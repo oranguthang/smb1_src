@@ -1,0 +1,15 @@
+# Build artifacts and ROM files
+*.o
+*.prg
+*.nes
+
+# Extracted ROM data (do not commit to avoid copyright issues)
+*.chr
+*.hdr
+
+# Editor/IDE files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
