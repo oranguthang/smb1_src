@@ -6,7 +6,7 @@ A comprehensive disassembly of Super Mario Bros for the Nintendo Entertainment S
 
 This repository contains:
 
-- **src/smbdis.asm** - Complete Super Mario Bros disassembly by doppelganger
+- **src/main.asm** - Address-ordered entrypoint for the modular disassembly
 - **src/ldconfig.txt** - Linker configuration for the ROM build
 - **bin/ca65.exe** - 6502 assembly compiler from [cc65](http://www.cc65.org/)
 - **bin/ld65.exe** - 6502 linker from [cc65](http://www.cc65.org/)
@@ -20,12 +20,18 @@ smb1_src/
 |-- bin/                # Local ca65/ld65 toolchain
 |   |-- ca65.exe
 |   `-- ld65.exe
+|-- assets/
+|   |-- manifest.json   # Reference identity and extracted-asset hashes
+|   `-- generated/      # Ignored local header and CHR data
 |-- docs/               # Local technical notes
 |   |-- 6502jsm.txt
 |   `-- modding_examples.md
+|-- scripts/            # Cross-platform build, split, and validation logic
 |-- src/                # Assembly source and linker config
 |   |-- ldconfig.txt
-|   `-- smbdis.asm
+|   |-- main.asm
+|   |-- memory/         # Hardware, RAM, and assembly-time definitions
+|   `-- system/         # Reset and per-frame control flow
 |-- Makefile            # Main build entrypoint
 |-- README.md
 `-- .gitignore
@@ -33,11 +39,14 @@ smb1_src/
 
 ## Prerequisites
 
-To build the ROM, you need to extract the header and CHR ROM data from an original Super Mario Bros ROM file. Place one of the following ROM files in the project directory:
+The preservation profile currently targets exactly:
 
-- `Super Mario Bros. (E) (REV0) [!p].nes`
-- `Super Mario Bros. (E) (REVA) [!p].nes`
-- `Super Mario Bros. (JU) [!].nes`
+```text
+Super Mario Bros. (JU) [!].nes
+SHA-1 ea343f4e445a9050d4b4fbac2c77d0693b1d0922
+```
+
+Place a legally obtained matching ROM in the project root, then run:
 
 Then run:
 
@@ -45,45 +54,49 @@ Then run:
 make split
 ```
 
-This will extract:
-- **smb.hdr** - iNES ROM header (16 bytes)
-- **smb.chr** - Character ROM data (8192 bytes, graphics)
+This validates the complete ROM identity before extracting:
 
-**Note:** These files are not included in the repository due to copyright concerns. The `split` command extracts them from your legally owned ROM file.
+- `assets/generated/header/smb.hdr` - 16-byte iNES header;
+- `assets/generated/chr/smb.chr` - 8192-byte CHR-ROM payload.
+
+The ROM and extracted files are ignored and are not included in the repository.
+PAL revisions and ROMs with extra trailing payloads are rejected by default.
 
 ## Building
+
+### Preservation PRG build
+
+The reconstruction can be assembled and checked without proprietary graphics
+or a ROM image:
+
+```bash
+make build-prg
+make verify-prg
+```
+
+`make verify-prg` writes the PRG, labels, linker map, and debug information
+under the ignored `build/native/` directory. It fails unless the 32 KiB PRG is
+byte-identical to the recorded baseline in `assets/manifest.json`.
 
 ### Using Makefile
 
 ```bash
-# Build the ROM
+# Validate local assets and build build/native/smb.nes
 make build
 
-# Clean build artifacts
-make clean
+# Rebuild and require complete byte identity with the reference ROM
+make verify
 
-# Build everything (same as build)
-make all
+# Validate extracted assets without changing them
+make check-assets
+
+# Remove build/native safely; extracted assets remain untouched
+make clean
 ```
 
-### Manual build steps
-
-1. Assemble the source:
-   ```bash
-   bin/ca65.exe -o smbdis.o src/smbdis.asm
-   ```
-
-2. Link the object file:
-   ```bash
-   bin/ld65.exe -C src/ldconfig.txt smbdis.o
-   ```
-
-3. Create the final NES ROM:
-   ```bash
-   copy /b smb.hdr+smb.prg+smb.chr smb.nes
-   ```
-
-The resulting `smb.nes` file can be run in any NES emulator.
+The Makefile contains only thin entrypoints. ROM parsing, safe extraction,
+assembly, linking, concatenation, checksum validation, and cleanup are
+implemented in platform-independent Python scripts under `scripts/`.
 
 ## Modding Notes
 

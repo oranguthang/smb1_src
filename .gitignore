@@ -1,9 +1,11 @@
 # Build artifacts and ROM files
+build/
 *.o
 *.prg
 *.nes
 
 # Extracted ROM data (do not commit to avoid copyright issues)
+assets/generated/
 *.chr
 *.hdr
 
@@ -13,3 +15,6 @@
 *~
 .vscode/
 .idea/
+
+# Local research repositories
+references/

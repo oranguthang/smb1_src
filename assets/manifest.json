@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "reference_rom": {
+    "name": "Super Mario Bros. (Japan, USA)",
+    "sha1": "ea343f4e445a9050d4b4fbac2c77d0693b1d0922",
+    "prg_cpu_base": "0x8000",
+    "prg_size": 32768,
+    "prg_sha1": "fefa1097449a3a11ebf8c6199e905996c5dc8fbd",
+    "chr_size": 8192,
+    "chr_sha1": "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5",
+    "header_size": 16,
+    "header_sha1": "40c71db0dc29b16057ec159bca7008241fc3a9f6",
+    "trainer_size": 0,
+    "mapper": 0,
+    "mirroring": "vertical"
+  },
+  "assets": [
+    {
+      "path": "header/smb.hdr",
+      "region": "header",
+      "offset": 0,
+      "size": 16,
+      "sha1": "40c71db0dc29b16057ec159bca7008241fc3a9f6"
+    },
+    {
+      "path": "chr/smb.chr",
+      "region": "chr",
+      "offset": 0,
+      "size": 8192,
+      "sha1": "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5"
+    }
+  ]
+}

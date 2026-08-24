@@ -34,19 +34,22 @@ produced bytes.
 
 ## Current Baseline
 
-- `src/smbdis.asm` is a single address-ordered source file of 16,351 lines.
-- Hardware definitions, RAM aliases, constants, code, data, music, and vectors
-  currently share that file.
+- The original `src/smbdis.asm` contained one address-ordered source file of
+  16,351 lines. Its remaining unsplit body now lives in `src/main.asm`.
+- Hardware definitions, RAM aliases, constants, and the first system module
+  have been extracted without renaming symbols or changing emitted bytes.
 - The PRG is linked as one 32 KiB region at CPU `$8000..$FFFF`.
-- The current Makefile supports basic assembly, linking, ROM concatenation,
-  local CHR/header extraction, and cleanup.
-- There is no hash-validated reference profile, byte-identity target, generated
-  linker-symbol workflow, source lint, unit-test suite, or runtime scenario set.
+- `make verify-prg` builds the native source under `build/native/`, emits labels,
+  a linker map, and debug data, and validates PRG SHA-1
+  `fefa1097449a3a11ebf8c6199e905996c5dc8fbd`.
+- The user-supplied `Super Mario Bros. (JU) [!].nes` reference has been
+  validated as mapper 0 with vertical mirroring, 32 KiB PRG, and 8 KiB CHR.
+- `make verify` reproduces its complete ROM SHA-1
+  `ea343f4e445a9050d4b4fbac2c77d0693b1d0922` byte-for-byte.
+- There is not yet a source lint, unit-test suite, or runtime scenario set.
 - No original `.nes`, `.chr`, or `.hdr` file is tracked in the current Git
   history.
-- The current working tree differs from the initial commit only by text
-  line-ending conversion. Repository text normalization must be handled as an
-  isolated change before structural source edits begin.
+- Repository text normalization is enforced by `.gitattributes`.
 
 ## Source and Proprietary Asset Policy
 
@@ -201,7 +204,7 @@ Do not invent inputs, outputs, clobbers, or invariants to complete the template.
 
 ## Milestones
 
-### 0. Repository Hygiene and Reference Selection - Planned
+### 0. Repository Hygiene and Reference Selection - Complete
 
 - Add an explicit LF text policy and normalize the current line-ending-only
   working-tree changes separately from source reconstruction.
@@ -214,7 +217,7 @@ Do not invent inputs, outputs, clobbers, or invariants to complete the template.
 Exit criterion: the repository has a clean, reviewable baseline and one proven
 reference identity.
 
-### 1. Reproducible Native Build and Byte-Identity Gate - Planned
+### 1. Reproducible Native Build and Byte-Identity Gate - Complete
 
 - Replace root-level build artifacts with an ignored `build/` directory.
 - Add a platform-independent native build script around ca65 and ld65.
@@ -225,7 +228,7 @@ reference identity.
 
 Exit criterion: `make verify` reproduces the selected reference ROM exactly.
 
-### 2. Reproducible Modular Baseline - Planned
+### 2. Reproducible Modular Baseline - In Progress
 
 - Introduce `src/main.asm` as an address-ordered include index.
 - Move definitions into `src/memory/` without renaming them.
