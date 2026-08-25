@@ -55,11 +55,11 @@ DemoEntry:
 
 ```asm
 ; Wait for two VBlank intervals before continuing reset
-VBlank1:
+bra_wait_for_first_vblank:
     LDA PPU_STATUS
-    BPL VBlank1
+    BPL bra_wait_for_first_vblank
 
-ColdBoot:
+bra_initialize_after_boot_check:
     JSR sub_initialize_memory  ; Clear memory using the pointer in Y
 ```
 

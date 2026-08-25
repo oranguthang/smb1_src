@@ -138,9 +138,9 @@ groups were:
 | `vec_reset_handler` through `sub_sprite_shuffler` | Reset, NMI, frame processing, pause |
 | `sub_oper_mode_execution_tree` through screen text | Modes, title, victory, HUD |
 | `RenderAreaGraphics` through score output | Background, VRAM, PPU helpers |
-| `InitializeGame` through game-over flow | Game and area initialization |
+| `handler_initialize_game` through game-over flow | Game and area initialization |
 | `sub_area_parser_task_handler` through level data | Area parser, objects, level streams |
-| `GameMode` through player physics | Game core, scrolling, player control |
+| `handler_run_game_mode` through player physics | Game core, scrolling, player control |
 | Fireballs through shared movement | Gameplay objects and common physics |
 | `sub_enemies_and_loops_core` through enemy initialization | Enemy stream parser and setup |
 | `RunEnemyObjectsCore` through platform runtime | Enemy and platform behavior |

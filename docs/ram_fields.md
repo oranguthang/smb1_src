@@ -57,7 +57,7 @@ object-slot index at the access site.
 | --- | ---: | --- |
 | `ram_player_anim_timer` | `$0781` | Active animation countdown |
 | `ram_player_anim_timer_reload` | `$070C` | Reload selected from horizontal speed or climbing direction |
-| `ram_jumpspring_anim_ctrl` | `$070E` | Jumpspring animation state that gates ordinary integration |
+| `ram_jumpspring_anim_ctrl` | `$070E` | handler_draw_jumpspring animation state that gates ordinary integration |
 | `ram_climb_side_timer` | `$0789` | Delay before changing sides of a vine |
 
 These roles are `!(OBS)` observations from direct reads, writes, and arithmetic
