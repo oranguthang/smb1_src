@@ -31,7 +31,7 @@ RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/runtime
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg symbols validate-symbols trace-runtime validate-runtime split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg symbols validate-symbols trace trace-runtime validate-runtime split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -124,6 +124,8 @@ validate-runtime:
 		--scenarios "$(RUNTIME_SCENARIOS)" \
 		--trace-dir "$(RUNTIME_TRACE_DIR)"
 
+trace: validate-symbols trace-runtime
+
 split:
 	$(PYTHON) "$(PROJECT_DIR)scripts/split_assets.py" \
 		--rom "$(ORIGINAL_ROM)" \
@@ -138,6 +140,7 @@ check-assets:
 lint:
 	$(PYTHON) "$(PROJECT_DIR)scripts/asm_style.py" "$(PROJECT_DIR)src"
 	$(PYTHON) "$(PROJECT_DIR)scripts/lint_source.py" "$(PROJECT_DIR)"
+	$(PYTHON) "$(PROJECT_DIR)scripts/lint_project.py" "$(PROJECT_DIR)"
 
 format:
 	$(PYTHON) "$(PROJECT_DIR)scripts/asm_style.py" --fix "$(PROJECT_DIR)src"

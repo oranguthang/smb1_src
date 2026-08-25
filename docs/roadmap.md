@@ -340,7 +340,7 @@ recorded address by address and explicitly bounded in
 `docs/runtime_evidence.md`. The complete 17,862-frame movie supplies the broad
 deterministic regression.
 
-### 7. Automated Source and Documentation Validation - In Progress
+### 7. Automated Source and Documentation Validation - Complete
 
 Add layered checks:
 
@@ -363,6 +363,15 @@ comment spacing. It also rejects leading blank lines, terminal comment periods,
 and non-ASCII comment text with a manual English-rewrite diagnostic. Distinguishing
 English from another language written entirely in unaccented Latin characters
 remains a review requirement rather than a probabilistic heuristic.
+
+The four validation layers are now executable as documented. Project lint also
+parses every Python tool and test with `ast`, checks local Markdown link targets,
+requires material source evidence tags to reference the stable unknowns
+registry, rejects orphan registry IDs, and forbids raw PPU/APU/I/O operands
+outside `hardware.inc`. Focused unit tests exercise both accepted and rejected
+cases. `make trace` composes the live FCEUX symbol smoke test with all focused
+and long-movie runtime scenarios; `make verify` remains the independent and
+authoritative byte-identity gate.
 
 ### 8. Decode and Round-Trip Data Formats - Planned
 

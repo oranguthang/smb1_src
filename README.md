@@ -106,6 +106,9 @@ make validate-symbols
 # Replay and validate focused gameplay transactions
 make trace-runtime
 
+# Run the complete live debugger and emulator evidence layer
+make trace
+
 # Validate local assets and build build/native/smb.nes
 make build
 
