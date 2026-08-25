@@ -1,56 +1,56 @@
 ; -------------------------------------------------------------------------------------
 ; $00 - used in adding to get proper offset
 
-RelativePlayerPosition:
+sub_relative_player_position:
     LDX #$00  ; set offsets for relative cooordinates
     LDY #$00  ; routine to correspond to player object
     JMP RelWOfs  ; get the coordinates
 
-RelativeBubblePosition:
+sub_relative_bubble_position:
     LDY #$01  ; set for air bubble offsets
-    JSR GetProperObjOffset  ; modify X to get proper air bubble offset
+    JSR sub_get_proper_obj_offset  ; modify X to get proper air bubble offset
     LDY #$03
     JMP RelWOfs  ; get the coordinates
 
-RelativeFireballPosition:
+sub_relative_fireball_position:
     LDY #$00  ; set for fireball offsets
-    JSR GetProperObjOffset  ; modify X to get proper fireball offset
+    JSR sub_get_proper_obj_offset  ; modify X to get proper fireball offset
     LDY #$02
 RelWOfs:
-    JSR GetObjRelativePosition  ; get the coordinates
+    JSR sub_get_obj_relative_position  ; get the coordinates
     LDX ram_object_offset  ; return original offset
     RTS  ; leave
 
-RelativeMiscPosition:
+sub_relative_misc_position:
     LDY #$02  ; set for misc object offsets
-    JSR GetProperObjOffset  ; modify X to get proper misc object offset
+    JSR sub_get_proper_obj_offset  ; modify X to get proper misc object offset
     LDY #$06
     JMP RelWOfs  ; get the coordinates
 
-RelativeEnemyPosition:
+sub_relative_enemy_position:
     LDA #$01  ; get coordinates of enemy object
     LDY #$01  ; relative to the screen
-    JMP VariableObjOfsRelPos
+    JMP sub_variable_obj_ofs_rel_pos
 
-RelativeBlockPosition:
+sub_relative_block_position:
     LDA #$09  ; get coordinates of one block object
     LDY #$04  ; relative to the screen
-    JSR VariableObjOfsRelPos
+    JSR sub_variable_obj_ofs_rel_pos
     INX  ; adjust offset for other block object if any
     INX
     LDA #$09
     INY  ; adjust other and get coordinates for other one
 
-VariableObjOfsRelPos:
+sub_variable_obj_ofs_rel_pos:
     STX $00  ; store value to add to A here
     CLC
     ADC $00  ; add A to value stored
     TAX  ; use as enemy offset
-    JSR GetObjRelativePosition
+    JSR sub_get_obj_relative_position
     LDX ram_object_offset  ; reload old object offset and leave
     RTS
 
-GetObjRelativePosition:
+sub_get_obj_relative_position:
     LDA ram_spr_object_y_position,x  ; load vertical coordinate low
     STA ram_spr_object_rel_y_pos,y  ; store here
     LDA ram_spr_object_x_position,x  ; load horizontal coordinate
@@ -62,45 +62,45 @@ GetObjRelativePosition:
 ; -------------------------------------------------------------------------------------
 ; $00 - used as temp variable to hold offscreen bits
 
-GetPlayerOffscreenBits:
+sub_get_player_offscreen_bits:
     LDX #$00  ; set offsets for player-specific variables
     LDY #$00  ; and get offscreen information about player
     JMP GetOffScreenBitsSet
 
-GetFireballOffscreenBits:
+sub_get_fireball_offscreen_bits:
     LDY #$00  ; set for fireball offsets
-    JSR GetProperObjOffset  ; modify X to get proper fireball offset
+    JSR sub_get_proper_obj_offset  ; modify X to get proper fireball offset
     LDY #$02  ; set other offset for fireball's offscreen bits
     JMP GetOffScreenBitsSet  ; and get offscreen information about fireball
 
-GetBubbleOffscreenBits:
+sub_get_bubble_offscreen_bits:
     LDY #$01  ; set for air bubble offsets
-    JSR GetProperObjOffset  ; modify X to get proper air bubble offset
+    JSR sub_get_proper_obj_offset  ; modify X to get proper air bubble offset
     LDY #$03  ; set other offset for airbubble's offscreen bits
     JMP GetOffScreenBitsSet  ; and get offscreen information about air bubble
 
-GetMiscOffscreenBits:
+sub_get_misc_offscreen_bits:
     LDY #$02  ; set for misc object offsets
-    JSR GetProperObjOffset  ; modify X to get proper misc object offset
+    JSR sub_get_proper_obj_offset  ; modify X to get proper misc object offset
     LDY #$06  ; set other offset for misc object's offscreen bits
     JMP GetOffScreenBitsSet  ; and get offscreen information about misc object
 
 ObjOffsetData:
     .byte $07, $16, $0d
 
-GetProperObjOffset:
+sub_get_proper_obj_offset:
     TXA  ; move offset to A
     CLC
     ADC ObjOffsetData,y  ; add amount of bytes to offset depending on setting in Y
     TAX  ; put back in X and leave
     RTS
 
-GetEnemyOffscreenBits:
+sub_get_enemy_offscreen_bits:
     LDA #$01  ; set A to add 1 byte in order to get enemy offset
     LDY #$01  ; set Y to put offscreen bits in ram_enemy_offscreen_bits
     JMP SetOffscrBitsOffset
 
-GetBlockOffscreenBits:
+sub_get_block_offscreen_bits:
     LDA #$09  ; set A to add 9 bytes in order to get block obj offset
     LDY #$04  ; set Y to put offscreen bits in ram_block_offscreen_bits
 
@@ -113,7 +113,7 @@ SetOffscrBitsOffset:
 GetOffScreenBitsSet:
     TYA  ; save offscreen bits offset to stack for now
     PHA
-    JSR RunOffscrBitsSubs
+    JSR sub_run_offscr_bits_subs
     ASL  ; move low nybble to high nybble
     ASL
     ASL
@@ -127,8 +127,8 @@ GetOffScreenBitsSet:
     LDX ram_object_offset
     RTS
 
-RunOffscrBitsSubs:
-    JSR GetXOffscreenBits  ; do subroutine here
+sub_run_offscr_bits_subs:
+    JSR sub_get_x_offscreen_bits  ; do subroutine here
     LSR  ; move high nybble to low
     LSR
     LSR
@@ -139,7 +139,7 @@ RunOffscrBitsSubs:
 ; --------------------------------
 ; (these apply to these three subsections)
 ; $04 - used to store proper offset
-; $05 - used as adder in DividePDiff
+; $05 - used as adder in sub_divide_p_diff
 ; $06 - used to store preset value used to compare to pixel difference in $07
 ; $07 - used to store difference between coordinates of object and screen edges
 
@@ -150,7 +150,7 @@ XOffscreenBitsData:
 DefaultXOnscreenOfs:
     .byte $07, $0f, $07
 
-GetXOffscreenBits:
+sub_get_x_offscreen_bits:
     STX $04  ; save position in buffer to here
     LDY #$01  ; start with right side of screen
 XOfsLoop:
@@ -169,7 +169,7 @@ XOfsLoop:
     LDA #$38  ; if no branching, load value here and store
     STA $06
     LDA #$08  ; load some other value and execute subroutine
-    JSR DividePDiff
+    JSR sub_divide_p_diff
 XLdBData:
     LDA XOffscreenBitsData,x  ; get bits here
     LDX $04  ; reobtain position in buffer
@@ -212,7 +212,7 @@ YOfsLoop:
     LDA #$20  ; if no branching, load value here and store
     STA $06
     LDA #$04  ; load some other value and execute subroutine
-    JSR DividePDiff
+    JSR sub_divide_p_diff
 YLdBData:
     LDA YOffscreenBitsData,x  ; get offscreen data bits using offset
     LDX $04  ; reobtain position in buffer
@@ -225,7 +225,7 @@ ExYOfsBS:
 
 ; --------------------------------
 
-DividePDiff:
+sub_divide_p_diff:
     STA $05  ; store current value in A here
     LDA $07  ; get pixel difference
     CMP $06  ; compare to preset value

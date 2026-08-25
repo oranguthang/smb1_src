@@ -21,16 +21,16 @@ sub_dispatch_inline_handler:
 
 ; -------------------------------------------------------------------------------------
 
-InitializeNameTables:
+sub_initialize_name_tables:
     LDA PPU_STATUS  ; reset flip-flop
     LDA ram_mirror_ppu_ctrl_reg1  ; load mirror of ppu reg $2000
     ORA #%00010000  ; set sprites for first 4k and background for second 4k
     AND #%11110000  ; clear rest of lower nybble, leave higher alone
-    JSR WritePPUReg1
+    JSR sub_write_ppu_reg1
     LDA #$24  ; set vram address to start of name table 1
-    JSR WriteNTAddr
+    JSR sub_write_nt_addr
     LDA #$20  ; and then set it to name table 0
-WriteNTAddr:
+sub_write_nt_addr:
     STA PPU_ADDRESS
     LDA #$00
     STA PPU_ADDRESS
@@ -53,20 +53,20 @@ InitATLoop:
     BNE InitATLoop
     STA ram_horizontal_scroll  ; reset scroll variables
     STA ram_vertical_scroll
-    JMP InitScroll  ; initialize scroll registers to zero
+    JMP sub_init_scroll  ; initialize scroll registers to zero
 
 ; -------------------------------------------------------------------------------------
 ; $00 - temp joypad bit
 
-ReadJoypads:
+sub_read_joypads:
     LDA #$01  ; reset and clear strobe of joypad ports
     STA JOYPAD_PORT
     LSR
     TAX  ; start with joypad 1's port
     STA JOYPAD_PORT
-    JSR ReadPortBits
+    JSR sub_read_port_bits
     INX  ; increment for joypad 2's port
-ReadPortBits:
+sub_read_port_bits:
     LDY #$08
 PortLoop:
     PHA  ; push previous bit onto stack
@@ -111,7 +111,7 @@ WriteBufferToScreen:
     BCS SetupWrites  ; if d7 of third byte was clear, ppu will
     AND #%11111011  ; only increment by 1
 SetupWrites:
-    JSR WritePPUReg1  ; write to register
+    JSR sub_write_ppu_reg1  ; write to register
     PLA  ; pull from stack and shift to left again
     ASL
     BCC GetLength  ; if d6 of third byte was clear, do not repeat byte
@@ -142,19 +142,19 @@ RepeatByte:
     STA PPU_ADDRESS
     STA PPU_ADDRESS  ; then reinitializes it for some reason
     STA PPU_ADDRESS
-UpdateScreen:
+sub_update_screen:
     LDX PPU_STATUS  ; reset flip-flop
     LDY #$00  ; load first byte from indirect as a pointer
     LDA ($00),y
     BNE WriteBufferToScreen  ; if byte is zero we have no further updates to make here
-InitScroll:
+sub_init_scroll:
     STA PPU_SCROLL_REG  ; store contents of A into scroll registers
     STA PPU_SCROLL_REG  ; and end whatever subroutine led us here
     RTS
 
 ; -------------------------------------------------------------------------------------
 
-WritePPUReg1:
+sub_write_ppu_reg1:
     STA PPU_CTRL_REG1  ; write contents of A to PPU register 1
     STA ram_mirror_ppu_ctrl_reg1  ; and its mirror
     RTS

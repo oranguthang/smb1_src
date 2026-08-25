@@ -15,16 +15,16 @@ StatusBarData:
 StatusBarOffset:
     .byte $06, $0c, $12, $18, $1e, $24
 
-PrintStatusBarNumbers:
+sub_print_status_bar_numbers:
     STA $00  ; store player-specific offset
-    JSR OutputNumbers  ; use first nybble to print the coin display
+    JSR sub_output_numbers  ; use first nybble to print the coin display
     LDA $00  ; move high nybble to low
     LSR  ; and print to score display
     LSR
     LSR
     LSR
 
-OutputNumbers:
+sub_output_numbers:
     CLC  ; add 1 to low nybble
     ADC #$01
     AND #%00001111  ; mask out high nybble
@@ -71,7 +71,7 @@ ExitOutputN:
 
 ; -------------------------------------------------------------------------------------
 
-DigitsMathRoutine:
+sub_digits_math_routine:
     LDA ram_oper_mode  ; check mode of operation
     CMP #con_mode_title_screen
     BEQ EraseDMods  ; if in title screen mode, branch to lock score
@@ -108,12 +108,12 @@ CarryOne:
 
 ; -------------------------------------------------------------------------------------
 
-UpdateTopScore:
+sub_update_top_score:
     LDX #$05  ; start with mario's score
-    JSR TopScoreCheck
+    JSR sub_top_score_check
     LDX #$0b  ; now do luigi's score
 
-TopScoreCheck:
+sub_top_score_check:
     LDY #$05  ; start with the lowest digit
     SEC
 GetScoreDiff:

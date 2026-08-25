@@ -24,7 +24,7 @@ SetM2:
     LDA #con_silence  ; silence music
     STA ram_event_music_queue
     INC ram_oper_mode_task  ; move onto next secondary mode in autoctrl mode
-    JMP KillAllEnemies  ; jump to empty all enemy slots and then leave
+    JMP sub_kill_all_enemies  ; jump to empty all enemy slots and then leave
 
 MoveD_Bowser:
     JSR sub_move_enemy_downward_slow  ; do a sub to move bowser downwards
@@ -46,9 +46,9 @@ RemoveBridge:
     LDY ram_vram_buffer1_offset  ; increment vram buffer offset
     INY
     LDX #$0c  ; set offset for tile data for sub to draw blank metatile
-    JSR RemBridge  ; do sub here to remove bowser's bridge metatiles
+    JSR sub_rem_bridge  ; do sub here to remove bowser's bridge metatiles
     LDX ram_object_offset  ; get enemy offset
-    JSR MoveVOffset  ; set new vram buffer offset
+    JSR sub_move_v_offset  ; set new vram buffer offset
     LDA #con_sfx_blast  ; load the fireworks/gunfire sound into the square 2 sfx
     STA ram_square2_sound_queue  ; queue while at the same time loading the brick
     LDA #con_sfx_brick_shatter  ; shatter sound into the noise sfx queue thus
@@ -57,7 +57,7 @@ RemoveBridge:
     LDA ram_bridge_collapse_offset
     CMP #$0f  ; if bridge collapse offset has not yet reached
     BNE NoBFall  ; the end, go ahead and skip this part
-    JSR InitVStf  ; initialize whatever vertical speed bowser has
+    JSR sub_init_v_stf  ; initialize whatever vertical speed bowser has
     LDA #%01000000
     STA ram_enemy_state,x  ; set bowser's state to one of defeated states (d6 set)
     LDA #con_sfx_bowser_fall
@@ -76,12 +76,12 @@ RunBowser:
     BEQ BowserControl
     LDA ram_enemy_y_position,x  ; otherwise check vertical position
     CMP #$e0  ; if above a certain point, branch to move defeated bowser
-    BCC MoveD_Bowser  ; otherwise proceed to KillAllEnemies
+    BCC MoveD_Bowser  ; otherwise proceed to sub_kill_all_enemies
 
-KillAllEnemies:
+sub_kill_all_enemies:
     LDX #$04  ; start with last enemy slot
 KillLoop:
-    JSR EraseEnemyObject  ; branch to kill enemy objects
+    JSR sub_erase_enemy_object  ; branch to kill enemy objects
     DEX  ; move onto next enemy slot
     BPL KillLoop  ; do this until all slots are emptied
     STA ram_enemy_frenzy_buffer  ; empty frenzy buffer
@@ -115,7 +115,7 @@ ResetMDr:
 B_FaceP:
     LDA ram_enemy_frame_timer,x  ; if timer set here expired,
     BEQ GetPRCmp  ; branch to next section
-    JSR PlayerEnemyDiff  ; get horizontal difference between player and bowser,
+    JSR sub_player_enemy_diff  ; get horizontal difference between player and bowser,
     BPL GetPRCmp  ; and branch if bowser to the right of the player
     LDA #$01
     STA ram_enemy_moving_dir,x  ; set bowser to move and face to the right
@@ -169,7 +169,7 @@ HammerChk:
     LDA ram_frame_counter
     AND #%00000011  ; check to see if it's time to execute sub
     BNE SetHmrTmr  ; if not, skip sub, otherwise
-    JSR SpawnHammerObj  ; execute sub on every fourth frame to spawn misc object (hammer)
+    JSR sub_spawn_hammer_obj  ; execute sub on every fourth frame to spawn misc object (hammer)
 SetHmrTmr:
     LDA ram_enemy_y_position,x  ; get current vertical position
     CMP #$80  ; if still above a certain point
@@ -185,7 +185,7 @@ MakeBJump:
     CMP #$01  ; if timer not yet about to expire,
     BNE ChkFireB  ; skip ahead to next part
     DEC ram_enemy_y_position,x  ; otherwise decrement vertical coordinate
-    JSR InitVStf  ; initialize movement amount
+    JSR sub_init_v_stf  ; initialize movement amount
     LDA #$fe
     STA ram_enemy_y_speed,x  ; set vertical speed to move bowser upwards
 ChkFireB:
@@ -203,7 +203,7 @@ SpawnFBr:
     EOR #%10000000  ; invert bowser's mouth bit to open
     STA ram_bowser_body_controls  ; and close bowser's mouth
     BMI ChkFireB  ; if bowser's mouth open, loop back
-    JSR SetFlameTimer  ; get timing for bowser's flame
+    JSR sub_set_flame_timer  ; get timing for bowser's flame
     LDY ram_secondary_hard_mode
     BEQ SetFBTmr  ; if secondary hard mode flag not set, skip this
     SEC
@@ -216,7 +216,7 @@ SetFBTmr:
 ; --------------------------------
 
 BowserGfxHandler:
-    JSR ProcessBowserHalf  ; do a sub here to process bowser's front
+    JSR sub_process_bowser_half  ; do a sub here to process bowser's front
     LDY #$10  ; load default value here to position bowser's rear
     LDA ram_enemy_moving_dir,x  ; check moving direction
     LSR
@@ -242,7 +242,7 @@ CopyFToR:
     STX ram_object_offset
     LDA #con_bowser  ; set bowser's enemy identifier
     STA ram_enemy_id,x  ; store in bowser's rear object
-    JSR ProcessBowserHalf  ; do a sub here to process bowser's rear
+    JSR sub_process_bowser_half  ; do a sub here to process bowser's rear
     PLA
     STA ram_object_offset  ; get original enemy object offset
     TAX
@@ -251,15 +251,15 @@ CopyFToR:
 ExBGfxH:
     RTS  ; leave!
 
-ProcessBowserHalf:
+sub_process_bowser_half:
     INC ram_bowser_gfx_flag  ; increment bowser's graphics flag, then run subroutines
-    JSR RunRetainerObj  ; to get offscreen bits, relative position and draw bowser (finally!)
+    JSR sub_run_retainer_obj  ; to get offscreen bits, relative position and draw bowser (finally!)
     LDA ram_enemy_state,x
     BNE ExBGfxH  ; if either enemy object not in normal state, branch to leave
     LDA #$0a
     STA ram_enemy_bound_box_ctrl,x  ; set bounding box size control
-    JSR GetEnemyBoundBox  ; get bounding box coordinates
-    JMP PlayerEnemyCollision  ; do player-to-enemy collision detection
+    JSR sub_get_enemy_bound_box  ; get bounding box coordinates
+    JMP sub_player_enemy_collision  ; do player-to-enemy collision detection
 
 ; -------------------------------------------------------------------------------------
 ; $00 - used to hold movement force and tile number
@@ -268,7 +268,7 @@ ProcessBowserHalf:
 FlameTimerData:
     .byte $bf, $40, $bf, $bf, $bf, $40, $40, $bf
 
-SetFlameTimer:
+sub_set_flame_timer:
     LDY ram_bowser_flame_timer_ctrl  ; load counter as offset
     INC ram_bowser_flame_timer_ctrl  ; increment
     LDA ram_bowser_flame_timer_ctrl  ; mask out all but 3 LSB
@@ -278,7 +278,7 @@ SetFlameTimer:
 ExFl:
     RTS
 
-ProcBowserFlame:
+sub_proc_bowser_flame:
     LDA ram_timer_control  ; if master timer control flag set,
     BNE SetGfxF  ; skip all of this
     LDA #$40  ; load default movement force
@@ -305,7 +305,7 @@ SFlmX:
     ADC ram_enemy_y_move_force,x  ; otherwise add value here to coordinate and store
     STA ram_enemy_y_position,x  ; as new vertical coordinate
 SetGfxF:
-    JSR RelativeEnemyPosition  ; get new relative coordinates
+    JSR sub_relative_enemy_position  ; get new relative coordinates
     LDA ram_enemy_state,x  ; if bowser's flame not in normal state,
     BNE ExFl  ; branch to leave
     LDA #$51  ; otherwise, continue
@@ -341,7 +341,7 @@ DrawFlameLoop:
     CPX #$03  ; have not yet been done
     BCC DrawFlameLoop
     LDX ram_object_offset  ; reload original enemy offset
-    JSR GetEnemyOffscreenBits  ; get offscreen information
+    JSR sub_get_enemy_offscreen_bits  ; get offscreen information
     LDY ram_enemy_spr_data_offset,x  ; get OAM data offset
     LDA ram_enemy_offscreen_bits  ; get enemy object offscreen bits
     LSR  ; move d0 to carry and result to stack
@@ -384,14 +384,14 @@ RunFireworks:
     CMP #$03  ; check explosion graphics counter
     BCS FireworksSoundScore  ; if at a certain point, branch to kill this object
 SetupExpl:
-    JSR RelativeEnemyPosition  ; get relative coordinates of explosion
+    JSR sub_relative_enemy_position  ; get relative coordinates of explosion
     LDA ram_enemy_rel_y_pos  ; copy relative coordinates
     STA ram_fireball_rel_y_pos  ; from the enemy object to the fireball object
     LDA ram_enemy_rel_x_pos  ; first vertical, then horizontal
     STA ram_fireball_rel_x_pos
     LDY ram_enemy_spr_data_offset,x  ; get OAM data offset
     LDA ram_explosion_gfx_counter,x  ; get explosion graphics counter
-    JSR DrawExplosion_Fireworks  ; do a sub to draw the explosion then leave
+    JSR sub_draw_explosion_fireworks  ; do a sub to draw the explosion then leave
     RTS
 
 FireworksSoundScore:
@@ -464,7 +464,7 @@ NoTTick:
     LDY #$23  ; set offset here to subtract from game timer's last digit
     LDA #$ff  ; set adder here to $ff, or -1, to subtract one
     STA ram_digit_modifier+5  ; from the last digit of the game timer
-    JSR DigitsMathRoutine  ; subtract digit
+    JSR sub_digits_math_routine  ; subtract digit
     LDA #$05  ; set now to add 50 points
     STA ram_digit_modifier+5  ; per game timer interval subtracted
 
@@ -474,21 +474,21 @@ EndAreaPoints:
     BEQ ELPGive  ; if mario, do not change
     LDY #$11  ; otherwise load offset for luigi's score
 ELPGive:
-    JSR DigitsMathRoutine  ; award 50 points per game timer interval
+    JSR sub_digits_math_routine  ; award 50 points per game timer interval
     LDA ram_current_player  ; get player on the screen (or 500 points per
     ASL  ; fireworks explosion if branched here from there)
     ASL  ; shift to high nybble
     ASL
     ASL
     ORA #%00000100  ; add four to set nybble for game timer
-    JMP UpdateNumber  ; jump to print the new score and game timer
+    JMP sub_update_number  ; jump to print the new score and game timer
 
 RaiseFlagSetoffFWorks:
     LDA ram_enemy_y_position,x  ; check star flag's vertical position
     CMP #$72  ; against preset value
     BCC SetoffF  ; if star flag higher vertically, branch to other code
     DEC ram_enemy_y_position,x  ; otherwise, raise star flag by one pixel
-    JMP DrawStarFlag  ; and skip this part here
+    JMP sub_draw_star_flag  ; and skip this part here
 SetoffF:
     LDA ram_fireworks_counter  ; check fireworks counter
     BEQ DrawFlagSetTimer  ; if no fireworks left to go off, skip this part
@@ -496,8 +496,8 @@ SetoffF:
     LDA #con_fireworks
     STA ram_enemy_frenzy_buffer  ; otherwise set fireworks object in frenzy queue
 
-DrawStarFlag:
-    JSR RelativeEnemyPosition  ; get relative coordinates of star flag
+sub_draw_star_flag:
+    JSR sub_relative_enemy_position  ; get relative coordinates of star flag
     LDY ram_enemy_spr_data_offset,x  ; get OAM data offset
     LDX #$03  ; do four sprites
 DSFLoop:
@@ -523,7 +523,7 @@ DSFLoop:
     RTS
 
 DrawFlagSetTimer:
-    JSR DrawStarFlag  ; do sub to draw star flag
+    JSR sub_draw_star_flag  ; do sub to draw star flag
     LDA #$06
     STA ram_enemy_interval_timer,x  ; set interval timer here
 
@@ -532,7 +532,7 @@ IncrementSFTask2:
     RTS
 
 DelayToAreaEnd:
-    JSR DrawStarFlag  ; do sub to draw star flag
+    JSR sub_draw_star_flag  ; do sub to draw star flag
     LDA ram_enemy_interval_timer,x  ; if interval timer set in previous task
     BNE StarFlagExit2  ; not yet expired, branch to leave
     LDA ram_event_music_buffer  ; if event music buffer empty,
@@ -553,7 +553,7 @@ MovePiranhaPlant:
     BNE SetupToMovePPlant  ; if moving, skip to part ahead
     LDA ram_piranha_plant_y_speed,x  ; if currently rising, branch
     BMI ReversePlantSpeed  ; to move enemy upwards out of pipe
-    JSR PlayerEnemyDiff  ; get horizontal difference between player and
+    JSR sub_player_enemy_diff  ; get horizontal difference between player and
     BPL ChkPlayerNearPipe  ; piranha plant, and branch if enemy to right of player
     LDA $00  ; otherwise get saved horizontal difference
     EOR #$ff
@@ -606,7 +606,7 @@ PutinPipe:
 ; -------------------------------------------------------------------------------------
 ; $07 - spinning speed
 
-FirebarSpin:
+sub_firebar_spin:
     STA $07  ; save spinning speed here
     LDA ram_firebar_spin_direction,x  ; check spinning direction
     BNE SpinCounterClockwise  ; if moving counter-clockwise, branch to other part

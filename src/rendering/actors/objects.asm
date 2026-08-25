@@ -8,7 +8,7 @@
 DefaultBlockObjTiles:
     .byte $85, $85, $86, $86  ; brick w/ line (these are sprite tiles, not BG!)
 
-DrawBlock:
+sub_draw_block:
     LDA ram_block_rel_y_pos  ; get relative vertical coordinate of block object
     STA $02  ; store here
     LDA ram_block_rel_x_pos  ; get relative horizontal coordinate of block object
@@ -23,7 +23,7 @@ DBlkLoop:
     LDA DefaultBlockObjTiles,x  ; get left tile number
     STA $00  ; set here
     LDA DefaultBlockObjTiles+1,x  ; get right tile number
-    JSR DrawOneSpriteRow  ; do sub to write tile numbers to first row of sprites
+    JSR sub_draw_one_sprite_row  ; do sub to write tile numbers to first row of sprites
     CPX #$04  ; check incremented offset
     BNE DBlkLoop  ; and loop back until all four sprites are done
     LDX ram_object_offset  ; get block object offset
@@ -40,7 +40,7 @@ ChkRep:
     BNE BlkOffscr  ; branch ahead to use current graphics
     LDA #$87  ; set A for used block tile
     INY  ; increment Y to write to tile bytes
-    JSR DumpFourSpr  ; do sub to dump into all four sprites
+    JSR sub_dump_four_spr  ; do sub to dump into all four sprites
     DEY  ; return Y to original offset
     LDA #$03  ; set palette bits
     LDX ram_area_type
@@ -66,11 +66,11 @@ BlkOffscr:
     STA ram_sprite_y_position+12,y
 PullOfsB:
     PLA  ; pull offscreen bits from stack
-ChkLeftCo:
+sub_chk_left_co:
     AND #%00001000  ; check to see if d3 in offscreen bits are set
     BEQ ExDBlk  ; if not set, branch, otherwise move sprites offscreen
 
-MoveColOffscreen:
+sub_move_col_offscreen:
     LDA #$f8  ; move offscreen two OAMs
     STA ram_sprite_y_position,y  ; on the left side (or two rows of enemy on either side
     STA ram_sprite_y_position+8,y  ; if branched here from enemy graphics handler)
@@ -80,7 +80,7 @@ ExDBlk:
 ; -------------------------------------------------------------------------------------
 ; $00 - used to hold palette bits for attribute byte or relative X position
 
-DrawBrickChunks:
+sub_draw_brick_chunks:
     LDA #$02  ; set palette bits here
     STA $00
     LDA #$75  ; set tile number for ball (something residual, likely)
@@ -93,7 +93,7 @@ DrawBrickChunks:
 DChunks:
     LDY ram_block_spr_data_offset,x  ; get OAM data offset
     INY  ; increment to start with tile bytes in OAM
-    JSR DumpFourSpr  ; do sub to dump tile number into all four sprites
+    JSR sub_dump_four_spr  ; do sub to dump tile number into all four sprites
     LDA ram_frame_counter  ; get frame counter
     ASL
     ASL
@@ -102,11 +102,11 @@ DChunks:
     AND #$c0  ; get what was originally d3-d2 of low nybble
     ORA $00  ; add palette bits
     INY  ; increment offset for attribute bytes
-    JSR DumpFourSpr  ; do sub to dump attribute data into all four sprites
+    JSR sub_dump_four_spr  ; do sub to dump attribute data into all four sprites
     DEY
     DEY  ; decrement offset to Y coordinate
     LDA ram_block_rel_y_pos  ; get first block object's relative vertical coordinate
-    JSR DumpTwoSpr  ; do sub to dump current Y coordinate into two sprites
+    JSR sub_dump_two_spr  ; do sub to dump current Y coordinate into two sprites
     LDA ram_block_rel_x_pos  ; get first block object's relative horizontal coordinate
     STA ram_sprite_x_position,y  ; save into X coordinate of first sprite
     LDA ram_block_orig_x_pos,x  ; get original horizontal coordinate
@@ -130,12 +130,12 @@ DChunks:
     ADC #$06  ; plus 6 pixels to position fourth brick chunk correctly
     STA ram_sprite_x_position+12,y  ; save into X coordinate of fourth sprite
     LDA ram_block_offscreen_bits  ; get offscreen bits for block object
-    JSR ChkLeftCo  ; do sub to move left half of sprites offscreen if necessary
+    JSR sub_chk_left_co  ; do sub to move left half of sprites offscreen if necessary
     LDA ram_block_offscreen_bits  ; get offscreen bits again
     ASL  ; shift d7 into carry
     BCC ChnkOfs  ; if d7 not set, branch to last part
     LDA #$f8
-    JSR DumpTwoSpr  ; otherwise move top sprites offscreen
+    JSR sub_dump_two_spr  ; otherwise move top sprites offscreen
 ChnkOfs:
     LDA $00  ; if relative position on left side of screen,
     BPL ExBCDr  ; go ahead and leave
@@ -157,7 +157,7 @@ DrawFireball:
     LDA ram_fireball_rel_x_pos  ; get relative horizontal coordinate
     STA ram_sprite_x_position,y  ; store as sprite X coordinate, then do shared code
 
-DrawFirebar:
+sub_draw_firebar:
     LDA ram_frame_counter  ; get frame counter
     LSR  ; divide by four
     LSR
@@ -189,11 +189,11 @@ DrawExplosion_Fireball:
     CMP #$03  ; check to see if time to kill fireball
     BCS KillFireBall  ; branch if so, otherwise continue to draw explosion
 
-DrawExplosion_Fireworks:
+sub_draw_explosion_fireworks:
     TAX  ; use whatever's in A for offset
     LDA ExplosionTiles,x  ; get tile number using offset
     INY  ; increment Y (contains sprite data offset)
-    JSR DumpFourSpr  ; and dump into tile number part of sprite data
+    JSR sub_dump_four_spr  ; and dump into tile number part of sprite data
     DEY  ; decrement Y so we have the proper offset again
     LDX ram_object_offset  ; return enemy object buffer offset to X
     LDA ram_fireball_rel_y_pos  ; get relative vertical coordinate
@@ -231,14 +231,14 @@ KillFireBall:
 
 ; -------------------------------------------------------------------------------------
 
-DrawSmallPlatform:
+sub_draw_small_platform:
     LDY ram_enemy_spr_data_offset,x  ; get OAM data offset
     LDA #$5b  ; load tile number for small platforms
     INY  ; increment offset for tile numbers
-    JSR DumpSixSpr  ; dump tile number into all six sprites
+    JSR sub_dump_six_spr  ; dump tile number into all six sprites
     INY  ; increment offset for attributes
     LDA #$02  ; load palette controls
-    JSR DumpSixSpr  ; dump attributes into all six sprites
+    JSR sub_dump_six_spr  ; dump attributes into all six sprites
     DEY  ; decrement for original offset
     DEY
     LDA ram_enemy_rel_x_pos  ; get relative horizontal coordinate
@@ -259,7 +259,7 @@ DrawSmallPlatform:
     BCS TopSP  ; do not mess with it
     LDA #$f8  ; otherwise move first three sprites offscreen
 TopSP:
-    JSR DumpThreeSpr  ; dump vertical coordinate into Y coordinates
+    JSR sub_dump_three_spr  ; dump vertical coordinate into Y coordinates
     PLA  ; pull from stack
     CLC
     ADC #$80  ; add 128 pixels
@@ -299,7 +299,7 @@ ExSPl:
 
 ; -------------------------------------------------------------------------------------
 
-DrawBubble:
+sub_draw_bubble:
     LDY ram_player_y_high_pos  ; if player's vertical high position
     DEY  ; not within screen, skip all of this
     BNE ExDBub

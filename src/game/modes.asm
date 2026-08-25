@@ -30,7 +30,7 @@ ChkSelect:
     LDX ram_demo_timer  ; otherwise check demo timer
     BNE ChkWorldSel  ; if demo timer not expired, branch to check world selection
     STA ram_select_timer  ; set controller bits here if running demo
-    JSR DemoEngine  ; run through the demo actions
+    JSR sub_demo_engine  ; run through the demo actions
     BCS ResetTitle  ; if carry flag set, demo over, thus branch
     JMP RunDemo  ; otherwise, run game engine for demo
 ChkWorldSel:
@@ -53,7 +53,7 @@ SelectBLogic:
     LDA ram_number_of_players  ; if no, must have been the select button, therefore
     EOR #%00000001  ; change number of players and draw icon accordingly
     STA ram_number_of_players
-    JSR DrawMushroomIcon
+    JSR sub_draw_mushroom_icon
     JMP NullJoypad
 IncWorldSel:
     LDX ram_world_select_number  ; increment world select number
@@ -61,7 +61,7 @@ IncWorldSel:
     TXA
     AND #%00000111  ; mask out higher bits
     STA ram_world_select_number  ; store as current world select number
-    JSR GoContinue
+    JSR sub_go_continue
 UpdateShroom:
     LDA WSelectBufferTemplate,x  ; write template for world select in vram buffer
     STA ram_vram_buffer1-1,x  ; do this until all bytes are written
@@ -75,7 +75,7 @@ NullJoypad:
     LDA #$00  ; clear joypad bits for player 1
     STA ram_saved_joypad1_bits
 RunDemo:
-    JSR GameCoreRoutine  ; run game engine
+    JSR sub_game_core_routine  ; run game engine
     LDA ram_game_engine_subroutine  ; check to see if we're running lose life routine
     CMP #$06
     BNE ExitMenu  ; if not, do not do all the resetting below
@@ -92,9 +92,9 @@ ChkContinue:
     ASL  ; check to see if A button was also pushed
     BCC StartWorld1  ; if not, don't load continue function's world number
     LDA ram_continue_world  ; load previously saved world number for secret
-    JSR GoContinue  ; continue function when pressing A + start
+    JSR sub_go_continue  ; continue function when pressing A + start
 StartWorld1:
-    JSR LoadAreaPointer
+    JSR sub_load_area_pointer
     INC ram_hidden1_up_flag  ; set 1-up box flag for both players
     INC ram_off_scr_hidden1_up_flag
     INC ram_fetch_new_game_timer_flag  ; set fetch new game timer flag
@@ -112,7 +112,7 @@ InitScores:
     BPL InitScores
 ExitMenu:
     RTS
-GoContinue:
+sub_go_continue:
     STA ram_world_number  ; start both players at the first area
     STA ram_off_scr_world_number  ; of the previously saved world number
     LDX #$00  ; note that on power-up using this function
@@ -125,7 +125,7 @@ GoContinue:
 MushroomIconData:
     .byte $07, $22, $49, $83, $ce, $24, $24, $00
 
-DrawMushroomIcon:
+sub_draw_mushroom_icon:
     LDY #$07  ; read eight bytes to be read by transfer routine
 IconDataRead:
     LDA MushroomIconData,y  ; note that the default position is set for a
@@ -153,7 +153,7 @@ DemoTimingData:
     .byte $15, $5a, $10, $20, $28, $30, $20, $10
     .byte $80, $20, $30, $30, $01, $ff, $00
 
-DemoEngine:
+sub_demo_engine:
     LDX ram_demo_action  ; load current demo action
     LDA ram_demo_action_timer  ; load current action timer
     BNE DoAction  ; if timer still counting down, skip
@@ -174,17 +174,17 @@ DemoOver:
 ; -------------------------------------------------------------------------------------
 
 VictoryMode:
-    JSR VictoryModeSubroutines  ; run victory mode subroutines
+    JSR sub_victory_mode_subroutines  ; run victory mode subroutines
     LDA ram_oper_mode_task  ; get current task of victory mode
     BEQ AutoPlayer  ; if on bridge collapse, skip enemy processing
     LDX #$00
     STX ram_object_offset  ; otherwise reset enemy object offset
-    JSR EnemiesAndLoopsCore  ; and run enemy code
+    JSR sub_enemies_and_loops_core  ; and run enemy code
 AutoPlayer:
-    JSR RelativePlayerPosition  ; get player's relative coordinates
-    JMP PlayerGfxHandler  ; draw the player, then leave
+    JSR sub_relative_player_position  ; get player's relative coordinates
+    JMP sub_player_gfx_handler  ; draw the player, then leave
 
-VictoryModeSubroutines:
+sub_victory_mode_subroutines:
     LDA ram_oper_mode_task
     JSR sub_dispatch_inline_handler
 
@@ -220,7 +220,7 @@ PerformWalk:
     INY  ; note Y will be used to walk the player
 DontWalk:
     TYA  ; put contents of Y in A and
-    JSR AutoControlPlayer  ; use A to move player to the right or not
+    JSR sub_auto_control_player  ; use A to move player to the right or not
     LDA ram_screen_left_page_loc  ; check page location of left side of screen
     CMP ram_destination_page_loc  ; against set value here
     BEQ ExitVWalk  ; branch if equal to change modes if necessary
@@ -231,8 +231,8 @@ DontWalk:
     LDA #$01  ; set 1 pixel per frame
     ADC #$00  ; add carry from previous addition
     TAY  ; use as scroll amount
-    JSR ScrollScreen  ; do sub to scroll the screen
-    JSR UpdScrollVar  ; do another sub to update screen and scroll variables
+    JSR sub_scroll_screen  ; do sub to scroll the screen
+    JSR sub_upd_scroll_var  ; do another sub to update screen and scroll variables
     INC ram_victory_walk_control  ; increment value to stay in this routine
 ExitVWalk:
     LDA ram_victory_walk_control  ; load value set here
@@ -316,7 +316,7 @@ PlayerEndWorld:
     STA ram_level_number  ; and level number control to start at area 1
     STA ram_oper_mode_task  ; initialize secondary mode of operation
     INC ram_world_number  ; increment world number to move onto the next world
-    JSR LoadAreaPointer  ; get area address offset for the next area
+    JSR sub_load_area_pointer  ; get area address offset for the next area
     INC ram_fetch_new_game_timer_flag  ; set flag to load game timer from header
     LDA #con_mode_game
     STA ram_oper_mode  ; set mode of operation to game mode
@@ -331,7 +331,7 @@ EndChkBButton:
     STA ram_world_select_enable_flag
     LDA #$ff  ; remove onscreen player's lives
     STA ram_numberof_lives
-    JSR TerminateGame  ; do sub to continue other player or end game
+    JSR sub_terminate_game  ; do sub to continue other player or end game
 EndExitTwo:
     RTS  ; leave
 
@@ -360,7 +360,7 @@ ScoreUpdateData:
     .byte $41, $42, $44, $45, $48
     .byte $31, $32, $34, $35, $38, $00
 
-FloateyNumbersRoutine:
+sub_floatey_numbers_routine:
     LDA ram_floatey_num_control,x  ; load control for floatey number
     BEQ EndExitOne  ; if zero, branch to leave
     CMP #$0b  ; if less than $0b, branch
@@ -392,7 +392,7 @@ LoadNumTiles:
     LDA ScoreUpdateData,y  ; load again and this time
     AND #%00001111  ; mask out the high nybble
     STA ram_digit_modifier,x  ; store as amount to add to the digit
-    JSR AddToScore  ; update the score accordingly
+    JSR sub_add_to_score  ; update the score accordingly
 ChkTallEnemy:
     LDY ram_enemy_spr_data_offset,x  ; get OAM data offset for enemy object
     LDA ram_enemy_id,x  ; get enemy object identifier
@@ -424,7 +424,7 @@ FloateyPart:
 SetupNumSpr:
     LDA ram_floatey_num_y_pos,x  ; get vertical coordinate
     SBC #$08  ; subtract eight and dump into the
-    JSR DumpTwoSpr  ; left and right sprite's Y coordinates
+    JSR sub_dump_two_spr  ; left and right sprite's Y coordinates
     LDA ram_floatey_num_x_pos,x  ; get horizontal coordinate
     STA ram_sprite_x_position,y  ; store into X coordinate of left sprite
     CLC

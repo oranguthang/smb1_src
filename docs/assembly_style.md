@@ -60,7 +60,7 @@ VBlank1:
     BPL VBlank1
 
 ColdBoot:
-    JSR InitializeMemory  ; Clear memory using the pointer in Y
+    JSR sub_initialize_memory  ; Clear memory using the pointer in Y
 ```
 
 ## Tooling

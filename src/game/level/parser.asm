@@ -1,6 +1,6 @@
 ; -------------------------------------------------------------------------------------
 
-AreaParserTaskHandler:
+sub_area_parser_task_handler:
     LDY ram_area_parser_task_num  ; check number of tasks here
     BNE DoAPTasks  ; if already set, go ahead
     LDY #$08
@@ -8,14 +8,14 @@ AreaParserTaskHandler:
 DoAPTasks:
     DEY
     TYA
-    JSR AreaParserTasks
+    JSR sub_area_parser_tasks
     DEC ram_area_parser_task_num  ; if all tasks not complete do not
     BNE SkipATRender  ; render attribute table yet
-    JSR RenderAttributeTables
+    JSR sub_render_attribute_tables
 SkipATRender:
     RTS
 
-AreaParserTasks:
+sub_area_parser_tasks:
     JSR sub_dispatch_inline_handler
 
     .word IncrementColumnPos
@@ -125,7 +125,7 @@ TerrainRenderBits:
 AreaParserCore:
     LDA ram_backloading_flag  ; check to see if we are starting right of start
     BEQ RenderSceneryTerrain  ; if not, go ahead and render background, foreground and terrain
-    JSR ProcessAreaData  ; otherwise skip ahead and load level data
+    JSR sub_process_area_data  ; otherwise skip ahead and load level data
 
 RenderSceneryTerrain:
     LDX #$0c
@@ -249,9 +249,9 @@ EndUChk:
     LDY $01
     BNE TerrLoop  ; unconditional branch, use Y to load next byte
 RendBBuf:
-    JSR ProcessAreaData  ; do the area data loading routine now
+    JSR sub_process_area_data  ; do the area data loading routine now
     LDA ram_block_buffer_column_pos
-    JSR GetBlockBufferAddr  ; get block buffer address from where we're at
+    JSR sub_get_block_buffer_addr  ; get block buffer address from where we're at
     LDX #$00
     LDY #$00  ; init index regs and start at beginning of smaller buffer
 ChkMTLow:
@@ -287,7 +287,7 @@ BlockBuffLowBounds:
 ; $00 - used to store area object identifier
 ; $07 - used as adder to find proper area object code
 
-ProcessAreaData:
+sub_process_area_data:
     LDX #$02  ; start at the end of area object buffer
 ProcADLoop:
     STX ram_object_offset
@@ -336,12 +336,12 @@ CheckRear:
     CMP ram_current_page_loc  ; behind current page of renderer
     BCC SetBehind  ; if so branch
 RdyDecode:
-    JSR DecodeAreaData  ; do sub and do not turn on flag
+    JSR sub_decode_area_data  ; do sub and do not turn on flag
     JMP ChkLength
 SetBehind:
     INC ram_behind_area_parser_flag  ; turn on flag if object is behind renderer
 NextAObj:
-    JSR IncAreaObjOffset  ; increment buffer offset and move on
+    JSR sub_inc_area_obj_offset  ; increment buffer offset and move on
 ChkLength:
     LDX ram_object_offset  ; get buffer offset
     LDA ram_area_object_length,x  ; check object length for anything stored here
@@ -351,20 +351,20 @@ ProcLoopb:
     DEX  ; decrement buffer offset
     BPL ProcADLoop  ; and loopback unless exceeded buffer
     LDA ram_behind_area_parser_flag  ; check for flag set if objects were behind renderer
-    BNE ProcessAreaData  ; branch if true to load more level data, otherwise
+    BNE sub_process_area_data  ; branch if true to load more level data, otherwise
     LDA ram_backloading_flag  ; check for flag set if starting right of page $00
-    BNE ProcessAreaData  ; branch if true to load more level data, otherwise leave
+    BNE sub_process_area_data  ; branch if true to load more level data, otherwise leave
 EndAParse:
     RTS
 
-IncAreaObjOffset:
+sub_inc_area_obj_offset:
     INC ram_area_data_offset  ; increment offset of level pointer
     INC ram_area_data_offset
     LDA #$00  ; reset page select
     STA ram_area_object_page_sel
     RTS
 
-DecodeAreaData:
+sub_decode_area_data:
     LDA ram_area_object_length,x  ; check current buffer flag
     BMI Chk1stB
     LDY ram_area_obj_offset_buffer,x  ; if not, get offset from buffer
@@ -477,7 +477,7 @@ BackColC:
 StrAObj:
     LDA ram_area_data_offset  ; if so, load area obj offset and store in buffer
     STA ram_area_obj_offset_buffer,x
-    JSR IncAreaObjOffset  ; do sub to increment to next object data
+    JSR sub_inc_area_obj_offset  ; do sub to increment to next object data
 RunAObj:
     LDA $00  ; get stored value and add offset to it
     CLC  ; then use the jump engine with current contents of A

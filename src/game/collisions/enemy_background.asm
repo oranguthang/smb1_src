@@ -7,11 +7,11 @@ EnemyBGCStateData:
 EnemyBGCXSpdData:
     .byte $10, $f0
 
-EnemyToBGCollisionDet:
+sub_enemy_to_bg_collision_det:
     LDA ram_enemy_state,x  ; check enemy state for d6 set
     AND #%00100000
     BNE ExEBG  ; if set, branch to leave
-    JSR SubtEnemyYPos  ; otherwise, do a subroutine here
+    JSR sub_subt_enemy_y_pos  ; otherwise, do a subroutine here
     BCC ExEBG  ; if enemy vertical coord + 62 < 68, branch to leave
     LDY ram_enemy_id,x
     CPY #con_spiny  ; if enemy object is not spiny, branch elsewhere
@@ -23,7 +23,7 @@ EnemyToBGCollisionDet:
 DoIDCheckBGColl:
     CPY #con_green_paratroopa_jump  ; check for some other enemy object
     BNE HBChk  ; branch if not found
-    JMP EnemyJump  ; otherwise jump elsewhere
+    JMP sub_enemy_jump  ; otherwise jump elsewhere
 HBChk:
     CPY #con_hammer_bro  ; check for hammer bro
     BNE CInvu  ; branch if not found
@@ -36,7 +36,7 @@ CInvu:
     CPY #$07  ; if enemy object =>$07, branch to leave
     BCS ExEBGChk
 YesIn:
-    JSR ChkUnderEnemy  ; if enemy object < $07, or = $12 or $2e, do this sub
+    JSR sub_chk_under_enemy  ; if enemy object < $07, or = $12 or $2e, do this sub
     BNE HandleEToBGCollision  ; if block underneath enemy, branch
 
 NoEToBGCollision:
@@ -46,7 +46,7 @@ NoEToBGCollision:
 ; $02 - vertical coordinate from block buffer routine
 
 HandleEToBGCollision:
-    JSR ChkForNonSolids  ; if something is underneath enemy, find out what
+    JSR sub_chk_for_non_solids  ; if something is underneath enemy, find out what
     BEQ NoEToBGCollision  ; if blank $26, coins, or hidden blocks, jump, enemy falls through
     CMP #$23
     BNE LandEnemyProperly  ; check for blank metatile $23 and branch if not found
@@ -55,28 +55,28 @@ HandleEToBGCollision:
     STA ($06),y  ; trigger this routine accidentally again
     LDA ram_enemy_id,x
     CMP #$15  ; if enemy object => $15, branch ahead
-    BCS ChkToStunEnemies
+    BCS sub_chk_to_stun_enemies
     CMP #con_goomba  ; if enemy object not goomba, branch ahead of this routine
     BNE GiveOEPoints
-    JSR KillEnemyAboveBlock  ; if enemy object IS goomba, do this sub
+    JSR sub_kill_enemy_above_block  ; if enemy object IS goomba, do this sub
 
 GiveOEPoints:
     LDA #$01  ; award 100 points for hitting block beneath enemy
-    JSR SetupFloateyNumber
+    JSR sub_setup_floatey_number
 
-ChkToStunEnemies:
+sub_chk_to_stun_enemies:
     CMP #$09  ; perform many comparisons on enemy object identifier
-    BCC SetStun
+    BCC sub_set_stun
     CMP #$11  ; if the enemy object identifier is equal to the values
-    BCS SetStun  ; $09, $0e, $0f or $10, it will be modified, and not
+    BCS sub_set_stun  ; $09, $0e, $0f or $10, it will be modified, and not
     CMP #$0a  ; modified if not any of those values, note that piranha plant will
     BCC Demote  ; always fail this test because A will still have vertical
     CMP #con_piranha_plant  ; coordinate from previous addition, also these comparisons
-    BCC SetStun  ; are only necessary if branching from $d7a1
+    BCC sub_set_stun  ; are only necessary if branching from $d7a1
 Demote:
     AND #%00000001  ; erase all but LSB, essentially turning enemy object
     STA ram_enemy_id,x  ; into green or red koopa troopa to demote them
-SetStun:
+sub_set_stun:
     LDA ram_enemy_state,x  ; load enemy state
     AND #%11110000  ; save high nybble
     ORA #%00000010
@@ -94,7 +94,7 @@ SetWYSpd:
 SetNotW:
     STA ram_enemy_y_speed,x  ; set vertical speed now
     LDY #$01
-    JSR PlayerEnemyDiff  ; get horizontal difference between player and enemy object
+    JSR sub_player_enemy_diff  ; get horizontal difference between player and enemy object
     BPL ChkBBill  ; branch if enemy is to the right of player
     INY  ; increment Y if not
 ChkBBill:
@@ -148,7 +148,7 @@ SetForStn:
     STA ram_enemy_interval_timer,x  ; set timer here
     LDA #$03  ; set state here, apparently used to render
     STA ram_enemy_state,x  ; upside-down koopas and buzzy beetles
-    JSR EnemyLanding  ; then land it properly
+    JSR sub_enemy_landing  ; then land it properly
 ExSteChk:
     RTS  ; then leave
 
@@ -167,17 +167,17 @@ ProcEnemyDirection:
     BEQ LandEnemyInitState  ; trying to face the player
 InvtD:
     LDY #$01  ; load 1 for enemy to face the left (inverted here)
-    JSR PlayerEnemyDiff  ; get horizontal difference between player and enemy
+    JSR sub_player_enemy_diff  ; get horizontal difference between player and enemy
     BPL CNwCDir  ; if enemy to the right of player, branch
     INY  ; if to the left, increment by one for enemy to face right (inverted)
 CNwCDir:
     TYA
     CMP ram_enemy_moving_dir,x  ; compare direction in A with current direction in memory
     BNE LandEnemyInitState
-    JSR ChkForBump_HammerBroJ  ; if equal, not facing in correct dir, do sub to turn around
+    JSR sub_chk_for_bump_hammer_bro_j  ; if equal, not facing in correct dir, do sub to turn around
 
 LandEnemyInitState:
-    JSR EnemyLanding  ; land enemy properly
+    JSR sub_enemy_landing  ; land enemy properly
     LDA ram_enemy_state,x
     AND #%10000000  ; if d7 of enemy state is set, branch
     BNE NMovShellFallBit
@@ -198,7 +198,7 @@ ChkForRedKoopa:
     CMP #con_red_koopa
     BNE Chk2MSBSt  ; branch if not found
     LDA ram_enemy_state,x
-    BEQ ChkForBump_HammerBroJ  ; if enemy found and in normal state, branch
+    BEQ sub_chk_for_bump_hammer_bro_j  ; if enemy found and in normal state, branch
 Chk2MSBSt:
     LDA ram_enemy_state,x  ; save enemy state into Y
     TAY
@@ -228,10 +228,10 @@ SdeCLoop:
     CMP ram_enemy_moving_dir,x  ; compare value against moving direction
     BNE NextSdeC  ; branch if different and do not seek block there
     LDA #$01  ; set flag in A for save horizontal coordinate
-    JSR BlockBufferChk_Enemy  ; find block to left or right of enemy object
+    JSR sub_block_buffer_chk_enemy  ; find block to left or right of enemy object
     BEQ NextSdeC  ; if nothing found, branch
-    JSR ChkForNonSolids  ; check for non-solid blocks
-    BNE ChkForBump_HammerBroJ  ; branch if not found
+    JSR sub_chk_for_non_solids  ; check for non-solid blocks
+    BNE sub_chk_for_bump_hammer_bro_j  ; branch if not found
 NextSdeC:
     DEC $eb  ; move to the next direction
     INY
@@ -240,7 +240,7 @@ NextSdeC:
 ExESdeC:
     RTS
 
-ChkForBump_HammerBroJ:
+sub_chk_for_bump_hammer_bro_j:
     CPX #$05  ; check if we're on the special use slot
     BEQ NoBump  ; and if so, branch ahead and do not play sound
     LDA ram_enemy_state,x  ; if enemy state d7 not set, branch
@@ -263,7 +263,7 @@ InvEnemyDir:
 ; --------------------------------
 ; $00 - used to hold horizontal difference between player and enemy
 
-PlayerEnemyDiff:
+sub_player_enemy_diff:
     LDA ram_enemy_x_position,x  ; get distance between enemy object's
     SEC  ; horizontal coordinate and the player's
     SBC ram_player_x_position  ; horizontal coordinate
@@ -274,34 +274,34 @@ PlayerEnemyDiff:
 
 ; --------------------------------
 
-EnemyLanding:
-    JSR InitVStf  ; do something here to vertical speed and something else
+sub_enemy_landing:
+    JSR sub_init_v_stf  ; do something here to vertical speed and something else
     LDA ram_enemy_y_position,x
     AND #%11110000  ; save high nybble of vertical coordinate, and
     ORA #%00001000  ; set d3, then store, probably used to set enemy object
     STA ram_enemy_y_position,x  ; neatly on whatever it's landing on
     RTS
 
-SubtEnemyYPos:
+sub_subt_enemy_y_pos:
     LDA ram_enemy_y_position,x  ; add 62 pixels to enemy object's
     CLC  ; vertical coordinate
     ADC #$3e
     CMP #$44  ; compare against a certain range
     RTS  ; and leave with flags set for conditional branch
 
-EnemyJump:
-    JSR SubtEnemyYPos  ; do a sub here
+sub_enemy_jump:
+    JSR sub_subt_enemy_y_pos  ; do a sub here
     BCC DoSide  ; if enemy vertical coord + 62 < 68, branch to leave
     LDA ram_enemy_y_speed,x
     CLC  ; add two to vertical speed
     ADC #$02
     CMP #$03  ; if green paratroopa not falling, branch ahead
     BCC DoSide
-    JSR ChkUnderEnemy  ; otherwise, check to see if green paratroopa is
+    JSR sub_chk_under_enemy  ; otherwise, check to see if green paratroopa is
     BEQ DoSide  ; standing on anything, then branch to same place if not
-    JSR ChkForNonSolids  ; check for non-solid blocks
+    JSR sub_chk_for_non_solids  ; check for non-solid blocks
     BEQ DoSide  ; branch if found
-    JSR EnemyLanding  ; change vertical coordinate and speed
+    JSR sub_enemy_landing  ; change vertical coordinate and speed
     LDA #$fd
     STA ram_enemy_y_speed,x  ; make the paratroopa jump again
 DoSide:
@@ -310,13 +310,13 @@ DoSide:
 ; --------------------------------
 
 HammerBroBGColl:
-    JSR ChkUnderEnemy  ; check to see if hammer bro is standing on anything
+    JSR sub_chk_under_enemy  ; check to see if hammer bro is standing on anything
     BEQ NoUnderHammerBro
     CMP #$23  ; check for blank metatile $23 and branch if not found
     BNE UnderHammerBro
 
-KillEnemyAboveBlock:
-    JSR ShellOrBlockDefeat  ; do this sub to kill enemy
+sub_kill_enemy_above_block:
+    JSR sub_shell_or_block_defeat  ; do this sub to kill enemy
     LDA #$fc  ; alter vertical speed of enemy and leave
     STA ram_enemy_y_speed,x
     RTS
@@ -327,7 +327,7 @@ UnderHammerBro:
     LDA ram_enemy_state,x
     AND #%10001000  ; save d7 and d3 from enemy state, nullify other bits
     STA ram_enemy_state,x  ; and store
-    JSR EnemyLanding  ; modify vertical coordinate, speed and something else
+    JSR sub_enemy_landing  ; modify vertical coordinate, speed and something else
     JMP DoEnemySideCheck  ; then check for horizontal blockage and leave
 
 NoUnderHammerBro:
@@ -336,12 +336,12 @@ NoUnderHammerBro:
     STA ram_enemy_state,x
     RTS
 
-ChkUnderEnemy:
+sub_chk_under_enemy:
     LDA #$00  ; set flag in A for save vertical coordinate
     LDY #$15  ; set Y to check the bottom middle (8,18) of enemy object
-    JMP BlockBufferChk_Enemy  ; hop to it!
+    JMP sub_block_buffer_chk_enemy  ; hop to it!
 
-ChkForNonSolids:
+sub_chk_for_non_solids:
     CMP #$26  ; blank metatile used for vines?
     BEQ NSFnd
     CMP #$c2  ; regular coin?
@@ -356,13 +356,13 @@ NSFnd:
 
 ; -------------------------------------------------------------------------------------
 
-FireballBGCollision:
+sub_fireball_bg_collision:
     LDA ram_fireball_y_position,x  ; check fireball's vertical coordinate
     CMP #$18
     BCC ClearBounceFlag  ; if within the status bar area of the screen, branch ahead
-    JSR BlockBufferChk_FBall  ; do fireball to background collision detection on bottom of it
+    JSR sub_block_buffer_chk_f_ball  ; do fireball to background collision detection on bottom of it
     BEQ ClearBounceFlag  ; if nothing underneath fireball, branch
-    JSR ChkForNonSolids  ; check for non-solid metatiles
+    JSR sub_chk_for_non_solids  ; check for non-solid metatiles
     BEQ ClearBounceFlag  ; branch if any found
     LDA ram_fireball_y_speed,x  ; if fireball's vertical speed set to move upwards,
     BMI InitFireballExplode  ; branch to set exploding bit in fireball's state

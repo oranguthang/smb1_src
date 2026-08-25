@@ -1,6 +1,6 @@
 ; -------------------------------------------------------------------------------------
 
-EnemiesAndLoopsCore:
+sub_enemies_and_loops_core:
     LDA ram_enemy_flag,x  ; check data here for MSB set
     PHA  ; save in stack
     ASL
@@ -36,7 +36,7 @@ LoopCmdPageNumber:
 LoopCmdYPosition:
     .byte $40, $b0, $b0, $80, $40, $40, $80, $40, $f0, $f0, $f0
 
-ExecGameLoopback:
+sub_exec_game_loopback:
     LDA ram_player_page_loc  ; send player back four pages
     SEC
     SBC #$04
@@ -105,8 +105,8 @@ WrongChk:
     CMP #con_world7  ; incorrect vertical position or not on solid ground)
     BEQ IncMLoop
 DoLpBack:
-    JSR ExecGameLoopback  ; if player is not in right place, loop back
-    JSR KillAllEnemies
+    JSR sub_exec_game_loopback  ; if player is not in right place, loop back
+    JSR sub_kill_all_enemies
 InitMLp:
     LDA #$00  ; initialize counters used for multi-part loop commands
     STA ram_multi_loop_pass_cntr
@@ -126,7 +126,7 @@ ChkEnemyFrenzy:
     LDA #$00
     STA ram_enemy_state,x  ; initialize state and frenzy queue
     STA ram_enemy_frenzy_queue
-    JMP InitEnemyObject  ; and then jump to deal with this enemy
+    JMP sub_init_enemy_object  ; and then jump to deal with this enemy
 
 ; --------------------------------
 ; $06 - used to hold page location of extended right boundary
@@ -245,7 +245,7 @@ StrID:
     STA ram_enemy_id,x  ; store enemy object number into buffer
     LDA #$01
     STA ram_enemy_flag,x  ; set flag for enemy in buffer
-    JSR InitEnemyObject
+    JSR sub_init_enemy_object
     LDA ram_enemy_flag,x  ; check to see if flag is set
     BNE Inc2B  ; if not, leave, otherwise branch
     RTS
@@ -260,10 +260,10 @@ CheckFrenzyBuffer:
 StrFre:
     STA ram_enemy_id,x  ; store contents of frenzy buffer into enemy identifier value
 
-InitEnemyObject:
+sub_init_enemy_object:
     LDA #$00  ; initialize enemy state
     STA ram_enemy_state,x
-    JSR CheckpointEnemyID  ; jump ahead to run jump engine and subroutines
+    JSR sub_checkpoint_enemy_id  ; jump ahead to run jump engine and subroutines
 ExEPar:
     RTS  ; then leave
 
@@ -307,7 +307,7 @@ Inc2B:
     LDX ram_object_offset  ; reload current offset in enemy buffers
     RTS  ; and leave
 
-CheckpointEnemyID:
+sub_checkpoint_enemy_id:
     LDA ram_enemy_id,x
     CMP #$15  ; check enemy object identifier for $15 or greater
     BCS InitEnemyRoutines  ; and branch straight to the jump engine if found
@@ -324,9 +324,9 @@ InitEnemyRoutines:
 
 ; jump engine table for newly loaded enemy objects
 
-    .word InitNormalEnemy  ; for objects $00-$0f
-    .word InitNormalEnemy
-    .word InitNormalEnemy
+    .word sub_init_normal_enemy  ; for objects $00-$0f
+    .word sub_init_normal_enemy
+    .word sub_init_normal_enemy
     .word InitRedKoopa
     .word NoInitCode
     .word InitHammerBro
@@ -336,12 +336,12 @@ InitEnemyRoutines:
     .word NoInitCode
     .word InitCheepCheep
     .word InitCheepCheep
-    .word InitPodoboo
-    .word InitPiranhaPlant
+    .word sub_init_podoboo
+    .word sub_init_piranha_plant
     .word InitJumpGPTroopa
     .word InitRedPTroopa
 
-    .word InitHorizFlySwimEnemy  ; for objects $10-$1f
+    .word sub_init_horiz_fly_swim_enemy  ; for objects $10-$1f
     .word InitLakitu
     .word InitEnemyFrenzy
     .word NoInitCode
@@ -369,11 +369,11 @@ InitEnemyRoutines:
     .word InitHoriPlatform
     .word InitDropPlatform
     .word InitHoriPlatform
-    .word PlatLiftUp
-    .word PlatLiftDown
+    .word sub_plat_lift_up
+    .word sub_plat_lift_down
     .word InitBowser
     .word PwrUpJmp  ; possibly dummy value
-    .word Setup_Vine
+    .word sub_setup_vine
 
     .word NoInitCode  ; for objects $30-$36
     .word NoInitCode
@@ -391,12 +391,12 @@ NoInitCode:
 ; --------------------------------
 
 InitGoomba:
-    JSR InitNormalEnemy  ; set appropriate horizontal speed
-    JMP SmallBBox  ; set $09 as bounding box control, set other values
+    JSR sub_init_normal_enemy  ; set appropriate horizontal speed
+    JMP sub_small_b_box  ; set $09 as bounding box control, set other values
 
 ; --------------------------------
 
-InitPodoboo:
+sub_init_podoboo:
     LDA #$02  ; set enemy position to below
     STA ram_enemy_y_high_pos,x  ; the bottom of the screen
     STA ram_enemy_y_position,x
@@ -404,7 +404,7 @@ InitPodoboo:
     STA ram_enemy_interval_timer,x  ; set timer for enemy
     LSR
     STA ram_enemy_state,x  ; initialize enemy state, then jump to use
-    JMP SmallBBox  ; $09 as bounding box size and set other things
+    JMP sub_small_b_box  ; $09 as bounding box size and set other things
 
 ; --------------------------------
 
@@ -418,7 +418,7 @@ InitRetainerObj:
 NormalXSpdData:
     .byte $f8, $f4
 
-InitNormalEnemy:
+sub_init_normal_enemy:
     LDY #$01  ; load offset of 1 by default
     LDA ram_primary_hard_mode  ; check for primary hard mode flag set
     BNE GetESpd
@@ -432,7 +432,7 @@ SetESpd:
 ; --------------------------------
 
 InitRedKoopa:
-    JSR InitNormalEnemy  ; load appropriate horizontal speed
+    JSR sub_init_normal_enemy  ; load appropriate horizontal speed
     LDA #$01  ; set enemy state for red koopa troopa $03
     STA ram_enemy_state,x
     RTS
@@ -454,7 +454,7 @@ InitHammerBro:
 
 ; --------------------------------
 
-InitHorizFlySwimEnemy:
+sub_init_horiz_fly_swim_enemy:
     LDA #$00  ; initialize horizontal speed
     JMP SetESpd
 
@@ -463,7 +463,7 @@ InitHorizFlySwimEnemy:
 InitBloober:
     LDA #$00  ; initialize horizontal speed
     STA ram_blooper_move_speed,x
-SmallBBox:
+sub_small_b_box:
     LDA #$09  ; set specific bounding box size control
     BNE SetBBox  ; unconditional branch
 
@@ -485,7 +485,7 @@ SetBBox:
     STA ram_enemy_bound_box_ctrl,x  ; set bounding box control here
     LDA #$02  ; set moving direction for left
     STA ram_enemy_moving_dir,x
-InitVStf:
+sub_init_v_stf:
     LDA #$00  ; initialize vertical speed
     STA ram_enemy_y_speed,x  ; and movement force
     STA ram_enemy_y_move_force,x
@@ -503,7 +503,7 @@ InitBulletBill:
 ; --------------------------------
 
 InitCheepCheep:
-    JSR SmallBBox  ; set vertical bounding box, speed, init others
+    JSR sub_small_b_box  ; set vertical bounding box, speed, init others
     LDA ram_pseudo_random_bit_reg,x  ; check one portion of LSFR
     AND #%00010000  ; get d4 from it
     STA ram_cheep_cheep_move_m_flag,x  ; save as movement flag of some sort
@@ -517,14 +517,14 @@ InitLakitu:
     LDA ram_enemy_frenzy_buffer  ; check to see if an enemy is already in
     BNE KillLakitu  ; the frenzy buffer, and branch to kill lakitu if so
 
-SetupLakitu:
+sub_setup_lakitu:
     LDA #$00  ; erase counter for lakitu's reappearance
     STA ram_lakitu_reappear_timer
-    JSR InitHorizFlySwimEnemy  ; set $03 as bounding box, set other attributes
+    JSR sub_init_horiz_fly_swim_enemy  ; set $03 as bounding box, set other attributes
     JMP TallBBox2  ; set $03 as bounding box again (not necessary) and leave
 
 KillLakitu:
-    JMP EraseEnemyObject
+    JMP sub_erase_enemy_object
 
 ; --------------------------------
 ; $01-$03 - used to hold pseudorandom difference adjusters
@@ -564,9 +564,9 @@ CreateL:
     STA ram_enemy_state,x
     LDA #con_lakitu  ; create lakitu enemy object
     STA ram_enemy_id,x
-    JSR SetupLakitu  ; do a sub to set up lakitu
+    JSR sub_setup_lakitu  ; do a sub to set up lakitu
     LDA #$20
-    JSR PutAtRightExtent  ; finish setting up lakitu
+    JSR sub_put_at_right_extent  ; finish setting up lakitu
 RetEOfs:
     LDX ram_object_offset  ; get enemy object buffer offset again and leave
 ExLSHand:
@@ -604,7 +604,7 @@ DifLoop:
     DEX  ; decrement X for each one
     BPL DifLoop  ; loop until all three are written
     LDX ram_object_offset  ; get enemy object buffer offset
-    JSR PlayerLakituDiff  ; move enemy, change direction, get value - difference
+    JSR sub_player_lakitu_diff  ; move enemy, change direction, get value - difference
     LDY ram_player_x_speed  ; check player's horizontal speed
     CPY #$08
     BCS SetSpSpd  ; if moving faster than a certain amount, branch elsewhere
@@ -619,7 +619,7 @@ DifLoop:
 UsePosv:
     TYA  ; put value from A in Y back to A (they will be lost anyway)
 SetSpSpd:
-    JSR SmallBBox  ; set bounding box control, init attributes, lose contents of A
+    JSR sub_small_b_box  ; set bounding box control, init attributes, lose contents of A
     LDY #$02
     STA ram_enemy_x_speed,x  ; set horizontal speed to zero because previous contents
     CMP #$00  ; of A were lost...branch here will never be taken for

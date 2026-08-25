@@ -109,7 +109,7 @@ ExitDrawM:
 ; $00 - temp attribute table address high (big endian order this time!)
 ; $01 - temp attribute table address low
 
-RenderAttributeTables:
+sub_render_attribute_tables:
     LDA ram_current_nt_addr_low  ; get low byte of next name table address
     AND #%00011111  ; to be written to, mask out all but 5 LSB,
     SEC  ; subtract four
@@ -160,7 +160,7 @@ SetVRAMCtrl:
 
 ; -------------------------------------------------------------------------------------
 
-; $00 - used as temporary counter in ColorRotation
+; $00 - used as temporary counter in sub_color_rotation
 
 ColorRotatePalette:
     .byte $27, $27, $27, $17, $07, $17
@@ -175,7 +175,7 @@ Palette3Data:
     .byte $0f, $07, $17, $1c
     .byte $0f, $07, $17, $00
 
-ColorRotation:
+sub_color_rotation:
     LDA ram_frame_counter  ; get frame counter
     AND #$07  ; mask out all but three LSB
     BNE ExitColorRot  ; branch if not set to zero to do this every eighth frame
@@ -236,28 +236,28 @@ BlockGfxData:
     .byte $24, $24, $24, $24
     .byte $26, $26, $26, $26
 
-RemoveCoin_Axe:
+sub_remove_coin_axe:
     LDY #$41  ; set low byte so offset points to $0341
     LDA #$03  ; load offset for default blank metatile
     LDX ram_area_type  ; check area type
     BNE WriteBlankMT  ; if not water type, use offset
     LDA #$04  ; otherwise load offset for blank metatile used in water
 WriteBlankMT:
-    JSR PutBlockMetatile  ; do a sub to write blank metatile to vram buffer
+    JSR sub_put_block_metatile  ; do a sub to write blank metatile to vram buffer
     LDA #$06
     STA ram_vram_buffer_addr_ctrl  ; set vram address controller to $0341 and leave
     RTS
 
-ReplaceBlockMetatile:
-    JSR WriteBlockMetatile  ; write metatile to vram buffer to replace block object
+sub_replace_block_metatile:
+    JSR sub_write_block_metatile  ; write metatile to vram buffer to replace block object
     INC ram_block_residual_counter  ; increment unused counter (residual code)
     DEC ram_block_rep_flag,x  ; decrement flag (residual code)
     RTS  ; leave
 
-DestroyBlockMetatile:
+sub_destroy_block_metatile:
     LDA #$00  ; force blank metatile if branched/jumped to this point
 
-WriteBlockMetatile:
+sub_write_block_metatile:
     LDY #$03  ; load offset for blank metatile
     CMP #$00  ; check contents of A for blank metatile
     BEQ UseBOffset  ; branch if found (unconditional if branched from 8a6b)
@@ -276,15 +276,15 @@ UseBOffset:
     TYA  ; put Y in A
     LDY ram_vram_buffer1_offset  ; get vram buffer offset
     INY  ; move onto next byte
-    JSR PutBlockMetatile  ; get appropriate block data and write to vram buffer
-MoveVOffset:
+    JSR sub_put_block_metatile  ; get appropriate block data and write to vram buffer
+sub_move_v_offset:
     DEY  ; decrement vram buffer offset
     TYA  ; add 10 bytes to it
     CLC
     ADC #10
     JMP SetVRAMOffset  ; branch to store as new vram buffer offset
 
-PutBlockMetatile:
+sub_put_block_metatile:
     STX $00  ; store control bit from ram_spr_data_offset_ctrl
     STY $01  ; store vram buffer offset for next byte
     ASL
@@ -317,7 +317,7 @@ SaveHAdder:
     ADC $03  ; then add high byte of name table
     STA $05  ; store here
     LDY $01  ; get vram buffer offset to be used
-RemBridge:
+sub_rem_bridge:
     LDA BlockGfxData,x  ; write top left and top right
     STA ram_vram_buffer1+2,y  ; tile numbers into first spot
     LDA BlockGfxData+1,x

@@ -43,7 +43,7 @@ PlayerGraphicsTable:
 SwimKickTileNum:
     .byte $31, $46
 
-PlayerGfxHandler:
+sub_player_gfx_handler:
     LDA ram_injury_timer  ; if player's injured invincibility timer
     BEQ CntPl  ; not set, skip checkpoint and continue code
     LDA ram_frame_counter
@@ -56,11 +56,11 @@ CntPl:
     LDA ram_player_change_size_flag  ; if grow/shrink flag set
     BNE DoChangeSize  ; then branch to some other code
     LDY ram_swimming_flag  ; if swimming flag set, branch to
-    BEQ FindPlayerAction  ; different part, do not return
+    BEQ sub_find_player_action  ; different part, do not return
     LDA ram_player_state
     CMP #$00  ; if player status normal,
-    BEQ FindPlayerAction  ; branch and do not return
-    JSR FindPlayerAction  ; otherwise jump and return
+    BEQ sub_find_player_action  ; branch and do not return
+    JSR sub_find_player_action  ; otherwise jump and return
     LDA ram_frame_counter
     AND #%00000100  ; check frame counter for d2 set (8 frames every
     BNE ExPGH  ; eighth frame), and branch if set to leave
@@ -86,12 +86,12 @@ BigKTS:
 ExPGH:
     RTS  ; then leave
 
-FindPlayerAction:
-    JSR ProcessPlayerAction  ; find proper offset to graphics table by player's actions
+sub_find_player_action:
+    JSR sub_process_player_action  ; find proper offset to graphics table by player's actions
     JMP PlayerGfxProcessing  ; draw player, then process for fireball throwing
 
 DoChangeSize:
-    JSR HandleChangeSize  ; find proper offset to graphics table for grow/shrink
+    JSR sub_handle_change_size  ; find proper offset to graphics table for grow/shrink
     JMP PlayerGfxProcessing  ; draw player, then process for fireball throwing
 
 PlayerKilled:
@@ -101,8 +101,8 @@ PlayerKilled:
 PlayerGfxProcessing:
     STA ram_player_gfx_offset  ; store offset to graphics table here
     LDA #$04
-    JSR RenderPlayerSub  ; draw player based on offset loaded
-    JSR ChkForPlayerAttrib  ; set horizontal flip bits as necessary
+    JSR sub_render_player_sub  ; draw player based on offset loaded
+    JSR sub_chk_for_player_attrib  ; set horizontal flip bits as necessary
     LDA ram_fireball_throwing_timer
     BEQ PlayerOffscreenChk  ; if fireball throw timer not set, skip to the end
     LDY #$00  ; set value to initialize by default
@@ -121,7 +121,7 @@ PlayerGfxProcessing:
     DEY  ; otherwise set to update only three sprite rows
 SUpdR:
     TYA  ; save in A for use
-    JSR RenderPlayerSub  ; in sub, draw player object again
+    JSR sub_render_player_sub  ; in sub, draw player object again
 
 PlayerOffscreenChk:
     LDA ram_player_offscreen_bits  ; get player's offscreen bits
@@ -139,7 +139,7 @@ PROfsLoop:
     LDA #$f8  ; load offscreen Y coordinate just in case
     LSR $00  ; shift bit into carry
     BCC NPROffscr  ; if bit not set, skip, do not move sprites
-    JSR DumpTwoSpr  ; otherwise dump offscreen Y coordinate into sprite data
+    JSR sub_dump_two_spr  ; otherwise dump offscreen Y coordinate into sprite data
 NPROffscr:
     TYA
     SEC  ; subtract eight bytes to do
@@ -154,7 +154,7 @@ NPROffscr:
 IntermediatePlayerData:
     .byte $58, $01, $00, $60, $ff, $04
 
-DrawPlayer_Intermediate:
+sub_draw_player_intermediate:
     LDX #$05  ; store data into zero page memory
 PIntLoop:
     LDA IntermediatePlayerData,x  ; load data to display player as he always
@@ -163,7 +163,7 @@ PIntLoop:
     BPL PIntLoop  ; do this until all data is loaded
     LDX #$b8  ; load offset for small standing
     LDY #$04  ; load sprite data offset
-    JSR DrawPlayerLoop  ; draw player accordingly
+    JSR sub_draw_player_loop  ; draw player accordingly
     LDA ram_sprite_attributes+36  ; get empty sprite attributes
     ORA #%01000000  ; set horizontal flip bit for bottom-right sprite
     STA ram_sprite_attributes+32  ; store and leave
@@ -178,7 +178,7 @@ PIntLoop:
 ; $07 - number of rows to draw
 ; these also used in IntermediatePlayerData
 
-RenderPlayerSub:
+sub_render_player_sub:
     STA $07  ; store number of rows of sprites to draw
     LDA ram_player_rel_x_pos
     STA ram_player_pos_for_scroll  ; store player's relative horizontal position
@@ -192,16 +192,16 @@ RenderPlayerSub:
     LDX ram_player_gfx_offset  ; load graphics table offset
     LDY ram_player_spr_data_offset  ; get player's sprite data offset
 
-DrawPlayerLoop:
+sub_draw_player_loop:
     LDA PlayerGraphicsTable,x  ; load player's left side
     STA $00
     LDA PlayerGraphicsTable+1,x  ; now load right side
-    JSR DrawOneSpriteRow
+    JSR sub_draw_one_sprite_row
     DEC $07  ; decrement rows of sprites to draw
-    BNE DrawPlayerLoop  ; do this until all rows are drawn
+    BNE sub_draw_player_loop  ; do this until all rows are drawn
     RTS
 
-ProcessPlayerAction:
+sub_process_player_action:
     LDA ram_player_state  ; get player's state
     CMP #$03
     BEQ ActionClimbing  ; if climbing, branch here
@@ -234,7 +234,7 @@ ProcOnGroundActs:
     INY  ; otherwise increment to skid offset ($03)
 
 NonAnimatedActs:
-    JSR GetGfxOffsetAdder  ; do a sub here to get offset adder for graphics table
+    JSR sub_get_gfx_offset_adder  ; do a sub here to get offset adder for graphics table
     LDA #$00
     STA ram_player_anim_ctrl  ; initialize animation frame control
     LDA PlayerGfxTblOffsets,y  ; load offset to graphics table using size as offset
@@ -242,24 +242,24 @@ NonAnimatedActs:
 
 ActionFalling:
     LDY #$04  ; load offset for walking/running
-    JSR GetGfxOffsetAdder  ; get offset to graphics table
-    JMP GetCurrentAnimOffset  ; execute instructions for falling state
+    JSR sub_get_gfx_offset_adder  ; get offset to graphics table
+    JMP sub_get_current_anim_offset  ; execute instructions for falling state
 
 ActionWalkRun:
     LDY #$04  ; load offset for walking/running
-    JSR GetGfxOffsetAdder  ; get offset to graphics table
+    JSR sub_get_gfx_offset_adder  ; get offset to graphics table
     JMP FourFrameExtent  ; execute instructions for normal state
 
 ActionClimbing:
     LDY #$05  ; load offset for climbing
     LDA ram_player_y_speed  ; check player's vertical speed
     BEQ NonAnimatedActs  ; if no speed, branch, use offset as-is
-    JSR GetGfxOffsetAdder  ; otherwise get offset for graphics table
+    JSR sub_get_gfx_offset_adder  ; otherwise get offset for graphics table
     JMP ThreeFrameExtent  ; then skip ahead to more code
 
 ActionSwimming:
     LDY #$01  ; load offset for swimming
-    JSR GetGfxOffsetAdder
+    JSR sub_get_gfx_offset_adder
     LDA ram_jump_swim_timer  ; check jump/swim timer
     ORA ram_player_anim_ctrl  ; and animation frame control
     BNE FourFrameExtent  ; if any one of these set, branch ahead
@@ -267,7 +267,7 @@ ActionSwimming:
     ASL  ; check for A button pressed
     BCS FourFrameExtent  ; branch to same place if A button pressed
 
-GetCurrentAnimOffset:
+sub_get_current_anim_offset:
     LDA ram_player_anim_ctrl  ; get animation frame control
     JMP GetOffsetFromAnimCtrl  ; jump to get proper offset to graphics table
 
@@ -280,7 +280,7 @@ ThreeFrameExtent:
 
 AnimationControl:
     STA $00  ; store upper extent here
-    JSR GetCurrentAnimOffset  ; get proper offset to graphics table
+    JSR sub_get_current_anim_offset  ; get proper offset to graphics table
     PHA  ; save offset to stack
     LDA ram_player_anim_timer  ; load animation frame timer
     BNE ExAnimC  ; branch if not expired
@@ -298,7 +298,7 @@ ExAnimC:
     PLA  ; get offset to graphics table from stack and leave
     RTS
 
-GetGfxOffsetAdder:
+sub_get_gfx_offset_adder:
     LDA ram_player_size  ; get player's size
     BEQ SzOfs  ; if player big, use current offset as-is
     TYA  ; for big player
@@ -312,7 +312,7 @@ ChangeSizeOffsetAdder:
     .byte $00, $01, $00, $01, $00, $01, $02, $00, $01, $02
     .byte $02, $00, $02, $00, $02, $00, $02, $00, $02, $00
 
-HandleChangeSize:
+sub_handle_change_size:
     LDY ram_player_anim_ctrl  ; get animation frame control
     LDA ram_frame_counter
     AND #%00000011  ; get frame counter and execute this code every
@@ -350,7 +350,7 @@ ShrPlF:
     LDA PlayerGfxTblOffsets,y  ; get offset to graphics table based on offset loaded
     RTS  ; and leave
 
-ChkForPlayerAttrib:
+sub_chk_for_player_attrib:
     LDY ram_player_spr_data_offset  ; get sprite data offset
     LDA ram_game_engine_subroutine
     CMP #$0b  ; if executing specific game engine routine,

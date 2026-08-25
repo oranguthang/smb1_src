@@ -6,7 +6,7 @@
 PlayerBGUpperExtent:
     .byte $20, $10
 
-PlayerBGCollision:
+sub_player_bg_collision:
     LDA ram_disable_collision_det  ; if collision detection disabled flag set,
     BNE ExPBGCol  ; branch to leave
     LDA ram_game_engine_subroutine
@@ -59,22 +59,22 @@ HeadChk:
     LDA ram_player_y_position  ; get player's vertical coordinate
     CMP PlayerBGUpperExtent,x  ; compare with upper extent value based on offset
     BCC DoFootCheck  ; if player is too high, skip this part
-    JSR BlockBufferColli_Head  ; do player-to-bg collision detection on top of
+    JSR sub_block_buffer_colli_head  ; do player-to-bg collision detection on top of
     BEQ DoFootCheck  ; player, and branch if nothing above player's head
-    JSR CheckForCoinMTiles  ; check to see if player touched coin with their head
+    JSR sub_check_for_coin_m_tiles  ; check to see if player touched coin with their head
     BCS AwardTouchedCoin  ; if so, branch to some other part of code
     LDY ram_player_y_speed  ; check player's vertical speed
     BPL DoFootCheck  ; if player not moving upwards, branch elsewhere
     LDY $04  ; check lower nybble of vertical coordinate returned
     CPY #$04  ; from collision detection routine
     BCC DoFootCheck  ; if low nybble < 4, branch
-    JSR CheckForSolidMTiles  ; check to see what player's head bumped on
+    JSR sub_check_for_solid_m_tiles  ; check to see what player's head bumped on
     BCS SolidOrClimb  ; if player collided with solid metatile, branch
     LDY ram_area_type  ; otherwise check area type
     BEQ NYSpd  ; if water level, branch ahead
     LDY ram_block_bounce_timer  ; if block bounce timer not expired,
     BNE NYSpd  ; branch ahead, do not process collision
-    JSR PlayerHeadCollision  ; otherwise do a sub to process collision
+    JSR sub_player_head_collision  ; otherwise do a sub to process collision
     JMP DoFootCheck  ; jump ahead to skip these other parts here
 
 SolidOrClimb:
@@ -91,25 +91,25 @@ DoFootCheck:
     LDA ram_player_y_position
     CMP #$cf  ; check to see how low player is
     BCS DoPlayerSideCheck  ; if player is too far down on screen, skip all of this
-    JSR BlockBufferColli_Feet  ; do player-to-bg collision detection on bottom left of player
-    JSR CheckForCoinMTiles  ; check to see if player touched coin with their left foot
+    JSR sub_block_buffer_colli_feet  ; do player-to-bg collision detection on bottom left of player
+    JSR sub_check_for_coin_m_tiles  ; check to see if player touched coin with their left foot
     BCS AwardTouchedCoin  ; if so, branch to some other part of code
     PHA  ; save bottom left metatile to stack
-    JSR BlockBufferColli_Feet  ; do player-to-bg collision detection on bottom right of player
+    JSR sub_block_buffer_colli_feet  ; do player-to-bg collision detection on bottom right of player
     STA $00  ; save bottom right metatile here
     PLA
     STA $01  ; pull bottom left metatile and save here
     BNE ChkFootMTile  ; if anything here, skip this part
     LDA $00  ; otherwise check for anything in bottom right metatile
     BEQ DoPlayerSideCheck  ; and skip ahead if not
-    JSR CheckForCoinMTiles  ; check to see if player touched coin with their right foot
+    JSR sub_check_for_coin_m_tiles  ; check to see if player touched coin with their right foot
     BCC ChkFootMTile  ; if not, skip unconditional jump and continue code
 
 AwardTouchedCoin:
     JMP HandleCoinMetatile  ; follow the code to erase coin and award to player 1 coin
 
 ChkFootMTile:
-    JSR CheckForClimbMTiles  ; check to see if player landed on climbable metatiles
+    JSR sub_check_for_climb_m_tiles  ; check to see if player landed on climbable metatiles
     BCS DoPlayerSideCheck  ; if so, branch
     LDY ram_player_y_speed  ; check player's vertical speed
     BMI DoPlayerSideCheck  ; if player moving upwards, branch
@@ -117,7 +117,7 @@ ChkFootMTile:
     BNE ContChk  ; if player did not touch axe, skip ahead
     JMP HandleAxeMetatile  ; otherwise jump to set modes of operation
 ContChk:
-    JSR ChkInvisibleMTiles  ; do sub to check for hidden coin or 1-up blocks
+    JSR sub_chk_invisible_m_tiles  ; do sub to check for hidden coin or 1-up blocks
     BEQ DoPlayerSideCheck  ; if either found, branch
     LDY ram_jumpspring_anim_ctrl  ; if jumpspring animating right now,
     BNE InitSteP  ; branch ahead
@@ -126,13 +126,13 @@ ContChk:
     BCC LandPlyr  ; if lower nybble < 5, branch
     LDA ram_player_moving_dir
     STA $00  ; use player's moving direction as temp variable
-    JMP ImpedePlayerMove  ; jump to impede player's movement in that direction
+    JMP sub_impede_player_move  ; jump to impede player's movement in that direction
 LandPlyr:
-    JSR ChkForLandJumpSpring  ; do sub to check for jumpspring metatiles and deal with it
+    JSR sub_chk_for_land_jump_spring  ; do sub to check for jumpspring metatiles and deal with it
     LDA #$f0
     AND ram_player_y_position  ; mask out lower nybble of player's vertical position
     STA ram_player_y_position  ; and store as new vertical position to land player properly
-    JSR HandlePipeEntry  ; do sub to process potential pipe entry
+    JSR sub_handle_pipe_entry  ; do sub to process potential pipe entry
     LDA #$00
     STA ram_player_y_speed  ; initialize vertical speed and fractional
     STA ram_player_y_move_force  ; movement force to stop player's vertical movement
@@ -156,13 +156,13 @@ SideCheckLoop:
     BCC BHalf  ; if player is in status bar area, branch ahead to skip this part
     CMP #$e4
     BCS ExSCH  ; branch to leave if player is too far down
-    JSR BlockBufferColli_Side  ; do player-to-bg collision detection on one half of player
+    JSR sub_block_buffer_colli_side  ; do player-to-bg collision detection on one half of player
     BEQ BHalf  ; branch ahead if nothing found
     CMP #$1c  ; otherwise check for pipe metatiles
     BEQ BHalf  ; if collided with sideways pipe (top), branch ahead
     CMP #$6b
     BEQ BHalf  ; if collided with water pipe (top), branch ahead
-    JSR CheckForClimbMTiles  ; do sub to see if player bumped into anything climbable
+    JSR sub_check_for_climb_m_tiles  ; do sub to see if player bumped into anything climbable
     BCC CheckSideMTiles  ; if not, branch to alternate section of code
 BHalf:
     LDY $eb  ; load block adder offset
@@ -172,7 +172,7 @@ BHalf:
     BCC ExSCH  ; if too high, branch to leave
     CMP #$d0
     BCS ExSCH  ; if too low, branch to leave
-    JSR BlockBufferColli_Side  ; do player-to-bg collision detection on other half of player
+    JSR sub_block_buffer_colli_side  ; do player-to-bg collision detection on other half of player
     BNE CheckSideMTiles  ; if something found, branch
     DEC $00  ; otherwise decrement counter
     BNE SideCheckLoop  ; run code until both sides of player are checked
@@ -180,15 +180,15 @@ ExSCH:
     RTS  ; leave
 
 CheckSideMTiles:
-    JSR ChkInvisibleMTiles  ; check for hidden or coin 1-up blocks
+    JSR sub_chk_invisible_m_tiles  ; check for hidden or coin 1-up blocks
     BEQ ExCSM  ; branch to leave if either found
-    JSR CheckForClimbMTiles  ; check for climbable metatiles
+    JSR sub_check_for_climb_m_tiles  ; check for climbable metatiles
     BCC ContSChk  ; if not found, skip and continue with code
     JMP HandleClimbing  ; otherwise jump to handle climbing
 ContSChk:
-    JSR CheckForCoinMTiles  ; check to see if player touched coin
+    JSR sub_check_for_coin_m_tiles  ; check to see if player touched coin
     BCS HandleCoinMetatile  ; if so, execute code to erase coin and award to player 1 coin
-    JSR ChkJumpspringMetatiles  ; check for jumpspring metatiles
+    JSR sub_chk_jumpspring_metatiles  ; check for jumpspring metatiles
     BCC ChkPBtm  ; if not found, branch ahead to continue cude
     LDA ram_jumpspring_anim_ctrl  ; otherwise check jumpspring animation control
     BNE ExCSM  ; branch to leave if set
@@ -238,7 +238,7 @@ ChkGERtn:
 ; $06-$07 - block buffer address
 
 StopPlayerMove:
-    JSR ImpedePlayerMove  ; stop player's movement
+    JSR sub_impede_player_move  ; stop player's movement
 ExCSM:
     RTS  ; leave
 
@@ -246,9 +246,9 @@ AreaChangeTimerData:
     .byte $a0, $34
 
 HandleCoinMetatile:
-    JSR ErACM  ; do sub to erase coin metatile from block buffer
+    JSR sub_er_acm  ; do sub to erase coin metatile from block buffer
     INC ram_coin_tally_for1_ups  ; increment coin tally used for 1-up blocks
-    JMP GiveOneCoin  ; update coin amount and tally on the screen
+    JMP sub_give_one_coin  ; update coin amount and tally on the screen
 
 HandleAxeMetatile:
     LDA #$00
@@ -257,11 +257,11 @@ HandleAxeMetatile:
     STA ram_oper_mode  ; set primary mode to autoctrl mode
     LDA #$18
     STA ram_player_x_speed  ; set horizontal speed and continue to erase axe metatile
-ErACM:
+sub_er_acm:
     LDY $02  ; load vertical high nybble offset for block buffer
     LDA #$00  ; load blank metatile
     STA ($06),y  ; store to remove old contents from block buffer
-    JMP RemoveCoin_Axe  ; update the screen accordingly
+    JMP sub_remove_coin_axe  ; update the screen accordingly
 
 ; --------------------------------
 ; $02 - high nybble of vertical coordinate from block buffer
@@ -303,7 +303,7 @@ FlagpoleCollision:
     CMP #$04  ; check for flagpole slide routine running
     BEQ RunFR  ; if running, branch to end of flagpole code here
     LDA #con_bullet_bill_cannon_var  ; load identifier for bullet bills (cannon variant)
-    JSR KillEnemies  ; get rid of them
+    JSR sub_kill_enemies  ; get rid of them
     LDA #con_silence
     STA ram_event_music_queue  ; silence music
     LSR
@@ -367,7 +367,7 @@ ExPVne:
 
 ; --------------------------------
 
-ChkInvisibleMTiles:
+sub_chk_invisible_m_tiles:
     CMP #$5f  ; check for hidden coin block
     BEQ ExCInvT  ; branch to leave if found
     CMP #$60  ; check for hidden 1-up block
@@ -376,10 +376,10 @@ ExCInvT:
 
 ; --------------------------------
 ; $00-$01 - used to hold bottom right and bottom left metatiles (in that order)
-; $00 - used as flag by ImpedePlayerMove to restrict specific movement
+; $00 - used as flag by sub_impede_player_move to restrict specific movement
 
-ChkForLandJumpSpring:
-    JSR ChkJumpspringMetatiles  ; do sub to check if player landed on jumpspring
+sub_chk_for_land_jump_spring:
+    JSR sub_chk_jumpspring_metatiles  ; do sub to check if player landed on jumpspring
     BCC ExCJSp  ; if carry not set, jumpspring not found, therefore leave
     LDA #$70
     STA ram_vertical_force  ; otherwise set vertical movement force for player
@@ -392,7 +392,7 @@ ChkForLandJumpSpring:
 ExCJSp:
     RTS  ; and leave
 
-ChkJumpspringMetatiles:
+sub_chk_jumpspring_metatiles:
     CMP #$67  ; check for top jumpspring metatile
     BEQ JSFnd  ; branch to set carry if found
     CMP #$68  ; check for bottom jumpspring metatile
@@ -403,7 +403,7 @@ JSFnd:
 NoJSFnd:
     RTS  ; leave
 
-HandlePipeEntry:
+sub_handle_pipe_entry:
     LDA ram_up_down_buttons  ; check saved controller bits from earlier
     AND #%00000100  ; for pressing down
     BEQ ExPipeE  ; if not pressing down, branch to leave
@@ -453,7 +453,7 @@ GetWNum:
 ExPipeE:
     RTS  ; leave!!!
 
-ImpedePlayerMove:
+sub_impede_player_move:
     LDA #$00  ; initialize value here
     LDY ram_player_x_speed  ; get player's horizontal speed
     LDX $00  ; check value set earlier for
@@ -497,20 +497,20 @@ ExIPM:
 SolidMTileUpperExt:
     .byte $10, $61, $88, $c4
 
-CheckForSolidMTiles:
-    JSR GetMTileAttrib  ; find appropriate offset based on metatile's 2 MSB
+sub_check_for_solid_m_tiles:
+    JSR sub_get_m_tile_attrib  ; find appropriate offset based on metatile's 2 MSB
     CMP SolidMTileUpperExt,x  ; compare current metatile with solid metatiles
     RTS
 
 ClimbMTileUpperExt:
     .byte $24, $6d, $8a, $c6
 
-CheckForClimbMTiles:
-    JSR GetMTileAttrib  ; find appropriate offset based on metatile's 2 MSB
+sub_check_for_climb_m_tiles:
+    JSR sub_get_m_tile_attrib  ; find appropriate offset based on metatile's 2 MSB
     CMP ClimbMTileUpperExt,x  ; compare current metatile with climbable metatiles
     RTS
 
-CheckForCoinMTiles:
+sub_check_for_coin_m_tiles:
     CMP #$c2  ; check for regular coin
     BEQ CoinSd  ; branch if found
     CMP #$c3  ; check for underwater coin
@@ -522,7 +522,7 @@ CoinSd:
     STA ram_square2_sound_queue  ; load coin grab sound and leave
     RTS
 
-GetMTileAttrib:
+sub_get_m_tile_attrib:
     TAY  ; save metatile value into Y
     AND #%11000000  ; mask out all but 2 MSB
     ASL

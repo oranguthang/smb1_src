@@ -3,7 +3,7 @@
 ContinueMusic:
     JMP HandleSquare2Music  ; if we have music, start with square 2 channel
 
-MusicHandler:
+sub_music_handler:
     LDA ram_event_music_queue  ; check event music queue
     BNE LoadEventMusic
     LDA ram_area_music_queue  ; check area music queue
@@ -17,8 +17,8 @@ LoadEventMusic:
     STA ram_event_music_buffer  ; copy event music queue contents to buffer
     CMP #con_death_music  ; is it death music?
     BNE NoStopSfx  ; if not, jump elsewhere
-    JSR StopSquare1Sfx  ; stop sfx in square 1 and 2
-    JSR StopSquare2Sfx  ; but clear only square 1's sfx buffer
+    JSR sub_stop_square1_sfx  ; stop sfx in square 1 and 2
+    JSR sub_stop_square2_sfx  ; but clear only square 1's sfx buffer
 NoStopSfx:
     LDX ram_area_music_buffer
     STX ram_area_music_buffer_alt  ; save current area music buffer to be re-obtained later
@@ -34,7 +34,7 @@ NoStopSfx:
 LoadAreaMusic:
     CMP #$04  ; is it underground music?
     BNE NoStop1  ; no, do not stop square 1 sfx
-    JSR StopSquare1Sfx
+    JSR sub_stop_square1_sfx
 NoStop1:
     LDY #$10  ; start counter used only by ground level music
 GMLoopB:
@@ -129,7 +129,7 @@ VictoryMLoopBack:
     JMP LoadEventMusic
 
 Squ2LengthHandler:
-    JSR ProcessLengthData  ; store length of note
+    JSR sub_process_length_data  ; store length of note
     STA ram_squ2_note_len_buffer
     LDY ram_music_offset_square2  ; fetch another byte (MUST NOT BE LENGTH BYTE!)
     INC ram_music_offset_square2
@@ -138,12 +138,12 @@ Squ2LengthHandler:
 Squ2NoteHandler:
     LDX ram_square2_sound_buffer  ; is there a sound playing on this channel?
     BNE SkipFqL1
-    JSR SetFreq_Squ2  ; no, then play the note
+    JSR sub_set_freq_squ2  ; no, then play the note
     BEQ Rest  ; check to see if note is rest
-    JSR LoadControlRegs  ; if not, load control regs for square 2
+    JSR sub_load_control_regs  ; if not, load control regs for square 2
 Rest:
     STA ram_squ2_envelope_data_ctrl  ; save contents of A
-    JSR Dump_Sq2_Regs  ; dump X and Y into square 2 control regs
+    JSR sub_dump_sq2_regs  ; dump X and Y into square 2 control regs
 SkipFqL1:
     LDA ram_squ2_note_len_buffer  ; save length in square 2 note counter
     STA ram_squ2_note_len_counter
@@ -154,11 +154,11 @@ MiscSqu2MusicTasks:
     LDA ram_event_music_buffer  ; check for death music or d4 set on secondary buffer
     AND #%10010001  ; note that regs for death music or d4 are loaded by default
     BNE HandleSquare1Music
-    LDY ram_squ2_envelope_data_ctrl  ; check for contents saved from LoadControlRegs
+    LDY ram_squ2_envelope_data_ctrl  ; check for contents saved from sub_load_control_regs
     BEQ NoDecEnv1
     DEC ram_squ2_envelope_data_ctrl  ; decrement unless already zero
 NoDecEnv1:
-    JSR LoadEnvelopeData  ; do a load of envelope data to replace default
+    JSR sub_load_envelope_data  ; do a load of envelope data to replace default
     STA SND_SQUARE2_REG  ; based on offset set by first load unless playing
     LDX #$7f  ; death music or d4 set on secondary buffer
     STX SND_SQUARE2_REG+1
@@ -182,18 +182,18 @@ FetchSqu1MusicData:
     BNE FetchSqu1MusicData  ; unconditional branch
 
 Squ1NoteHandler:
-    JSR AlternateLengthHandler
+    JSR sub_alternate_length_handler
     STA ram_squ1_note_len_counter  ; save contents of A in square 1 note counter
     LDY ram_square1_sound_buffer  ; is there a sound playing on square 1?
     BNE HandleTriangleMusic
     TXA
     AND #%00111110  ; change saved data to appropriate note format
-    JSR SetFreq_Squ1  ; play the note
+    JSR sub_set_freq_squ1  ; play the note
     BEQ SkipCtrlL
-    JSR LoadControlRegs
+    JSR sub_load_control_regs
 SkipCtrlL:
     STA ram_squ1_envelope_data_ctrl  ; save envelope offset
-    JSR Dump_Squ1_Regs
+    JSR sub_dump_squ1_regs
 
 MiscSqu1MusicTasks:
     LDA ram_square1_sound_buffer  ; is there a sound playing on square 1?
@@ -205,7 +205,7 @@ MiscSqu1MusicTasks:
     BEQ NoDecEnv2
     DEC ram_squ1_envelope_data_ctrl  ; decrement unless already zero
 NoDecEnv2:
-    JSR LoadEnvelopeData  ; do a load of envelope data
+    JSR sub_load_envelope_data  ; do a load of envelope data
     STA SND_SQUARE1_REG  ; based on offset set by first load
 DeathMAltReg:
     LDA ram_alt_reg_content_flag  ; check for alternate control reg data
@@ -223,7 +223,7 @@ HandleTriangleMusic:
     LDA (ram_music_data),y
     BEQ LoadTriCtrlReg  ; if zero, skip all this and move on to noise
     BPL TriNoteHandler  ; if non-negative, data is note
-    JSR ProcessLengthData  ; otherwise, it is length data
+    JSR sub_process_length_data  ; otherwise, it is length data
     STA ram_tri_note_len_buffer  ; save contents of A
     LDA #$1f
     STA SND_TRIANGLE_REG  ; load some default data for triangle control reg
@@ -233,7 +233,7 @@ HandleTriangleMusic:
     BEQ LoadTriCtrlReg  ; check once more for nonzero data
 
 TriNoteHandler:
-    JSR SetFreq_Tri
+    JSR sub_set_freq_tri
     LDX ram_tri_note_len_buffer  ; save length in triangle note counter
     STX ram_tri_note_len_counter
     LDA ram_event_music_buffer
@@ -277,7 +277,7 @@ FetchNoiseBeatData:
     BNE FetchNoiseBeatData  ; unconditional branch
 
 NoiseBeatHandler:
-    JSR AlternateLengthHandler
+    JSR sub_alternate_length_handler
     STA ram_noise_beat_len_counter  ; store length in noise beat counter
     TXA
     AND #%00111110  ; reload data and erase length bits
@@ -316,7 +316,7 @@ PlayBeat:
 ExitMusicHandler:
     RTS
 
-AlternateLengthHandler:
+sub_alternate_length_handler:
     TAX  ; save a copy of original byte into X
     ROR  ; save LSB from original byte into carry
     TXA  ; reload original byte and rotate three times
@@ -324,7 +324,7 @@ AlternateLengthHandler:
     ROL  ; bit in carry as the MSB here
     ROL
 
-ProcessLengthData:
+sub_process_length_data:
     AND #%00000111  ; clear all but the three LSBs
     CLC
     ADC $f0  ; add offset loaded from first header byte
@@ -333,7 +333,7 @@ ProcessLengthData:
     LDA MusicLengthLookupTbl,y  ; load length
     RTS
 
-LoadControlRegs:
+sub_load_control_regs:
     LDA ram_event_music_buffer  ; check secondary buffer for win castle music
     AND #con_end_of_castle_music
     BEQ NotECstlM
@@ -352,7 +352,7 @@ AllMus:
     LDY #$7f
     RTS
 
-LoadEnvelopeData:
+sub_load_envelope_data:
     LDA ram_event_music_buffer  ; check secondary buffer for win castle music
     AND #con_end_of_castle_music
     BEQ LoadUsualEnvData

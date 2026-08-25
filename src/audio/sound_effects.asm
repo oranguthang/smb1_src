@@ -1,6 +1,6 @@
 ; -------------------------------------------------------------------------------------
 
-SoundEngine:
+sub_sound_engine:
     LDA ram_oper_mode  ; are we in title screen mode?
     BNE SndOn
     STA SND_MASTERCTRL_REG  ; if so, disable sound and leave
@@ -47,7 +47,7 @@ PTone2F:
 PTRegC:
     LDX #$84
     LDY #$7f
-    JSR PlaySqu1Sfx
+    JSR sub_play_squ1_sfx
 DecPauC:
     DEC ram_squ1_sfx_len_counter  ; decrement pause sfx counter
     BNE SkipSoundSubroutines
@@ -64,10 +64,10 @@ SkipPIn:
     BEQ SkipSoundSubroutines
 
 RunSoundSubroutines:
-    JSR Square1SfxHandler  ; play sfx on square channel 1
-    JSR Square2SfxHandler  ; ''  ''  '' square channel 2
-    JSR NoiseSfxHandler  ; ''  ''  '' noise channel
-    JSR MusicHandler  ; play music on all channels
+    JSR sub_square1_sfx_handler  ; play sfx on square channel 1
+    JSR sub_square2_sfx_handler  ; ''  ''  '' square channel 2
+    JSR sub_noise_sfx_handler  ; ''  ''  '' noise channel
+    JSR sub_music_handler  ; play music on all channels
     LDA #$00  ; clear the music queues
     STA ram_area_music_queue
     STA ram_event_music_queue
@@ -95,15 +95,15 @@ StrWave:
 
 ; --------------------------------
 
-Dump_Squ1_Regs:
+sub_dump_squ1_regs:
     STY SND_SQUARE1_REG+1  ; dump the contents of X and Y into square 1's control regs
     STX SND_SQUARE1_REG
     RTS
 
-PlaySqu1Sfx:
-    JSR Dump_Squ1_Regs  ; do sub to set ctrl regs for square 1, then set frequency regs
+sub_play_squ1_sfx:
+    JSR sub_dump_squ1_regs  ; do sub to set ctrl regs for square 1, then set frequency regs
 
-SetFreq_Squ1:
+sub_set_freq_squ1:
     LDX #$00  ; set frequency reg offset for square 1 sound channel
 
 Dump_Freq_Regs:
@@ -117,19 +117,19 @@ Dump_Freq_Regs:
 NoTone:
     RTS
 
-Dump_Sq2_Regs:
+sub_dump_sq2_regs:
     STX SND_SQUARE2_REG  ; dump the contents of X and Y into square 2's control regs
     STY SND_SQUARE2_REG+1
     RTS
 
-PlaySqu2Sfx:
-    JSR Dump_Sq2_Regs  ; do sub to set ctrl regs for square 2, then set frequency regs
+sub_play_squ2_sfx:
+    JSR sub_dump_sq2_regs  ; do sub to set ctrl regs for square 2, then set frequency regs
 
-SetFreq_Squ2:
+sub_set_freq_squ2:
     LDX #$04  ; set frequency reg offset for square 2 sound channel
     BNE Dump_Freq_Regs  ; unconditional branch
 
-SetFreq_Tri:
+sub_set_freq_tri:
     LDX #$08  ; set frequency reg offset for triangle sound channel
     BNE Dump_Freq_Regs  ; unconditional branch
 
@@ -143,7 +143,7 @@ PlayFlagpoleSlide:
     LDA #$40  ; store length of flagpole sound
     STA ram_squ1_sfx_len_counter
     LDA #$62  ; load part of reg contents for flagpole sound
-    JSR SetFreq_Squ1
+    JSR sub_set_freq_squ1
     LDX #$99  ; now load the rest
     BNE FPS2nd
 
@@ -157,7 +157,7 @@ PlayBigJump:
 JumpRegContents:
     LDX #$82  ; note that small and big jump borrow each others' reg contents
     LDY #$a7  ; anyway, this loads the first part of mario's jumping sound
-    JSR PlaySqu1Sfx
+    JSR sub_play_squ1_sfx
     LDA #$28  ; store length of sfx for both jumping sounds
     STA ram_squ1_sfx_len_counter  ; then continue on here
 
@@ -175,7 +175,7 @@ N2Prt:
 FPS2nd:
     LDY #$bc  ; the flagpole slide sound shares part of third part
 DmpJpFPS:
-    JSR Dump_Squ1_Regs
+    JSR sub_dump_squ1_regs
     BNE DecJpFPS  ; unconditional branch outta here
 
 PlayFireballThrow:
@@ -190,7 +190,7 @@ Fthrow:
     LDX #$9e  ; the fireball sound shares reg contents with the bump sound
     STA ram_squ1_sfx_len_counter
     LDA #$0c  ; load offset for bump sound
-    JSR PlaySqu1Sfx
+    JSR sub_play_squ1_sfx
 
 ContinueBumpThrow:
     LDA ram_squ1_sfx_len_counter  ; check for second part of bump sound
@@ -201,7 +201,7 @@ ContinueBumpThrow:
 DecJpFPS:
     BNE BranchToDecLength1  ; unconditional branch
 
-Square1SfxHandler:
+sub_square1_sfx_handler:
     LDY ram_square1_sound_queue  ; check for sfx in queue
     BEQ CheckSfx1Buffer
     STY ram_square1_sound_buffer  ; if found, put in buffer
@@ -248,7 +248,7 @@ PlaySwimStomp:
     LDY #$9c  ; store reg contents for swim/stomp sound
     LDX #$9e
     LDA #$26
-    JSR PlaySqu1Sfx
+    JSR sub_play_squ1_sfx
 
 ContinueSwimStomp:
     LDY ram_squ1_sfx_len_counter  ; look up reg contents in data section based on
@@ -268,7 +268,7 @@ PlaySmackEnemy:
     LDX #$9f
     STA ram_squ1_sfx_len_counter
     LDA #$28  ; store reg contents for smack enemy sound
-    JSR PlaySqu1Sfx
+    JSR sub_play_squ1_sfx
     BNE DecrementSfx1Length  ; unconditional branch
 
 ContinueSmackEnemy:
@@ -288,7 +288,7 @@ DecrementSfx1Length:
     DEC ram_squ1_sfx_len_counter  ; decrement length of sfx
     BNE ExSfx1
 
-StopSquare1Sfx:
+sub_stop_square1_sfx:
     LDX #$00  ; if end of sfx reached, clear buffer
     STX $f1  ; and stop making the sfx
     LDX #$0e
@@ -313,7 +313,7 @@ ContinuePipeDownInj:
     LDY #$91  ; and this is where it actually gets written in
     LDX #$9a
     LDA #$44
-    JSR PlaySqu1Sfx
+    JSR sub_play_squ1_sfx
 NoPDwnL:
     JMP DecrementSfx1Length
 
@@ -349,7 +349,7 @@ CGrab_TTickRegL:
     STA ram_squ2_sfx_len_counter
     LDY #$7f  ; load the rest of reg contents
     LDA #$42  ; of coin grab and timer tick sound
-    JSR PlaySqu2Sfx
+    JSR sub_play_squ2_sfx
 
 ContinueCGrabTTick:
     LDA ram_squ2_sfx_len_counter  ; check for time to play second tone yet
@@ -390,7 +390,7 @@ ContinuePowerUpGrab:
     LDY #$7f
 
 LoadSqu2Regs:
-    JSR PlaySqu2Sfx
+    JSR sub_play_squ2_sfx
 
 DecrementSfx2Length:
     DEC ram_squ2_sfx_len_counter  ; decrement length of sfx
@@ -400,7 +400,7 @@ EmptySfx2Buffer:
     LDX #$00  ; initialize square 2's sound effects buffer
     STX ram_square2_sound_buffer
 
-StopSquare2Sfx:
+sub_stop_square2_sfx:
     LDX #$0d  ; stop playing the sfx
     STX SND_MASTERCTRL_REG
     LDX #$0f
@@ -408,7 +408,7 @@ StopSquare2Sfx:
 ExSfx2:
     RTS
 
-Square2SfxHandler:
+sub_square2_sfx_handler:
     LDA ram_square2_sound_buffer  ; special handling for the 1-up sound to keep it
     AND #con_sfx_extra_life  ; from being interrupted by other sounds on square 2
     BNE ContinueExtraLife
@@ -519,7 +519,7 @@ ContinueGrowItems:
     LDA #$9d  ; load contents of other reg directly
     STA SND_SQUARE2_REG
     LDA PUp_VGrow_FreqData,y  ; use secondary counter / 2 as offset for frequency regs
-    JSR SetFreq_Squ2
+    JSR sub_set_freq_squ2
     RTS
 
 StopGrowItems:
@@ -559,7 +559,7 @@ DecrementSfx3Length:
 ExSfx3:
     RTS
 
-NoiseSfxHandler:
+sub_noise_sfx_handler:
     LDY ram_noise_sound_queue  ; check for sfx in queue
     BEQ CheckNoiseBuffer
     STY ram_noise_sound_buffer  ; if found, put in buffer

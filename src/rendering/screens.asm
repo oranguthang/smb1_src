@@ -23,8 +23,8 @@ ScreenRoutines:
 ; -------------------------------------------------------------------------------------
 
 InitScreen:
-    JSR MoveAllSpritesOffscreen  ; initialize all sprites including sprite #0
-    JSR InitializeNameTables  ; and erase both name and attribute tables
+    JSR sub_move_all_sprites_offscreen  ; initialize all sprites including sprite #0
+    JSR sub_initialize_name_tables  ; and erase both name and attribute tables
     LDA ram_oper_mode
     BEQ NextSubtask  ; if mode still 0, do not load
     LDX #$03  ; into buffer pointer
@@ -41,7 +41,7 @@ SetupIntermediate:
     STA ram_player_status  ; and player status to not fiery
     LDA #$02  ; this is the ONLY time background color control
     STA ram_background_color_ctrl  ; is set to less than 4
-    JSR GetPlayerColors
+    JSR sub_get_player_colors
     PLA  ; we only execute this routine for
     STA ram_player_status  ; the intermediate lives display
     PLA  ; and once we're done, we return bg
@@ -62,7 +62,7 @@ NextSubtask:
     JMP IncSubtask  ; move onto next task
 
 ; -------------------------------------------------------------------------------------
-; $00 - used as temp counter in GetPlayerColors
+; $00 - used as temp counter in sub_get_player_colors
 
 BGColorCtrl_Addr:
     .byte $00, $09, $0a, $04
@@ -84,7 +84,7 @@ GetBackgroundColor:
 NoBGColor:
     INC ram_screen_routine_task  ; increment to next subtask and plod on through
 
-GetPlayerColors:
+sub_get_player_colors:
     LDX ram_vram_buffer1_offset  ; get current buffer offset
     LDY #$00
     LDA ram_current_player  ; check which player is on the screen
@@ -143,13 +143,13 @@ NoAltPal:
 
 WriteTopStatusLine:
     LDA #$00  ; select main status bar
-    JSR WriteGameText  ; output it
+    JSR sub_write_game_text  ; output it
     JMP IncSubtask  ; onto the next task
 
 ; -------------------------------------------------------------------------------------
 
 WriteBottomStatusLine:
-    JSR GetSBNybbles  ; write player's score and coin tally to screen
+    JSR sub_get_sb_nybbles  ; write player's score and coin tally to screen
     LDX ram_vram_buffer1_offset
     LDA #$20  ; write address for world-area number on screen
     STA ram_vram_buffer1,x
@@ -203,11 +203,11 @@ DisplayIntermediate:
     LDA ram_disable_intermediate  ; if this flag is set, skip intermediate lives display
     BNE NoInter  ; and jump to specific task, otherwise
 PlayerInter:
-    JSR DrawPlayer_Intermediate  ; put player in appropriate place for
+    JSR sub_draw_player_intermediate  ; put player in appropriate place for
     LDA #$01  ; lives display, then output lives display to buffer
 OutputInter:
-    JSR WriteGameText
-    JSR ResetScreenTimer
+    JSR sub_write_game_text
+    JSR sub_reset_screen_timer
     LDA #$00
     STA ram_disable_screen_flag  ; reenable screen output
     RTS
@@ -215,7 +215,7 @@ GameOverInter:
     LDA #$12  ; set screen timer
     STA ram_screen_timer
     LDA #$03  ; output game over screen to buffer
-    JSR WriteGameText
+    JSR sub_write_game_text
     JMP IncModeTask_B
 NoInter:
     LDA #$08  ; set for specific task and leave
@@ -227,7 +227,7 @@ NoInter:
 AreaParserTaskControl:
     INC ram_disable_screen_flag  ; turn off screen
 TaskLoop:
-    JSR AreaParserTaskHandler  ; render column set of current area
+    JSR sub_area_parser_task_handler  ; render column set of current area
     LDA ram_area_parser_task_num  ; check number of tasks
     BNE TaskLoop  ; if tasks still not all done, do another one
     DEC ram_column_sets  ; do we need to render more column sets?
@@ -281,7 +281,7 @@ TScrClear:
     STA ram_vram_buffer1-1+$100,x
     DEX
     BNE TScrClear
-    JSR DrawMushroomIcon  ; draw player select icon
+    JSR sub_draw_mushroom_icon  ; draw player select icon
 IncSubtask:
     INC ram_screen_routine_task  ; move onto next task
     RTS
@@ -290,7 +290,7 @@ IncSubtask:
 
 WriteTopScore:
     LDA #$fa  ; run display routine to display top score on title
-    JSR UpdateNumber
+    JSR sub_update_number
 IncModeTask_B:
     INC ram_oper_mode_task  ; move onto next mode
     RTS
@@ -355,7 +355,7 @@ GameTextOffsets:
     .byte TwoPlayerGameOver-GameText, OnePlayerGameOver-GameText
     .byte WarpZoneWelcome-GameText, WarpZoneWelcome-GameText
 
-WriteGameText:
+sub_write_game_text:
     PHA  ; save text number to stack
     ASL
     TAY  ; multiply by 2 and use as offset
@@ -452,9 +452,9 @@ WarpNumLoop:
 ResetSpritesAndScreenTimer:
     LDA ram_screen_timer  ; check if screen timer has expired
     BNE NoReset  ; if not, branch to leave
-    JSR MoveAllSpritesOffscreen  ; otherwise reset sprites now
+    JSR sub_move_all_sprites_offscreen  ; otherwise reset sprites now
 
-ResetScreenTimer:
+sub_reset_screen_timer:
     LDA #$07  ; reset timer again
     STA ram_screen_timer
     INC ram_screen_routine_task  ; move onto next task

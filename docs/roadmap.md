@@ -51,8 +51,12 @@ produced bytes.
 - `make verify` reproduces its complete ROM SHA-1
   `ea343f4e445a9050d4b4fbac2c77d0693b1d0922` byte-for-byte.
 - `make lint` enforces the documented ca65 whitespace, layout, comment-spacing,
-  mnemonic-case, and directive-case rules. The checker has focused unit tests;
-  broader tooling tests and runtime scenarios are not yet present.
+  mnemonic-case, directive-case, semantic-prefix, module-size, and direct
+  `JSR`/`sub_` consistency rules. The checkers have focused unit tests; runtime
+  scenarios are not yet present.
+- All 516 RAM and assembly-time constant definitions use explicit `ram_` and
+  `con_` prefixes. All 295 callable labels use `sub_`, have a direct `JSR`
+  caller, and are protected by the semantic lint gate.
 - No original `.nes`, `.chr`, or `.hdr` file is tracked in the current Git
   history.
 - Repository text normalization is enforced by `.gitattributes`.
@@ -131,18 +135,18 @@ groups were:
 | Current source range | Initial responsibility |
 | --- | --- |
 | Definitions through `DIRECTIVES` | Hardware, RAM, and constants |
-| `Start` through `SpriteShuffler` | Reset, NMI, frame processing, pause |
-| `OperModeExecutionTree` through screen text | Modes, title, victory, HUD |
+| `Start` through `sub_sprite_shuffler` | Reset, NMI, frame processing, pause |
+| `sub_oper_mode_execution_tree` through screen text | Modes, title, victory, HUD |
 | `RenderAreaGraphics` through score output | Background, VRAM, PPU helpers |
 | `InitializeGame` through game-over flow | Game and area initialization |
-| `AreaParserTaskHandler` through level data | Area parser, objects, level streams |
+| `sub_area_parser_task_handler` through level data | Area parser, objects, level streams |
 | `GameMode` through player physics | Game core, scrolling, player control |
 | Fireballs through shared movement | Gameplay objects and common physics |
-| `EnemiesAndLoopsCore` through enemy initialization | Enemy stream parser and setup |
+| `sub_enemies_and_loops_core` through enemy initialization | Enemy stream parser and setup |
 | `RunEnemyObjectsCore` through platform runtime | Enemy and platform behavior |
 | Fireball/enemy collision through block-buffer collision | Collision systems |
-| `DrawVine` through sprite/offscreen helpers | OAM, actors, and animation |
-| `SoundEngine` through music data | Audio engine and streams |
+| `sub_draw_vine` through sprite/offscreen helpers | OAM, actors, and animation |
+| `sub_sound_engine` through music data | Audio engine and streams |
 | Interrupt vectors | Fixed vectors |
 
 These groups guided the final boundaries recorded in `docs/source_layout.md`.
@@ -243,17 +247,23 @@ Exit criterion: `make verify` reproduces the selected reference ROM exactly.
 Exit criterion: the modular tree builds the exact same ROM and no ordinary ASM
 module exceeds the agreed size budget.
 
-### 3. Mechanical Cleanup and Semantic Naming - In Progress
+### 3. Mechanical Cleanup and Semantic Naming - Complete
 
 - Separate hardware registers, RAM fields, constants, and ROM data symbols.
-  The physical files exist and sound-engine RAM aliases have been moved out of
-  `constants.inc`; semantic prefixing remains incremental work.
+  The physical files exist, sound-engine RAM aliases have been moved out of
+  `constants.inc`, and RAM/constants use explicit semantic prefixes.
 - Adopt the control-flow and data-prefix vocabulary incrementally.
+  Callable routines, player movement control flow, shared movement entries, and
+  their indexed tables now use the documented vocabulary. Existing descriptive
+  local labels remain valid until their subsystem evidence supports refinement.
 - Remove address-derived active symbol names where they exist.
+  Semantic lint rejects new lowercase address-derived identifiers.
 - Normalize whitespace and source formatting with mechanically checkable rules.
   The initial assembly formatter and lint gate are complete.
 - Introduce only small domain macros that preserve instruction order,
   addressing mode, flags, cycles, and emitted bytes.
+  No macro was introduced without a repeated domain operation that justified
+  the additional abstraction.
 
 Exit criterion: symbols communicate verified roles and every rename/macro batch
 passes byte verification.

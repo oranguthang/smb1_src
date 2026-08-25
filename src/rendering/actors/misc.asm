@@ -5,7 +5,7 @@
 VineYPosAdder:
     .byte $00, $30
 
-DrawVine:
+sub_draw_vine:
     STY $00  ; save offset here
     LDA ram_enemy_rel_y_pos  ; get relative vertical coordinate
     CLC
@@ -13,7 +13,7 @@ DrawVine:
     LDX ram_vine_obj_offset,y  ; get offset to vine
     LDY ram_enemy_spr_data_offset,x  ; get sprite data offset
     STY $02  ; store sprite data offset here
-    JSR SixSpriteStacker  ; stack six sprites on top of each other vertically
+    JSR sub_six_sprite_stacker  ; stack six sprites on top of each other vertically
     LDA ram_enemy_rel_x_pos  ; get relative horizontal coordinate
     STA ram_sprite_x_position,y  ; store in first, third and fifth sprites
     STA ram_sprite_x_position+8,y
@@ -67,7 +67,7 @@ NextVSp:
     LDY $00  ; return offset set earlier
     RTS
 
-SixSpriteStacker:
+sub_six_sprite_stacker:
     LDX #$06  ; do six sprites
 StkLp:
     STA ram_sprite_data,y  ; store X or Y coordinate into OAM data
@@ -105,7 +105,7 @@ SecondSprTilenum:
 HammerSprAttrib:
     .byte $03, $03, $c3, $c3
 
-DrawHammer:
+sub_draw_hammer:
     LDY ram_misc_spr_data_offset,x  ; get misc object OAM data offset
     LDA ram_timer_control
     BNE ForceHPose  ; if master timer control set, skip this part
@@ -151,7 +151,7 @@ RenderH:
     LDA #$00
     STA ram_misc_state,x  ; otherwise nullify misc object state
     LDA #$f8
-    JSR DumpTwoSpr  ; do sub to move hammer sprites offscreen
+    JSR sub_dump_two_spr  ; do sub to move hammer sprites offscreen
 NoHOffscr:
     RTS  ; leave
 
@@ -169,7 +169,7 @@ FlagpoleScoreNumTiles:
     .byte $f8, $fb
     .byte $f6, $fb
 
-FlagpoleGfxHandler:
+sub_flagpole_gfx_handler:
     LDY ram_enemy_spr_data_offset,x  ; get sprite data offset for flagpole flag
     LDA ram_enemy_rel_x_pos  ; get relative horizontal coordinate
     STA ram_sprite_x_position,y  ; store as X coordinate for first sprite
@@ -181,7 +181,7 @@ FlagpoleGfxHandler:
     ADC #$0c  ; add twelve more pixels and
     STA $05  ; store here to be used later by floatey number
     LDA ram_enemy_y_position,x  ; get vertical coordinate
-    JSR DumpTwoSpr  ; and do sub to dump into first and second sprites
+    JSR sub_dump_two_spr  ; and do sub to dump into first and second sprites
     ADC #$08  ; add eight pixels
     STA ram_sprite_y_position+8,y  ; and store into third sprite
     LDA ram_flagpole_f_num_y_pos  ; get vertical coordinate for floatey number
@@ -209,7 +209,7 @@ FlagpoleGfxHandler:
     LDA FlagpoleScoreNumTiles,x  ; get appropriate tile data
     STA $00
     LDA FlagpoleScoreNumTiles+1,x
-    JSR DrawOneSpriteRow  ; use it to render floatey number
+    JSR sub_draw_one_sprite_row  ; use it to render floatey number
 
 ChkFlagOffscreen:
     LDX ram_object_offset  ; get object offset for flag
@@ -220,20 +220,20 @@ ChkFlagOffscreen:
 
 ; -------------------------------------------------------------------------------------
 
-MoveSixSpritesOffscreen:
+sub_move_six_sprites_offscreen:
     LDA #$f8  ; set offscreen coordinate if jumping here
 
-DumpSixSpr:
+sub_dump_six_spr:
     STA ram_sprite_data+20,y  ; dump A contents
     STA ram_sprite_data+16,y  ; into third row sprites
 
-DumpFourSpr:
+sub_dump_four_spr:
     STA ram_sprite_data+12,y  ; into second row sprites
 
-DumpThreeSpr:
+sub_dump_three_spr:
     STA ram_sprite_data+8,y
 
-DumpTwoSpr:
+sub_dump_two_spr:
     STA ram_sprite_data+4,y  ; and into first row sprites
     STA ram_sprite_data,y
 
@@ -242,17 +242,17 @@ ExitDumpSpr:
 
 ; -------------------------------------------------------------------------------------
 
-DrawLargePlatform:
+sub_draw_large_platform:
     LDY ram_enemy_spr_data_offset,x  ; get OAM data offset
     STY $02  ; store here
     INY  ; add 3 to it for offset
     INY  ; to X coordinate
     INY
     LDA ram_enemy_rel_x_pos  ; get horizontal relative coordinate
-    JSR SixSpriteStacker  ; store X coordinates using A as base, stack horizontally
+    JSR sub_six_sprite_stacker  ; store X coordinates using A as base, stack horizontally
     LDX ram_object_offset
     LDA ram_enemy_y_position,x  ; get vertical coordinate
-    JSR DumpFourSpr  ; dump into first four sprites as Y coordinate
+    JSR sub_dump_four_spr  ; dump into first four sprites as Y coordinate
     LDY ram_area_type
     CPY #$03  ; check for castle-type level
     BEQ ShrinkPlatform
@@ -274,12 +274,12 @@ SetLast2Platform:
 SetPlatformTilenum:
     LDX ram_object_offset  ; get enemy object buffer offset
     INY  ; increment Y for tile offset
-    JSR DumpSixSpr  ; dump tile number into all six sprites
+    JSR sub_dump_six_spr  ; dump tile number into all six sprites
     LDA #$02  ; set palette controls
     INY  ; increment Y for sprite attributes
-    JSR DumpSixSpr  ; dump attributes into all six sprites
+    JSR sub_dump_six_spr  ; dump attributes into all six sprites
     INX  ; increment X for enemy objects
-    JSR GetXOffscreenBits  ; get offscreen bits again
+    JSR sub_get_x_offscreen_bits  ; get offscreen bits again
     DEX
     LDY ram_enemy_spr_data_offset,x  ; get OAM data offset
     ASL  ; rotate d7 into carry, save remaining
@@ -325,7 +325,7 @@ SLChk:
     LDA ram_enemy_offscreen_bits  ; check d7 of offscreen bits
     ASL  ; and if d7 is not set, skip sub
     BCC ExDLPl
-    JSR MoveSixSpritesOffscreen  ; otherwise branch to move all sprites offscreen
+    JSR sub_move_six_sprites_offscreen  ; otherwise branch to move all sprites offscreen
 ExDLPl:
     RTS
 
@@ -338,7 +338,7 @@ DrawFloateyNumber_Coin:
     DEC ram_misc_y_position,x  ; otherwise, decrement vertical coordinate
 NotRsNum:
     LDA ram_misc_y_position,x  ; get vertical coordinate
-    JSR DumpTwoSpr  ; dump into both sprites
+    JSR sub_dump_two_spr  ; dump into both sprites
     LDA ram_misc_rel_x_pos  ; get relative horizontal coordinate
     STA ram_sprite_x_position,y  ; store as X coordinate for first sprite
     CLC
@@ -356,7 +356,7 @@ NotRsNum:
 JumpingCoinTiles:
     .byte $60, $61, $62, $63
 
-JCoinGfxHandler:
+sub_j_coin_gfx_handler:
     LDY ram_misc_spr_data_offset,x  ; get coin/floatey number's OAM data offset
     LDA ram_misc_state,x  ; get state of misc object
     CMP #$02  ; if 2 or greater,
@@ -375,7 +375,7 @@ JCoinGfxHandler:
     TAX  ; use as graphical offset
     LDA JumpingCoinTiles,x  ; load tile number
     INY  ; increment OAM data offset to write tile numbers
-    JSR DumpTwoSpr  ; do sub to dump tile number into both sprites
+    JSR sub_dump_two_spr  ; do sub to dump tile number into both sprites
     DEY  ; decrement to get old offset
     LDA #$02
     STA ram_sprite_attributes,y  ; set attribute byte in first sprite
@@ -403,7 +403,7 @@ PowerUpGfxTable:
 PowerUpAttributes:
     .byte $02, $01, $02, $01
 
-DrawPowerUp:
+sub_draw_power_up:
     LDY ram_enemy_spr_data_offset+5  ; get power-up's sprite data offset
     LDA ram_enemy_rel_y_pos  ; get relative vertical coordinate
     CLC
@@ -428,7 +428,7 @@ PUpDrawLoop:
     LDA PowerUpGfxTable,x  ; load left tile of power-up object
     STA $00
     LDA PowerUpGfxTable+1,x  ; load right tile
-    JSR DrawOneSpriteRow  ; branch to draw one row of our power-up object
+    JSR sub_draw_one_sprite_row  ; branch to draw one row of our power-up object
     DEC $07  ; decrement counter
     BPL PUpDrawLoop  ; branch until two rows are drawn
     LDY ram_enemy_spr_data_offset+5  ; get sprite data offset again

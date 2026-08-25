@@ -9,11 +9,11 @@ KickedShellXSpdData:
 DemotedKoopaXSpdData:
     .byte $08, $f8
 
-PlayerEnemyCollision:
+sub_player_enemy_collision:
     LDA ram_frame_counter  ; check counter for d0 set
     LSR
     BCS NoPUp  ; if set, branch to leave
-    JSR CheckPlayerVertical  ; if player object is completely offscreen or
+    JSR sub_check_player_vertical  ; if player object is completely offscreen or
     BCS NoPECol  ; if down past 224th pixel row, branch to leave
     LDA ram_enemy_offscr_bits_masked,x  ; if current enemy is offscreen by any amount,
     BNE NoPECol  ; go ahead and branch to leave
@@ -23,8 +23,8 @@ PlayerEnemyCollision:
     LDA ram_enemy_state,x
     AND #%00100000  ; if enemy state has d5 set, branch to leave
     BNE NoPECol
-    JSR GetEnemyBoundBoxOfs  ; get bounding box offset for current enemy object
-    JSR PlayerCollisionCore  ; do collision detection on player vs. enemy
+    JSR sub_get_enemy_bound_box_ofs  ; get bounding box offset for current enemy object
+    JSR sub_player_collision_core  ; do collision detection on player vs. enemy
     LDX ram_object_offset  ; get enemy object buffer offset
     BCS CheckForPUpCollision  ; if collision, branch past this part here
     LDA ram_enemy_collision_bits,x
@@ -41,7 +41,7 @@ CheckForPUpCollision:
 EColl:
     LDA ram_star_invincible_timer  ; if star mario invincibility timer expired,
     BEQ HandlePECollisions  ; perform task here, otherwise kill enemy like
-    JMP ShellOrBlockDefeat  ; hit with a shell, or from beneath
+    JMP sub_shell_or_block_defeat  ; hit with a shell, or from beneath
 
 KickedShellPtsData:
     .byte $0a, $06, $04
@@ -57,15 +57,15 @@ HandlePECollisions:
     CPY #con_spiny  ; branch if spiny
     BEQ ChkForPlayerInjury
     CPY #con_piranha_plant  ; branch if piranha plant
-    BEQ InjurePlayer
+    BEQ sub_injure_player
     CPY #con_podoboo  ; branch if podoboo
-    BEQ InjurePlayer
+    BEQ sub_injure_player
     CPY #con_bullet_bill_cannon_var  ; branch if bullet bill
     BEQ ChkForPlayerInjury
     CPY #$15  ; branch if object => $15
-    BCS InjurePlayer
+    BCS sub_injure_player
     LDA ram_area_type  ; branch if water type level
-    BEQ InjurePlayer
+    BEQ sub_injure_player
     LDA ram_enemy_state,x  ; branch if d7 of enemy state was set
     ASL
     BCS ChkForPlayerInjury
@@ -81,7 +81,7 @@ HandlePECollisions:
     LDA ram_enemy_state,x  ; set d7 in enemy state, thus become moving shell
     ORA #%10000000
     STA ram_enemy_state,x
-    JSR EnemyFacePlayer  ; set moving direction and get offset
+    JSR sub_enemy_face_player  ; set moving direction and get offset
     LDA KickedShellXSpdData,y  ; load and set horizontal speed data with offset
     STA ram_enemy_x_speed,x
     LDA #$03  ; add three to whatever the stomp counter contains
@@ -92,7 +92,7 @@ HandlePECollisions:
     BCS KSPts  ; data obtained from the stomp counter + 3
     LDA KickedShellPtsData,y  ; otherwise, set points based on proximity to timer expiration
 KSPts:
-    JSR SetupFloateyNumber  ; set values for floatey number now
+    JSR sub_setup_floatey_number  ; set values for floatey number now
 ExPEC:
     RTS  ; leave!!!
 
@@ -121,14 +121,14 @@ ChkETmrs:
 TInjE:
     LDA ram_enemy_moving_dir,x  ; if enemy moving towards the left,
     CMP #$01  ; branch, otherwise do a jump here
-    BNE InjurePlayer  ; to turn the enemy around
+    BNE sub_injure_player  ; to turn the enemy around
     JMP LInj
 
-InjurePlayer:
+sub_injure_player:
     LDA ram_injury_timer  ; check again to see if injured invincibility timer is
     BNE ExInjColRoutines  ; at zero, and branch to leave if so
 
-ForceInjury:
+sub_force_injury:
     LDX ram_player_status  ; check player's status
     BEQ KillPlayer  ; branch if small
     STA ram_player_status  ; otherwise set player's status to small
@@ -136,11 +136,11 @@ ForceInjury:
     STA ram_injury_timer  ; set injured invincibility timer
     ASL
     STA ram_square1_sound_queue  ; play pipedown/injury sound
-    JSR GetPlayerColors  ; change player's palette if necessary
+    JSR sub_get_player_colors  ; change player's palette if necessary
     LDA #$0a  ; set subroutine to run on next frame
 SetKRout:
     LDY #$01  ; set new player state
-SetPRout:
+sub_set_p_rout:
     STA ram_game_engine_subroutine  ; load new value to run subroutine on next frame
     STY ram_player_state  ; store new player state
     LDY #$ff
@@ -167,7 +167,7 @@ StompedEnemyPtsData:
 EnemyStomped:
     LDA ram_enemy_id,x  ; check for spiny, branch to hurt player
     CMP #con_spiny  ; if found
-    BEQ InjurePlayer
+    BEQ sub_injure_player
     LDA #con_sfx_enemy_stomp  ; otherwise play stomp/swim sound
     STA ram_square1_sound_queue
     LDA ram_enemy_id,x
@@ -192,15 +192,15 @@ EnemyStomped:
 
 EnemyStompedPts:
     LDA StompedEnemyPtsData,y  ; load points data using offset in Y
-    JSR SetupFloateyNumber  ; run sub to set floatey number controls
+    JSR sub_setup_floatey_number  ; run sub to set floatey number controls
     LDA ram_enemy_moving_dir,x
     PHA  ; save enemy movement direction to stack
-    JSR SetStun  ; run sub to kill enemy
+    JSR sub_set_stun  ; run sub to kill enemy
     PLA
     STA ram_enemy_moving_dir,x  ; return enemy movement direction from stack
     LDA #%00100000
     STA ram_enemy_state,x  ; set d5 in enemy state
-    JSR InitVStf  ; nullify vertical speed, physics-related thing,
+    JSR sub_init_v_stf  ; nullify vertical speed, physics-related thing,
     STA ram_enemy_x_speed,x  ; and horizontal speed
     LDA #$fd  ; set player's vertical speed, to give bounce
     STA ram_player_y_speed
@@ -214,9 +214,9 @@ ChkForDemoteKoopa:
     LDY #$00  ; return enemy to normal state
     STY ram_enemy_state,x
     LDA #$03  ; award 400 points to the player
-    JSR SetupFloateyNumber
-    JSR InitVStf  ; nullify physics-related thing and vertical speed
-    JSR EnemyFacePlayer  ; turn enemy around if necessary
+    JSR sub_setup_floatey_number
+    JSR sub_init_v_stf  ; nullify physics-related thing and vertical speed
+    JSR sub_enemy_face_player  ; turn enemy around if necessary
     LDA DemotedKoopaXSpdData,y
     STA ram_enemy_x_speed,x  ; set appropriate moving speed based on direction
     JMP SBnce  ; then move onto something else
@@ -231,7 +231,7 @@ HandleStompedShellE:
     LDA ram_stomp_chain_counter  ; add whatever is in the stomp counter
     CLC  ; to whatever is in the stomp timer
     ADC ram_stomp_timer
-    JSR SetupFloateyNumber  ; award points accordingly
+    JSR sub_setup_floatey_number  ; award points accordingly
     INC ram_stomp_timer  ; increment stomp timer of some sort
     LDY ram_primary_hard_mode  ; check primary hard mode flag
     LDA RevivalRateData,y  ; load timer setting according to flag
@@ -245,14 +245,14 @@ ChkEnemyFaceRight:
     LDA ram_enemy_moving_dir,x  ; check to see if enemy is moving to the right
     CMP #$01
     BNE LInj  ; if not, branch
-    JMP InjurePlayer  ; otherwise go back to hurt player
+    JMP sub_injure_player  ; otherwise go back to hurt player
 LInj:
-    JSR EnemyTurnAround  ; turn the enemy around, if necessary
-    JMP InjurePlayer  ; go back to hurt player
+    JSR sub_enemy_turn_around  ; turn the enemy around, if necessary
+    JMP sub_injure_player  ; go back to hurt player
 
-EnemyFacePlayer:
+sub_enemy_face_player:
     LDY #$01  ; set to move right by default
-    JSR PlayerEnemyDiff  ; get horizontal difference between player and enemy
+    JSR sub_player_enemy_diff  ; get horizontal difference between player and enemy
     BPL SFcRt  ; if enemy is to the right of player, do not increment
     INY  ; otherwise, increment to set to move to the left
 SFcRt:
@@ -260,7 +260,7 @@ SFcRt:
     DEY  ; then decrement to use as a proper offset
     RTS
 
-SetupFloateyNumber:
+sub_setup_floatey_number:
     STA ram_floatey_num_control,x  ; set number of points control for floatey numbers
     LDA #$30
     STA ram_floatey_num_timer,x  ; set timer for floatey numbers
@@ -280,7 +280,7 @@ SetBitsMask:
 ClearBitsMask:
     .byte %01111111, %10111111, %11011111, %11101111, %11110111, %11111011, %11111101
 
-EnemiesCollision:
+sub_enemies_collision:
     LDA ram_frame_counter  ; check counter for d0 set
     LSR
     BCC ExSFN  ; if d0 not set, leave
@@ -295,7 +295,7 @@ EnemiesCollision:
     BEQ ExitECRoutine
     LDA ram_enemy_offscr_bits_masked,x  ; if masked offscreen bits nonzero, branch to leave
     BNE ExitECRoutine
-    JSR GetEnemyBoundBoxOfs  ; otherwise, do sub, get appropriate bounding box offset for
+    JSR sub_get_enemy_bound_box_ofs  ; otherwise, do sub, get appropriate bounding box offset for
     DEX  ; first enemy we're going to compare, then decrement for second
     BMI ExitECRoutine  ; branch to leave if there are no other enemies
 ECLoop:
@@ -319,7 +319,7 @@ ECLoop:
     CLC
     ADC #$04
     TAX  ; use as new contents of X
-    JSR SprObjectCollisionCore  ; do collision detection using the two enemies here
+    JSR sub_spr_object_collision_core  ; do collision detection using the two enemies here
     LDX ram_object_offset  ; use first enemy offset for X
     LDY $01  ; use second enemy offset for Y
     BCC NoEnemyCollision  ; if carry clear, no collision, branch ahead of this
@@ -334,7 +334,7 @@ ECLoop:
     ORA SetBitsMask,x  ; if the bit is not set, set it now
     STA ram_enemy_collision_bits,y
 YesEC:
-    JSR ProcEnemyCollisions  ; react according to the nature of collision
+    JSR sub_proc_enemy_collisions  ; react according to the nature of collision
     JMP ReadyNextEnemy  ; move onto next enemy slot
 
 NoEnemyCollision:
@@ -353,7 +353,7 @@ ExitECRoutine:
     LDX ram_object_offset  ; get enemy object buffer offset
     RTS  ; leave
 
-ProcEnemyCollisions:
+sub_proc_enemy_collisions:
     LDA ram_enemy_state,y  ; check both enemy states for d5 set
     ORA ram_enemy_state,x
     AND #%00100000  ; if d5 is set in either state, or both, branch
@@ -368,20 +368,20 @@ ProcEnemyCollisions:
     ASL
     BCC ShellCollisions  ; branch if d7 is clear
     LDA #$06
-    JSR SetupFloateyNumber  ; award 1000 points for killing enemy
-    JSR ShellOrBlockDefeat  ; then kill enemy, then load
+    JSR sub_setup_floatey_number  ; award 1000 points for killing enemy
+    JSR sub_shell_or_block_defeat  ; then kill enemy, then load
     LDY $01  ; original offset of second enemy
 
 ShellCollisions:
     TYA  ; move Y to X
     TAX
-    JSR ShellOrBlockDefeat  ; kill second enemy
+    JSR sub_shell_or_block_defeat  ; kill second enemy
     LDX ram_object_offset
     LDA ram_shell_chain_counter,x  ; get chain counter for shell
     CLC
     ADC #$04  ; add four to get appropriate point offset
     LDX $01
-    JSR SetupFloateyNumber  ; award appropriate number of points for second enemy
+    JSR sub_setup_floatey_number  ; award appropriate number of points for second enemy
     LDX ram_object_offset  ; load original offset of first enemy
     INC ram_shell_chain_counter,x  ; increment chain counter for additional enemies
 
@@ -395,13 +395,13 @@ ProcSecondEnemyColl:
     LDA ram_enemy_id,y  ; check first enemy identifier for hammer bro
     CMP #con_hammer_bro  ; if hammer bro found in alt state, branch to leave
     BEQ ExitProcessEColl
-    JSR ShellOrBlockDefeat  ; otherwise, kill first enemy
+    JSR sub_shell_or_block_defeat  ; otherwise, kill first enemy
     LDY $01
     LDA ram_shell_chain_counter,y  ; get chain counter for shell
     CLC
     ADC #$04  ; add four to get appropriate point offset
     LDX ram_object_offset
-    JSR SetupFloateyNumber  ; award appropriate number of points for first enemy
+    JSR sub_setup_floatey_number  ; award appropriate number of points for first enemy
     LDX $01  ; load original offset of second enemy
     INC ram_shell_chain_counter,x  ; increment chain counter for additional enemies
     RTS  ; leave!!!
@@ -409,10 +409,10 @@ ProcSecondEnemyColl:
 MoveEOfs:
     TYA  ; move Y ($01) to X
     TAX
-    JSR EnemyTurnAround  ; do the sub here using value from $01
+    JSR sub_enemy_turn_around  ; do the sub here using value from $01
     LDX ram_object_offset  ; then do it again using value from $08
 
-EnemyTurnAround:
+sub_enemy_turn_around:
     LDA ram_enemy_id,x  ; check for specific enemies
     CMP #con_piranha_plant
     BEQ ExTA  ; if piranha plant, leave
@@ -441,7 +441,7 @@ ExTA:
 ; -------------------------------------------------------------------------------------
 ; $00 - vertical position of platform
 
-LargePlatformCollision:
+sub_large_platform_collision:
     LDA #$ff  ; save value here
     STA ram_platform_collision_flag,x
     LDA ram_timer_control  ; check master timer control
@@ -450,25 +450,25 @@ LargePlatformCollision:
     BMI ExLPC  ; branch to leave
     LDA ram_enemy_id,x
     CMP #$24  ; check enemy object identifier for
-    BNE ChkForPlayerC_LargeP  ; balance platform, branch if not found
+    BNE sub_chk_for_player_c_large_p  ; balance platform, branch if not found
     LDA ram_enemy_state,x
     TAX  ; set state as enemy offset here
-    JSR ChkForPlayerC_LargeP  ; perform code with state offset, then original offset, in X
+    JSR sub_chk_for_player_c_large_p  ; perform code with state offset, then original offset, in X
 
-ChkForPlayerC_LargeP:
-    JSR CheckPlayerVertical  ; figure out if player is below a certain point
+sub_chk_for_player_c_large_p:
+    JSR sub_check_player_vertical  ; figure out if player is below a certain point
     BCS ExLPC  ; or offscreen, branch to leave if true
     TXA
-    JSR GetEnemyBoundBoxOfsArg  ; get bounding box offset in Y
+    JSR sub_get_enemy_bound_box_ofs_arg  ; get bounding box offset in Y
     LDA ram_enemy_y_position,x  ; store vertical coordinate in
     STA $00  ; temp variable for now
     TXA  ; send offset we're on to the stack
     PHA
-    JSR PlayerCollisionCore  ; do player-to-platform collision detection
+    JSR sub_player_collision_core  ; do player-to-platform collision detection
     PLA  ; retrieve offset from the stack
     TAX
     BCC ExLPC  ; if no collision, branch to leave
-    JSR ProcLPlatCollisions  ; otherwise collision, perform sub
+    JSR sub_proc_l_plat_collisions  ; otherwise collision, perform sub
 ExLPC:
     LDX ram_object_offset  ; get enemy object buffer offset and leave
     RTS
@@ -476,24 +476,24 @@ ExLPC:
 ; --------------------------------
 ; $00 - counter for bounding boxes
 
-SmallPlatformCollision:
+sub_small_platform_collision:
     LDA ram_timer_control  ; if master timer control set,
     BNE ExSPC  ; branch to leave
     STA ram_platform_collision_flag,x  ; otherwise initialize collision flag
-    JSR CheckPlayerVertical  ; do a sub to see if player is below a certain point
+    JSR sub_check_player_vertical  ; do a sub to see if player is below a certain point
     BCS ExSPC  ; or entirely offscreen, and branch to leave if true
     LDA #$02
     STA $00  ; load counter here for 2 bounding boxes
 
 ChkSmallPlatLoop:
     LDX ram_object_offset  ; get enemy object offset
-    JSR GetEnemyBoundBoxOfs  ; get bounding box offset in Y
+    JSR sub_get_enemy_bound_box_ofs  ; get bounding box offset in Y
     AND #%00000010  ; if d1 of offscreen lower nybble bits was set
     BNE ExSPC  ; then branch to leave
     LDA ram_bounding_box_ul_y_pos,y  ; check top of platform's bounding box for being
     CMP #$20  ; above a specific point
     BCC MoveBoundBox  ; if so, branch, don't do collision detection
-    JSR PlayerCollisionCore  ; otherwise, perform player-to-platform collision detection
+    JSR sub_player_collision_core  ; otherwise, perform player-to-platform collision detection
     BCS ProcSPlatCollisions  ; skip ahead if collision
 
 MoveBoundBox:
@@ -516,7 +516,7 @@ ExSPC:
 ProcSPlatCollisions:
     LDX ram_object_offset  ; return enemy object buffer offset to X, then continue
 
-ProcLPlatCollisions:
+sub_proc_l_plat_collisions:
     LDA ram_bounding_box_dr_y_pos,y  ; get difference by subtracting the top
     SEC  ; of the player's bounding box from the bottom
     SBC ram_bounding_box_ul_y_pos  ; of the platform's bounding box
@@ -565,7 +565,7 @@ PlatformSideCollisions:
     CMP #$09  ; if difference not close enough, skip subroutine
     BCS NoSideC  ; and instead branch to leave (no collision)
 SideC:
-    JSR ImpedePlayerMove  ; deal with horizontal collision
+    JSR sub_impede_player_move  ; deal with horizontal collision
 NoSideC:
     LDX ram_object_offset  ; return with enemy object buffer offset
     RTS
@@ -575,14 +575,14 @@ NoSideC:
 PlayerPosSPlatData:
     .byte $80, $00
 
-PositionPlayerOnS_Plat:
+sub_position_player_on_s_plat:
     TAY  ; use bounding box counter saved in collision flag
     LDA ram_enemy_y_position,x  ; for offset
     CLC  ; add positioning data using offset to the vertical
     ADC PlayerPosSPlatData-1,y  ; coordinate
     .byte $2c  ; BIT instruction opcode
 
-PositionPlayerOnVPlat:
+sub_position_player_on_v_plat:
     LDA ram_enemy_y_position,x  ; get vertical coordinate
     LDY ram_game_engine_subroutine
     CPY #$0b  ; if certain routine being executed on this frame,
@@ -604,7 +604,7 @@ ExPlPos:
 
 ; -------------------------------------------------------------------------------------
 
-CheckPlayerVertical:
+sub_check_player_vertical:
     LDA ram_player_offscreen_bits  ; if player object is completely offscreen
     CMP #$f0  ; vertically, leave this routine
     BCS ExCPV
@@ -618,10 +618,10 @@ ExCPV:
 
 ; -------------------------------------------------------------------------------------
 
-GetEnemyBoundBoxOfs:
+sub_get_enemy_bound_box_ofs:
     LDA ram_object_offset  ; get enemy object buffer offset
 
-GetEnemyBoundBoxOfsArg:
+sub_get_enemy_bound_box_ofs_arg:
     ASL  ; multiply A by four, then add four
     ASL  ; to skip player's bounding box
     CLC

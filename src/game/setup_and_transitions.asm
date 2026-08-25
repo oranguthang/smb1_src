@@ -11,7 +11,7 @@ Sprite0Data:
 
 InitializeGame:
     LDY #$6f  ; clear all memory as in initialization procedure,
-    JSR InitializeMemory  ; but this time, clear only as far as $076f
+    JSR sub_initialize_memory  ; but this time, clear only as far as $076f
     LDY #$1f
 ClrSndLoop:
     STA ram_sound_memory,y  ; clear out memory used
@@ -19,11 +19,11 @@ ClrSndLoop:
     BPL ClrSndLoop
     LDA #$18  ; set demo timer
     STA ram_demo_timer
-    JSR LoadAreaPointer
+    JSR sub_load_area_pointer
 
 InitializeArea:
     LDY #$4b  ; clear all memory again, only as far as $074b
-    JSR InitializeMemory  ; this is only necessary if branching from
+    JSR sub_initialize_memory  ; this is only necessary if branching from
     LDX #$21
     LDA #$00
 ClrTimersLoop:
@@ -38,7 +38,7 @@ StartPage:
     STA ram_screen_left_page_loc  ; set as value here
     STA ram_current_page_loc  ; also set as current page
     STA ram_backloading_flag  ; set flag here if halfway page or saved entry page number found
-    JSR GetScreenPosition  ; get pixel coordinates for screen borders
+    JSR sub_get_screen_position  ; get pixel coordinates for screen borders
     LDY #$20  ; if on odd numbered page, use $2480 as start of rendering
     AND #%00000001  ; otherwise use $2080, this address used later as name table
     BEQ SetInitNTHigh  ; address for rendering of game area
@@ -57,7 +57,7 @@ SetInitNTHigh:
     DEC ram_area_object_length+2
     LDA #$0b  ; set value for renderer to update 12 column sets
     STA ram_column_sets  ; 12 column sets = 24 metatile columns = 1 1/2 screens
-    JSR GetAreaDataAddrs  ; get enemy and level addresses and load header
+    JSR sub_get_area_data_addrs  ; get enemy and level addresses and load header
     LDA ram_primary_hard_mode  ; check to see if primary hard mode has been activated
     BNE SetSecHard  ; if so, activate the secondary no matter where we're at
     LDA ram_world_number  ; otherwise check world number
@@ -110,7 +110,7 @@ ClearVRLoop:
     AND #$01  ; mask out all but LSB of page location
     ROR  ; rotate LSB of page location into carry then onto mirror
     ROL ram_mirror_ppu_ctrl_reg1  ; this is to set the proper PPU name table
-    JSR GetAreaMusic  ; load proper music into queue
+    JSR sub_get_area_music  ; load proper music into queue
     LDA #$38  ; load sprite shuffle amounts to be used later
     STA ram_spr_shuffle_amt+2
     LDA #$48
@@ -129,8 +129,8 @@ ISpr0Loop:
     STA ram_sprite_data,y
     DEY
     BPL ISpr0Loop
-    JSR DoNothing2  ; these jsrs doesn't do anything useful
-    JSR DoNothing1
+    JSR sub_do_nothing2  ; these jsrs doesn't do anything useful
+    JSR sub_do_nothing1
     INC ram_sprite0_hit_detect_flag  ; set sprite #0 check flag
     INC ram_oper_mode_task  ; increment to next task
     RTS
@@ -140,7 +140,7 @@ ISpr0Loop:
 ; $06 - RAM address low
 ; $07 - RAM address high
 
-InitializeMemory:
+sub_initialize_memory:
     LDX #$07  ; set initial high byte to $0700-$07ff
     LDA #$00  ; set initial low byte to start of page (at $00 of page)
     STA $06
@@ -167,7 +167,7 @@ MusicSelectData:
     .byte con_water_music, con_ground_music, con_underground_music, con_castle_music
     .byte con_cloud_music, con_pipe_intro_music
 
-GetAreaMusic:
+sub_get_area_music:
     LDA ram_oper_mode  ; if in title screen mode, leave
     BEQ ExitGetM
     LDA ram_alt_entrance_control  ; check for specific alternate mode of entry
@@ -241,7 +241,7 @@ SetStPos:
     STA ram_player_y_position  ; or value that overwrote $0710 as offset for vertical
     LDA PlayerBGPriorityData,x
     STA ram_player_spr_attrib  ; set player sprite attributes using offset in X
-    JSR GetPlayerColors  ; get appropriate player palette
+    JSR sub_get_player_colors  ; get appropriate player palette
     LDY ram_game_timer_setting  ; get timer control value from header
     BEQ ChkOverR  ; if set to zero, branch (do not use dummy byte for this)
     LDA ram_fetch_new_game_timer_flag  ; do we need to set the game timer? if not, use
@@ -260,16 +260,16 @@ ChkOverR:
     LDA #$03  ; set player state to climbing
     STA ram_player_state
     LDX #$00  ; set offset for first slot, for block object
-    JSR InitBlock_XY_Pos
+    JSR sub_init_block_xy_pos
     LDA #$f0  ; set vertical coordinate for block object
     STA ram_block_y_position
     LDX #$05  ; set offset in X for last enemy object buffer slot
     LDY #$00  ; set offset in Y for object coordinates used earlier
-    JSR Setup_Vine  ; do a sub to grow vine
+    JSR sub_setup_vine  ; do a sub to grow vine
 ChkSwimE:
     LDY ram_area_type  ; if level not water-type,
     BNE SetPESub  ; skip this subroutine
-    JSR SetupBubble  ; otherwise, execute sub to set up air bubbles
+    JSR sub_setup_bubble  ; otherwise, execute sub to set up air bubbles
 SetPESub:
     LDA #$07  ; set to run player entrance subroutine
     STA ram_game_engine_subroutine  ; on the next frame of game engine
@@ -327,7 +327,7 @@ MaskHPNyb:
     LDA #$00  ; beginning of the level
 SetHalfway:
     STA ram_halfway_page  ; store as halfway page for player
-    JSR TransposePlayers  ; switch players around if 2-player game
+    JSR sub_transpose_players  ; switch players around if 2-player game
     JMP ContinueGame  ; continue the game
 
 ; -------------------------------------------------------------------------------------
@@ -359,13 +359,13 @@ RunGameOver:
     STA ram_disable_screen_flag
     LDA ram_saved_joypad1_bits  ; check controller for start pressed
     AND #con_btn_start
-    BNE TerminateGame
+    BNE sub_terminate_game
     LDA ram_screen_timer  ; if not pressed, wait for
     BNE GameIsOn  ; screen timer to expire
-TerminateGame:
+sub_terminate_game:
     LDA #con_silence  ; silence music
     STA ram_event_music_queue
-    JSR TransposePlayers  ; check if other player can keep
+    JSR sub_transpose_players  ; check if other player can keep
     BCC ContinueGame  ; going, and do so if possible
     LDA ram_world_number  ; otherwise put world number of current
     STA ram_continue_world  ; player into secret continue function variable
@@ -377,7 +377,7 @@ TerminateGame:
     RTS
 
 ContinueGame:
-    JSR LoadAreaPointer  ; update level pointer with
+    JSR sub_load_area_pointer  ; update level pointer with
     LDA #$01  ; actual world and area numbers, then
     STA ram_player_size  ; reset player's size, status, and
     INC ram_fetch_new_game_timer_flag  ; set game timer flag to reload
@@ -391,7 +391,7 @@ ContinueGame:
 GameIsOn:
     RTS
 
-TransposePlayers:
+sub_transpose_players:
     SEC  ; set carry flag by default to end game
     LDA ram_number_of_players  ; if only a 1 player game, leave
     BEQ ExTrans
@@ -416,8 +416,8 @@ ExTrans:
 
 ; -------------------------------------------------------------------------------------
 
-DoNothing1:
+sub_do_nothing1:
     LDA #$ff  ; this is residual code, this value is
     STA $06c9  ; not used anywhere in the program
-DoNothing2:
+sub_do_nothing2:
     RTS

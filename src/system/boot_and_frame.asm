@@ -26,7 +26,7 @@ WBootCheck:
     BNE ColdBoot
     LDY #con_warm_boot_offset  ; if passed both, load warm boot pointer
 ColdBoot:
-    JSR InitializeMemory  ; clear memory using pointer in Y
+    JSR sub_initialize_memory  ; clear memory using pointer in Y
     STA SND_DELTA_REG+1  ; reset delta counter load register
     STA ram_oper_mode  ; reset primary mode of operation
     LDA #$a5  ; set warm boot flag
@@ -36,12 +36,12 @@ ColdBoot:
     STA SND_MASTERCTRL_REG  ; enable all sound channels except dmc
     LDA #%00000110
     STA PPU_CTRL_REG2  ; turn off clipping for OAM and background
-    JSR MoveAllSpritesOffscreen
-    JSR InitializeNameTables  ; initialize both name tables
+    JSR sub_move_all_sprites_offscreen
+    JSR sub_initialize_name_tables  ; initialize both name tables
     INC ram_disable_screen_flag  ; set flag to disable screen output
     LDA ram_mirror_ppu_ctrl_reg1
     ORA #%10000000  ; enable NMIs
-    JSR WritePPUReg1
+    JSR sub_write_ppu_reg1
 EndlessLoop:
     JMP EndlessLoop  ; endless loop, need I say more?
 
@@ -88,7 +88,7 @@ ScreenOff:
     STA PPU_CTRL_REG2
     LDX PPU_STATUS  ; reset flip-flop and reset scroll registers to zero
     LDA #$00
-    JSR InitScroll
+    JSR sub_init_scroll
     STA PPU_SPR_ADDR  ; reset spr-ram address register
     LDA #$02  ; perform spr-ram DMA access on $0200-$02ff
     STA SPR_DMA
@@ -97,7 +97,7 @@ ScreenOff:
     STA $00
     LDA VRAM_AddrTable_High,x
     STA $01
-    JSR UpdateScreen  ; update screen with buffer contents
+    JSR sub_update_screen  ; update screen with buffer contents
     LDY #$00
     LDX ram_vram_buffer_addr_ctrl  ; check for usage of $0341
     CPX #$06
@@ -111,10 +111,10 @@ InitBuffer:
     STA ram_vram_buffer_addr_ctrl  ; reinit address control to $0301
     LDA ram_mirror_ppu_ctrl_reg2  ; copy mirror of $2001 to register
     STA PPU_CTRL_REG2
-    JSR SoundEngine  ; play sound
-    JSR ReadJoypads  ; read joypads
-    JSR PauseRoutine  ; handle pause
-    JSR UpdateTopScore
+    JSR sub_sound_engine  ; play sound
+    JSR sub_read_joypads  ; read joypads
+    JSR sub_pause_routine  ; handle pause
+    JSR sub_update_top_score
     LDA ram_game_pause_status  ; check for pause status
     LSR
     BCS PauseSkip
@@ -164,8 +164,8 @@ Sprite0Clr:
     LDA ram_game_pause_status  ; if in pause mode, do not bother with sprites at all
     LSR
     BCS Sprite0Hit
-    JSR MoveSpritesOffscreen
-    JSR SpriteShuffler
+    JSR sub_move_sprites_offscreen
+    JSR sub_sprite_shuffler
 Sprite0Hit:
     LDA PPU_STATUS  ; do sprite #0 hit detection
     AND #%01000000
@@ -185,7 +185,7 @@ SkipSprite0:
     LDA ram_game_pause_status  ; if in pause mode, do not perform operation mode stuff
     LSR
     BCS SkipMainOper
-    JSR OperModeExecutionTree  ; otherwise do one of many, many possible subroutines
+    JSR sub_oper_mode_execution_tree  ; otherwise do one of many, many possible subroutines
 SkipMainOper:
     LDA PPU_STATUS  ; reset flip-flop
     PLA
@@ -195,7 +195,7 @@ SkipMainOper:
 
 ; -------------------------------------------------------------------------------------
 
-PauseRoutine:
+sub_pause_routine:
     LDA ram_oper_mode  ; are we in victory mode?
     CMP #con_mode_victory  ; if so, go ahead
     BEQ ChkPauseTimer
@@ -236,7 +236,7 @@ ExitPause:
 ; -------------------------------------------------------------------------------------
 ; $00 - used for preset value
 
-SpriteShuffler:
+sub_sprite_shuffler:
     LDY ram_area_type  ; load level type, likely residual code
     LDA #$28  ; load preset value which will put it at
     STA $00  ; sprite #10
@@ -283,7 +283,7 @@ SetMiscOffset:
 
 ; -------------------------------------------------------------------------------------
 
-OperModeExecutionTree:
+sub_oper_mode_execution_tree:
     LDA ram_oper_mode  ; this is the heart of the entire program,
     JSR sub_dispatch_inline_handler  ; most of what goes on starts here
 
@@ -294,11 +294,11 @@ OperModeExecutionTree:
 
 ; -------------------------------------------------------------------------------------
 
-MoveAllSpritesOffscreen:
+sub_move_all_sprites_offscreen:
     LDY #$00  ; this routine moves all sprites off the screen
     .byte $2c  ; BIT instruction opcode
 
-MoveSpritesOffscreen:
+sub_move_sprites_offscreen:
     LDY #$04  ; this routine moves all but sprite 0
     LDA #$f8  ; off the screen
 SprInitLoop:

@@ -47,7 +47,7 @@ JmpEO:
     .word JumpspringHandler
     .word NoRunCode
     .word WarpZoneObject
-    .word RunRetainerObj
+    .word sub_run_retainer_obj
 
 ; --------------------------------
 
@@ -56,40 +56,40 @@ NoRunCode:
 
 ; --------------------------------
 
-RunRetainerObj:
-    JSR GetEnemyOffscreenBits
-    JSR RelativeEnemyPosition
-    JMP EnemyGfxHandler
+sub_run_retainer_obj:
+    JSR sub_get_enemy_offscreen_bits
+    JSR sub_relative_enemy_position
+    JMP sub_enemy_gfx_handler
 
 ; --------------------------------
 
 RunNormalEnemies:
     LDA #$00  ; init sprite attributes
     STA ram_enemy_spr_attrib,x
-    JSR GetEnemyOffscreenBits
-    JSR RelativeEnemyPosition
-    JSR EnemyGfxHandler
-    JSR GetEnemyBoundBox
-    JSR EnemyToBGCollisionDet
-    JSR EnemiesCollision
-    JSR PlayerEnemyCollision
+    JSR sub_get_enemy_offscreen_bits
+    JSR sub_relative_enemy_position
+    JSR sub_enemy_gfx_handler
+    JSR sub_get_enemy_bound_box
+    JSR sub_enemy_to_bg_collision_det
+    JSR sub_enemies_collision
+    JSR sub_player_enemy_collision
     LDY ram_timer_control  ; if master timer control set, skip to last routine
     BNE SkipMove
-    JSR EnemyMovementSubs
+    JSR sub_enemy_movement_subs
 SkipMove:
-    JMP OffscreenBoundsCheck
+    JMP sub_offscreen_bounds_check
 
-EnemyMovementSubs:
+sub_enemy_movement_subs:
     LDA ram_enemy_id,x
     JSR sub_dispatch_inline_handler
 
-    .word MoveNormalEnemy  ; only objects $00-$14 use this table
-    .word MoveNormalEnemy
-    .word MoveNormalEnemy
-    .word MoveNormalEnemy
-    .word MoveNormalEnemy
+    .word sub_move_normal_enemy  ; only objects $00-$14 use this table
+    .word sub_move_normal_enemy
+    .word sub_move_normal_enemy
+    .word sub_move_normal_enemy
+    .word sub_move_normal_enemy
     .word ProcHammerBro
-    .word MoveNormalEnemy
+    .word sub_move_normal_enemy
     .word MoveBloober
     .word MoveBulletBill
     .word NoMoveCode
@@ -97,11 +97,11 @@ EnemyMovementSubs:
     .word MoveSwimmingCheepCheep
     .word MovePodoboo
     .word MovePiranhaPlant
-    .word MoveJumpingEnemy
+    .word sub_move_jumping_enemy
     .word ProcMoveRedPTroopa
     .word MoveFlyGreenPTroopa
     .word MoveLakitu
-    .word MoveNormalEnemy
+    .word sub_move_normal_enemy
     .word NoMoveCode  ; dummy
     .word MoveFlyingCheepCheep
 
@@ -113,49 +113,49 @@ NoMoveCode:
 ; --------------------------------
 
 RunBowserFlame:
-    JSR ProcBowserFlame
-    JSR GetEnemyOffscreenBits
-    JSR RelativeEnemyPosition
-    JSR GetEnemyBoundBox
-    JSR PlayerEnemyCollision
-    JMP OffscreenBoundsCheck
+    JSR sub_proc_bowser_flame
+    JSR sub_get_enemy_offscreen_bits
+    JSR sub_relative_enemy_position
+    JSR sub_get_enemy_bound_box
+    JSR sub_player_enemy_collision
+    JMP sub_offscreen_bounds_check
 
 ; --------------------------------
 
 RunFirebarObj:
-    JSR ProcFirebar
-    JMP OffscreenBoundsCheck
+    JSR sub_proc_firebar
+    JMP sub_offscreen_bounds_check
 
 ; --------------------------------
 
 RunSmallPlatform:
-    JSR GetEnemyOffscreenBits
-    JSR RelativeEnemyPosition
-    JSR SmallPlatformBoundBox
-    JSR SmallPlatformCollision
-    JSR RelativeEnemyPosition
-    JSR DrawSmallPlatform
-    JSR MoveSmallPlatform
-    JMP OffscreenBoundsCheck
+    JSR sub_get_enemy_offscreen_bits
+    JSR sub_relative_enemy_position
+    JSR sub_small_platform_bound_box
+    JSR sub_small_platform_collision
+    JSR sub_relative_enemy_position
+    JSR sub_draw_small_platform
+    JSR sub_move_small_platform
+    JMP sub_offscreen_bounds_check
 
 ; --------------------------------
 
 RunLargePlatform:
-    JSR GetEnemyOffscreenBits
-    JSR RelativeEnemyPosition
-    JSR LargePlatformBoundBox
-    JSR LargePlatformCollision
+    JSR sub_get_enemy_offscreen_bits
+    JSR sub_relative_enemy_position
+    JSR sub_large_platform_bound_box
+    JSR sub_large_platform_collision
     LDA ram_timer_control  ; if master timer control set,
     BNE SkipPT  ; skip subroutine tree
-    JSR LargePlatformSubroutines
+    JSR sub_large_platform_subroutines
 SkipPT:
-    JSR RelativeEnemyPosition
-    JSR DrawLargePlatform
-    JMP OffscreenBoundsCheck
+    JSR sub_relative_enemy_position
+    JSR sub_draw_large_platform
+    JMP sub_offscreen_bounds_check
 
 ; --------------------------------
 
-LargePlatformSubroutines:
+sub_large_platform_subroutines:
     LDA ram_enemy_id,x  ; subtract $24 to get proper offset for jump table
     SEC
     SBC #$24
@@ -171,7 +171,7 @@ LargePlatformSubroutines:
 
 ; -------------------------------------------------------------------------------------
 
-EraseEnemyObject:
+sub_erase_enemy_object:
     LDA #$00  ; clear all enemy object variables
     STA ram_enemy_flag,x
     STA ram_enemy_id,x
@@ -188,7 +188,7 @@ EraseEnemyObject:
 MovePodoboo:
     LDA ram_enemy_interval_timer,x  ; check enemy timer
     BNE PdbM  ; branch to move enemy if not expired
-    JSR InitPodoboo  ; otherwise set up podoboo again
+    JSR sub_init_podoboo  ; otherwise set up podoboo again
     LDA ram_pseudo_random_bit_reg+1,x  ; get part of LSFR
     ORA #%10000000  ; set d7
     STA ram_enemy_y_move_force,x  ; store as movement force
@@ -229,7 +229,7 @@ ChkJH:
     LDY ram_secondary_hard_mode  ; otherwise get secondary hard mode flag
     LDA HammerThrowTmrData,y  ; get timer data using flag as offset
     STA ram_hammer_throwing_timer,x  ; set as new timer
-    JSR SpawnHammerObj  ; do a sub here to spawn hammer object
+    JSR sub_spawn_hammer_obj  ; do a sub here to spawn hammer object
     BCC DecHT  ; if carry clear, hammer not spawned, skip to decrement timer
     LDA ram_enemy_state,x
     ORA #%00001000  ; set d3 in enemy state for hammer throw
@@ -288,7 +288,7 @@ MoveHammerBroXDir:
 Shimmy:
     STY ram_enemy_x_speed,x  ; store horizontal speed
     LDY #$01  ; set to face right by default
-    JSR PlayerEnemyDiff  ; get horizontal difference between player and hammer bro
+    JSR sub_player_enemy_diff  ; get horizontal difference between player and hammer bro
     BMI SetShim  ; if enemy to the left of player, skip this part
     INY  ; set to face left
     LDA ram_enemy_interval_timer,x  ; check walking timer
@@ -298,7 +298,7 @@ Shimmy:
 SetShim:
     STY ram_enemy_moving_dir,x  ; set moving direction
 
-MoveNormalEnemy:
+sub_move_normal_enemy:
     LDY #$00  ; init Y to leave horizontal movement as-is
     LDA ram_enemy_state,x
     AND #%01000000  ; check enemy state for d6 set, if set skip
@@ -377,13 +377,13 @@ ChkKillGoomba:
     LDA ram_enemy_id,x
     CMP #con_goomba  ; check for goomba object
     BNE NKGmba  ; branch if not found
-    JSR EraseEnemyObject  ; otherwise, kill this goomba object
+    JSR sub_erase_enemy_object  ; otherwise, kill this goomba object
 NKGmba:
     RTS  ; leave!
 
 ; --------------------------------
 
-MoveJumpingEnemy:
+sub_move_jumping_enemy:
     JSR sub_move_enemy_with_gravity  ; do a sub to impose gravity on green paratroopa
     JMP sub_move_enemy_horizontally  ; jump to move enemy horizontally
 
@@ -417,8 +417,8 @@ MovPTDwn:
 ; $01 - used to store maximum value for secondary counter
 
 MoveFlyGreenPTroopa:
-    JSR XMoveCntr_GreenPTroopa  ; do sub to increment primary and secondary counters
-    JSR MoveWithXMCntrs  ; do sub to move green paratroopa accordingly, and horizontally
+    JSR sub_x_move_cntr_green_p_troopa  ; do sub to increment primary and secondary counters
+    JSR sub_move_with_xm_cntrs  ; do sub to move green paratroopa accordingly, and horizontally
     LDY #$01  ; set Y to move green paratroopa down
     LDA ram_frame_counter
     AND #%00000011  ; check frame counter 2 LSB for any bits set
@@ -436,10 +436,10 @@ YSway:
 NoMGPT:
     RTS  ; leave!
 
-XMoveCntr_GreenPTroopa:
+sub_x_move_cntr_green_p_troopa:
     LDA #$13  ; load preset maximum value for secondary counter
 
-XMoveCntr_Platform:
+sub_x_move_cntr_platform:
     STA $01  ; store value here
     LDA ram_frame_counter
     AND #%00000011  ; branch to leave if not on
@@ -462,7 +462,7 @@ DecSeXM:
     DEC ram_x_move_secondary_counter,x  ; otherwise decrement secondary counter and leave
     RTS
 
-MoveWithXMCntrs:
+sub_move_with_xm_cntrs:
     LDA ram_x_move_secondary_counter,x  ; save secondary counter to stack
     PHA
     LDY #$01  ; set value here by default
@@ -503,14 +503,14 @@ MoveBloober:
     BCS SBMDir  ; do an unconditional branch to set
 FBLeft:
     LDY #$02  ; set left moving direction by default
-    JSR PlayerEnemyDiff  ; get horizontal difference between player and bloober
+    JSR sub_player_enemy_diff  ; get horizontal difference between player and bloober
     BPL SBMDir  ; if enemy to the right of player, keep left
     DEY  ; otherwise decrement to set right moving direction
 SBMDir:
     STY ram_enemy_moving_dir,x  ; set moving direction of bloober, then continue on here
 
 BlooberSwim:
-    JSR ProcSwimmingB  ; execute sub to make bloober swim characteristically
+    JSR sub_proc_swimming_b  ; execute sub to make bloober swim characteristically
     LDA ram_enemy_y_position,x  ; get vertical coordinate
     SEC
     SBC ram_enemy_y_move_force,x  ; subtract movement force
@@ -543,7 +543,7 @@ LeftSwim:
 MoveDefeatedBloober:
     JMP sub_move_enemy_downward_slow  ; jump to move defeated bloober downwards
 
-ProcSwimmingB:
+sub_proc_swimming_b:
     LDA ram_blooper_move_counter,x  ; get enemy's movement counter
     AND #%00000010  ; check for d1 set
     BNE ChkForFloatdown  ; branch if set

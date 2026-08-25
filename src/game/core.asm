@@ -9,46 +9,46 @@ GameMode:
     .word InitializeArea
     .word ScreenRoutines
     .word SecondaryGameSetup
-    .word GameCoreRoutine
+    .word sub_game_core_routine
 
 ; -------------------------------------------------------------------------------------
 
-GameCoreRoutine:
+sub_game_core_routine:
     LDX ram_current_player  ; get which player is on the screen
     LDA ram_saved_joypad_bits,x  ; use appropriate player's controller bits
     STA ram_saved_joypad_bits  ; as the master controller bits
-    JSR GameRoutines  ; execute one of many possible subs
+    JSR sub_game_routines  ; execute one of many possible subs
     LDA ram_oper_mode_task  ; check major task of operating mode
     CMP #$03  ; if we are supposed to be here,
     BCS GameEngine  ; branch to the game engine itself
     RTS
 
 GameEngine:
-    JSR ProcFireball_Bubble  ; process fireballs and air bubbles
+    JSR sub_proc_fireball_bubble  ; process fireballs and air bubbles
     LDX #$00
 ProcELoop:
     STX ram_object_offset  ; put incremented offset in X as enemy object offset
-    JSR EnemiesAndLoopsCore  ; process enemy objects
-    JSR FloateyNumbersRoutine  ; process floatey numbers
+    JSR sub_enemies_and_loops_core  ; process enemy objects
+    JSR sub_floatey_numbers_routine  ; process floatey numbers
     INX
     CPX #$06  ; do these two subroutines until the whole buffer is done
     BNE ProcELoop
-    JSR GetPlayerOffscreenBits  ; get offscreen bits for player object
-    JSR RelativePlayerPosition  ; get relative coordinates for player object
-    JSR PlayerGfxHandler  ; draw the player
-    JSR BlockObjMT_Updater  ; replace block objects with metatiles if necessary
+    JSR sub_get_player_offscreen_bits  ; get offscreen bits for player object
+    JSR sub_relative_player_position  ; get relative coordinates for player object
+    JSR sub_player_gfx_handler  ; draw the player
+    JSR sub_block_obj_mt_updater  ; replace block objects with metatiles if necessary
     LDX #$01
     STX ram_object_offset  ; set offset for second
-    JSR BlockObjectsCore  ; process second block object
+    JSR sub_block_objects_core  ; process second block object
     DEX
     STX ram_object_offset  ; set offset for first
-    JSR BlockObjectsCore  ; process first block object
-    JSR MiscObjectsCore  ; process misc objects (hammer, jumping coins)
-    JSR ProcessCannons  ; process bullet bill cannons
-    JSR ProcessWhirlpools  ; process whirlpools
-    JSR FlagpoleRoutine  ; process the flagpole
-    JSR RunGameTimer  ; count down the game timer
-    JSR ColorRotation  ; cycle one of the background colors
+    JSR sub_block_objects_core  ; process first block object
+    JSR sub_misc_objects_core  ; process misc objects (hammer, jumping coins)
+    JSR sub_process_cannons  ; process bullet bill cannons
+    JSR sub_process_whirlpools  ; process whirlpools
+    JSR sub_flagpole_routine  ; process the flagpole
+    JSR sub_run_game_timer  ; count down the game timer
+    JSR sub_color_rotation  ; cycle one of the background colors
     LDA ram_player_y_high_pos
     CMP #$02  ; if player is below the screen, don't bother with the music
     BPL NoChgMus
@@ -58,7 +58,7 @@ ProcELoop:
     BNE NoChgMus  ; if not yet at a certain point, continue
     LDA ram_interval_timer_control  ; if interval timer not yet expired,
     BNE NoChgMus  ; branch ahead, don't bother with the music
-    JSR GetAreaMusic  ; to re-attain appropriate level music
+    JSR sub_get_area_music  ; to re-attain appropriate level music
 NoChgMus:
     LDY ram_star_invincible_timer  ; get invincibility timer
     LDA ram_frame_counter  ; get frame counter
@@ -68,16 +68,16 @@ NoChgMus:
     LSR
 CycleTwo:
     LSR  ; if branched here, divide by 2 to cycle every other frame
-    JSR CyclePlayerPalette  ; do sub to cycle the palette (note: shares fire flower code)
+    JSR sub_cycle_player_palette  ; do sub to cycle the palette (note: shares fire flower code)
     JMP SaveAB  ; then skip this sub to finish up the game engine
 ClrPlrPal:
-    JSR ResetPalStar  ; do sub to clear player's palette bits in attributes
+    JSR sub_reset_pal_star  ; do sub to clear player's palette bits in attributes
 SaveAB:
     LDA ram_a_b_buttons  ; save current A and B button
     STA ram_previous_a_b_buttons  ; into temp variable to be used on next frame
     LDA #$00
     STA ram_left_right_buttons  ; nullify left and right buttons temp variable
-UpdScrollVar:
+sub_upd_scroll_var:
     LDA ram_vram_buffer_addr_ctrl
     CMP #$06  ; if vram address controller set to 6 (one of two $0341s)
     BEQ ExitEng  ; then branch to leave
@@ -92,13 +92,13 @@ UpdScrollVar:
     LDA #$00  ; reset vram buffer offset used in conjunction with
     STA ram_vram_buffer2_offset  ; level graphics buffer at $0341-$035f
 RunParser:
-    JSR AreaParserTaskHandler  ; update the name table with more level graphics
+    JSR sub_area_parser_task_handler  ; update the name table with more level graphics
 ExitEng:
     RTS  ; and after all that, we're finally done!
 
 ; -------------------------------------------------------------------------------------
 
-ScrollHandler:
+sub_scroll_handler:
     LDA ram_player_x_scroll  ; load value saved here
     CLC
     ADC ram_platform_x_scroll  ; add value used by left/right platforms
@@ -120,10 +120,10 @@ ScrollHandler:
 ChkNearMid:
     LDA ram_player_pos_for_scroll
     CMP #$70  ; check player's horizontal screen position
-    BCC ScrollScreen  ; if less than 112 pixels to the right, branch
+    BCC sub_scroll_screen  ; if less than 112 pixels to the right, branch
     LDY ram_player_x_scroll  ; otherwise get original value undecremented
 
-ScrollScreen:
+sub_scroll_screen:
     TYA
     STA ram_scroll_amount  ; save value here
     CLC
@@ -143,7 +143,7 @@ ScrollScreen:
     AND #%11111110  ; save all bits except d0
     ORA $00  ; get saved bit here and save in PPU register 1
     STA ram_mirror_ppu_ctrl_reg1  ; mirror to be used to set name table later
-    JSR GetScreenPosition  ; figure out where the right side is
+    JSR sub_get_screen_position  ; figure out where the right side is
     LDA #$08
     STA ram_scroll_interval_timer  ; set scroll timer (residual, not used elsewhere)
     JMP ChkPOffscr  ; skip this part
@@ -152,7 +152,7 @@ InitScrlAmt:
     STA ram_scroll_amount  ; initialize value here
 ChkPOffscr:
     LDX #$00  ; set X for player offset
-    JSR GetXOffscreenBits  ; get horizontal offscreen bits for player
+    JSR sub_get_x_offscreen_bits  ; get horizontal offscreen bits for player
     STA $00  ; save them here
     LDY #$00  ; load default offset (left side)
     ASL  ; if d7 of offscreen bits are set,
@@ -187,7 +187,7 @@ OffscrJoypadBitsData:
 
 ; -------------------------------------------------------------------------------------
 
-GetScreenPosition:
+sub_get_screen_position:
     LDA ram_screen_left_x_pos  ; get coordinate of screen's left boundary
     CLC
     ADC #$ff  ; add 255 pixels
@@ -199,7 +199,7 @@ GetScreenPosition:
 
 ; -------------------------------------------------------------------------------------
 
-GameRoutines:
+sub_game_routines:
     LDA ram_game_engine_subroutine  ; run routine based on number (a few of these routines are
     JSR sub_dispatch_inline_handler  ; merely placeholders as conditions for other routines)
 
@@ -226,7 +226,7 @@ PlayerEntrance:
     LDA #$00
     LDY ram_player_y_position  ; if vertical position above a certain
     CPY #$30  ; point, nullify controller bits and continue
-    BCC AutoControlPlayer  ; with player movement code, do not return
+    BCC sub_auto_control_player  ; with player movement code, do not return
     LDA ram_player_entrance_ctrl  ; check player entry bits from header
     CMP #$06
     BEQ ChkBehPipe  ; if set to 6 or 7, execute pipe intro code
@@ -236,9 +236,9 @@ ChkBehPipe:
     LDA ram_player_spr_attrib  ; check for sprite attributes
     BNE IntroEntr  ; branch if found
     LDA #$01
-    JMP AutoControlPlayer  ; force player to walk to the right
+    JMP sub_auto_control_player  ; force player to walk to the right
 IntroEntr:
-    JSR EnterSidePipe  ; execute sub to move player to the right
+    JSR sub_enter_side_pipe  ; execute sub to move player to the right
     DEC ram_change_area_timer  ; decrement timer for change of area
     BNE ExitEntr  ; branch to exit if not yet expired
     INC ram_disable_intermediate  ; set flag to skip world and lives display
@@ -247,7 +247,7 @@ EntrMode2:
     LDA ram_joypad_override  ; if controller override bits set here,
     BNE VineEntr  ; branch to enter with vine
     LDA #$ff  ; otherwise, set value here then execute sub
-    JSR MovePlayerYAxis  ; to move player upwards (note $ff = -1)
+    JSR sub_move_player_y_axis  ; to move player upwards (note $ff = -1)
     LDA ram_player_y_position  ; check to see if player is at a specific coordinate
     CMP #$91  ; if player risen to a certain point (this requires pipes
     BCC PlayerRdy  ; to be at specific height to look/function right) branch
@@ -268,7 +268,7 @@ VineEntr:
     STA ram_block_buffer_1+$b4  ; use same value to force player to climb
 OffVine:
     STY ram_disable_collision_det  ; set collision detection disable flag
-    JSR AutoControlPlayer  ; use contents of A to move player up or right, execute sub
+    JSR sub_auto_control_player  ; use contents of A to move player up or right, execute sub
     LDA ram_player_x_position
     CMP #$48  ; check player's horizontal position
     BCC ExitEntr  ; if not far enough to the right, branch to leave
@@ -287,7 +287,7 @@ ExitEntr:
 ; -------------------------------------------------------------------------------------
 ; $07 - used to hold upper limit of high byte when player falls down hole
 
-AutoControlPlayer:
+sub_auto_control_player:
     STA ram_saved_joypad_bits  ; override controller bits with contents of A if executing here
 
 PlayerCtrlRoutine:
@@ -343,12 +343,12 @@ ChkMoveDir:
 SetMoveDir:
     STA ram_player_moving_dir  ; set moving direction
 PlayerSubs:
-    JSR ScrollHandler  ; move the screen if necessary
-    JSR GetPlayerOffscreenBits  ; get player's offscreen bits
-    JSR RelativePlayerPosition  ; get coordinates relative to the screen
+    JSR sub_scroll_handler  ; move the screen if necessary
+    JSR sub_get_player_offscreen_bits  ; get player's offscreen bits
+    JSR sub_relative_player_position  ; get coordinates relative to the screen
     LDX #$00  ; set offset for player object
-    JSR BoundingBoxCore  ; get player's bounding box coordinates
-    JSR PlayerBGCollision  ; do collision detection and process
+    JSR sub_bounding_box_core  ; get player's bounding box coordinates
+    JSR sub_player_bg_collision  ; do collision detection and process
     LDA ram_player_y_position
     CMP #$40  ; check to see if player is higher than 64th pixel
     BCC PlayerHole  ; if so, branch ahead
@@ -403,7 +403,7 @@ ExitCtrl:
 CloudExit:
     LDA #$00
     STA ram_joypad_override  ; clear controller override bits if any are set
-    JSR SetEntr  ; do sub to set secondary mode
+    JSR sub_set_entr  ; do sub to set secondary mode
     INC ram_alt_entrance_control  ; set mode of entry to 3
     RTS
 
@@ -414,24 +414,24 @@ Vine_AutoClimb:
     BNE AutoClimb  ; above the status bar yet and if so, set modes
     LDA ram_player_y_position
     CMP #$e4
-    BCC SetEntr
+    BCC sub_set_entr
 AutoClimb:
     LDA #%00001000  ; set controller bits override to up
     STA ram_joypad_override
     LDY #$03  ; set player state to climbing
     STY ram_player_state
-    JMP AutoControlPlayer
-SetEntr:
+    JMP sub_auto_control_player
+sub_set_entr:
     LDA #$02  ; set starting position to override
     STA ram_alt_entrance_control
-    JMP ChgAreaMode  ; set modes
+    JMP sub_chg_area_mode  ; set modes
 
 ; -------------------------------------------------------------------------------------
 
 VerticalPipeEntry:
     LDA #$01  ; set 1 as movement amount
-    JSR MovePlayerYAxis  ; do sub to move player downwards
-    JSR ScrollHandler  ; do sub to scroll screen with saved force if necessary
+    JSR sub_move_player_y_axis  ; do sub to move player downwards
+    JSR sub_scroll_handler  ; do sub to scroll screen with saved force if necessary
     LDY #$00  ; load default mode of entry
     LDA ram_warp_zone_control  ; check warp zone control variable/flag
     BNE ChgAreaPipe  ; if set, branch to use mode 0
@@ -442,7 +442,7 @@ VerticalPipeEntry:
     INY
     JMP ChgAreaPipe  ; otherwise use mode 2
 
-MovePlayerYAxis:
+sub_move_player_y_axis:
     CLC
     ADC ram_player_y_position  ; add contents of A to player position
     STA ram_player_y_position
@@ -451,13 +451,13 @@ MovePlayerYAxis:
 ; -------------------------------------------------------------------------------------
 
 SideExitPipeEntry:
-    JSR EnterSidePipe  ; execute sub to move player to the right
+    JSR sub_enter_side_pipe  ; execute sub to move player to the right
     LDY #$02
 ChgAreaPipe:
     DEC ram_change_area_timer  ; decrement timer for change of area
     BNE ExitCAPipe
     STY ram_alt_entrance_control  ; when timer expires set mode of alternate entry
-ChgAreaMode:
+sub_chg_area_mode:
     INC ram_disable_screen_flag  ; set flag to disable screen output
     LDA #$00
     STA ram_oper_mode_task  ; set secondary mode of operation
@@ -465,7 +465,7 @@ ChgAreaMode:
 ExitCAPipe:
     RTS  ; leave
 
-EnterSidePipe:
+sub_enter_side_pipe:
     LDA #$08  ; set player's horizontal speed
     STA ram_player_x_speed
     LDY #$01  ; set controller right button by default
@@ -476,7 +476,7 @@ EnterSidePipe:
     TAY  ; and nullify controller bit override here
 RightPipe:
     TYA  ; use contents of Y to
-    JSR AutoControlPlayer  ; execute player control routine with ctrl bits nulled
+    JSR sub_auto_control_player  ; execute player control routine with ctrl bits nulled
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -489,7 +489,7 @@ PlayerChangeSize:
 EndChgSize:
     CMP #$c4  ; check again for another specific moment
     BNE ExitChgSize  ; and branch to leave if before or after that point
-    JSR DonePlayerTask  ; otherwise do sub to init timer control and set routine
+    JSR sub_done_player_task  ; otherwise do sub to init timer control and set routine
 ExitChgSize:
     RTS  ; and then leave
 
@@ -500,7 +500,7 @@ PlayerInjuryBlink:
     CMP #$f0  ; for specific moment in time
     BCS ExitBlink  ; branch if before that point
     CMP #$c8  ; check again for another specific point
-    BEQ DonePlayerTask  ; branch if at that point, and not before or after
+    BEQ sub_done_player_task  ; branch if at that point, and not before or after
     JMP PlayerCtrlRoutine  ; otherwise run player control routine
 ExitBlink:
     BNE ExitBoth  ; do unconditional branch to leave
@@ -517,7 +517,7 @@ ExitBoth:
     RTS  ; leave
 
 ; -------------------------------------------------------------------------------------
-; $00 - used in CyclePlayerPalette to store current palette to cycle
+; $00 - used in sub_cycle_player_palette to store current palette to cycle
 
 PlayerDeath:
     LDA ram_timer_control  ; check master timer control
@@ -525,7 +525,7 @@ PlayerDeath:
     BCS ExitDeath  ; branch to leave if before that point
     JMP PlayerCtrlRoutine  ; otherwise run player control routine
 
-DonePlayerTask:
+sub_done_player_task:
     LDA #$00
     STA ram_timer_control  ; initialize master timer control to continue timers
     LDA #$08
@@ -540,7 +540,7 @@ PlayerFireFlower:
     LSR
     LSR  ; divide by four to change every four frames
 
-CyclePlayerPalette:
+sub_cycle_player_palette:
     AND #$03  ; mask out all but d1-d0 (previously d3-d2)
     STA $00  ; store result here to use as palette bits
     LDA ram_player_spr_attrib  ; get player attributes
@@ -550,9 +550,9 @@ CyclePlayerPalette:
     RTS  ; and leave
 
 ResetPalFireFlower:
-    JSR DonePlayerTask  ; do sub to init timer control and run player control routine
+    JSR sub_done_player_task  ; do sub to init timer control and run player control routine
 
-ResetPalStar:
+sub_reset_pal_star:
     LDA ram_player_spr_attrib  ; get player attributes
     AND #%11111100  ; mask out palette bits to force palette 0
     STA ram_player_spr_attrib  ; store as new player attributes
@@ -576,7 +576,7 @@ FlagpoleSlide:
     BCS SlidePlayer  ; far enough, and if so, branch with no controller bits set
     LDA #$04  ; otherwise force player to climb down (to slide)
 SlidePlayer:
-    JMP AutoControlPlayer  ; jump to player control routine
+    JMP sub_auto_control_player  ; jump to player control routine
 NoFPObj:
     INC ram_game_engine_subroutine  ; increment to next routine (this may
     RTS  ; be residual code)
@@ -588,7 +588,7 @@ Hidden1UpCoinAmts:
 
 PlayerEndLevel:
     LDA #$01  ; force player to walk to the right
-    JSR AutoControlPlayer
+    JSR sub_auto_control_player
     LDA ram_player_y_position  ; check player's vertical position
     CMP #$ae
     BCC ChkStop  ; if player is not yet off the flagpole, skip this part
@@ -623,9 +623,9 @@ RdyNextA:
     INC ram_hidden1_up_flag  ; otherwise set hidden 1-up box control flag
 NextArea:
     INC ram_area_number  ; increment area number used for address loader
-    JSR LoadAreaPointer  ; get new level pointer
+    JSR sub_load_area_pointer  ; get new level pointer
     INC ram_fetch_new_game_timer_flag  ; set flag to load new game timer
-    JSR ChgAreaMode  ; do sub to set secondary mode, disable screen and sprite 0
+    JSR sub_chg_area_mode  ; do sub to set secondary mode, disable screen and sprite 0
     STA ram_halfway_page  ; reset halfway page to 0 (beginning)
     LDA #con_silence
     STA ram_event_music_queue  ; silence music and leave

@@ -1,5 +1,5 @@
 ; -------------------------------------------------------------------------------------
-; $00-$01 - used in DrawEnemyObjRow to hold sprite tile numbers
+; $00-$01 - used in sub_draw_enemy_obj_row to hold sprite tile numbers
 ; $02 - used to store Y position
 ; $03 - used to store moving direction, used to flip enemies horizontally
 ; $04 - used to store enemy's sprite attributes
@@ -73,7 +73,7 @@ EnemyAnimTimingBMask:
 JumpspringFrameOffsets:
     .byte $18, $19, $1a, $19, $18
 
-EnemyGfxHandler:
+sub_enemy_gfx_handler:
     LDA ram_enemy_y_position,x  ; get enemy object vertical position
     STA $02
     LDA ram_enemy_rel_x_pos  ; get enemy object horizontal position
@@ -348,9 +348,9 @@ CheckDefeatedState:
 
 DrawEnemyObject:
     LDY $eb  ; load sprite data offset
-    JSR DrawEnemyObjRow  ; draw six tiles of data
-    JSR DrawEnemyObjRow  ; into sprite data
-    JSR DrawEnemyObjRow
+    JSR sub_draw_enemy_obj_row  ; draw six tiles of data
+    JSR sub_draw_enemy_obj_row  ; into sprite data
+    JSR sub_draw_enemy_obj_row
     LDX ram_object_offset  ; get enemy object offset
     LDY ram_enemy_spr_data_offset,x  ; get sprite data offset
     LDA $ef
@@ -367,7 +367,7 @@ CheckForVerticalFlip:
     ORA #%10000000  ; set bit for vertical flip
     INY
     INY  ; increment two bytes so that we store the vertical flip
-    JSR DumpSixSpr  ; in attribute bytes of enemy obj sprite data
+    JSR sub_dump_six_spr  ; in attribute bytes of enemy obj sprite data
     DEY
     DEY  ; now go back to the Y coordinate offset
     TYA
@@ -499,14 +499,14 @@ SprObjectOffscrChk:
     PHA  ; save to stack
     BCC LcChk  ; branch if not set
     LDA #$04  ; set for right column sprites
-    JSR MoveESprColOffscreen  ; and move them offscreen
+    JSR sub_move_e_spr_col_offscreen  ; and move them offscreen
 LcChk:
     PLA  ; get from stack
     LSR  ; move d3 to carry
     PHA  ; save to stack
     BCC Row3C  ; branch if not set
     LDA #$00  ; set for left column sprites,
-    JSR MoveESprColOffscreen  ; move them offscreen
+    JSR sub_move_e_spr_col_offscreen  ; move them offscreen
 Row3C:
     PLA  ; get from stack again
     LSR  ; move d5 to carry this time
@@ -514,50 +514,50 @@ Row3C:
     PHA  ; save to stack again
     BCC Row23C  ; branch if carry not set
     LDA #$10  ; set for third row of sprites
-    JSR MoveESprRowOffscreen  ; and move them offscreen
+    JSR sub_move_e_spr_row_offscreen  ; and move them offscreen
 Row23C:
     PLA  ; get from stack
     LSR  ; move d6 into carry
     PHA  ; save to stack
     BCC AllRowC
     LDA #$08  ; set for second and third rows
-    JSR MoveESprRowOffscreen  ; move them offscreen
+    JSR sub_move_e_spr_row_offscreen  ; move them offscreen
 AllRowC:
     PLA  ; get from stack once more
     LSR  ; move d7 into carry
     BCC ExEGHandler
-    JSR MoveESprRowOffscreen  ; move all sprites offscreen (A should be 0 by now)
+    JSR sub_move_e_spr_row_offscreen  ; move all sprites offscreen (A should be 0 by now)
     LDA ram_enemy_id,x
     CMP #con_podoboo  ; check enemy identifier for podoboo
     BEQ ExEGHandler  ; skip this part if found, we do not want to erase podoboo!
     LDA ram_enemy_y_high_pos,x  ; check high byte of vertical position
     CMP #$02  ; if not yet past the bottom of the screen, branch
     BNE ExEGHandler
-    JSR EraseEnemyObject  ; what it says
+    JSR sub_erase_enemy_object  ; what it says
 
 ExEGHandler:
     RTS
 
-DrawEnemyObjRow:
+sub_draw_enemy_obj_row:
     LDA EnemyGraphicsTable,x  ; load two tiles of enemy graphics
     STA $00
     LDA EnemyGraphicsTable+1,x
 
-DrawOneSpriteRow:
+sub_draw_one_sprite_row:
     STA $01
     JMP DrawSpriteObject  ; draw them
 
-MoveESprRowOffscreen:
+sub_move_e_spr_row_offscreen:
     CLC  ; add A to enemy object OAM data offset
     ADC ram_enemy_spr_data_offset,x
     TAY  ; use as offset
     LDA #$f8
-    JMP DumpTwoSpr  ; move first row of sprites offscreen
+    JMP sub_dump_two_spr  ; move first row of sprites offscreen
 
-MoveESprColOffscreen:
+sub_move_e_spr_col_offscreen:
     CLC  ; add A to enemy object OAM data offset
     ADC ram_enemy_spr_data_offset,x
     TAY  ; use as offset
-    JSR MoveColOffscreen  ; move first and second row sprites in column offscreen
+    JSR sub_move_col_offscreen  ; move first and second row sprites in column offscreen
     STA ram_sprite_data+16,y  ; move third row sprite in column offscreen
     RTS

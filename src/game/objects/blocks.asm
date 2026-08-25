@@ -2,13 +2,13 @@
 ; These apply to all routines in this section unless otherwise noted:
 ; $00 - used to store metatile from block buffer routine
 ; $02 - used to store vertical high nybble offset from block buffer routine
-; $05 - used to store metatile stored in A at beginning of PlayerHeadCollision
+; $05 - used to store metatile stored in A at beginning of sub_player_head_collision
 ; $06-$07 - used as block buffer address indirect
 
 BlockYPosAdderData:
     .byte $04, $12
 
-PlayerHeadCollision:
+sub_player_head_collision:
     PHA  ; store metatile number to stack
     LDA #$11  ; load unbreakable block object state by default
     LDX ram_spr_data_offset_ctrl  ; load offset control bit here
@@ -17,7 +17,7 @@ PlayerHeadCollision:
     LDA #$12  ; otherwise load breakable block object state
 DBlockSte:
     STA ram_block_state,x  ; store into block object buffer
-    JSR DestroyBlockMetatile  ; store blank metatile in vram buffer to write to name table
+    JSR sub_destroy_block_metatile  ; store blank metatile in vram buffer to write to name table
     LDX ram_spr_data_offset_ctrl  ; load offset control bit
     LDA $02  ; get vertical high nybble offset used in block buffer routine
     STA ram_block_orig_y_pos,x  ; set as vertical coordinate for block object
@@ -25,7 +25,7 @@ DBlockSte:
     LDA $06  ; get low byte of block buffer address used in same routine
     STA ram_block_b_buf_low,x  ; save as offset here to be used later
     LDA ($06),y  ; get contents of block buffer at old address at $06, $07
-    JSR BlockBumpedChk  ; do a sub to check which block player bumped head on
+    JSR sub_block_bumped_chk  ; do a sub to check which block player bumped head on
     STA $00  ; store metatile here
     LDY ram_player_size  ; check player's size
     BNE ChkBrick  ; if small, use metatile itself as contents of A
@@ -54,7 +54,7 @@ PutOldMT:
     TYA  ; put metatile into A
 PutMTileB:
     STA ram_block_metatile,x  ; store whatever metatile be appropriate here
-    JSR InitBlock_XY_Pos  ; get block object horizontal coordinates saved
+    JSR sub_init_block_xy_pos  ; get block object horizontal coordinates saved
     LDY $02  ; get vertical high nybble offset
     LDA #$23
     STA ($06),y  ; write blank metatile $23 to block buffer
@@ -78,10 +78,10 @@ BigBP:
     LDY ram_block_state,x  ; get block object state
     CPY #$11
     BEQ Unbreak  ; if set to value loaded for unbreakable, branch
-    JSR BrickShatter  ; execute code for breakable brick
+    JSR sub_brick_shatter  ; execute code for breakable brick
     JMP InvOBit  ; skip subroutine to do last part of code here
 Unbreak:
-    JSR BumpBlock  ; execute code for unbreakable brick or question block
+    JSR sub_bump_block  ; execute code for unbreakable brick or question block
 InvOBit:
     LDA ram_spr_data_offset_ctrl  ; invert control bit used by block objects
     EOR #$01  ; and floatey numbers
@@ -90,7 +90,7 @@ InvOBit:
 
 ; --------------------------------
 
-InitBlock_XY_Pos:
+sub_init_block_xy_pos:
     LDA ram_player_x_position  ; get player's horizontal coordinate
     CLC
     ADC #$08  ; add eight pixels
@@ -106,8 +106,8 @@ InitBlock_XY_Pos:
 
 ; --------------------------------
 
-BumpBlock:
-    JSR CheckTopOfBlock  ; check to see if there's a coin directly above this block
+sub_bump_block:
+    JSR sub_check_top_of_block  ; check to see if there's a coin directly above this block
     LDA #con_sfx_bump
     STA ram_square1_sound_queue  ; play bump sound
     LDA #$00
@@ -117,7 +117,7 @@ BumpBlock:
     LDA #$fe
     STA ram_block_y_speed,x  ; set vertical speed for block object
     LDA $05  ; get original metatile from stack
-    JSR BlockBumpedChk  ; do a sub to check which block player bumped head on
+    JSR sub_block_bumped_chk  ; do a sub to check which block player bumped head on
     BCC ExitBlockChk  ; if no match was found, branch to leave
     TYA  ; move block number to A
     CMP #$09  ; if block number was within 0-8 range,
@@ -154,7 +154,7 @@ ExtraLifeMushBlock:
 VineBlock:
     LDX #$05  ; load last slot for enemy object buffer
     LDY ram_spr_data_offset_ctrl  ; get control bit
-    JSR Setup_Vine  ; set up vine object
+    JSR sub_setup_vine  ; set up vine object
 
 ExitBlockChk:
     RTS  ; leave
@@ -168,7 +168,7 @@ BrickQBlockMetatiles:
     .byte $55, $56, $57, $58, $59  ; used by ground level types
     .byte $5a, $5b, $5c, $5d, $5e  ; used by other level types
 
-BlockBumpedChk:
+sub_block_bumped_chk:
     LDY #$0d  ; start at end of metatile data
 BumpChkLoop:
     CMP BrickQBlockMetatiles,y  ; check to see if current metatile matches
@@ -181,23 +181,23 @@ MatchBump:
 
 ; --------------------------------
 
-BrickShatter:
-    JSR CheckTopOfBlock  ; check to see if there's a coin directly above this block
+sub_brick_shatter:
+    JSR sub_check_top_of_block  ; check to see if there's a coin directly above this block
     LDA #con_sfx_brick_shatter
     STA ram_block_rep_flag,x  ; set flag for block object to immediately replace metatile
     STA ram_noise_sound_queue  ; load brick shatter sound
-    JSR SpawnBrickChunks  ; create brick chunk objects
+    JSR sub_spawn_brick_chunks  ; create brick chunk objects
     LDA #$fe
     STA ram_player_y_speed  ; set vertical speed for player
     LDA #$05
     STA ram_digit_modifier+5  ; set digit modifier to give player 50 points
-    JSR AddToScore  ; do sub to update the score
+    JSR sub_add_to_score  ; do sub to update the score
     LDX ram_spr_data_offset_ctrl  ; load control bit and leave
     RTS
 
 ; --------------------------------
 
-CheckTopOfBlock:
+sub_check_top_of_block:
     LDX ram_spr_data_offset_ctrl  ; load control bit
     LDY $02  ; get vertical high nybble offset used in block buffer
     BEQ TopEx  ; branch to leave if set to zero, because we're at the top
@@ -211,15 +211,15 @@ CheckTopOfBlock:
     BNE TopEx  ; if not, branch to leave
     LDA #$00
     STA ($06),y  ; otherwise put blank metatile where coin was
-    JSR RemoveCoin_Axe  ; write blank metatile to vram buffer
+    JSR sub_remove_coin_axe  ; write blank metatile to vram buffer
     LDX ram_spr_data_offset_ctrl  ; get control bit
-    JSR SetupJumpCoin  ; create jumping coin object and update coin variables
+    JSR sub_setup_jump_coin  ; create jumping coin object and update coin variables
 TopEx:
     RTS  ; leave!
 
 ; --------------------------------
 
-SpawnBrickChunks:
+sub_spawn_brick_chunks:
     LDA ram_block_x_position,x  ; set horizontal coordinate of block object
     STA ram_block_orig_x_pos,x  ; as original horizontal coordinate here
     LDA #$f0
@@ -246,7 +246,7 @@ SpawnBrickChunks:
 
 ; -------------------------------------------------------------------------------------
 
-BlockObjectsCore:
+sub_block_objects_core:
     LDA ram_block_state,x  ; get state of block object
     BEQ UpdSte  ; if not set, branch to leave
     AND #$0f  ; mask out high nybble
@@ -267,9 +267,9 @@ BlockObjectsCore:
     JSR sub_apply_block_gravity  ; do sub to impose gravity on other block object
     JSR sub_move_object_horizontally  ; do another sub to move horizontally
     LDX ram_object_offset  ; get block object offset used for both
-    JSR RelativeBlockPosition  ; get relative coordinates
-    JSR GetBlockOffscreenBits  ; get offscreen information
-    JSR DrawBrickChunks  ; draw the brick chunks
+    JSR sub_relative_block_position  ; get relative coordinates
+    JSR sub_get_block_offscreen_bits  ; get offscreen information
+    JSR sub_draw_brick_chunks  ; draw the brick chunks
     PLA  ; get lower nybble of saved state
     LDY ram_block_y_high_pos,x  ; check vertical high byte of block object
     BEQ UpdSte  ; if above the screen, branch to kill it
@@ -288,9 +288,9 @@ ChkTop:
 BouncingBlockHandler:
     JSR sub_apply_block_gravity  ; do sub to impose gravity on block object
     LDX ram_object_offset  ; get block object offset
-    JSR RelativeBlockPosition  ; get relative coordinates
-    JSR GetBlockOffscreenBits  ; get offscreen information
-    JSR DrawBlock  ; draw the block
+    JSR sub_relative_block_position  ; get relative coordinates
+    JSR sub_get_block_offscreen_bits  ; get offscreen information
+    JSR sub_draw_block  ; draw the block
     LDA ram_block_y_position,x  ; get vertical coordinate
     AND #$0f  ; mask out high nybble
     CMP #$05  ; check to see if low nybble wrapped around
@@ -308,7 +308,7 @@ UpdSte:
 ; $02 - used to store offset to block buffer
 ; $06-$07 - used to store block buffer address
 
-BlockObjMT_Updater:
+sub_block_obj_mt_updater:
     LDX #$01  ; set offset to start with second block object
 UpdateLoop:
     STX ram_object_offset  ; set offset here
@@ -325,7 +325,7 @@ UpdateLoop:
     TAY
     LDA ram_block_metatile,x  ; get metatile to be written
     STA ($06),y  ; write it to the block buffer
-    JSR ReplaceBlockMetatile  ; do sub to replace metatile where block object is
+    JSR sub_replace_block_metatile  ; do sub to replace metatile where block object is
     LDA #$00
     STA ram_block_rep_flag,x  ; clear block object flag
 NextBUpd:

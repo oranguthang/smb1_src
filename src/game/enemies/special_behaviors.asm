@@ -36,15 +36,15 @@ FirebarTblOffsets:
 FirebarYPos:
     .byte $0c, $18
 
-ProcFirebar:
-    JSR GetEnemyOffscreenBits  ; get offscreen information
+sub_proc_firebar:
+    JSR sub_get_enemy_offscreen_bits  ; get offscreen information
     LDA ram_enemy_offscreen_bits  ; check for d3 set
     AND #%00001000  ; if so, branch to leave
     BNE SkipFBar
     LDA ram_timer_control  ; if master timer control set, branch
     BNE SusFbar  ; ahead of this part
     LDA ram_firebar_spin_speed,x  ; load spinning speed of firebar
-    JSR FirebarSpin  ; modify current spinstate
+    JSR sub_firebar_spin  ; modify current spinstate
     AND #%00011111  ; mask out all but 5 LSB
     STA ram_firebar_spin_state_high,x  ; and store as new high byte of spinstate
 SusFbar:
@@ -62,8 +62,8 @@ SkpFSte:
     STA ram_firebar_spin_state_high,x
 SetupGFB:
     STA $ef  ; save high byte of spinning thing, modified or otherwise
-    JSR RelativeEnemyPosition  ; get relative coordinates to screen
-    JSR GetFirebarPosition  ; do a sub here (residual, too early to be used now)
+    JSR sub_relative_enemy_position  ; get relative coordinates to screen
+    JSR sub_get_firebar_position  ; do a sub here (residual, too early to be used now)
     LDY ram_enemy_spr_data_offset,x  ; get OAM data offset
     LDA ram_enemy_rel_y_pos  ; get relative vertical coordinate
     STA ram_sprite_y_position,y  ; store as Y in OAM data
@@ -73,7 +73,7 @@ SetupGFB:
     STA $06  ; also save here
     LDA #$01
     STA $00  ; set $01 value here (not necessary)
-    JSR FirebarCollision  ; draw fireball part and do collision detection
+    JSR sub_firebar_collision  ; draw fireball part and do collision detection
     LDY #$05  ; load value for short firebars by default
     LDA ram_enemy_id,x
     CMP #$1f  ; are we doing a long firebar?
@@ -85,8 +85,8 @@ SetMFbar:
     STA $00  ; initialize counter here
 DrawFbar:
     LDA $ef  ; load high byte of spinstate
-    JSR GetFirebarPosition  ; get fireball position data depending on firebar part
-    JSR DrawFirebar_Collision  ; position it properly, draw it and do collision detection
+    JSR sub_get_firebar_position  ; get fireball position data depending on firebar part
+    JSR sub_draw_firebar_collision  ; position it properly, draw it and do collision detection
     LDA $00  ; check which firebar part
     CMP #$04
     BNE NextFbar
@@ -101,7 +101,7 @@ NextFbar:
 SkipFBar:
     RTS
 
-DrawFirebar_Collision:
+sub_draw_firebar_collision:
     LDA $03  ; store mirror data elsewhere
     STA $05
     LDY $06  ; load OAM data offset for firebar
@@ -145,8 +145,8 @@ SetVFbr:
     STA ram_sprite_y_position,y  ; store as Y coordinate here
     STA $07  ; also store here for now
 
-FirebarCollision:
-    JSR DrawFirebar  ; run sub here to draw current tile of firebar
+sub_firebar_collision:
+    JSR sub_draw_firebar  ; run sub here to draw current tile of firebar
     TYA  ; return OAM data offset and save
     PHA  ; to the stack for now
     LDA ram_star_invincible_timer  ; if star mario invincibility timer
@@ -217,7 +217,7 @@ SetSDir:
     LDX #$00
     LDA $00  ; save value written to $00 to stack
     PHA
-    JSR InjurePlayer  ; perform sub to hurt or kill player
+    JSR sub_injure_player  ; perform sub to hurt or kill player
     PLA
     STA $00  ; get value of $00 from stack
 NoColFB:
@@ -228,7 +228,7 @@ NoColFB:
     LDX ram_object_offset  ; get enemy object buffer offset and leave
     RTS
 
-GetFirebarPosition:
+sub_get_firebar_position:
     PHA  ; save high byte of spinstate to the stack
     AND #%00001111  ; mask out low nybble
     CMP #$09
@@ -352,7 +352,7 @@ LdLDa:
     STA $0001,y  ; store in zero page
     DEY
     BPL LdLDa  ; do this until all values are stired
-    JSR PlayerLakituDiff  ; execute sub to set speed and create spinys
+    JSR sub_player_lakitu_diff  ; execute sub to set speed and create spinys
 SetLSpd:
     STA ram_lakitu_move_speed,x  ; set movement speed returned from sub
     LDY #$01  ; set moving direction to right by default
@@ -369,9 +369,9 @@ SetLMov:
     STY ram_enemy_moving_dir,x  ; store moving direction
     JMP sub_move_enemy_horizontally  ; move lakitu horizontally
 
-PlayerLakituDiff:
+sub_player_lakitu_diff:
     LDY #$00  ; set Y for default value
-    JSR PlayerEnemyDiff  ; get horizontal difference between enemy and player
+    JSR sub_player_enemy_diff  ; get horizontal difference between enemy and player
     BPL ChkLakDif  ; branch if enemy is to the right of the player
     INY  ; increment Y for left of player
     LDA $00

@@ -3,7 +3,7 @@
 CannonBitmasks:
     .byte %00001111, %00000111
 
-ProcessCannons:
+sub_process_cannons:
     LDA ram_area_type  ; get area type
     BEQ ExCannon  ; if water type area, branch to leave
     LDX #$02
@@ -52,11 +52,11 @@ Chk_BB:
     LDA ram_enemy_id,x  ; check enemy identifier for bullet bill (cannon variant)
     CMP #con_bullet_bill_cannon_var
     BNE Next3Slt  ; if not found, branch to get next slot
-    JSR OffscreenBoundsCheck  ; otherwise, check to see if it went offscreen
+    JSR sub_offscreen_bounds_check  ; otherwise, check to see if it went offscreen
     LDA ram_enemy_flag,x  ; check enemy buffer flag
     BEQ Next3Slt  ; if not set, branch to get next slot
-    JSR GetEnemyOffscreenBits  ; otherwise, get offscreen information
-    JSR BulletBillHandler  ; then do sub to handle bullet bill
+    JSR sub_get_enemy_offscreen_bits  ; otherwise, get offscreen information
+    JSR sub_bullet_bill_handler  ; then do sub to handle bullet bill
 Next3Slt:
     DEX  ; move onto next slot
     BPL ThreeSChk  ; do this until first three slots are checked
@@ -68,7 +68,7 @@ ExCannon:
 BulletBillXSpdData:
     .byte $18, $e8
 
-BulletBillHandler:
+sub_bullet_bill_handler:
     LDA ram_timer_control  ; if master timer control set,
     BNE RunBBSubs  ; branch to run subroutines except movement sub
     LDA ram_enemy_state,x
@@ -78,7 +78,7 @@ BulletBillHandler:
     CMP #%00001100  ; check to see if all bits are set
     BEQ KillBB  ; if so, branch to kill this object
     LDY #$01  ; set to move right by default
-    JSR PlayerEnemyDiff  ; get horizontal difference between player and bullet bill
+    JSR sub_player_enemy_diff  ; get horizontal difference between player and bullet bill
     BMI SetupBB  ; if enemy to the left of player, branch
     INY  ; otherwise increment to move left
 SetupBB:
@@ -104,13 +104,13 @@ ChkDSte:
 BBFly:
     JSR sub_move_enemy_horizontally  ; do sub to move bullet bill horizontally
 RunBBSubs:
-    JSR GetEnemyOffscreenBits  ; get offscreen information
-    JSR RelativeEnemyPosition  ; get relative coordinates
-    JSR GetEnemyBoundBox  ; get bounding box coordinates
-    JSR PlayerEnemyCollision  ; handle player to enemy collisions
-    JMP EnemyGfxHandler  ; draw the bullet bill and leave
+    JSR sub_get_enemy_offscreen_bits  ; get offscreen information
+    JSR sub_relative_enemy_position  ; get relative coordinates
+    JSR sub_get_enemy_bound_box  ; get bounding box coordinates
+    JSR sub_player_enemy_collision  ; handle player to enemy collisions
+    JMP sub_enemy_gfx_handler  ; draw the bullet bill and leave
 KillBB:
-    JSR EraseEnemyObject  ; kill bullet bill and leave
+    JSR sub_erase_enemy_object  ; kill bullet bill and leave
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -122,7 +122,7 @@ HammerEnemyOfsData:
 HammerXSpdData:
     .byte $10, $f0
 
-SpawnHammerObj:
+sub_spawn_hammer_obj:
     LDA ram_pseudo_random_bit_reg+1  ; get pseudorandom bits from
     AND #%00000111  ; second part of LSFR
     BNE SetMOfs  ; if any bits are set, branch and use as offset
@@ -154,7 +154,7 @@ NoHammer:
 ; $01 - used to set upward force (residual)
 ; $02 - used to set maximum speed
 
-ProcHammerObj:
+sub_proc_hammer_obj:
     LDA ram_timer_control  ; if master timer control set
     BNE RunHSubs  ; skip all of this code and go to last subs at the end
     LDA ram_misc_state,x  ; otherwise get hammer's state
@@ -206,12 +206,12 @@ SetHPos:
     STA ram_misc_y_high_pos,x  ; set hammer's vertical high byte
     BNE RunHSubs  ; unconditional branch to skip first routine
 RunAllH:
-    JSR PlayerHammerCollision  ; handle collisions
+    JSR sub_player_hammer_collision  ; handle collisions
 RunHSubs:
-    JSR GetMiscOffscreenBits  ; get offscreen information
-    JSR RelativeMiscPosition  ; get relative coordinates
-    JSR GetMiscBoundBox  ; get bounding box coordinates
-    JSR DrawHammer  ; draw the hammer
+    JSR sub_get_misc_offscreen_bits  ; get offscreen information
+    JSR sub_relative_misc_position  ; get relative coordinates
+    JSR sub_get_misc_bound_box  ; get bounding box coordinates
+    JSR sub_draw_hammer  ; draw the hammer
     RTS  ; and we are done here
 
 ; -------------------------------------------------------------------------------------
@@ -219,7 +219,7 @@ RunHSubs:
 ; $06 - used to store low byte of block buffer address
 
 CoinBlock:
-    JSR FindEmptyMiscSlot  ; set offset for empty or last misc object buffer slot
+    JSR sub_find_empty_misc_slot  ; set offset for empty or last misc object buffer slot
     LDA ram_block_page_loc,x  ; get page location of block object
     STA ram_misc_page_loc,y  ; store as page location of misc object
     LDA ram_block_x_position,x  ; get horizontal coordinate of block object
@@ -230,8 +230,8 @@ CoinBlock:
     STA ram_misc_y_position,y  ; store as vertical coordinate of misc object
     JMP JCoinC  ; jump to rest of code as applies to this misc object
 
-SetupJumpCoin:
-    JSR FindEmptyMiscSlot  ; set offset for empty or last misc object buffer slot
+sub_setup_jump_coin:
+    JSR sub_find_empty_misc_slot  ; set offset for empty or last misc object buffer slot
     LDA ram_block_page_loc2,x  ; get page location saved earlier
     STA ram_misc_page_loc,y  ; and save as page location for misc object
     LDA $06  ; get low byte of block buffer offset
@@ -252,11 +252,11 @@ JCoinC:
     STA ram_misc_state,y  ; set state for misc object
     STA ram_square2_sound_queue  ; load coin grab sound
     STX ram_object_offset  ; store current control bit as misc object offset
-    JSR GiveOneCoin  ; update coin tally on the screen and coin amount variable
+    JSR sub_give_one_coin  ; update coin tally on the screen and coin amount variable
     INC ram_coin_tally_for1_ups  ; increment coin tally used to activate 1-up block flag
     RTS
 
-FindEmptyMiscSlot:
+sub_find_empty_misc_slot:
     LDY #$08  ; start at end of misc objects buffer
 FMiscLoop:
     LDA ram_misc_state,y  ; get misc object state
@@ -271,7 +271,7 @@ UseMiscS:
 
 ; -------------------------------------------------------------------------------------
 
-MiscObjectsCore:
+sub_misc_objects_core:
     LDX #$08  ; set at end of misc object buffer
 MiscLoop:
     STX ram_object_offset  ; store misc object offset here
@@ -279,7 +279,7 @@ MiscLoop:
     BEQ MiscLoopBack  ; branch to check next slot
     ASL  ; otherwise shift d7 into carry
     BCC ProcJumpCoin  ; if d7 not set, jumping coin, thus skip to rest of code here
-    JSR ProcHammerObj  ; otherwise go to process hammer,
+    JSR sub_proc_hammer_obj  ; otherwise go to process hammer,
     JMP MiscLoopBack  ; then check next slot
 
 ; --------------------------------
@@ -324,10 +324,10 @@ JCoinRun:
     BNE RunJCSubs  ; if not moving downward fast enough, keep state as-is
     INC ram_misc_state,x  ; otherwise increment state to change to floatey number
 RunJCSubs:
-    JSR RelativeMiscPosition  ; get relative coordinates
-    JSR GetMiscOffscreenBits  ; get offscreen information
-    JSR GetMiscBoundBox  ; get bounding box coordinates (why?)
-    JSR JCoinGfxHandler  ; draw the coin or floatey number
+    JSR sub_relative_misc_position  ; get relative coordinates
+    JSR sub_get_misc_offscreen_bits  ; get offscreen information
+    JSR sub_get_misc_bound_box  ; get bounding box coordinates (why?)
+    JSR sub_j_coin_gfx_handler  ; draw the coin or floatey number
 
 MiscLoopBack:
     DEX  ; decrement misc object offset
@@ -345,12 +345,12 @@ ScoreOffsets:
 StatusBarNybbles:
     .byte $02, $13
 
-GiveOneCoin:
+sub_give_one_coin:
     LDA #$01  ; set digit modifier to add 1 coin
     STA ram_digit_modifier+5  ; to the current player's coin tally
     LDX ram_current_player  ; get current player on the screen
     LDY CoinTallyOffsets,x  ; get offset for player's coin tally
-    JSR DigitsMathRoutine  ; update the coin tally
+    JSR sub_digits_math_routine  ; update the coin tally
     INC ram_coin_tally  ; increment onscreen player's coin amount
     LDA ram_coin_tally
     CMP #100  ; does player have 100 coins yet?
@@ -365,17 +365,17 @@ CoinPoints:
     LDA #$02  ; set digit modifier to award
     STA ram_digit_modifier+4  ; 200 points to the player
 
-AddToScore:
+sub_add_to_score:
     LDX ram_current_player  ; get current player
     LDY ScoreOffsets,x  ; get offset for player's score
-    JSR DigitsMathRoutine  ; update the score internally with value in digit modifier
+    JSR sub_digits_math_routine  ; update the score internally with value in digit modifier
 
-GetSBNybbles:
+sub_get_sb_nybbles:
     LDY ram_current_player  ; get current player
     LDA StatusBarNybbles,y  ; get nybbles based on player, use to update score and coins
 
-UpdateNumber:
-    JSR PrintStatusBarNumbers  ; print status bar numbers based on nybbles, whatever they be
+sub_update_number:
+    JSR sub_print_status_bar_numbers  ; print status bar numbers based on nybbles, whatever they be
     LDY ram_vram_buffer1_offset
     LDA ram_vram_buffer1-6,y  ; check highest digit of score
     BNE NoZSup  ; if zero, overwrite with space tile for zero suppression
@@ -439,12 +439,12 @@ PowerUpObjHandler:
     BEQ ShroomM  ; if 1-up mushroom, branch ahead to move it
     CMP #$02
     BNE RunPUSubs  ; if not star, branch elsewhere to skip movement
-    JSR MoveJumpingEnemy  ; otherwise impose gravity on star power-up and make it jump
-    JSR EnemyJump  ; note that green paratroopa shares the same code here
+    JSR sub_move_jumping_enemy  ; otherwise impose gravity on star power-up and make it jump
+    JSR sub_enemy_jump  ; note that green paratroopa shares the same code here
     JMP RunPUSubs  ; then jump to other power-up subroutines
 ShroomM:
-    JSR MoveNormalEnemy  ; do sub to make mushrooms move
-    JSR EnemyToBGCollisionDet  ; deal with collisions
+    JSR sub_move_normal_enemy  ; do sub to make mushrooms move
+    JSR sub_enemy_to_bg_collision_det  ; deal with collisions
     JMP RunPUSubs  ; run the other subroutines
 
 GrowThePowerUp:
@@ -469,11 +469,11 @@ ChkPUSte:
     CMP #$06  ; for if power-up has risen enough
     BCC ExitPUp  ; if not, don't even bother running these routines
 RunPUSubs:
-    JSR RelativeEnemyPosition  ; get coordinates relative to screen
-    JSR GetEnemyOffscreenBits  ; get offscreen bits
-    JSR GetEnemyBoundBox  ; get bounding box coordinates
-    JSR DrawPowerUp  ; draw the power-up object
-    JSR PlayerEnemyCollision  ; check for collision with player
-    JSR OffscreenBoundsCheck  ; check to see if it went offscreen
+    JSR sub_relative_enemy_position  ; get coordinates relative to screen
+    JSR sub_get_enemy_offscreen_bits  ; get offscreen bits
+    JSR sub_get_enemy_bound_box  ; get bounding box coordinates
+    JSR sub_draw_power_up  ; draw the power-up object
+    JSR sub_player_enemy_collision  ; check for collision with player
+    JSR sub_offscreen_bounds_check  ; check to see if it went offscreen
 ExitPUp:
     RTS  ; and we're done

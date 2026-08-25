@@ -5,10 +5,10 @@ AreaDataOfsLoopback:
 
 ; -------------------------------------------------------------------------------------
 
-LoadAreaPointer:
-    JSR FindAreaPointer  ; find it and store it here
+sub_load_area_pointer:
+    JSR sub_find_area_pointer  ; find it and store it here
     STA ram_area_pointer
-GetAreaType:
+sub_get_area_type:
     AND #%01100000  ; mask out all but d6 and d5
     ASL
     ROL
@@ -17,7 +17,7 @@ GetAreaType:
     STA ram_area_type  ; save 2 MSB as area type
     RTS
 
-FindAreaPointer:
+sub_find_area_pointer:
     LDY ram_world_number  ; load offset from world variable
     LDA WorldAddrOffsets,y
     CLC  ; add area number used to find data
@@ -26,9 +26,9 @@ FindAreaPointer:
     LDA AreaAddrOffsets,y  ; from there we have our area pointer
     RTS
 
-GetAreaDataAddrs:
+sub_get_area_data_addrs:
     LDA ram_area_pointer  ; use 2 MSB for Y
-    JSR GetAreaType
+    JSR sub_get_area_type
     TAY
     LDA ram_area_pointer  ; mask out all but 5 LSB
     AND #%00011111

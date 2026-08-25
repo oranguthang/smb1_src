@@ -1,9 +1,9 @@
 ; -------------------------------------------------------------------------------------
-; $00 - used to store downward movement force in FireballObjCore
-; $02 - used to store maximum vertical speed in FireballObjCore
-; $07 - used to store pseudorandom bit in BubbleCheck
+; $00 - used to store downward movement force in sub_fireball_obj_core
+; $02 - used to store maximum vertical speed in sub_fireball_obj_core
+; $07 - used to store pseudorandom bit in sub_bubble_check
 
-ProcFireball_Bubble:
+sub_proc_fireball_bubble:
     LDA ram_player_status  ; check player's status
     CMP #$02
     BCC ProcAirBubbles  ; if not fiery, branch
@@ -37,9 +37,9 @@ ProcFireball_Bubble:
 
 ProcFireballs:
     LDX #$00
-    JSR FireballObjCore  ; process first fireball object
+    JSR sub_fireball_obj_core  ; process first fireball object
     LDX #$01
-    JSR FireballObjCore  ; process second fireball object, then do air bubbles
+    JSR sub_fireball_obj_core  ; process second fireball object, then do air bubbles
 
 ProcAirBubbles:
     LDA ram_area_type  ; if not water type level, skip the rest of this
@@ -47,10 +47,10 @@ ProcAirBubbles:
     LDX #$02  ; otherwise load counter and use as offset
 BublLoop:
     STX ram_object_offset  ; store offset
-    JSR BubbleCheck  ; check timers and coordinates, create air bubble
-    JSR RelativeBubblePosition  ; get relative coordinates
-    JSR GetBubbleOffscreenBits  ; get offscreen information
-    JSR DrawBubble  ; draw the air bubble
+    JSR sub_bubble_check  ; check timers and coordinates, create air bubble
+    JSR sub_relative_bubble_position  ; get relative coordinates
+    JSR sub_get_bubble_offscreen_bits  ; get offscreen information
+    JSR sub_draw_bubble  ; draw the air bubble
     DEX
     BPL BublLoop  ; do this until all three are handled
 BublExit:
@@ -59,7 +59,7 @@ BublExit:
 FireballXSpdData:
     .byte $40, $c0
 
-FireballObjCore:
+sub_fireball_obj_core:
     STX ram_object_offset  ; store offset as current object
     LDA ram_fireball_state,x  ; check for d7 = 1
     ASL
@@ -100,14 +100,14 @@ RunFB:
     JSR sub_apply_object_gravity  ; do sub here to impose gravity on fireball and move vertically
     JSR sub_move_object_horizontally  ; do another sub to move it horizontally
     LDX ram_object_offset  ; return fireball offset to X
-    JSR RelativeFireballPosition  ; get relative coordinates
-    JSR GetFireballOffscreenBits  ; get offscreen information
-    JSR GetFireballBoundBox  ; get bounding box coordinates
-    JSR FireballBGCollision  ; do fireball to background collision detection
+    JSR sub_relative_fireball_position  ; get relative coordinates
+    JSR sub_get_fireball_offscreen_bits  ; get offscreen information
+    JSR sub_get_fireball_bound_box  ; get bounding box coordinates
+    JSR sub_fireball_bg_collision  ; do fireball to background collision detection
     LDA ram_f_ball_offscreen_bits  ; get fireball offscreen bits
     AND #%11001100  ; mask out certain bits
     BNE EraseFB  ; if any bits still set, branch to kill fireball
-    JSR FireballEnemyCollision  ; do fireball to enemy collision detection and deal with collisions
+    JSR sub_fireball_enemy_collision  ; do fireball to enemy collision detection and deal with collisions
     JMP DrawFireball  ; draw fireball appropriately and leave
 EraseFB:
     LDA #$00  ; erase fireball state
@@ -116,10 +116,10 @@ NoFBall:
     RTS  ; leave
 
 FireballExplosion:
-    JSR RelativeFireballPosition
+    JSR sub_relative_fireball_position
     JMP DrawExplosion_Fireball
 
-BubbleCheck:
+sub_bubble_check:
     LDA ram_pseudo_random_bit_reg+1,x  ; get part of LSFR
     AND #$01
     STA $07  ; store pseudorandom bit here
@@ -129,7 +129,7 @@ BubbleCheck:
     LDA ram_air_bubble_timer  ; if air bubble timer not expired,
     BNE ExitBubl  ; branch to leave, otherwise create new air bubble
 
-SetupBubble:
+sub_setup_bubble:
     LDY #$00  ; load default value here
     LDA ram_player_facing_dir  ; get player's facing direction
     LSR  ; move d0 to carry
@@ -175,7 +175,7 @@ BubbleTimerData:
 
 ; -------------------------------------------------------------------------------------
 
-RunGameTimer:
+sub_run_game_timer:
     LDA ram_oper_mode  ; get primary mode of operation
     BEQ ExGTimer  ; branch to leave if in title screen mode
     LDA ram_game_engine_subroutine
@@ -206,12 +206,12 @@ ResGTCtrl:
     LDY #$23  ; set offset for last digit
     LDA #$ff  ; set value to decrement game timer digit
     STA ram_digit_modifier+5
-    JSR DigitsMathRoutine  ; do sub to decrement game timer slowly
+    JSR sub_digits_math_routine  ; do sub to decrement game timer slowly
     LDA #$a4  ; set status nybbles to update game timer display
-    JMP PrintStatusBarNumbers  ; do sub to update the display
+    JMP sub_print_status_bar_numbers  ; do sub to update the display
 TimeUpOn:
     STA ram_player_status  ; init player status (note A will always be zero here)
-    JSR ForceInjury  ; do sub to kill the player (note player is small here)
+    JSR sub_force_injury  ; do sub to kill the player (note player is small here)
     INC ram_game_timer_expired_flag  ; set game timer expiration flag
 ExGTimer:
     RTS  ; leave
@@ -226,17 +226,17 @@ WarpZoneObject:
     BNE ExGTimer  ; if so, branch to leave
     STA ram_scroll_lock  ; otherwise nullify scroll lock flag
     INC ram_warp_zone_control  ; increment warp zone flag to make warp pipes for warp zone
-    JMP EraseEnemyObject  ; kill this object
+    JMP sub_erase_enemy_object  ; kill this object
 
 ; -------------------------------------------------------------------------------------
 ; $00 - used in WhirlpoolActivate to store whirlpool length / 2, page location of center of whirlpool
 ; and also to store movement force exerted on player
-; $01 - used in ProcessWhirlpools to store page location of right extent of whirlpool
+; $01 - used in sub_process_whirlpools to store page location of right extent of whirlpool
 ; and in WhirlpoolActivate to store center of whirlpool
-; $02 - used in ProcessWhirlpools to store right extent of whirlpool and in
+; $02 - used in sub_process_whirlpools to store right extent of whirlpool and in
 ; WhirlpoolActivate to store maximum vertical speed
 
-ProcessWhirlpools:
+sub_process_whirlpools:
     LDA ram_area_type  ; check for water type level
     BNE ExitWh  ; branch to leave if not found
     STA ram_whirlpool_flag  ; otherwise initialize whirlpool flag
@@ -327,7 +327,7 @@ FlagpoleScoreMods:
 FlagpoleScoreDigits:
     .byte $03, $03, $04, $04, $04
 
-FlagpoleRoutine:
+sub_flagpole_routine:
     LDX #$05  ; set enemy object offset
     STX ram_object_offset  ; to special use slot
     LDA ram_enemy_id,x
@@ -365,13 +365,13 @@ GiveFPScr:
     LDA FlagpoleScoreMods,y  ; get amount to award player points
     LDX FlagpoleScoreDigits,y  ; get digit with which to award points
     STA ram_digit_modifier,x  ; store in digit modifier
-    JSR AddToScore  ; do sub to award player points depending on height of collision
+    JSR sub_add_to_score  ; do sub to award player points depending on height of collision
     LDA #$05
     STA ram_game_engine_subroutine  ; set to run end-of-level subroutine on next frame
 FPGfx:
-    JSR GetEnemyOffscreenBits  ; get offscreen information
-    JSR RelativeEnemyPosition  ; get relative coordinates
-    JSR FlagpoleGfxHandler  ; draw flagpole flag and floatey number
+    JSR sub_get_enemy_offscreen_bits  ; get offscreen information
+    JSR sub_relative_enemy_position  ; get relative coordinates
+    JSR sub_flagpole_gfx_handler  ; draw flagpole flag and floatey number
 ExitFlagP:
     RTS
 
@@ -381,7 +381,7 @@ Jumpspring_Y_PosData:
     .byte $08, $10, $08, $00
 
 JumpspringHandler:
-    JSR GetEnemyOffscreenBits  ; get offscreen information
+    JSR sub_get_enemy_offscreen_bits  ; get offscreen information
     LDA ram_timer_control  ; check master timer control
     BNE DrawJSpr  ; branch to last section if set
     LDA ram_jumpspring_anim_ctrl  ; check jumpspring frame control
@@ -419,9 +419,9 @@ BounceJS:
     LDA #$00
     STA ram_jumpspring_anim_ctrl  ; initialize jumpspring frame control
 DrawJSpr:
-    JSR RelativeEnemyPosition  ; get jumpspring's relative coordinates
-    JSR EnemyGfxHandler  ; draw jumpspring
-    JSR OffscreenBoundsCheck  ; check to see if we need to kill it
+    JSR sub_relative_enemy_position  ; get jumpspring's relative coordinates
+    JSR sub_enemy_gfx_handler  ; draw jumpspring
+    JSR sub_offscreen_bounds_check  ; check to see if we need to kill it
     LDA ram_jumpspring_anim_ctrl  ; if frame control at zero, don't bother
     BEQ ExJSpring  ; trying to animate it, just leave
     LDA ram_jumpspring_timer
@@ -434,7 +434,7 @@ ExJSpring:
 
 ; -------------------------------------------------------------------------------------
 
-Setup_Vine:
+sub_setup_vine:
     LDA #con_vine_object  ; load identifier for vine object
     STA ram_enemy_id,x  ; store in buffer
     LDA #$01
@@ -483,11 +483,11 @@ RunVSubs:
     LDA ram_vine_height  ; if vine still very small,
     CMP #$08  ; branch to leave
     BCC ExitVH
-    JSR RelativeEnemyPosition  ; get relative coordinates of vine,
-    JSR GetEnemyOffscreenBits  ; and any offscreen bits
+    JSR sub_relative_enemy_position  ; get relative coordinates of vine,
+    JSR sub_get_enemy_offscreen_bits  ; and any offscreen bits
     LDY #$00  ; initialize offset used in draw vine sub
 VDrawLoop:
-    JSR DrawVine  ; draw vine
+    JSR sub_draw_vine  ; draw vine
     INY  ; increment offset
     CPY ram_vine_flag_offset  ; if offset in Y and offset here
     BNE VDrawLoop  ; do not yet match, loop back to draw more vine
@@ -497,7 +497,7 @@ VDrawLoop:
     DEY  ; otherwise decrement Y to get proper offset again
 KillVine:
     LDX ram_vine_obj_offset,y  ; get enemy object offset for this vine object
-    JSR EraseEnemyObject  ; kill this vine object
+    JSR sub_erase_enemy_object  ; kill this vine object
     DEY  ; decrement Y
     BPL KillVine  ; if any vine objects left, loop back to kill it
     STA ram_vine_flag_offset  ; initialize vine flag/offset
@@ -509,7 +509,7 @@ WrCMTile:
     LDX #$06  ; set offset in X to last enemy slot
     LDA #$01  ; set A to obtain horizontal in $04, but we don't care
     LDY #$1b  ; set Y to offset to get block at ($04, $10) of coordinates
-    JSR BlockBufferCollision  ; do a sub to get block buffer address set, return contents
+    JSR sub_block_buffer_collision  ; do a sub to get block buffer address set, return contents
     LDY $02
     CPY #$d0  ; if vertical high nybble offset beyond extent of
     BCS ExitVH  ; current block buffer, branch to leave, do not write

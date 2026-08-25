@@ -17,10 +17,10 @@ is reached:
 | `bra_` | Internal conditional branch target |
 | `vec_` | CPU interrupt or reset vector entry |
 
-A `sub_` label must have a direct `JSR` caller. Every direct `JSR` target will
-converge on the `sub_` prefix as milestone 3 proceeds. A label reached both by
-fall-through and a conditional branch remains a `bra_`; a shared entry reached
-with `JMP` uses `loc_`.
+A `sub_` label must have a direct `JSR` caller, and every direct `JSR` target
+must use the `sub_` prefix. `make lint` enforces both directions. A label reached
+both by fall-through and a conditional branch remains a `bra_`; a shared entry
+reached with `JMP` uses `loc_`.
 
 ## Data Symbols
 

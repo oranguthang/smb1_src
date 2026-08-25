@@ -47,9 +47,9 @@ ScrollLockObject_Warp:
 WarpNum:
     TXA
     STA ram_warp_zone_control  ; store number here to be used by warp zone routine
-    JSR WriteGameText  ; print text and warp zone numbers
+    JSR sub_write_game_text  ; print text and warp zone numbers
     LDA #con_piranha_plant
-    JSR KillEnemies  ; load identifier for piranha plants and do sub
+    JSR sub_kill_enemies  ; load identifier for piranha plants and do sub
 
 ScrollLockObject:
     LDA ram_scroll_lock  ; invert scroll lock to turn it on
@@ -58,9 +58,9 @@ ScrollLockObject:
     RTS
 
 ; --------------------------------
-; $00 - used to store enemy identifier in KillEnemies
+; $00 - used to store enemy identifier in sub_kill_enemies
 
-KillEnemies:
+sub_kill_enemies:
     STA $00  ; store identifier here
     LDA #$00
     LDX #$04  ; check for identifier in enemy object buffer
@@ -104,7 +104,7 @@ AreaStyleObject:
     .word BulletBillCannon
 
 TreeLedge:
-    JSR GetLrgObjAttrib  ; get row and length of green ledge
+    JSR sub_get_lrg_obj_attrib  ; get row and length of green ledge
     LDA ram_area_object_length,x  ; check length counter for expiration
     BEQ EndTreeL
     BPL MidTreeL
@@ -126,7 +126,7 @@ EndTreeL:
     JMP NoUnder
 
 MushroomLedge:
-    JSR ChkLrgObjLength  ; get shroom dimensions
+    JSR sub_chk_lrg_obj_length  ; get shroom dimensions
     STY $06  ; store length here for now
     BCC EndMushL
     LDA ram_area_object_length,x  ; divide length by 2 and store elsewhere
@@ -152,11 +152,11 @@ EndMushL:
 AllUnder:
     INX
     LDY #$0f  ; set $0f to render all way down
-    JMP RenderUnderPart  ; now render the stem of mushroom
+    JMP sub_render_under_part  ; now render the stem of mushroom
 NoUnder:
     LDX $07  ; load row of ledge
     LDY #$00  ; set 0 for no bottom on this part
-    JMP RenderUnderPart
+    JMP sub_render_under_part
 
 ; --------------------------------
 
@@ -165,7 +165,7 @@ PulleyRopeMetatiles:
     .byte $42, $41, $43
 
 PulleyRopeObject:
-    JSR ChkLrgObjLength  ; get length of pulley/rope object
+    JSR sub_chk_lrg_obj_length  ; get length of pulley/rope object
     LDY #$00  ; initialize metatile offset
     BCS RenderPul  ; if starting, render left pulley
     INY
@@ -195,10 +195,10 @@ CastleMetatiles:
     .byte $4b, $47, $4b, $47, $4b
 
 CastleObject:
-    JSR GetLrgObjAttrib  ; save lower nybble as starting row
+    JSR sub_get_lrg_obj_attrib  ; save lower nybble as starting row
     STY $07  ; if starting row is above $0a, game will crash!!!
     LDY #$04
-    JSR ChkLrgObjFixedLength  ; load length of castle if not already loaded
+    JSR sub_chk_lrg_obj_fixed_length  ; load length of castle if not already loaded
     TXA
     PHA  ; save obj buffer offset to stack
     LDY ram_area_object_length,x  ; use current length as offset for castle data
@@ -234,9 +234,9 @@ ChkCFloor:
 NotTall:
     CMP #$02  ; if not tall castle, check to see if we're at the third column
     BNE ExitCastle  ; if we aren't and the castle is tall, don't create flag yet
-    JSR GetAreaObjXPosition  ; otherwise, obtain and save horizontal pixel coordinate
+    JSR sub_get_area_obj_x_position  ; otherwise, obtain and save horizontal pixel coordinate
     PHA
-    JSR FindEmptyEnemySlot  ; find an empty place on the enemy object buffer
+    JSR sub_find_empty_enemy_slot  ; find an empty place on the enemy object buffer
     PLA
     STA ram_enemy_x_position,x  ; then write horizontal coordinate for star flag
     LDA ram_current_page_loc
@@ -258,7 +258,7 @@ ExitCastle:
 ; --------------------------------
 
 WaterPipe:
-    JSR GetLrgObjAttrib  ; get row and lower nybble
+    JSR sub_get_lrg_obj_attrib  ; get row and lower nybble
     LDY ram_area_object_length,x  ; get length (residual code, water pipe is 1 col thick)
     LDX $07  ; get row
     LDA #$6b
@@ -268,15 +268,15 @@ WaterPipe:
     RTS
 
 ; --------------------------------
-; $05 - used to store length of vertical shaft in RenderSidewaysPipe
-; $06 - used to store leftover horizontal length in RenderSidewaysPipe
-; and vertical length in VerticalPipe and GetPipeHeight
+; $05 - used to store length of vertical shaft in sub_render_sideways_pipe
+; $06 - used to store leftover horizontal length in sub_render_sideways_pipe
+; and vertical length in VerticalPipe and sub_get_pipe_height
 
 IntroPipe:
     LDY #$03  ; check if length set, if not set, set it
-    JSR ChkLrgObjFixedLength
+    JSR sub_chk_lrg_obj_fixed_length
     LDY #$0a  ; set fixed value and render the sideways part
-    JSR RenderSidewaysPipe
+    JSR sub_render_sideways_pipe
     BCS NoBlankP  ; if carry flag set, not time to draw vertical pipe part
     LDX #$06  ; blank everything above the vertical pipe part
 VPipeSectLoop:
@@ -301,10 +301,10 @@ SidePipeBottomPart:
 
 ExitPipe:
     LDY #$03  ; check if length set, if not set, set it
-    JSR ChkLrgObjFixedLength
-    JSR GetLrgObjAttrib  ; get vertical length, then plow on through RenderSidewaysPipe
+    JSR sub_chk_lrg_obj_fixed_length
+    JSR sub_get_lrg_obj_attrib  ; get vertical length, then plow on through sub_render_sideways_pipe
 
-RenderSidewaysPipe:
+sub_render_sideways_pipe:
     DEY  ; decrement twice to make room for shaft at bottom
     DEY  ; and store here for now as vertical length
     STY $05
@@ -317,7 +317,7 @@ RenderSidewaysPipe:
     BEQ DrawSidePart  ; if found, do not draw the vertical pipe shaft
     LDX #$00
     LDY $05  ; init buffer offset and get vertical length
-    JSR RenderUnderPart  ; and render vertical shaft using tile number in A
+    JSR sub_render_under_part  ; and render vertical shaft using tile number in A
     CLC  ; clear carry flag to be used by IntroPipe
 DrawSidePart:
     LDY $06  ; render side pipe part at the bottom
@@ -334,7 +334,7 @@ VerticalPipeData:
     .byte $15, $14
 
 VerticalPipe:
-    JSR GetPipeHeight
+    JSR sub_get_pipe_height
     LDA $00  ; check to see if value was nullified earlier
     BEQ WarpPipe  ; (if d3, the usage control bit of second byte, was set)
     INY
@@ -349,9 +349,9 @@ WarpPipe:
     BEQ DrawPipe
     LDY ram_area_object_length,x  ; if on second column of pipe, branch
     BEQ DrawPipe  ; (because we only need to do this once)
-    JSR FindEmptyEnemySlot  ; check for an empty moving data buffer space
+    JSR sub_find_empty_enemy_slot  ; check for an empty moving data buffer space
     BCS DrawPipe  ; if not found, too many enemies, thus skip
-    JSR GetAreaObjXPosition  ; get horizontal pixel coordinate
+    JSR sub_get_area_obj_x_position  ; get horizontal pixel coordinate
     CLC
     ADC #$08  ; add eight to put the piranha plant in the center
     STA ram_enemy_x_position,x  ; store as enemy's horizontal coordinate
@@ -361,11 +361,11 @@ WarpPipe:
     LDA #$01
     STA ram_enemy_y_high_pos,x
     STA ram_enemy_flag,x  ; activate enemy flag
-    JSR GetAreaObjYPosition  ; get piranha plant's vertical coordinate and store here
+    JSR sub_get_area_obj_y_position  ; get piranha plant's vertical coordinate and store here
     STA ram_enemy_y_position,x
     LDA #con_piranha_plant  ; write piranha plant's value into buffer
     STA ram_enemy_id,x
-    JSR InitPiranhaPlant
+    JSR sub_init_piranha_plant
 DrawPipe:
     PLA  ; get value saved earlier and use as Y
     TAY
@@ -376,19 +376,19 @@ DrawPipe:
     LDA VerticalPipeData+2,y  ; render the rest of the pipe
     LDY $06  ; subtract one from length and render the part underneath
     DEY
-    JMP RenderUnderPart
+    JMP sub_render_under_part
 
-GetPipeHeight:
+sub_get_pipe_height:
     LDY #$01  ; check for length loaded, if not, load
-    JSR ChkLrgObjFixedLength  ; pipe length of 2 (horizontal)
-    JSR GetLrgObjAttrib
+    JSR sub_chk_lrg_obj_fixed_length  ; pipe length of 2 (horizontal)
+    JSR sub_get_lrg_obj_attrib
     TYA  ; get saved lower nybble as height
     AND #$07  ; save only the three lower bits as
     STA $06  ; vertical length, then load Y with
     LDY ram_area_object_length,x  ; length left over
     RTS
 
-FindEmptyEnemySlot:
+sub_find_empty_enemy_slot:
     LDX #$00  ; start at first enemy slot
 EmptyChkLoop:
     CLC  ; clear carry flag by default

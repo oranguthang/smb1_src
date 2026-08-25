@@ -19,7 +19,7 @@ BoundBoxCtrlData:
     .byte $00, $02, $10, $15
     .byte $04, $04, $0c, $1c
 
-GetFireballBoundBox:
+sub_get_fireball_bound_box:
     TXA  ; add seven bytes to offset
     CLC  ; to use in routines as offset for fireball
     ADC #$07
@@ -27,23 +27,23 @@ GetFireballBoundBox:
     LDY #$02  ; set offset for relative coordinates
     BNE FBallB  ; unconditional branch
 
-GetMiscBoundBox:
+sub_get_misc_bound_box:
     TXA  ; add nine bytes to offset
     CLC  ; to use in routines as offset for misc object
     ADC #$09
     TAX
     LDY #$06  ; set offset for relative coordinates
 FBallB:
-    JSR BoundingBoxCore  ; get bounding box coordinates
+    JSR sub_bounding_box_core  ; get bounding box coordinates
     JMP CheckRightScreenBBox  ; jump to handle any offscreen coordinates
 
-GetEnemyBoundBox:
+sub_get_enemy_bound_box:
     LDY #$48  ; store bitmask here for now
     STY $00
     LDY #$44  ; store another bitmask here for now and jump
     JMP GetMaskedOffScrBits
 
-SmallPlatformBoundBox:
+sub_small_platform_bound_box:
     LDY #$08  ; store bitmask here for now
     STY $00
     LDY #$04  ; store another bitmask here for now
@@ -66,9 +66,9 @@ CMBits:
     BNE MoveBoundBoxOffscreen  ; if anything set here, branch
     JMP SetupEOffsetFBBox  ; otherwise, do something else
 
-LargePlatformBoundBox:
+sub_large_platform_bound_box:
     INX  ; increment X to get the proper offset
-    JSR GetXOffscreenBits  ; then jump directly to the sub for horizontal offscreen bits
+    JSR sub_get_x_offscreen_bits  ; then jump directly to the sub for horizontal offscreen bits
     DEX  ; decrement to return to original offset
     CMP #$fe  ; if completely offscreen, branch to put entire bounding
     BCS MoveBoundBoxOffscreen  ; box offscreen, otherwise start getting coordinates
@@ -79,7 +79,7 @@ SetupEOffsetFBBox:
     ADC #$01
     TAX
     LDY #$01  ; load 1 as offset here, same reason
-    JSR BoundingBoxCore  ; do a sub to get the coordinates of the bounding box
+    JSR sub_bounding_box_core  ; do a sub to get the coordinates of the bounding box
     JMP CheckRightScreenBBox  ; jump to handle offscreen coordinates of bounding box
 
 MoveBoundBoxOffscreen:
@@ -94,7 +94,7 @@ MoveBoundBoxOffscreen:
     STA ram_enemy_bounding_box_coord+3,y
     RTS
 
-BoundingBoxCore:
+sub_bounding_box_core:
     STX $00  ; save offset here
     LDA ram_spr_object_rel_y_pos,y  ; store object coordinates relative to screen
     STA $02  ; vertically and horizontally, respectively
@@ -176,10 +176,10 @@ NoOfs2:
 ; $06 - second object's offset
 ; $07 - counter
 
-PlayerCollisionCore:
+sub_player_collision_core:
     LDX #$00  ; initialize X to use player's bounding box for comparison
 
-SprObjectCollisionCore:
+sub_spr_object_collision_core:
     STY $06  ; save contents of Y here
     LDA #$01
     STA $07  ; save value 1 here as counter, compare horizontal coordinates first
@@ -243,7 +243,7 @@ CollisionFound:
 ; $05 - modified x coordinate
 ; $06-$07 - block buffer address
 
-BlockBufferChk_Enemy:
+sub_block_buffer_chk_enemy:
     PHA  ; save contents of A to stack
     TXA
     CLC  ; add 1 to X to run sub with enemy offset in mind
@@ -260,7 +260,7 @@ ResidualMiscObjectCode:
     LDY #$1b  ; supposedly used once to set offset for block buffer data
     JMP ResJmpM  ; probably used in early stages to do misc to bg collision detection
 
-BlockBufferChk_FBall:
+sub_block_buffer_chk_f_ball:
     LDY #$1a  ; set offset for block buffer adder data
     TXA
     CLC
@@ -269,7 +269,7 @@ BlockBufferChk_FBall:
 ResJmpM:
     LDA #$00  ; set A to return vertical coordinate
 BBChk_E:
-    JSR BlockBufferCollision  ; do collision detection subroutine for sprite object
+    JSR sub_block_buffer_collision  ; do collision detection subroutine for sprite object
     LDX ram_object_offset  ; get object offset
     CMP #$00  ; check to see if object bumped into anything
     RTS
@@ -289,18 +289,18 @@ BlockBuffer_Y_Adder:
     .byte $20, $18, $18, $18, $18, $18, $14, $14
     .byte $06, $06, $08, $10
 
-BlockBufferColli_Feet:
+sub_block_buffer_colli_feet:
     INY  ; if branched here, increment to next set of adders
 
-BlockBufferColli_Head:
+sub_block_buffer_colli_head:
     LDA #$00  ; set flag to return vertical coordinate
     .byte $2c  ; BIT instruction opcode
 
-BlockBufferColli_Side:
+sub_block_buffer_colli_side:
     LDA #$01  ; set flag to return horizontal coordinate
     LDX #$00  ; set offset for player object
 
-BlockBufferCollision:
+sub_block_buffer_collision:
     PHA  ; save contents of A to stack
     STY $04  ; save contents of Y here
     LDA BlockBuffer_X_Adder,y  ; add horizontal coordinate
@@ -316,7 +316,7 @@ BlockBufferCollision:
     LSR  ; and effectively move high nybble to
     LSR  ; lower, LSB which became MSB will be
     LSR  ; d4 at this point
-    JSR GetBlockBufferAddr  ; get address of block buffer into $06, $07
+    JSR sub_get_block_buffer_addr  ; get address of block buffer into $06, $07
     LDY $04  ; get old contents of Y
     LDA ram_spr_object_y_position,x  ; get vertical coordinate of object
     CLC

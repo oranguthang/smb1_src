@@ -7,7 +7,7 @@ FirebarSpinDirData:
     .byte $00, $00, $10, $10, $00
 
 InitLongFirebar:
-    JSR DuplicateEnemyObj  ; create enemy object for long firebar
+    JSR sub_duplicate_enemy_obj  ; create enemy object for long firebar
 
 InitShortFirebar:
     LDA #$00  ; initialize low byte of spin state
@@ -53,7 +53,7 @@ FlyCCTimerData:
 InitFlyingCheepCheep:
     LDA ram_frenzy_enemy_timer  ; if timer here not expired yet, branch to leave
     BNE ChpChpEx
-    JSR SmallBBox  ; jump to set bounding box size $09 and init other values
+    JSR sub_small_b_box  ; jump to set bounding box size $09 and init other values
     LDA ram_pseudo_random_bit_reg+1,x
     AND #%00000011  ; set pseudorandom offset here
     TAY
@@ -142,7 +142,7 @@ FinCCSt:
 ; --------------------------------
 
 InitBowser:
-    JSR DuplicateEnemyObj  ; jump to create another bowser object
+    JSR sub_duplicate_enemy_obj  ; jump to create another bowser object
     STX ram_bowser_front_offset  ; save offset of first here
     LDA #$00
     STA ram_bowser_body_controls  ; initialize bowser's body controls
@@ -163,7 +163,7 @@ InitBowser:
 
 ; --------------------------------
 
-DuplicateEnemyObj:
+sub_duplicate_enemy_obj:
     LDY #$ff  ; start at beginning of enemy slots
 FSLoop:
     INY  ; increment one slot
@@ -204,7 +204,7 @@ InitBowserFlame:
     LDA ram_enemy_id,y  ; check for bowser
     CMP #con_bowser
     BEQ SpawnFromMouth  ; branch if found
-    JSR SetFlameTimer  ; get timer data based on flame counter
+    JSR sub_set_flame_timer  ; get timer data based on flame counter
     CLC
     ADC #$20  ; add 32 frames by default
     LDY ram_secondary_hard_mode
@@ -219,7 +219,7 @@ SetFrT:
     TAY  ; use as offset
     LDA FlameYPosData,y  ; load vertical position based on pseudorandom offset
 
-PutAtRightExtent:
+sub_put_at_right_extent:
     STA ram_enemy_y_position,x  ; set vertical position
     LDA ram_screen_right_x_pos
     CLC
@@ -373,11 +373,11 @@ AddFBit:
     ORA ram_bit_m_filter  ; add bit to already set bits in filter
     STA ram_bit_m_filter  ; and store
     LDA Enemy17YPosData,y  ; load vertical position using offset
-    JSR PutAtRightExtent  ; set vertical position and other values
+    JSR sub_put_at_right_extent  ; set vertical position and other values
     STA ram_enemy_ymf_dummy,x  ; initialize dummy variable
     LDA #$20  ; set timer
     STA ram_frenzy_enemy_timer
-    JMP CheckpointEnemyID  ; process our new enemy object
+    JMP sub_checkpoint_enemy_id  ; process our new enemy object
 
 DoBulletBills:
     LDY #$ff  ; start at beginning of enemy slots
@@ -464,7 +464,7 @@ GSltLp:
     LDA #$01  ; activate flag for buffer, and
     STA ram_enemy_y_high_pos,x  ; put enemy within the screen vertically
     STA ram_enemy_flag,x
-    JSR CheckpointEnemyID  ; process each enemy object separately
+    JSR sub_checkpoint_enemy_id  ; process each enemy object separately
     DEC ram_numberof_group_enemies  ; do this until we run out of enemy objects
     BNE GrLoop
 NextED:
@@ -472,7 +472,7 @@ NextED:
 
 ; --------------------------------
 
-InitPiranhaPlant:
+sub_init_piranha_plant:
     LDA #$01  ; set initial speed
     STA ram_piranha_plant_y_speed,x
     LSR
@@ -547,7 +547,7 @@ InitBalPlatform:
     LDY ram_secondary_hard_mode  ; if secondary hard mode flag not set,
     BNE AlignP  ; branch ahead
     LDY #$02  ; otherwise set value here
-    JSR PosPlatform  ; do a sub to add or subtract pixels
+    JSR sub_pos_platform  ; do a sub to add or subtract pixels
 AlignP:
     LDY #$ff  ; set default value here for now
     LDA ram_bal_platform_alignment  ; get current balance platform alignment
@@ -560,7 +560,7 @@ SetBPA:
     LDA #$00
     STA ram_enemy_moving_dir,x  ; init moving direction
     TAY  ; init Y
-    JSR PosPlatform  ; do a sub to add 8 pixels, then run shared code here
+    JSR sub_pos_platform  ; do a sub to add 8 pixels, then run shared code here
 
 ; --------------------------------
 
@@ -596,7 +596,7 @@ SetYO:
 ; --------------------------------
 
 CommonPlatCode:
-    JSR InitVStf  ; do a sub to init certain other values
+    JSR sub_init_v_stf  ; do a sub to init certain other values
 SPBBox:
     LDA #$05  ; set default bounding box size control
     LDY ram_area_type
@@ -612,18 +612,18 @@ CasPBB:
 ; --------------------------------
 
 LargeLiftUp:
-    JSR PlatLiftUp  ; execute code for platforms going up
+    JSR sub_plat_lift_up  ; execute code for platforms going up
     JMP LargeLiftBBox  ; overwrite bounding box for large platforms
 
 LargeLiftDown:
-    JSR PlatLiftDown  ; execute code for platforms going down
+    JSR sub_plat_lift_down  ; execute code for platforms going down
 
 LargeLiftBBox:
     JMP SPBBox  ; jump to overwrite bounding box size control
 
 ; --------------------------------
 
-PlatLiftUp:
+sub_plat_lift_up:
     LDA #$10  ; set movement amount here
     STA ram_enemy_y_move_force,x
     LDA #$ff  ; set moving speed for platforms going up
@@ -632,7 +632,7 @@ PlatLiftUp:
 
 ; --------------------------------
 
-PlatLiftDown:
+sub_plat_lift_down:
     LDA #$f0  ; set movement amount here
     STA ram_enemy_y_move_force,x
     LDA #$00  ; set moving speed for platforms going down
@@ -642,7 +642,7 @@ PlatLiftDown:
 
 CommonSmallLift:
     LDY #$01
-    JSR PosPlatform  ; do a sub to add 12 pixels due to preset value
+    JSR sub_pos_platform  ; do a sub to add 12 pixels due to preset value
     LDA #$04
     STA ram_enemy_bound_box_ctrl,x  ; set bounding box control for small platforms
     RTS
@@ -655,7 +655,7 @@ PlatPosDataLow:
 PlatPosDataHigh:
     .byte $00,$00,$ff
 
-PosPlatform:
+sub_pos_platform:
     LDA ram_enemy_x_position,x  ; get horizontal coordinate
     CLC
     ADC PlatPosDataLow,y  ; add or subtract pixels depending on offset

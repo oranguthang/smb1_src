@@ -1,7 +1,7 @@
 ; -------------------------------------------------------------------------------------
 ; $01 - enemy buffer offset
 
-FireballEnemyCollision:
+sub_fireball_enemy_collision:
     LDA ram_fireball_state,x  ; check to see if fireball state is set at all
     BEQ ExitFBallEnemy  ; branch to leave if not
     ASL
@@ -46,13 +46,13 @@ NotGoomba:
     CLC
     ADC #$04  ; add 4 bytes to it
     TAX  ; to use enemy's bounding box coordinates
-    JSR SprObjectCollisionCore  ; do fireball-to-enemy collision detection
+    JSR sub_spr_object_collision_core  ; do fireball-to-enemy collision detection
     LDX ram_object_offset  ; return fireball's original offset
     BCC NoFToECol  ; if carry clear, no collision, thus do next enemy slot
     LDA #%10000000
     STA ram_fireball_state,x  ; set d7 in enemy state
     LDX $01  ; get enemy offset
-    JSR HandleEnemyFBallCol  ; jump to handle fireball to enemy collision
+    JSR sub_handle_enemy_f_ball_col  ; jump to handle fireball to enemy collision
 NoFToECol:
     PLA  ; pull fireball offset from stack
     TAY  ; put it in Y
@@ -67,8 +67,8 @@ ExitFBallEnemy:
 BowserIdentities:
     .byte con_goomba, con_green_koopa, con_buzzy_beetle, con_spiny, con_lakitu, con_bloober, con_hammer_bro, con_bowser
 
-HandleEnemyFBallCol:
-    JSR RelativeEnemyPosition  ; get relative coordinate of enemy
+sub_handle_enemy_f_ball_col:
+    JSR sub_relative_enemy_position  ; get relative coordinate of enemy
     LDX $01  ; get current enemy object offset
     LDA ram_enemy_flag,x  ; check buffer flag for d7 set
     BPL ChkBuzzyBeetle  ; branch if not set to continue
@@ -89,7 +89,7 @@ ChkBuzzyBeetle:
 HurtBowser:
     DEC ram_bowser_hit_points  ; decrement bowser's hit points
     BNE ExHCF  ; if bowser still has hit points, branch to leave
-    JSR InitVStf  ; otherwise do sub to init vertical speed and movement force
+    JSR sub_init_v_stf  ; otherwise do sub to init vertical speed and movement force
     STA ram_enemy_x_speed,x  ; initialize horizontal speed
     STA ram_enemy_frenzy_buffer  ; init enemy frenzy buffer
     LDA #$fe
@@ -117,7 +117,7 @@ ChkOtherEnemies:
     CMP #$15
     BCS ExHCF  ; branch to leave if identifier => $15
 
-ShellOrBlockDefeat:
+sub_shell_or_block_defeat:
     LDA ram_enemy_id,x  ; check for piranha plant
     CMP #con_piranha_plant
     BNE StnE  ; branch if not found
@@ -125,7 +125,7 @@ ShellOrBlockDefeat:
     ADC #$18  ; add 24 pixels to enemy object's vertical position
     STA ram_enemy_y_position,x
 StnE:
-    JSR ChkToStunEnemies  ; do yet another sub
+    JSR sub_chk_to_stun_enemies  ; do yet another sub
     LDA ram_enemy_state,x
     AND #%00011111  ; mask out 2 MSB of enemy object's state
     ORA #%00100000  ; set d5 to defeat enemy and save as new state
@@ -142,7 +142,7 @@ GoombaPoints:
     LDA #$01  ; award 100 points for goomba
 
 EnemySmackScore:
-    JSR SetupFloateyNumber  ; update necessary score variables
+    JSR sub_setup_floatey_number  ; update necessary score variables
     LDA #con_sfx_enemy_smack  ; play smack enemy sound
     STA ram_square1_sound_queue
 ExHCF:
@@ -150,7 +150,7 @@ ExHCF:
 
 ; -------------------------------------------------------------------------------------
 
-PlayerHammerCollision:
+sub_player_hammer_collision:
     LDA ram_frame_counter  ; get frame counter
     LSR  ; shift d0 into carry
     BCC ExPHC  ; branch to leave if d0 not set to execute every other frame
@@ -163,7 +163,7 @@ PlayerHammerCollision:
     CLC
     ADC #$24  ; add 36 or $24 bytes to get proper offset
     TAY  ; for misc object bounding box coordinates
-    JSR PlayerCollisionCore  ; do player-to-hammer collision detection
+    JSR sub_player_collision_core  ; do player-to-hammer collision detection
     LDX ram_object_offset  ; get misc object offset
     BCC ClHCol  ; if no collision, then branch
     LDA ram_misc_collision_flag,x  ; otherwise read collision flag
@@ -177,7 +177,7 @@ PlayerHammerCollision:
     STA ram_misc_x_speed,x  ; set to send hammer flying the opposite direction
     LDA ram_star_invincible_timer  ; if star mario invincibility timer set,
     BNE ExPHC  ; branch to leave
-    JMP InjurePlayer  ; otherwise jump to hurt player, do not return
+    JMP sub_injure_player  ; otherwise jump to hurt player, do not return
 ClHCol:
     LDA #$00  ; clear collision flag
     STA ram_misc_collision_flag,x
@@ -187,9 +187,9 @@ ExPHC:
 ; -------------------------------------------------------------------------------------
 
 HandlePowerUpCollision:
-    JSR EraseEnemyObject  ; erase the power-up object
+    JSR sub_erase_enemy_object  ; erase the power-up object
     LDA #$06
-    JSR SetupFloateyNumber  ; award 1000 points to player by default
+    JSR sub_setup_floatey_number  ; award 1000 points to player by default
     LDA #con_sfx_power_up_grab
     STA ram_square2_sound_queue  ; play the power-up sound
     LDA ram_power_up_type  ; check power-up type
@@ -211,7 +211,7 @@ Shroom_Flower_PUp:
     LDX ram_object_offset  ; get enemy offset, not necessary
     LDA #$02  ; set player status to fiery
     STA ram_player_status
-    JSR GetPlayerColors  ; run sub to change colors of player
+    JSR sub_get_player_colors  ; run sub to change colors of player
     LDX ram_object_offset  ; get enemy offset again, and again not necessary
     LDA #$0c  ; set value to be used by subroutine tree (fiery)
     JMP UpToFiery  ; jump to set values accordingly
@@ -228,6 +228,6 @@ UpToSuper:
 
 UpToFiery:
     LDY #$00  ; set value to be used as new player state
-    JSR SetPRout  ; set values to stop certain things in motion
+    JSR sub_set_p_rout  ; set values to stop certain things in motion
 NoPUp:
     RTS

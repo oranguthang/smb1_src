@@ -1,13 +1,13 @@
 ; --------------------------------
 
 Hole_Water:
-    JSR ChkLrgObjLength  ; get low nybble and save as length
+    JSR sub_chk_lrg_obj_length  ; get low nybble and save as length
     LDA #$86  ; render waves
     STA ram_metatile_buffer+10
     LDX #$0b
     LDY #$01  ; now render the water underneath
     LDA #$87
-    JMP RenderUnderPart
+    JMP sub_render_under_part
 
 ; --------------------------------
 
@@ -18,7 +18,7 @@ QuestionBlockRow_High:
 QuestionBlockRow_Low:
     LDA #$07  ; start on the eighth row
     PHA  ; save whatever row to the stack for now
-    JSR ChkLrgObjLength  ; get low nybble and save as length
+    JSR sub_chk_lrg_obj_length  ; get low nybble and save as length
     PLA
     TAX  ; render question boxes with coins
     LDA #$c0
@@ -38,7 +38,7 @@ Bridge_Middle:
 Bridge_Low:
     LDA #$09  ; start on the tenth row
     PHA  ; save whatever row to the stack for now
-    JSR ChkLrgObjLength  ; get low nybble and save as length
+    JSR sub_chk_lrg_obj_length  ; get low nybble and save as length
     PLA
     TAX  ; render bridge railing
     LDA #$0b
@@ -46,15 +46,15 @@ Bridge_Low:
     INX
     LDY #$00  ; now render the bridge itself
     LDA #$63
-    JMP RenderUnderPart
+    JMP sub_render_under_part
 
 ; --------------------------------
 
 FlagBalls_Residual:
-    JSR GetLrgObjAttrib  ; get low nybble from object byte
+    JSR sub_get_lrg_obj_attrib  ; get low nybble from object byte
     LDX #$02  ; render flag balls on third row from top
     LDA #$6d  ; of screen downwards based on low nybble
-    JMP RenderUnderPart
+    JMP sub_render_under_part
 
 ; --------------------------------
 
@@ -64,10 +64,10 @@ FlagpoleObject:
     LDX #$01  ; now render the flagpole shaft
     LDY #$08
     LDA #$25
-    JSR RenderUnderPart
+    JSR sub_render_under_part
     LDA #$61  ; render solid block at the bottom
     STA ram_metatile_buffer+10
-    JSR GetAreaObjXPosition
+    JSR sub_get_area_obj_x_position
     SEC  ; get pixel coordinate of where the flagpole is,
     SBC #$08  ; subtract eight pixels and use as horizontal
     STA ram_enemy_x_position+5  ; coordinate for the flag
@@ -96,14 +96,14 @@ BalancePlatRope:
     LDX #$01  ; blank out all from second row to the bottom
     LDY #$0f  ; with blank used for balance platform rope
     LDA #$44
-    JSR RenderUnderPart
+    JSR sub_render_under_part
     PLA  ; get back object buffer offset
     TAX
-    JSR GetLrgObjAttrib  ; get vertical length from lower nybble
+    JSR sub_get_lrg_obj_attrib  ; get vertical length from lower nybble
     LDX #$01
 DrawRope:
     LDA #$40  ; render the actual rope
-    JMP RenderUnderPart
+    JMP sub_render_under_part
 
 ; --------------------------------
 
@@ -125,7 +125,7 @@ C_ObjectMetatile:
 
 CastleBridgeObj:
     LDY #$0c  ; load length of 13 columns
-    JSR ChkLrgObjFixedLength
+    JSR sub_chk_lrg_obj_fixed_length
     JMP ChainObj
 
 AxeObj:
@@ -139,12 +139,12 @@ ChainObj:
     JMP ColObj
 
 EmptyBlock:
-    JSR GetLrgObjAttrib  ; get row location
+    JSR sub_get_lrg_obj_attrib  ; get row location
     LDX $07
     LDA #$c4
 ColObj:
     LDY #$00  ; column length of 1
-    JMP RenderUnderPart
+    JMP sub_render_under_part
 
 ; --------------------------------
 
@@ -169,12 +169,12 @@ RowOfSolidBlocks:
     LDA SolidBlockMetatiles,y  ; get metatile
 GetRow:
     PHA  ; store metatile here
-    JSR ChkLrgObjLength  ; get row number, load length
+    JSR sub_chk_lrg_obj_length  ; get row number, load length
 DrawRow:
     LDX $07
     LDY #$00  ; set vertical height of 1
     PLA
-    JMP RenderUnderPart  ; render object
+    JMP sub_render_under_part  ; render object
 
 ColumnOfBricks:
     LDY ram_area_type  ; load area type obtained from area offset
@@ -186,15 +186,15 @@ ColumnOfSolidBlocks:
     LDA SolidBlockMetatiles,y  ; get metatile
 GetRow2:
     PHA  ; save metatile to stack for now
-    JSR GetLrgObjAttrib  ; get length and row
+    JSR sub_get_lrg_obj_attrib  ; get length and row
     PLA  ; restore metatile
     LDX $07  ; get starting row
-    JMP RenderUnderPart  ; now render the column
+    JMP sub_render_under_part  ; now render the column
 
 ; --------------------------------
 
 BulletBillCannon:
-    JSR GetLrgObjAttrib  ; get row and length of bullet bill cannon
+    JSR sub_get_lrg_obj_attrib  ; get row and length of bullet bill cannon
     LDX $07  ; start at first row
     LDA #$64  ; render bullet bill cannon
     STA ram_metatile_buffer,x
@@ -207,14 +207,14 @@ BulletBillCannon:
     DEY  ; done yet?
     BMI SetupCannon
     LDA #$66  ; if not, render bottom until length expires
-    JSR RenderUnderPart
+    JSR sub_render_under_part
 SetupCannon:
     LDX ram_cannon_offset  ; get offset for data used by cannons and whirlpools
-    JSR GetAreaObjYPosition  ; get proper vertical coordinate for cannon
+    JSR sub_get_area_obj_y_position  ; get proper vertical coordinate for cannon
     STA ram_cannon_y_position,x  ; and store it here
     LDA ram_current_page_loc
     STA ram_cannon_page_loc,x  ; store page number for cannon here
-    JSR GetAreaObjXPosition  ; get proper horizontal coordinate for cannon
+    JSR sub_get_area_obj_x_position  ; get proper horizontal coordinate for cannon
     STA ram_cannon_x_position,x  ; and store it here
     INX
     CPX #$06  ; increment and check offset
@@ -233,7 +233,7 @@ StaircaseRowData:
     .byte $03, $03, $04, $05, $06, $07, $08, $09, $0a
 
 StaircaseObject:
-    JSR ChkLrgObjLength  ; check and load length
+    JSR sub_chk_lrg_obj_length  ; check and load length
     BCC NextStair  ; if length already loaded, skip init part
     LDA #$09  ; start past the end for the bottom
     STA ram_staircase_control  ; of the staircase
@@ -244,18 +244,18 @@ NextStair:
     LDA StaircaseHeightData,y
     TAY
     LDA #$61  ; now render solid block staircase
-    JMP RenderUnderPart
+    JMP sub_render_under_part
 
 ; --------------------------------
 
 Jumpspring:
-    JSR GetLrgObjAttrib
-    JSR FindEmptyEnemySlot  ; find empty space in enemy object buffer
-    JSR GetAreaObjXPosition  ; get horizontal coordinate for jumpspring
+    JSR sub_get_lrg_obj_attrib
+    JSR sub_find_empty_enemy_slot  ; find empty space in enemy object buffer
+    JSR sub_get_area_obj_x_position  ; get horizontal coordinate for jumpspring
     STA ram_enemy_x_position,x  ; and store
     LDA ram_current_page_loc  ; store page location of jumpspring
     STA ram_enemy_page_loc,x
-    JSR GetAreaObjYPosition  ; get vertical coordinate for jumpspring
+    JSR sub_get_area_obj_y_position  ; get vertical coordinate for jumpspring
     STA ram_enemy_y_position,x  ; and store
     STA ram_jumpspring_fixed_y_pos,x  ; store as permanent coordinate here
     LDA #con_jumpspring_object
@@ -281,7 +281,7 @@ Hidden1UpBlock:
     JMP BrickWithItem  ; jump to code shared with unbreakable bricks
 
 QuestionBlock:
-    JSR GetAreaObjectID  ; get value from level decoder routine
+    JSR sub_get_area_object_id  ; get value from level decoder routine
     JMP DrawQBlk  ; go to render it
 
 BrickWithCoins:
@@ -289,7 +289,7 @@ BrickWithCoins:
     STA ram_brick_coin_timer_flag
 
 BrickWithItem:
-    JSR GetAreaObjectID  ; save area object ID
+    JSR sub_get_area_object_id  ; save area object ID
     STY $07
     LDA #$00  ; load default adder for bricks with lines
     LDY ram_area_type  ; check level type for ground level
@@ -303,10 +303,10 @@ BWithL:
 DrawQBlk:
     LDA BrickQBlockMetatiles,y  ; get appropriate metatile for brick (question block
     PHA  ; if branched to here from question block routine)
-    JSR GetLrgObjAttrib  ; get row from location byte
+    JSR sub_get_lrg_obj_attrib  ; get row from location byte
     JMP DrawRow  ; now render the object
 
-GetAreaObjectID:
+sub_get_area_object_id:
     LDA $00  ; get value saved from area parser routine
     SEC
     SBC #$00  ; possibly residual code
@@ -320,12 +320,12 @@ HoleMetatiles:
     .byte $87, $00, $00, $00
 
 Hole_Empty:
-    JSR ChkLrgObjLength  ; get lower nybble and save as length
+    JSR sub_chk_lrg_obj_length  ; get lower nybble and save as length
     BCC NoWhirlP  ; skip this part if length already loaded
     LDA ram_area_type  ; check for water type level
     BNE NoWhirlP  ; if not water type, skip this part
     LDX ram_whirlpool_offset  ; get offset for data used by cannons and whirlpools
-    JSR GetAreaObjXPosition  ; get proper vertical coordinate of where we're at
+    JSR sub_get_area_obj_x_position  ; get proper vertical coordinate of where we're at
     SEC
     SBC #$10  ; subtract 16 pixels
     STA ram_whirlpool_left_extent,x  ; store as left extent of whirlpool
@@ -350,11 +350,11 @@ NoWhirlP:
     LDX ram_area_type  ; get appropriate metatile, then
     LDA HoleMetatiles,x  ; render the hole proper
     LDX #$08
-    LDY #$0f  ; start at ninth row and go to bottom, run RenderUnderPart
+    LDY #$0f  ; start at ninth row and go to bottom, run sub_render_under_part
 
 ; --------------------------------
 
-RenderUnderPart:
+sub_render_under_part:
     STY ram_area_object_height  ; store vertical length to render
     LDY ram_metatile_buffer,x  ; check current spot to see if there's something
     BEQ DrawThisRow  ; we need to keep, if nothing, go ahead
@@ -378,16 +378,16 @@ WaitOneRow:
     BCS ExitUPartR
     LDY ram_area_object_height  ; decrement, and stop rendering if there is no more length
     DEY
-    BPL RenderUnderPart
+    BPL sub_render_under_part
 ExitUPartR:
     RTS
 
 ; --------------------------------
 
-ChkLrgObjLength:
-    JSR GetLrgObjAttrib  ; get row location and size (length if branched to from here)
+sub_chk_lrg_obj_length:
+    JSR sub_get_lrg_obj_attrib  ; get row location and size (length if branched to from here)
 
-ChkLrgObjFixedLength:
+sub_chk_lrg_obj_fixed_length:
     LDA ram_area_object_length,x  ; check for set length counter
     CLC  ; clear carry flag for not just starting
     BPL LenSet  ; if counter not set, load it, otherwise leave alone
@@ -397,7 +397,7 @@ ChkLrgObjFixedLength:
 LenSet:
     RTS
 
-GetLrgObjAttrib:
+sub_get_lrg_obj_attrib:
     LDY ram_area_obj_offset_buffer,x  ; get offset saved from area obj decoding routine
     LDA (ram_area_data),y  ; get first byte of level object
     AND #%00001111
@@ -410,7 +410,7 @@ GetLrgObjAttrib:
 
 ; --------------------------------
 
-GetAreaObjXPosition:
+sub_get_area_obj_x_position:
     LDA ram_current_column_pos  ; multiply current offset where we're at by 16
     ASL  ; to obtain horizontal pixel coordinate
     ASL
@@ -420,7 +420,7 @@ GetAreaObjXPosition:
 
 ; --------------------------------
 
-GetAreaObjYPosition:
+sub_get_area_obj_y_position:
     LDA $07  ; multiply value by 16
     ASL
     ASL  ; this will give us the proper vertical pixel coordinate
@@ -437,7 +437,7 @@ BlockBufferAddr:
     .byte <ram_block_buffer_1, <ram_block_buffer_2
     .byte >ram_block_buffer_1, >ram_block_buffer_2
 
-GetBlockBufferAddr:
+sub_get_block_buffer_addr:
     PHA  ; take value of A, save
     LSR  ; move high nybble to low
     LSR

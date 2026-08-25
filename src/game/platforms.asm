@@ -7,7 +7,7 @@ BalancePlatform:
     LDA ram_enemy_y_high_pos,x  ; check high byte of vertical position
     CMP #$03
     BNE DoBPl
-    JMP EraseEnemyObject  ; if far below screen, kill the object
+    JMP sub_erase_enemy_object  ; if far below screen, kill the object
 DoBPl:
     LDA ram_enemy_state,x  ; get object's state (set to $ff or other platform offset)
     BPL CheckBalPlatform  ; if doing other balance platform, branch to leave
@@ -30,7 +30,7 @@ ChkForFall:
     CLC
     ADC #$02  ; otherwise add 2 pixels to vertical position
     STA ram_enemy_y_position,x  ; of current platform and branch elsewhere
-    JMP StopPlatforms  ; to make platforms stop
+    JMP sub_stop_platforms  ; to make platforms stop
 
 MakePlatformFall:
     JMP InitPlatformFall  ; make platforms fall
@@ -43,7 +43,7 @@ ChkOtherForFall:
     CLC
     ADC #$02  ; otherwise add 2 pixels to vertical position
     STA ram_enemy_y_position,y  ; of other platform and branch elsewhere
-    JMP StopPlatforms  ; jump to stop movement and do not return
+    JMP sub_stop_platforms  ; jump to stop movement and do not return
 
 ChkToMoveBalPlat:
     LDA ram_enemy_y_position,x  ; save vertical position to stack
@@ -69,7 +69,7 @@ PlatUp:
     JSR sub_move_platform_up  ; do a sub to move upwards
     JMP DoOtherPlatform  ; jump ahead to remaining code
 PlatSt:
-    JSR StopPlatforms  ; do a sub to stop movement
+    JSR sub_stop_platforms  ; do a sub to stop movement
     JMP DoOtherPlatform  ; jump ahead to remaining code
 PlatDn:
     JSR sub_move_platform_down  ; do a sub to move downwards
@@ -85,7 +85,7 @@ DoOtherPlatform:
     LDA ram_platform_collision_flag,x  ; if no collision, skip this part here
     BMI DrawEraseRope
     TAX  ; put offset which collision occurred here
-    JSR PositionPlayerOnVPlat  ; and use it to position player accordingly
+    JSR sub_position_player_on_v_plat  ; and use it to position player accordingly
 
 DrawEraseRope:
     LDY ram_object_offset  ; get enemy object offset
@@ -98,7 +98,7 @@ DrawEraseRope:
     LDA ram_enemy_y_speed,y
     PHA  ; save two copies of vertical speed to stack
     PHA
-    JSR SetupPlatformRope  ; do a sub to figure out where to put new bg tiles
+    JSR sub_setup_platform_rope  ; do a sub to figure out where to put new bg tiles
     LDA $01  ; write name table address to vram buffer
     STA ram_vram_buffer1,x  ; first the high byte, then the low
     LDA $00
@@ -122,7 +122,7 @@ OtherRope:
     TAY  ; use as Y here
     PLA  ; pull second copy of vertical speed from stack
     EOR #$ff  ; invert bits to reverse speed
-    JSR SetupPlatformRope  ; do sub again to figure out where to put bg tiles
+    JSR sub_setup_platform_rope  ; do sub again to figure out where to put bg tiles
     LDA $01  ; write name table address to vram buffer
     STA ram_vram_buffer1+5,x  ; this time we're doing putting tiles for
     LDA $00  ; the other platform
@@ -151,7 +151,7 @@ ExitRp:
     LDX ram_object_offset  ; get enemy object buffer offset and leave
     RTS
 
-SetupPlatformRope:
+sub_setup_platform_rope:
     PHA  ; save second/third copy to stack
     LDA ram_enemy_x_position,y  ; get horizontal coordinate
     CLC
@@ -211,9 +211,9 @@ ExPRp:
 InitPlatformFall:
     TYA  ; move offset of other platform from Y to X
     TAX
-    JSR GetEnemyOffscreenBits  ; get offscreen bits
+    JSR sub_get_enemy_offscreen_bits  ; get offscreen bits
     LDA #$06
-    JSR SetupFloateyNumber  ; award 1000 points to player
+    JSR sub_setup_floatey_number  ; award 1000 points to player
     LDA ram_player_rel_x_pos
     STA ram_floatey_num_x_pos,x  ; put floatey number coordinates where player is
     LDA ram_player_y_position
@@ -221,8 +221,8 @@ InitPlatformFall:
     LDA #$01  ; set moving direction as flag for
     STA ram_enemy_moving_dir,x  ; falling platforms
 
-StopPlatforms:
-    JSR InitVStf  ; initialize vertical speed and low byte
+sub_stop_platforms:
+    JSR sub_init_v_stf  ; initialize vertical speed and low byte
     STA ram_enemy_y_speed,y  ; for both platforms and leave
     STA ram_enemy_y_move_force,y
     RTS
@@ -238,7 +238,7 @@ PlatformFall:
     LDA ram_platform_collision_flag,x  ; if player not standing on either platform,
     BMI ExPF  ; skip this part
     TAX  ; transfer collision flag offset as offset to X
-    JSR PositionPlayerOnVPlat  ; and position player appropriately
+    JSR sub_position_player_on_v_plat  ; and position player appropriately
 ExPF:
     LDX ram_object_offset  ; get enemy object buffer offset and leave
     RTS
@@ -272,7 +272,7 @@ YMDown:
 ChkYPCollision:
     LDA ram_platform_collision_flag,x  ; if collision flag not set here, branch
     BMI ExYPl  ; to leave
-    JSR PositionPlayerOnVPlat  ; otherwise position player appropriately
+    JSR sub_position_player_on_v_plat  ; otherwise position player appropriately
 ExYPl:
     RTS  ; leave
 
@@ -281,12 +281,12 @@ ExYPl:
 
 XMovingPlatform:
     LDA #$0e  ; load preset maximum value for secondary counter
-    JSR XMoveCntr_Platform  ; do a sub to increment counters for movement
-    JSR MoveWithXMCntrs  ; do a sub to move platform accordingly, and return value
+    JSR sub_x_move_cntr_platform  ; do a sub to increment counters for movement
+    JSR sub_move_with_xm_cntrs  ; do a sub to move platform accordingly, and return value
     LDA ram_platform_collision_flag,x  ; if no collision with player,
     BMI ExXMP  ; branch ahead to leave
 
-PositionPlayerOnHPlat:
+sub_position_player_on_h_plat:
     LDA ram_player_x_position
     CLC  ; add saved value from second subroutine to
     ADC $00  ; current player's position to position
@@ -301,7 +301,7 @@ PPHSubt:
 SetPVar:
     STA ram_player_page_loc  ; save result to player's page location
     STY ram_platform_x_scroll  ; put saved value from second sub here to be used later
-    JSR PositionPlayerOnVPlat  ; position player vertically and appropriately
+    JSR sub_position_player_on_v_plat  ; position player vertically and appropriately
 ExXMP:
     RTS  ; and we are done here
 
@@ -311,7 +311,7 @@ DropPlatform:
     LDA ram_platform_collision_flag,x  ; if no collision between platform and player
     BMI ExDPl  ; occurred, just leave without moving anything
     JSR sub_move_drop_platform  ; otherwise do a sub to move platform down very quickly
-    JSR PositionPlayerOnVPlat  ; do a sub to position player appropriately
+    JSR sub_position_player_on_v_plat  ; do a sub to position player appropriately
 ExDPl:
     RTS  ; leave
 
@@ -325,21 +325,21 @@ RightPlatform:
     BMI ExRPl  ; and platform, branch ahead, leave speed unaltered
     LDA #$10
     STA ram_enemy_x_speed,x  ; otherwise set new speed (gets moving if motionless)
-    JSR PositionPlayerOnHPlat  ; use saved value from earlier sub to position player
+    JSR sub_position_player_on_h_plat  ; use saved value from earlier sub to position player
 ExRPl:
     RTS  ; then leave
 
 ; --------------------------------
 
 MoveLargeLiftPlat:
-    JSR MoveLiftPlatforms  ; execute common to all large and small lift platforms
+    JSR sub_move_lift_platforms  ; execute common to all large and small lift platforms
     JMP ChkYPCollision  ; branch to position player correctly
 
-MoveSmallPlatform:
-    JSR MoveLiftPlatforms  ; execute common to all large and small lift platforms
+sub_move_small_platform:
+    JSR sub_move_lift_platforms  ; execute common to all large and small lift platforms
     JMP ChkSmallPlatCollision  ; branch to position player correctly
 
-MoveLiftPlatforms:
+sub_move_lift_platforms:
     LDA ram_timer_control  ; if master timer control set, skip all of this
     BNE ExLiftP  ; and branch to leave
     LDA ram_enemy_ymf_dummy,x
@@ -354,7 +354,7 @@ MoveLiftPlatforms:
 ChkSmallPlatCollision:
     LDA ram_platform_collision_flag,x  ; get bounding box counter saved in collision flag
     BEQ ExLiftP  ; if none found, leave player position alone
-    JSR PositionPlayerOnS_Plat  ; use to position player correctly
+    JSR sub_position_player_on_s_plat  ; use to position player correctly
 ExLiftP:
     RTS  ; then leave
 
@@ -364,7 +364,7 @@ ExLiftP:
 ; $02 - page location of extended right boundary
 ; $03 - extended right boundary position
 
-OffscreenBoundsCheck:
+sub_offscreen_bounds_check:
     LDA ram_enemy_id,x  ; check for cheep-cheep object
     CMP #con_flying_cheep_cheep  ; branch to leave if found
     BEQ ExScrnBd
@@ -410,7 +410,7 @@ ExtendLB:
     CPY #con_jumpspring_object  ; if jumpspring, do not erase
     BEQ ExScrnBd  ; erase all others too far to the right
 TooFar:
-    JSR EraseEnemyObject  ; erase object if necessary
+    JSR sub_erase_enemy_object  ; erase object if necessary
 ExScrnBd:
     RTS  ; leave
 
