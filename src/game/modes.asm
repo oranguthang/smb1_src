@@ -188,7 +188,7 @@ sub_victory_mode_subroutines:
     LDA ram_oper_mode_task
     JSR sub_dispatch_inline_handler
 
-    .word BridgeCollapse
+    .word handler_bridge_collapse
     .word handler_setup_victory_mode
     .word handler_player_victory_walk
     .word handler_print_victory_messages

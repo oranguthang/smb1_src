@@ -301,7 +301,7 @@ bra_select_ground_brick_metatile:
     ADC $07
     TAY  ; use as offset for metatile
 loc_draw_question_or_brick_block:
-    LDA BrickQBlockMetatiles,y  ; get appropriate metatile for brick (question block
+    LDA tbl_brick_and_question_block_metatiles,y  ; get appropriate metatile for brick (question block
     PHA  ; if branched to here from question block routine)
     JSR sub_get_large_area_object_attributes  ; get row from location byte
     JMP loc_draw_metatile_row  ; now render the object

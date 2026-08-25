@@ -27,7 +27,7 @@ an artificial controller byte before entering the same handler. Water areas
 also suppress input while the player is outside the playable vertical band.
 
 After movement, the handler updates scrolling and relative coordinates, builds
-the player bounding box, and calls `sub_player_bg_collision`. Collision owns
+the player bounding box, and calls `sub_handle_player_background_collision`. Collision owns
 landing correction, head and side blocking, climbing acquisition, coin contact,
 pipe entry, and the final movement-state correction for the frame.
 

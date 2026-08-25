@@ -365,7 +365,7 @@ bra_skip_piranha_plant:
     STA ram_enemy_y_position,x
     LDA #con_piranha_plant  ; write piranha plant's value into buffer
     STA ram_enemy_id,x
-    JSR sub_init_piranha_plant
+    JSR sub_initialize_piranha_plant
 bra_render_vertical_pipe:
     PLA  ; get value saved earlier and use as Y
     TAY

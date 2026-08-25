@@ -260,7 +260,7 @@ bra_check_joypad_override:
     LDA #$03  ; set player state to climbing
     STA ram_player_state
     LDX #$00  ; set offset for first slot, for block object
-    JSR sub_init_block_xy_pos
+    JSR sub_initialize_block_position
     LDA #$f0  ; set vertical coordinate for block object
     STA ram_block_y_position
     LDX #$05  ; set offset in X for last enemy object buffer slot

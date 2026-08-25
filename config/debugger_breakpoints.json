@@ -7,7 +7,7 @@
   "player": [
     {"symbol": "sub_update_player_movement", "description": "Player movement state dispatch"},
     {"symbol": "sub_update_player_physics", "description": "Player acceleration and jump physics"},
-    {"symbol": "sub_player_bg_collision", "description": "Player/background collision entry"},
+    {"symbol": "sub_handle_player_background_collision", "description": "Player/background collision entry"},
     {"symbol": "sub_injure_player", "description": "Player injury transaction"}
   ],
   "transactions": [

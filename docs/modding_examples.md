@@ -65,7 +65,7 @@ This allows Mario to jump unlimited times in mid-air (like in the Air hack).
 In the enemy runtime data, modify:
 
 ```asm
-RevivalRateData:
+tbl_enemy_revival_delays:
     .byte $10, $0b
 ```
 

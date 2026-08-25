@@ -24,7 +24,7 @@ sub_game_core_routine:
     RTS
 
 bra_run_game_engine:
-    JSR sub_proc_fireball_bubble  ; process fireballs and air bubbles
+    JSR sub_process_fireballs_and_bubbles  ; process fireballs and air bubbles
     LDX #$00
 bra_process_enemy_slots:
     STX ram_object_offset  ; put incremented offset in X as enemy object offset
@@ -36,7 +36,7 @@ bra_process_enemy_slots:
     JSR sub_get_player_offscreen_bits  ; get offscreen bits for player object
     JSR sub_relative_player_position  ; get relative coordinates for player object
     JSR sub_player_gfx_handler  ; draw the player
-    JSR sub_block_obj_mt_updater  ; replace block objects with metatiles if necessary
+    JSR sub_update_block_object_metatile  ; replace block objects with metatiles if necessary
     LDX #$01
     STX ram_object_offset  ; set offset for second
     JSR sub_block_objects_core  ; process second block object
@@ -45,7 +45,7 @@ bra_process_enemy_slots:
     JSR sub_block_objects_core  ; process first block object
     JSR sub_misc_objects_core  ; process misc objects (hammer, jumping coins)
     JSR sub_process_cannons  ; process bullet bill cannons
-    JSR sub_process_whirlpools  ; process whirlpools
+    JSR sub_process_whirlpool_pull  ; process whirlpools
     JSR sub_flagpole_routine  ; process the flagpole
     JSR sub_run_game_timer  ; count down the game timer
     JSR sub_color_rotation  ; cycle one of the background colors
@@ -359,7 +359,7 @@ bra_run_player_frame_subsystems:
     JSR sub_relative_player_position  ; get coordinates relative to the screen
     LDX #$00  ; set offset for player object
     JSR sub_bounding_box_core  ; get player's bounding box coordinates
-    JSR sub_player_bg_collision  ; do collision detection and process
+    JSR sub_handle_player_background_collision  ; do collision detection and process
     LDA ram_player_y_position
     CMP #$40  ; check to see if player is higher than 64th pixel
     BCC bra_check_player_below_screen  ; if so, branch ahead

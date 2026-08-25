@@ -14,36 +14,36 @@ sub_enemies_and_loops_core:
     LDA ram_enemy_flag,x  ; check data here for MSB set
     PHA  ; save in stack
     ASL
-    BCS ChkBowserF  ; if MSB set in enemy flag, branch ahead of jumps
+    BCS bra_resolve_bowser_rear_slot  ; if MSB set in enemy flag, branch ahead of jumps
     PLA  ; get from stack
-    BEQ ChkAreaTsk  ; if data zero, branch
-    JMP RunEnemyObjectsCore  ; otherwise, jump to run enemy subroutines
-ChkAreaTsk:
+    BEQ bra_check_area_parser_task  ; if data zero, branch
+    JMP loc_run_enemy_objects_core  ; otherwise, jump to run enemy subroutines
+bra_check_area_parser_task:
     LDA ram_area_parser_task_num  ; check number of tasks to perform
     AND #$07
     CMP #$07  ; if at a specific task, jump and leave
-    BEQ ExitELCore
-    JMP ProcLoopCommand  ; otherwise, jump to process loop command/load enemies
-ChkBowserF:
+    BEQ bra_exit_enemy_and_loop_core
+    JMP loc_process_game_loop_command  ; otherwise, jump to process loop command/load enemies
+bra_resolve_bowser_rear_slot:
     PLA  ; get data from stack
     AND #%00001111  ; mask out high nybble
     TAY
     LDA ram_enemy_flag,y  ; use as pointer and load same place with different offset
-    BNE ExitELCore
+    BNE bra_exit_enemy_and_loop_core
     STA ram_enemy_flag,x  ; if second enemy flag not set, also clear first one
-ExitELCore:
+bra_exit_enemy_and_loop_core:
     RTS
 
 ; --------------------------------
 
 ; loop command data
-LoopCmdWorldNumber:
+tbl_loop_command_world_numbers:
     .byte $03, $03, $06, $06, $06, $06, $06, $06, $07, $07, $07
 
-LoopCmdPageNumber:
+tbl_loop_command_page_numbers:
     .byte $05, $09, $04, $05, $06, $08, $09, $0a, $06, $0b, $10
 
-LoopCmdYPosition:
+tbl_loop_command_player_y_positions:
     .byte $40, $b0, $b0, $80, $40, $40, $80, $40, $f0, $f0, $f0
 
 sub_exec_game_loopback:
@@ -76,93 +76,93 @@ sub_exec_game_loopback:
     STA ram_area_data_offset  ; which loop command we encountered
     RTS
 
-ProcLoopCommand:
+loc_process_game_loop_command:
     LDA ram_loop_command  ; check if loop command was found
-    BEQ ChkEnemyFrenzy
+    BEQ bra_spawn_queued_frenzy_enemy
     LDA ram_current_column_pos  ; check to see if we're still on the first page
-    BNE ChkEnemyFrenzy  ; if not, do not loop yet
+    BNE bra_spawn_queued_frenzy_enemy  ; if not, do not loop yet
     LDY #$0b  ; start at the end of each set of loop data
-FindLoop:
+bra_find_matching_loop_command:
     DEY
-    BMI ChkEnemyFrenzy  ; if all data is checked and not match, do not loop
+    BMI bra_spawn_queued_frenzy_enemy  ; if all data is checked and not match, do not loop
     LDA ram_world_number  ; check to see if one of the world numbers
-    CMP LoopCmdWorldNumber,y  ; matches our current world number
-    BNE FindLoop
+    CMP tbl_loop_command_world_numbers,y  ; matches our current world number
+    BNE bra_find_matching_loop_command
     LDA ram_current_page_loc  ; check to see if one of the page numbers
-    CMP LoopCmdPageNumber,y  ; matches the page we're currently on
-    BNE FindLoop
+    CMP tbl_loop_command_page_numbers,y  ; matches the page we're currently on
+    BNE bra_find_matching_loop_command
     LDA ram_player_y_position  ; check to see if the player is at the correct position
-    CMP LoopCmdYPosition,y  ; if not, branch to check for world 7
-    BNE WrongChk
+    CMP tbl_loop_command_player_y_positions,y  ; if not, branch to check for world 7
+    BNE bra_handle_incorrect_loop_path
     LDA ram_player_state  ; check to see if the player is
     CMP #$00  ; on solid ground (i.e. not jumping or falling)
-    BNE WrongChk  ; if not, player fails to pass loop, and loopback
+    BNE bra_handle_incorrect_loop_path  ; if not, player fails to pass loop, and loopback
     LDA ram_world_number  ; are we in world 7? (check performed on correct
     CMP #con_world7  ; vertical position and on solid ground)
-    BNE InitMLp  ; if not, initialize flags used there, otherwise
+    BNE bra_reset_multi_loop_state  ; if not, initialize flags used there, otherwise
     INC ram_multi_loop_correct_cntr  ; increment counter for correct progression
-IncMLoop:
+bra_advance_world_7_loop_sequence:
     INC ram_multi_loop_pass_cntr  ; increment master multi-part counter
     LDA ram_multi_loop_pass_cntr  ; have we done all three parts?
     CMP #$03
-    BNE InitLCmd  ; if not, skip this part
+    BNE bra_clear_loop_command  ; if not, skip this part
     LDA ram_multi_loop_correct_cntr  ; if so, have we done them all correctly?
     CMP #$03
-    BEQ InitMLp  ; if so, branch past unnecessary check here
-    BNE DoLpBack  ; unconditional branch if previous branch fails
-WrongChk:
+    BEQ bra_reset_multi_loop_state  ; if so, branch past unnecessary check here
+    BNE bra_execute_game_loopback  ; unconditional branch if previous branch fails
+bra_handle_incorrect_loop_path:
     LDA ram_world_number  ; are we in world 7? (check performed on
     CMP #con_world7  ; incorrect vertical position or not on solid ground)
-    BEQ IncMLoop
-DoLpBack:
+    BEQ bra_advance_world_7_loop_sequence
+bra_execute_game_loopback:
     JSR sub_exec_game_loopback  ; if player is not in right place, loop back
     JSR sub_kill_all_enemies
-InitMLp:
+bra_reset_multi_loop_state:
     LDA #$00  ; initialize counters used for multi-part loop commands
     STA ram_multi_loop_pass_cntr
     STA ram_multi_loop_correct_cntr
-InitLCmd:
+bra_clear_loop_command:
     LDA #$00  ; initialize loop command flag
     STA ram_loop_command
 
 ; --------------------------------
 
-ChkEnemyFrenzy:
+bra_spawn_queued_frenzy_enemy:
     LDA ram_enemy_frenzy_queue  ; check for enemy object in frenzy queue
-    BEQ ProcessEnemyData  ; if not, skip this part
+    BEQ bra_process_enemy_stream  ; if not, skip this part
     STA ram_enemy_id,x  ; store as enemy object identifier here
     LDA #$01
     STA ram_enemy_flag,x  ; activate enemy object flag
     LDA #$00
     STA ram_enemy_state,x  ; initialize state and frenzy queue
     STA ram_enemy_frenzy_queue
-    JMP sub_init_enemy_object  ; and then jump to deal with this enemy
+    JMP sub_initialize_enemy_object  ; and then jump to deal with this enemy
 
 ; --------------------------------
 ; $06 - used to hold page location of extended right boundary
 ; $07 - used to hold high nybble of position of extended right boundary
 
-ProcessEnemyData:
+bra_process_enemy_stream:
     LDY ram_enemy_data_offset  ; get offset of enemy object data
     LDA (ram_enemy_data),y  ; load first byte
     CMP #$ff  ; check for EOD terminator
-    BNE CheckEndofBuffer
-    JMP CheckFrenzyBuffer  ; if found, jump to check frenzy buffer, otherwise
+    BNE bra_enforce_enemy_slot_limit
+    JMP loc_spawn_frenzy_enemy_or_vine  ; if found, jump to check frenzy buffer, otherwise
 
-CheckEndofBuffer:
+bra_enforce_enemy_slot_limit:
     AND #%00001111  ; check for special row $0e
     CMP #$0e
-    BEQ CheckRightBounds  ; if found, branch, otherwise
+    BEQ bra_compute_enemy_spawn_boundary  ; if found, branch, otherwise
     CPX #$05  ; check for end of buffer
-    BCC CheckRightBounds  ; if not at end of buffer, branch
+    BCC bra_compute_enemy_spawn_boundary  ; if not at end of buffer, branch
     INY
     LDA (ram_enemy_data),y  ; check for specific value here
     AND #%00111111  ; !(WHY?) CODE-002 - residual object-range check
     CMP #$2e
-    BEQ CheckRightBounds  ; but it has the effect of keeping enemies out of
+    BEQ bra_compute_enemy_spawn_boundary  ; but it has the effect of keeping enemies out of
     RTS  ; the sixth slot
 
-CheckRightBounds:
+bra_compute_enemy_spawn_boundary:
     LDA ram_screen_right_x_pos  ; add 48 to pixel coordinate of right boundary
     CLC
     ADC #$30
@@ -175,20 +175,20 @@ CheckRightBounds:
     INY
     LDA (ram_enemy_data),y  ; if MSB of enemy object is clear, branch to check for row $0f
     ASL
-    BCC CheckPageCtrlRow
+    BCC bra_parse_enemy_page_command
     LDA ram_enemy_object_page_sel  ; if page select already set, do not set again
-    BNE CheckPageCtrlRow
+    BNE bra_parse_enemy_page_command
     INC ram_enemy_object_page_sel  ; otherwise, if MSB is set, set page select
     INC ram_enemy_object_page_loc  ; and increment page control
 
-CheckPageCtrlRow:
+bra_parse_enemy_page_command:
     DEY
     LDA (ram_enemy_data),y  ; reread first byte
     AND #$0f
     CMP #$0f  ; check for special row $0f
-    BNE PositionEnemyObj  ; if not found, branch to position enemy object
+    BNE bra_decode_enemy_position  ; if not found, branch to position enemy object
     LDA ram_enemy_object_page_sel  ; if page select set,
-    BNE PositionEnemyObj  ; branch without reading second byte
+    BNE bra_decode_enemy_position  ; branch without reading second byte
     INY
     LDA (ram_enemy_data),y  ; otherwise, get second byte, mask out 2 MSB
     AND #%00111111
@@ -196,9 +196,9 @@ CheckPageCtrlRow:
     INC ram_enemy_data_offset  ; increment enemy object data offset 2 bytes
     INC ram_enemy_data_offset
     INC ram_enemy_object_page_sel  ; set page select for enemy object data and
-    JMP ProcLoopCommand  ; jump back to process loop commands again
+    JMP loc_process_game_loop_command  ; jump back to process loop commands again
 
-PositionEnemyObj:
+bra_decode_enemy_position:
     LDA ram_enemy_object_page_loc  ; store page control as page location
     STA ram_enemy_page_loc,x  ; for enemy object
     LDA (ram_enemy_data),y  ; get first byte of enemy object
@@ -207,19 +207,19 @@ PositionEnemyObj:
     CMP ram_screen_right_x_pos  ; check column position against right boundary
     LDA ram_enemy_page_loc,x  ; without subtracting, then subtract borrow
     SBC ram_screen_right_page_loc  ; from page location
-    BCS CheckRightExtBounds  ; if enemy object beyond or at boundary, branch
+    BCS bra_check_enemy_spawn_boundary  ; if enemy object beyond or at boundary, branch
     LDA (ram_enemy_data),y
     AND #%00001111  ; check for special row $0e
     CMP #$0e  ; if found, jump elsewhere
-    BEQ ParseRow0e
-    JMP CheckThreeBytes  ; if not found, unconditional jump
+    BEQ bra_parse_area_transition_command
+    JMP loc_advance_enemy_stream  ; if not found, unconditional jump
 
-CheckRightExtBounds:
+bra_check_enemy_spawn_boundary:
     LDA $07  ; check right boundary + 48 against
     CMP ram_enemy_x_position,x  ; column position without subtracting,
     LDA $06  ; then subtract borrow from page control temp
     SBC ram_enemy_page_loc,x  ; plus carry
-    BCC CheckFrenzyBuffer  ; if enemy object beyond extended boundary, branch
+    BCC loc_spawn_frenzy_enemy_or_vine  ; if enemy object beyond extended boundary, branch
     LDA #$01  ; store value in vertical high byte
     STA ram_enemy_y_high_pos,x
     LDA (ram_enemy_data),y  ; get first byte again
@@ -229,58 +229,58 @@ CheckRightExtBounds:
     ASL
     STA ram_enemy_y_position,x
     CMP #$e0  ; do one last check for special row $0e
-    BEQ ParseRow0e  ; (necessary if branched to $c1cb)
+    BEQ bra_parse_area_transition_command  ; (necessary if branched to $c1cb)
     INY
     LDA (ram_enemy_data),y  ; get second byte of object
     AND #%01000000  ; check to see if hard mode bit is set
-    BEQ CheckForEnemyGroup  ; if not, branch to check for group enemy objects
+    BEQ bra_decode_enemy_or_group_id  ; if not, branch to check for group enemy objects
     LDA ram_secondary_hard_mode  ; if set, check to see if secondary hard mode flag
-    BEQ Inc2B  ; is on, and if not, branch to skip this object completely
+    BEQ loc_advance_enemy_stream_two_bytes  ; is on, and if not, branch to skip this object completely
 
-CheckForEnemyGroup:
+bra_decode_enemy_or_group_id:
     LDA (ram_enemy_data),y  ; get second byte and mask out 2 MSB
     AND #%00111111
     CMP #$37  ; check for value below $37
-    BCC BuzzyBeetleMutate
+    BCC bra_apply_hard_mode_enemy_substitution
     CMP #$3f  ; if $37 or greater, check for value
-    BCC DoGroup  ; below $3f, branch if below $3f
+    BCC bra_spawn_enemy_group  ; below $3f, branch if below $3f
 
-BuzzyBeetleMutate:
+bra_apply_hard_mode_enemy_substitution:
     CMP #con_goomba  ; if below $37, check for goomba
-    BNE StrID  ; value ($3f or more always fails)
+    BNE bra_store_and_initialize_enemy_id  ; value ($3f or more always fails)
     LDY ram_primary_hard_mode  ; check if primary hard mode flag is set
-    BEQ StrID  ; and if so, change goomba to buzzy beetle
+    BEQ bra_store_and_initialize_enemy_id  ; and if so, change goomba to buzzy beetle
     LDA #con_buzzy_beetle
-StrID:
+bra_store_and_initialize_enemy_id:
     STA ram_enemy_id,x  ; store enemy object number into buffer
     LDA #$01
     STA ram_enemy_flag,x  ; set flag for enemy in buffer
-    JSR sub_init_enemy_object
+    JSR sub_initialize_enemy_object
     LDA ram_enemy_flag,x  ; check to see if flag is set
-    BNE Inc2B  ; if not, leave, otherwise branch
+    BNE loc_advance_enemy_stream_two_bytes  ; if not, leave, otherwise branch
     RTS
 
-CheckFrenzyBuffer:
+loc_spawn_frenzy_enemy_or_vine:
     LDA ram_enemy_frenzy_buffer  ; if enemy object stored in frenzy buffer
-    BNE StrFre  ; then branch ahead to store in enemy object buffer
+    BNE bra_store_queued_frenzy_or_vine_id  ; then branch ahead to store in enemy object buffer
     LDA ram_vine_flag_offset  ; otherwise check vine flag offset
     CMP #$01
-    BNE ExEPar  ; if other value <> 1, leave
+    BNE bra_exit_enemy_stream_parser  ; if other value <> 1, leave
     LDA #con_vine_object  ; otherwise put vine in enemy identifier
-StrFre:
+bra_store_queued_frenzy_or_vine_id:
     STA ram_enemy_id,x  ; store contents of frenzy buffer into enemy identifier value
 
-sub_init_enemy_object:
+sub_initialize_enemy_object:
     LDA #$00  ; initialize enemy state
     STA ram_enemy_state,x
     JSR sub_checkpoint_enemy_id  ; jump ahead to run jump engine and subroutines
-ExEPar:
+bra_exit_enemy_stream_parser:
     RTS  ; then leave
 
-DoGroup:
-    JMP HandleGroupEnemies  ; handle enemy group objects
+bra_spawn_enemy_group:
+    JMP loc_spawn_enemy_group  ; handle enemy group objects
 
-ParseRow0e:
+bra_parse_area_transition_command:
     INY  ; increment Y to load third byte of object
     INY
     LDA (ram_enemy_data),y
@@ -290,7 +290,7 @@ ParseRow0e:
     LSR
     LSR
     CMP ram_world_number  ; is it the same world number as we're on?
-    BNE NotUse  ; if not, do not use (this allows multiple uses
+    BNE bra_skip_area_transition_command  ; if not, do not use (this allows multiple uses
     DEY  ; of the same area, like the underground bonus areas)
     LDA (ram_enemy_data),y  ; otherwise, get second byte and use as offset
     STA ram_area_pointer  ; to addresses for level and enemy object data
@@ -298,18 +298,18 @@ ParseRow0e:
     LDA (ram_enemy_data),y  ; get third byte again, and this time mask out
     AND #%00011111  ; the 3 MSB from before, save as page number to be
     STA ram_entrance_page  ; used upon entry to area, if area is entered
-NotUse:
-    JMP Inc3B
+bra_skip_area_transition_command:
+    JMP loc_advance_enemy_stream_three_bytes
 
-CheckThreeBytes:
+loc_advance_enemy_stream:
     LDY ram_enemy_data_offset  ; load current offset for enemy object data
     LDA (ram_enemy_data),y  ; get first byte
     AND #%00001111  ; check for special row $0e
     CMP #$0e
-    BNE Inc2B
-Inc3B:
+    BNE loc_advance_enemy_stream_two_bytes
+loc_advance_enemy_stream_three_bytes:
     INC ram_enemy_data_offset  ; if row = $0e, increment three bytes
-Inc2B:
+loc_advance_enemy_stream_two_bytes:
     INC ram_enemy_data_offset  ; otherwise increment two bytes
     INC ram_enemy_data_offset
     LDA #$00  ; init page select for enemy objects
@@ -320,7 +320,7 @@ Inc2B:
 sub_checkpoint_enemy_id:
     LDA ram_enemy_id,x
     CMP #$15  ; check enemy object identifier for $15 or greater
-    BCS InitEnemyRoutines  ; and branch straight to the jump engine if found
+    BCS bra_dispatch_enemy_initializer  ; and branch straight to the jump engine if found
     TAY  ; save identifier in Y register for now
     LDA ram_enemy_y_position,x
     ADC #$08  ; add eight pixels to what will eventually be the
@@ -329,84 +329,84 @@ sub_checkpoint_enemy_id:
     STA ram_enemy_offscr_bits_masked,x  ; set offscreen masked bit
     TYA  ; get identifier back and use as offset for jump engine
 
-InitEnemyRoutines:
+bra_dispatch_enemy_initializer:
     JSR sub_dispatch_inline_handler
 
 ; jump engine table for newly loaded enemy objects
 
-    .word sub_init_normal_enemy  ; for objects $00-$0f
-    .word sub_init_normal_enemy
-    .word sub_init_normal_enemy
-    .word InitRedKoopa
-    .word NoInitCode
-    .word InitHammerBro
-    .word InitGoomba
-    .word InitBloober
-    .word InitBulletBill
-    .word NoInitCode
-    .word InitCheepCheep
-    .word InitCheepCheep
-    .word sub_init_podoboo
-    .word sub_init_piranha_plant
-    .word InitJumpGPTroopa
-    .word InitRedPTroopa
+    .word sub_initialize_normal_enemy  ; for objects $00-$0f
+    .word sub_initialize_normal_enemy
+    .word sub_initialize_normal_enemy
+    .word handler_initialize_red_koopa
+    .word handler_no_enemy_initialization
+    .word handler_initialize_hammer_bro
+    .word handler_initialize_goomba
+    .word handler_initialize_blooper
+    .word handler_initialize_bullet_bill
+    .word handler_no_enemy_initialization
+    .word handler_initialize_cheep_cheep
+    .word handler_initialize_cheep_cheep
+    .word sub_initialize_podoboo
+    .word sub_initialize_piranha_plant
+    .word handler_initialize_jumping_green_paratroopa
+    .word handler_initialize_red_paratroopa
 
-    .word sub_init_horiz_fly_swim_enemy  ; for objects $10-$1f
-    .word InitLakitu
-    .word InitEnemyFrenzy
-    .word NoInitCode
-    .word InitEnemyFrenzy
-    .word InitEnemyFrenzy
-    .word InitEnemyFrenzy
-    .word InitEnemyFrenzy
-    .word EndFrenzy
-    .word NoInitCode
-    .word NoInitCode
-    .word InitShortFirebar
-    .word InitShortFirebar
-    .word InitShortFirebar
-    .word InitShortFirebar
-    .word InitLongFirebar
+    .word sub_initialize_horizontal_flying_or_swimming_enemy  ; for objects $10-$1f
+    .word handler_initialize_lakitu
+    .word handler_initialize_enemy_frenzy
+    .word handler_no_enemy_initialization
+    .word handler_initialize_enemy_frenzy
+    .word handler_initialize_enemy_frenzy
+    .word handler_initialize_enemy_frenzy
+    .word handler_initialize_enemy_frenzy
+    .word handler_end_enemy_frenzy
+    .word handler_no_enemy_initialization
+    .word handler_no_enemy_initialization
+    .word handler_initialize_short_firebar
+    .word handler_initialize_short_firebar
+    .word handler_initialize_short_firebar
+    .word handler_initialize_short_firebar
+    .word handler_initialize_long_firebar
 
-    .word NoInitCode  ; for objects $20-$2f
-    .word NoInitCode
-    .word NoInitCode
-    .word NoInitCode
-    .word InitBalPlatform
-    .word InitVertPlatform
-    .word LargeLiftUp
-    .word LargeLiftDown
-    .word InitHoriPlatform
-    .word InitDropPlatform
-    .word InitHoriPlatform
-    .word sub_plat_lift_up
-    .word sub_plat_lift_down
-    .word InitBowser
-    .word PwrUpJmp  ; possibly dummy value
+    .word handler_no_enemy_initialization  ; for objects $20-$2f
+    .word handler_no_enemy_initialization
+    .word handler_no_enemy_initialization
+    .word handler_no_enemy_initialization
+    .word handler_initialize_balance_platform
+    .word handler_initialize_vertical_platform
+    .word handler_initialize_large_lift_up
+    .word handler_initialize_large_lift_down
+    .word handler_initialize_horizontal_platform
+    .word handler_initialize_drop_platform
+    .word handler_initialize_horizontal_platform
+    .word sub_initialize_platform_lift_up
+    .word sub_initialize_platform_lift_down
+    .word handler_initialize_bowser
+    .word handler_initialize_power_up_object  ; possibly dummy value
     .word sub_setup_vine
 
-    .word NoInitCode  ; for objects $30-$36
-    .word NoInitCode
-    .word NoInitCode
-    .word NoInitCode
-    .word NoInitCode
-    .word InitRetainerObj
-    .word EndOfEnemyInitCode
+    .word handler_no_enemy_initialization  ; for objects $30-$36
+    .word handler_no_enemy_initialization
+    .word handler_no_enemy_initialization
+    .word handler_no_enemy_initialization
+    .word handler_no_enemy_initialization
+    .word handler_initialize_retainer
+    .word handler_end_enemy_initialization
 
 ; -------------------------------------------------------------------------------------
 
-NoInitCode:
+handler_no_enemy_initialization:
     RTS  ; this executed when enemy object has no init code
 
 ; --------------------------------
 
-InitGoomba:
-    JSR sub_init_normal_enemy  ; set appropriate horizontal speed
-    JMP sub_small_b_box  ; set $09 as bounding box control, set other values
+handler_initialize_goomba:
+    JSR sub_initialize_normal_enemy  ; set appropriate horizontal speed
+    JMP sub_initialize_small_enemy_bounding_box  ; set $09 as bounding box control, set other values
 
 ; --------------------------------
 
-sub_init_podoboo:
+sub_initialize_podoboo:
     LDA #$02  ; set enemy position to below
     STA ram_enemy_y_high_pos,x  ; the bottom of the screen
     STA ram_enemy_y_position,x
@@ -414,88 +414,88 @@ sub_init_podoboo:
     STA ram_enemy_interval_timer,x  ; set timer for enemy
     LSR
     STA ram_enemy_state,x  ; initialize enemy state, then jump to use
-    JMP sub_small_b_box  ; $09 as bounding box size and set other things
+    JMP sub_initialize_small_enemy_bounding_box  ; $09 as bounding box size and set other things
 
 ; --------------------------------
 
-InitRetainerObj:
+handler_initialize_retainer:
     LDA #$b8  ; set fixed vertical position for
     STA ram_enemy_y_position,x  ; princess/mushroom retainer object
     RTS
 
 ; --------------------------------
 
-NormalXSpdData:
+tbl_normal_enemy_x_speeds:
     .byte $f8, $f4
 
-sub_init_normal_enemy:
+sub_initialize_normal_enemy:
     LDY #$01  ; load offset of 1 by default
     LDA ram_primary_hard_mode  ; check for primary hard mode flag set
-    BNE GetESpd
+    BNE bra_select_normal_enemy_x_speed
     DEY  ; if not set, decrement offset
-GetESpd:
-    LDA NormalXSpdData,y  ; get appropriate horizontal speed
-SetESpd:
+bra_select_normal_enemy_x_speed:
+    LDA tbl_normal_enemy_x_speeds,y  ; get appropriate horizontal speed
+loc_store_enemy_x_speed:
     STA ram_enemy_x_speed,x  ; store as speed for enemy object
-    JMP TallBBox  ; branch to set bounding box control and other data
+    JMP loc_set_tall_enemy_bounding_box  ; branch to set bounding box control and other data
 
 ; --------------------------------
 
-InitRedKoopa:
-    JSR sub_init_normal_enemy  ; load appropriate horizontal speed
+handler_initialize_red_koopa:
+    JSR sub_initialize_normal_enemy  ; load appropriate horizontal speed
     LDA #$01  ; set enemy state for red koopa troopa $03
     STA ram_enemy_state,x
     RTS
 
 ; --------------------------------
 
-HBroWalkingTimerData:
+tbl_hammer_bro_walking_delays:
     .byte $80, $50
 
-InitHammerBro:
+handler_initialize_hammer_bro:
     LDA #$00  ; init horizontal speed and timer used by hammer bro
     STA ram_hammer_throwing_timer,x  ; apparently to time hammer throwing
     STA ram_enemy_x_speed,x
     LDY ram_secondary_hard_mode  ; get secondary hard mode flag
-    LDA HBroWalkingTimerData,y
+    LDA tbl_hammer_bro_walking_delays,y
     STA ram_enemy_interval_timer,x  ; set value as delay for hammer bro to walk left
     LDA #$0b  ; set specific value for bounding box size control
-    JMP SetBBox
+    JMP loc_set_enemy_bounding_box
 
 ; --------------------------------
 
-sub_init_horiz_fly_swim_enemy:
+sub_initialize_horizontal_flying_or_swimming_enemy:
     LDA #$00  ; initialize horizontal speed
-    JMP SetESpd
+    JMP loc_store_enemy_x_speed
 
 ; --------------------------------
 
-InitBloober:
+handler_initialize_blooper:
     LDA #$00  ; initialize horizontal speed
     STA ram_blooper_move_speed,x
-sub_small_b_box:
+sub_initialize_small_enemy_bounding_box:
     LDA #$09  ; set specific bounding box size control
-    BNE SetBBox  ; unconditional branch
+    BNE loc_set_enemy_bounding_box  ; unconditional branch
 
 ; --------------------------------
 
-InitRedPTroopa:
+handler_initialize_red_paratroopa:
     LDY #$30  ; load central position adder for 48 pixels down
     LDA ram_enemy_y_position,x  ; set vertical coordinate into location to
     STA ram_red_p_troopa_orig_x_pos,x  ; be used as original vertical coordinate
-    BPL GetCent  ; if vertical coordinate < $80
+    BPL bra_compute_red_paratroopa_center_y  ; if vertical coordinate < $80
     LDY #$e0  ; if => $80, load position adder for 32 pixels up
-GetCent:
+bra_compute_red_paratroopa_center_y:
     TYA  ; send central position adder to A
     ADC ram_enemy_y_position,x  ; add to current vertical coordinate
     STA ram_red_p_troopa_center_y_pos,x  ; store as central vertical coordinate
-TallBBox:
+loc_set_tall_enemy_bounding_box:
     LDA #$03  ; set specific bounding box size control
-SetBBox:
+loc_set_enemy_bounding_box:
     STA ram_enemy_bound_box_ctrl,x  ; set bounding box control here
     LDA #$02  ; set moving direction for left
     STA ram_enemy_moving_dir,x
-sub_init_v_stf:
+sub_clear_enemy_vertical_motion:
     LDA #$00  ; initialize vertical speed
     STA ram_enemy_y_speed,x  ; and movement force
     STA ram_enemy_y_move_force,x
@@ -503,7 +503,7 @@ sub_init_v_stf:
 
 ; --------------------------------
 
-InitBulletBill:
+handler_initialize_bullet_bill:
     LDA #$02  ; set moving direction for left
     STA ram_enemy_moving_dir,x
     LDA #$09  ; set bounding box control for $09
@@ -512,8 +512,8 @@ InitBulletBill:
 
 ; --------------------------------
 
-InitCheepCheep:
-    JSR sub_small_b_box  ; set vertical bounding box, speed, init others
+handler_initialize_cheep_cheep:
+    JSR sub_initialize_small_enemy_bounding_box  ; set vertical bounding box, speed, init others
     LDA ram_pseudo_random_bit_reg,x  ; check one portion of LSFR
     AND #%00010000  ; get d4 from it
     STA ram_cheep_cheep_move_m_flag,x  ; save as movement flag of some sort
@@ -523,53 +523,53 @@ InitCheepCheep:
 
 ; --------------------------------
 
-InitLakitu:
+handler_initialize_lakitu:
     LDA ram_enemy_frenzy_buffer  ; check to see if an enemy is already in
-    BNE KillLakitu  ; the frenzy buffer, and branch to kill lakitu if so
+    BNE bra_erase_duplicate_lakitu  ; the frenzy buffer, and branch to kill lakitu if so
 
 sub_setup_lakitu:
     LDA #$00  ; erase counter for lakitu's reappearance
     STA ram_lakitu_reappear_timer
-    JSR sub_init_horiz_fly_swim_enemy  ; set $03 as bounding box, set other attributes
-    JMP TallBBox2  ; set $03 as bounding box again (not necessary) and leave
+    JSR sub_initialize_horizontal_flying_or_swimming_enemy  ; set $03 as bounding box, set other attributes
+    JMP loc_set_tall_special_enemy_bounding_box  ; set $03 as bounding box again (not necessary) and leave
 
-KillLakitu:
+bra_erase_duplicate_lakitu:
     JMP sub_erase_enemy_object
 
 ; --------------------------------
 ; $01-$03 - used to hold pseudorandom difference adjusters
 
-PRDiffAdjustData:
+tbl_spiny_throw_speed_adjustments:
     .byte $26, $2c, $32, $38
     .byte $20, $22, $24, $26
     .byte $13, $14, $15, $16
 
-LakituAndSpinyHandler:
+handler_spawn_lakitu_or_spiny:
     LDA ram_frenzy_enemy_timer  ; if timer here not expired, leave
-    BNE ExLSHand
+    BNE bra_exit_lakitu_spiny_handler
     CPX #$05  ; if we are on the special use slot, leave
-    BCS ExLSHand
+    BCS bra_exit_lakitu_spiny_handler
     LDA #$80  ; set timer
     STA ram_frenzy_enemy_timer
     LDY #$04  ; start with the last enemy slot
-ChkLak:
+bra_find_active_lakitu:
     LDA ram_enemy_id,y  ; check all enemy slots to see
     CMP #con_lakitu  ; if lakitu is on one of them
-    BEQ CreateSpiny  ; if so, branch out of this loop
+    BEQ bra_spawn_spiny_egg  ; if so, branch out of this loop
     DEY  ; otherwise check another slot
-    BPL ChkLak  ; loop until all slots are checked
+    BPL bra_find_active_lakitu  ; loop until all slots are checked
     INC ram_lakitu_reappear_timer  ; increment reappearance timer
     LDA ram_lakitu_reappear_timer
     CMP #$07  ; check to see if we're up to a certain value yet
-    BCC ExLSHand  ; if not, leave
+    BCC bra_exit_lakitu_spiny_handler  ; if not, leave
     LDX #$04  ; start with the last enemy slot again
-ChkNoEn:
+bra_find_empty_enemy_slot_for_lakitu:
     LDA ram_enemy_flag,x  ; check enemy buffer flag for non-active enemy slot
-    BEQ CreateL  ; branch out of loop if found
+    BEQ bra_spawn_lakitu  ; branch out of loop if found
     DEX  ; otherwise check next slot
-    BPL ChkNoEn  ; branch until all slots are checked
-    BMI RetEOfs  ; if no empty slots were found, branch to leave
-CreateL:
+    BPL bra_find_empty_enemy_slot_for_lakitu  ; branch until all slots are checked
+    BMI bra_restore_current_enemy_slot  ; if no empty slots were found, branch to leave
+bra_spawn_lakitu:
     LDA #$00  ; initialize enemy state
     STA ram_enemy_state,x
     LDA #con_lakitu  ; create lakitu enemy object
@@ -577,19 +577,19 @@ CreateL:
     JSR sub_setup_lakitu  ; do a sub to set up lakitu
     LDA #$20
     JSR sub_put_at_right_extent  ; finish setting up lakitu
-RetEOfs:
+bra_restore_current_enemy_slot:
     LDX ram_object_offset  ; get enemy object buffer offset again and leave
-ExLSHand:
+bra_exit_lakitu_spiny_handler:
     RTS
 
 ; --------------------------------
 
-CreateSpiny:
+bra_spawn_spiny_egg:
     LDA ram_player_y_position  ; if player above a certain point, branch to leave
     CMP #$2c
-    BCC ExLSHand
+    BCC bra_exit_lakitu_spiny_handler
     LDA ram_enemy_state,y  ; if lakitu is not in normal state, branch to leave
-    BNE ExLSHand
+    BNE bra_exit_lakitu_spiny_handler
     LDA ram_enemy_page_loc,y  ; store horizontal coordinates (high and low) of lakitu
     STA ram_enemy_page_loc,x  ; into the coordinates of the spiny we're going to create
     LDA ram_enemy_x_position,y
@@ -604,38 +604,38 @@ CreateSpiny:
     AND #%00000011
     TAY
     LDX #$02
-DifLoop:
-    LDA PRDiffAdjustData,y  ; get three values and save them
+bra_build_spiny_throw_adjustments:
+    LDA tbl_spiny_throw_speed_adjustments,y  ; get three values and save them
     STA $01,x  ; to $01-$03
     INY
     INY  ; increment Y four bytes for each value
     INY
     INY
     DEX  ; decrement X for each one
-    BPL DifLoop  ; loop until all three are written
+    BPL bra_build_spiny_throw_adjustments  ; loop until all three are written
     LDX ram_object_offset  ; get enemy object buffer offset
     JSR sub_player_lakitu_diff  ; move enemy, change direction, get value - difference
     LDY ram_player_x_speed  ; check player's horizontal speed
     CPY #$08
-    BCS SetSpSpd  ; if moving faster than a certain amount, branch elsewhere
+    BCS bra_initialize_spiny_throw_speed  ; if moving faster than a certain amount, branch elsewhere
     TAY  ; otherwise save value in A to Y for now
     LDA ram_pseudo_random_bit_reg+1,x
     AND #%00000011  ; get one of the LSFR parts and save the 2 LSB
-    BEQ UsePosv  ; branch if neither bits are set
+    BEQ bra_use_positive_spiny_throw_speed  ; branch if neither bits are set
     TYA
     EOR #%11111111  ; otherwise get two's compliment of Y
     TAY
     INY
-UsePosv:
+bra_use_positive_spiny_throw_speed:
     TYA  ; put value from A in Y back to A (they will be lost anyway)
-SetSpSpd:
-    JSR sub_small_b_box  ; set bounding box control, init attributes, lose contents of A
+bra_initialize_spiny_throw_speed:
+    JSR sub_initialize_small_enemy_bounding_box  ; set bounding box control, init attributes, lose contents of A
     LDY #$02
     STA ram_enemy_x_speed,x  ; set horizontal speed to zero because previous contents
     CMP #$00  ; of A were lost...branch here will never be taken for
-    BMI SpinyRte  ; the same reason
+    BMI bra_store_spiny_throw_direction  ; the same reason
     DEY
-SpinyRte:
+bra_store_spiny_throw_direction:
     STY ram_enemy_moving_dir,x  ; set moving direction to the right
     LDA #$fd
     STA ram_enemy_y_speed,x  ; set vertical speed to move upwards
@@ -643,5 +643,5 @@ SpinyRte:
     STA ram_enemy_flag,x  ; enable enemy object by setting flag
     LDA #$05
     STA ram_enemy_state,x  ; put spiny in egg state and leave
-ChpChpEx:
+bra_exit_enemy_initialization:
     RTS

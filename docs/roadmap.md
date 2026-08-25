@@ -143,7 +143,7 @@ groups were:
 | `handler_run_game_mode` through player physics | Game core, scrolling, player control |
 | Fireballs through shared movement | Gameplay objects and common physics |
 | `sub_enemies_and_loops_core` through enemy initialization | Enemy stream parser and setup |
-| `RunEnemyObjectsCore` through platform runtime | Enemy and platform behavior |
+| `loc_run_enemy_objects_core` through platform runtime | Enemy and platform behavior |
 | Fireball/enemy collision through block-buffer collision | Collision systems |
 | `sub_draw_vine` through sprite/offscreen helpers | OAM, actors, and animation |
 | `sub_sound_engine` through music data | Audio engine and streams |

@@ -149,7 +149,7 @@ WriteTopStatusLine:
 ; -------------------------------------------------------------------------------------
 
 WriteBottomStatusLine:
-    JSR sub_get_sb_nybbles  ; write player's score and coin tally to screen
+    JSR sub_get_status_bar_nibbles  ; write player's score and coin tally to screen
     LDX ram_vram_buffer1_offset
     LDA #$20  ; write address for world-area number on screen
     STA ram_vram_buffer1,x

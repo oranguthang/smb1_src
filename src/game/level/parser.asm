@@ -233,7 +233,7 @@ bra_render_terrain_byte:
 bra_apply_terrain_row_bits:
     LDY #$00  ; start at beginning of bitmasks
 bra_apply_terrain_bitmask:
-    LDA Bitmasks,y  ; load bitmask, then perform AND on contents of first byte
+    LDA tbl_enemy_slot_bit_masks,y  ; load bitmask, then perform AND on contents of first byte
     BIT $00
     BEQ bra_advance_terrain_row  ; if not set, skip this part (do not write terrain to buffer)
     LDA $07
