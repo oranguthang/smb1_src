@@ -137,7 +137,7 @@ groups were:
 | Definitions through `DIRECTIVES` | Hardware, RAM, and constants |
 | `vec_reset_handler` through `sub_sprite_shuffler` | Reset, NMI, frame processing, pause |
 | `sub_oper_mode_execution_tree` through screen text | Modes, title, victory, HUD |
-| `RenderAreaGraphics` through score output | Background, VRAM, PPU helpers |
+| `handler_render_area_column` through score output | Background, VRAM, PPU helpers |
 | `handler_initialize_game` through game-over flow | Game and area initialization |
 | `sub_area_parser_task_handler` through level data | Area parser, objects, level streams |
 | `handler_run_game_mode` through player physics | Game core, scrolling, player control |

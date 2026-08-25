@@ -15,7 +15,7 @@
 
 ; Clobbers:
 ; A, X, Y
-RenderAreaGraphics:
+handler_render_area_column:
     LDA ram_current_column_pos  ; store LSB of where we're at
     AND #$01
     STA $05
@@ -30,7 +30,7 @@ RenderAreaGraphics:
     LDA #$00  ; init attribute row
     STA $04
     TAX
-DrawMTLoop:
+bra_draw_metatile_column_loop:
     STX $01  ; store init value of 0 or incremented offset for buffer
     LDA ram_metatile_buffer,x  ; get first metatile number, and mask out all but 2 MSB
     AND #%11000000
@@ -39,9 +39,9 @@ DrawMTLoop:
     ROL  ; %xx000000 - attribute table bits,
     ROL  ; %00xxxxxx - metatile number
     TAY  ; rotate bits to d1-d0 and use as offset here
-    LDA MetatileGraphics_Low,y  ; get address to graphics table from here
+    LDA tbl_metatile_graphics_pointers_low,y  ; get address to graphics table from here
     STA $06
-    LDA MetatileGraphics_High,y
+    LDA tbl_metatile_graphics_pointers_high,y
     STA $07
     LDA ram_metatile_buffer,x  ; get metatile number again
     ASL  ; multiply by 4 and use as tile offset
@@ -61,29 +61,29 @@ DrawMTLoop:
     STA ram_vram_buffer2+4,x
     LDY $04  ; get current attribute row
     LDA $05  ; get LSB of current column where we're at, and
-    BNE RightCheck  ; branch if set (clear = left attrib, set = right)
+    BNE bra_position_right_metatile_attributes  ; branch if set (clear = left attrib, set = right)
     LDA $01  ; get current row we're rendering
     LSR  ; branch if LSB set (clear = top left, set = bottom left)
-    BCS LLeft
+    BCS bra_position_lower_left_metatile_attributes
     ROL $03  ; rotate attribute bits 3 to the left
     ROL $03  ; thus in d1-d0, for upper left square
     ROL $03
-    JMP SetAttrib
-RightCheck:
+    JMP loc_merge_metatile_attributes
+bra_position_right_metatile_attributes:
     LDA $01  ; get LSB of current row we're rendering
     LSR  ; branch if set (clear = top right, set = bottom right)
-    BCS NextMTRow
+    BCS bra_advance_metatile_attribute_row
     LSR $03  ; shift attribute bits 4 to the right
     LSR $03  ; thus in d3-d2, for upper right square
     LSR $03
     LSR $03
-    JMP SetAttrib
-LLeft:
+    JMP loc_merge_metatile_attributes
+bra_position_lower_left_metatile_attributes:
     LSR $03  ; shift attribute bits 2 to the right
     LSR $03  ; thus in d5-d4 for lower left square
-NextMTRow:
+bra_advance_metatile_attribute_row:
     INC $04  ; move onto next attribute row
-SetAttrib:
+loc_merge_metatile_attributes:
     LDA ram_attribute_buffer,y  ; get previously saved bits from before
     ORA $03  ; if any, and put new bits, if any, onto
     STA ram_attribute_buffer,y  ; the old, and store
@@ -92,7 +92,7 @@ SetAttrib:
     LDX $01  ; get current gfx buffer row, and check for
     INX  ; the bottom of the screen
     CPX #$0d
-    BCC DrawMTLoop  ; if not there yet, loop back
+    BCC bra_draw_metatile_column_loop  ; if not there yet, loop back
     LDY $00  ; get current vram buffer offset, increment by 3
     INY  ; (for name table address and length bytes)
     INY
@@ -103,14 +103,14 @@ SetAttrib:
     INC ram_current_nt_addr_low  ; increment name table address low
     LDA ram_current_nt_addr_low  ; check current low byte
     AND #%00011111  ; if no wraparound, just skip this part
-    BNE ExitDrawM
+    BNE bra_finish_area_column_render
     LDA #$80  ; if wraparound occurs, make sure low byte stays
     STA ram_current_nt_addr_low  ; just under the status bar
     LDA ram_current_nt_addr_high  ; and then invert d2 of the name table address high
     EOR #%00000100  ; to move onto the next appropriate name table
     STA ram_current_nt_addr_high
-ExitDrawM:
-    JMP SetVRAMCtrl  ; jump to set buffer to $0341 and leave
+bra_finish_area_column_render:
+    JMP loc_select_secondary_vram_buffer  ; jump to set buffer to $0341 and leave
 
 ; -------------------------------------------------------------------------------------
 ; $00 - temp attribute table address high (big endian order this time!)
@@ -124,9 +124,9 @@ sub_render_attribute_tables:
     AND #%00011111  ; mask out bits again and store
     STA $01
     LDA ram_current_nt_addr_high  ; get high byte and branch if borrow not set
-    BCS SetATHigh
+    BCS bra_compute_attribute_table_address_high
     EOR #%00000100  ; otherwise invert d2
-SetATHigh:
+bra_compute_attribute_table_address_high:
     AND #%00000100  ; mask out all other bits
     ORA #$23  ; add $2300 to the high byte and store
     STA $00
@@ -137,7 +137,7 @@ SetATHigh:
     STA $01  ; attribute table in our temp address
     LDX #$00
     LDY ram_vram_buffer2_offset  ; get buffer offset
-AttribLoop:
+bra_write_attribute_table_buffer:
     LDA $00
     STA ram_vram_buffer2,y  ; store high byte of attribute table address
     LDA $01
@@ -157,10 +157,10 @@ AttribLoop:
     INY
     INX  ; increment attribute offset and check to see
     CPX #$07  ; if we're at the end yet
-    BCC AttribLoop
+    BCC bra_write_attribute_table_buffer
     STA ram_vram_buffer2,y  ; put null terminator at the end
     STY ram_vram_buffer2_offset  ; store offset in case we want to do any more
-SetVRAMCtrl:
+loc_select_secondary_vram_buffer:
     LDA #$06
     STA ram_vram_buffer_addr_ctrl  ; set buffer to $0341 and leave
     RTS
@@ -169,14 +169,14 @@ SetVRAMCtrl:
 
 ; $00 - used as temporary counter in sub_color_rotation
 
-ColorRotatePalette:
+tbl_rotating_palette_colors:
     .byte $27, $27, $27, $17, $07, $17
 
-BlankPalette:
+tbl_blank_palette_packet:
     .byte $3f, $0c, $04, $ff, $ff, $ff, $ff, $00
 
 ; used based on area type
-Palette3Data:
+tbl_area_type_palette_3_colors:
     .byte $0f, $07, $12, $0f
     .byte $0f, $07, $17, $0f
     .byte $0f, $07, $17, $1c
@@ -185,18 +185,18 @@ Palette3Data:
 sub_color_rotation:
     LDA ram_frame_counter  ; get frame counter
     AND #$07  ; mask out all but three LSB
-    BNE ExitColorRot  ; branch if not set to zero to do this every eighth frame
+    BNE bra_exit_color_rotation  ; branch if not set to zero to do this every eighth frame
     LDX ram_vram_buffer1_offset  ; check vram buffer offset
     CPX #$31
-    BCS ExitColorRot  ; if offset over 48 bytes, branch to leave
+    BCS bra_exit_color_rotation  ; if offset over 48 bytes, branch to leave
     TAY  ; otherwise use frame counter's 3 LSB as offset here
-GetBlankPal:
-    LDA BlankPalette,y  ; get blank palette for palette 3
+bra_copy_blank_palette_packet:
+    LDA tbl_blank_palette_packet,y  ; get blank palette for palette 3
     STA ram_vram_buffer1,x  ; store it in the vram buffer
     INX  ; increment offsets
     INY
     CPY #$08
-    BCC GetBlankPal  ; do this until all bytes are copied
+    BCC bra_copy_blank_palette_packet  ; do this until all bytes are copied
     LDX ram_vram_buffer1_offset  ; get current vram buffer offset
     LDA #$03
     STA $00  ; set counter here
@@ -204,16 +204,16 @@ GetBlankPal:
     ASL  ; multiply by 4 to get proper offset
     ASL
     TAY  ; save as offset here
-GetAreaPal:
-    LDA Palette3Data,y  ; fetch palette to be written based on area type
+bra_copy_area_palette_colors:
+    LDA tbl_area_type_palette_3_colors,y  ; fetch palette to be written based on area type
     STA ram_vram_buffer1+3,x  ; store it to overwrite blank palette in vram buffer
     INY
     INX
     DEC $00  ; decrement counter
-    BPL GetAreaPal  ; do this until the palette is all copied
+    BPL bra_copy_area_palette_colors  ; do this until the palette is all copied
     LDX ram_vram_buffer1_offset  ; get current vram buffer offset
     LDY ram_color_rotate_offset  ; get color cycling offset
-    LDA ColorRotatePalette,y
+    LDA tbl_rotating_palette_colors,y
     STA ram_vram_buffer1+4,x  ; get and store current color in second slot of palette
     LDA ram_vram_buffer1_offset
     CLC  ; add seven bytes to vram buffer offset
@@ -222,10 +222,10 @@ GetAreaPal:
     INC ram_color_rotate_offset  ; increment color cycling offset
     LDA ram_color_rotate_offset
     CMP #$06  ; check to see if it's still in range
-    BCC ExitColorRot  ; if so, branch to leave
+    BCC bra_exit_color_rotation  ; if so, branch to leave
     LDA #$00
     STA ram_color_rotate_offset  ; otherwise, init to keep it in range
-ExitColorRot:
+bra_exit_color_rotation:
     RTS  ; leave
 
 ; -------------------------------------------------------------------------------------
@@ -236,7 +236,7 @@ ExitColorRot:
 ; $04, $05 - name table address low/high
 ; $06, $07 - block buffer address low/high
 
-BlockGfxData:
+tbl_block_metatile_tiles:
     .byte $45, $45, $47, $47
     .byte $47, $47, $47, $47
     .byte $57, $58, $59, $5a
@@ -247,9 +247,9 @@ sub_remove_coin_axe:
     LDY #$41  ; set low byte so offset points to $0341
     LDA #$03  ; load offset for default blank metatile
     LDX ram_area_type  ; check area type
-    BNE WriteBlankMT  ; if not water type, use offset
+    BNE bra_write_blank_metatile  ; if not water type, use offset
     LDA #$04  ; otherwise load offset for blank metatile used in water
-WriteBlankMT:
+bra_write_blank_metatile:
     JSR sub_put_block_metatile  ; do a sub to write blank metatile to vram buffer
     LDA #$06
     STA ram_vram_buffer_addr_ctrl  ; set vram address controller to $0341 and leave
@@ -267,29 +267,29 @@ sub_destroy_block_metatile:
 sub_write_block_metatile:
     LDY #$03  ; load offset for blank metatile
     CMP #$00  ; check contents of A for blank metatile
-    BEQ UseBOffset  ; branch if found (unconditional if branched from 8a6b)
+    BEQ bra_select_block_metatile_tiles  ; branch if found (unconditional if branched from 8a6b)
     LDY #$00  ; load offset for brick metatile w/ line
     CMP #$58
-    BEQ UseBOffset  ; use offset if metatile is brick with coins (w/ line)
+    BEQ bra_select_block_metatile_tiles  ; use offset if metatile is brick with coins (w/ line)
     CMP #$51
-    BEQ UseBOffset  ; use offset if metatile is breakable brick w/ line
+    BEQ bra_select_block_metatile_tiles  ; use offset if metatile is breakable brick w/ line
     INY  ; increment offset for brick metatile w/o line
     CMP #$5d
-    BEQ UseBOffset  ; use offset if metatile is brick with coins (w/o line)
+    BEQ bra_select_block_metatile_tiles  ; use offset if metatile is brick with coins (w/o line)
     CMP #$52
-    BEQ UseBOffset  ; use offset if metatile is breakable brick w/o line
+    BEQ bra_select_block_metatile_tiles  ; use offset if metatile is breakable brick w/o line
     INY  ; if any other metatile, increment offset for empty block
-UseBOffset:
+bra_select_block_metatile_tiles:
     TYA  ; put Y in A
     LDY ram_vram_buffer1_offset  ; get vram buffer offset
     INY  ; move onto next byte
     JSR sub_put_block_metatile  ; get appropriate block data and write to vram buffer
-sub_move_v_offset:
+sub_advance_primary_vram_buffer_offset:
     DEY  ; decrement vram buffer offset
     TYA  ; add 10 bytes to it
     CLC
     ADC #10
-    JMP SetVRAMOffset  ; branch to store as new vram buffer offset
+    JMP loc_store_primary_vram_buffer_offset  ; branch to store as new vram buffer offset
 
 sub_put_block_metatile:
     STX $00  ; store control bit from ram_spr_data_offset_ctrl
@@ -300,9 +300,9 @@ sub_put_block_metatile:
     LDY #$20  ; load high byte for name table 0
     LDA $06  ; get low byte of block buffer pointer
     CMP #$d0  ; check to see if we're on odd-page block buffer
-    BCC SaveHAdder  ; if not, use current high byte
+    BCC bra_compute_block_nametable_address  ; if not, use current high byte
     LDY #$24  ; otherwise load high byte for name table 1
-SaveHAdder:
+bra_compute_block_nametable_address:
     STY $03  ; save high byte here
     AND #$0f  ; mask out high nybble of block buffer pointer
     ASL  ; multiply by 2 to get appropriate name table low byte
@@ -324,14 +324,14 @@ SaveHAdder:
     ADC $03  ; then add high byte of name table
     STA $05  ; store here
     LDY $01  ; get vram buffer offset to be used
-sub_rem_bridge:
-    LDA BlockGfxData,x  ; write top left and top right
+sub_write_block_or_bridge_metatile:
+    LDA tbl_block_metatile_tiles,x  ; write top left and top right
     STA ram_vram_buffer1+2,y  ; tile numbers into first spot
-    LDA BlockGfxData+1,x
+    LDA tbl_block_metatile_tiles+1,x
     STA ram_vram_buffer1+3,y
-    LDA BlockGfxData+2,x  ; write bottom left and bottom
+    LDA tbl_block_metatile_tiles+2,x  ; write bottom left and bottom
     STA ram_vram_buffer1+7,y  ; right tiles numbers into
-    LDA BlockGfxData+3,x  ; second spot
+    LDA tbl_block_metatile_tiles+3,x  ; second spot
     STA ram_vram_buffer1+8,y
     LDA $04
     STA ram_vram_buffer1,y  ; write low byte of name table
@@ -352,13 +352,13 @@ sub_rem_bridge:
 ; -------------------------------------------------------------------------------------
 ; METATILE GRAPHICS TABLE
 
-MetatileGraphics_Low:
-    .byte <Palette0_MTiles, <Palette1_MTiles, <Palette2_MTiles, <Palette3_MTiles
+tbl_metatile_graphics_pointers_low:
+    .byte <off_palette_0_metatiles, <off_palette_1_metatiles, <off_palette_2_metatiles, <off_palette_3_metatiles
 
-MetatileGraphics_High:
-    .byte >Palette0_MTiles, >Palette1_MTiles, >Palette2_MTiles, >Palette3_MTiles
+tbl_metatile_graphics_pointers_high:
+    .byte >off_palette_0_metatiles, >off_palette_1_metatiles, >off_palette_2_metatiles, >off_palette_3_metatiles
 
-Palette0_MTiles:
+off_palette_0_metatiles:
     .byte $24, $24, $24, $24  ; blank
     .byte $27, $27, $27, $27  ; black metatile
     .byte $24, $24, $24, $35  ; bush left
@@ -399,7 +399,7 @@ Palette0_MTiles:
     .byte $a2, $a2, $a3, $a3  ; flagpole shaft
     .byte $24, $24, $24, $24  ; blank, used in conjunction with vines
 
-Palette1_MTiles:
+off_palette_1_metatiles:
     .byte $a2, $a2, $a3, $a3  ; vertical rope
     .byte $99, $24, $99, $24  ; horizontal rope
     .byte $24, $a2, $3e, $3f  ; left pulley
@@ -447,7 +447,7 @@ Palette1_MTiles:
     .byte $8e, $91, $8f, $92  ; water pipe bottom
     .byte $24, $2f, $24, $3d  ; flag ball (residual object)
 
-Palette2_MTiles:
+off_palette_2_metatiles:
     .byte $24, $24, $24, $35  ; cloud left
     .byte $36, $25, $37, $25  ; cloud middle
     .byte $24, $38, $24, $24  ; cloud right
@@ -459,7 +459,7 @@ Palette2_MTiles:
     .byte $b0, $b1, $b2, $b3  ; cloud level terrain
     .byte $77, $79, $77, $79  ; bowser's bridge
 
-Palette3_MTiles:
+off_palette_3_metatiles:
     .byte $53, $55, $54, $56  ; question block (coin)
     .byte $53, $55, $54, $56  ; question block (power-up)
     .byte $a5, $a7, $a6, $a8  ; coin
@@ -470,7 +470,7 @@ Palette3_MTiles:
 ; -------------------------------------------------------------------------------------
 ; VRAM BUFFER DATA FOR LOCATIONS IN PRG-ROM
 
-WaterPaletteData:
+off_water_area_palette_packet:
     .byte $3f, $00, $20
     .byte $0f, $15, $12, $25
     .byte $0f, $3a, $1a, $0f
@@ -482,7 +482,7 @@ WaterPaletteData:
     .byte $0f, $0f, $30, $10
     .byte $00
 
-GroundPaletteData:
+off_ground_area_palette_packet:
     .byte $3f, $00, $20
     .byte $0f, $29, $1a, $0f
     .byte $0f, $36, $17, $0f
@@ -494,7 +494,7 @@ GroundPaletteData:
     .byte $0f, $0f, $36, $17
     .byte $00
 
-UndergroundPaletteData:
+off_underground_area_palette_packet:
     .byte $3f, $00, $20
     .byte $0f, $29, $1a, $09
     .byte $0f, $3c, $1c, $0f
@@ -506,7 +506,7 @@ UndergroundPaletteData:
     .byte $0f, $0c, $3c, $1c
     .byte $00
 
-CastlePaletteData:
+off_castle_area_palette_packet:
     .byte $3f, $00, $20
     .byte $0f, $30, $10, $00
     .byte $0f, $30, $10, $00
@@ -518,27 +518,27 @@ CastlePaletteData:
     .byte $0f, $00, $30, $10
     .byte $00
 
-DaySnowPaletteData:
+off_day_snow_palette_packet:
     .byte $3f, $00, $04
     .byte $22, $30, $00, $10
     .byte $00
 
-NightSnowPaletteData:
+off_night_snow_palette_packet:
     .byte $3f, $00, $04
     .byte $0f, $30, $00, $10
     .byte $00
 
-MushroomPaletteData:
+off_mushroom_palette_packet:
     .byte $3f, $00, $04
     .byte $22, $27, $16, $0f
     .byte $00
 
-BowserPaletteData:
+off_bowser_palette_packet:
     .byte $3f, $14, $04
     .byte $0f, $1a, $30, $27
     .byte $00
 
-MarioThanksMessage:
+off_mario_thanks_message:
 ; "THANK YOU MARIO!"
     .byte $25, $48, $10
     .byte $1d, $11, $0a, $17, $14, $24
@@ -546,7 +546,7 @@ MarioThanksMessage:
     .byte $16, $0a, $1b, $12, $18, $2b
     .byte $00
 
-LuigiThanksMessage:
+off_luigi_thanks_message:
 ; "THANK YOU LUIGI!"
     .byte $25, $48, $10
     .byte $1d, $11, $0a, $17, $14, $24
@@ -554,7 +554,7 @@ LuigiThanksMessage:
     .byte $15, $1e, $12, $10, $12, $2b
     .byte $00
 
-MushroomRetainerSaved:
+off_mushroom_retainer_saved_message:
 ; "BUT OUR PRINCESS IS IN"
     .byte $25, $c5, $16
     .byte $0b, $1e, $1d, $24, $18, $1e, $1b, $24
@@ -565,7 +565,7 @@ MushroomRetainerSaved:
     .byte $0a, $17, $18, $1d, $11, $0e, $1b, $24
     .byte $0c, $0a, $1c, $1d, $15, $0e, $2b, $00
 
-PrincessSaved1:
+off_princess_saved_message_1:
 ; "YOUR QUEST IS OVER."
     .byte $25, $a7, $13
     .byte $22, $18, $1e, $1b, $24
@@ -573,7 +573,7 @@ PrincessSaved1:
     .byte $12, $1c, $24, $18, $1f, $0e, $1b, $af
     .byte $00
 
-PrincessSaved2:
+off_princess_saved_message_2:
 ; "WE PRESENT YOU A NEW QUEST."
     .byte $25, $e3, $1b
     .byte $20, $0e, $24
@@ -582,14 +582,14 @@ PrincessSaved2:
     .byte $1a, $1e, $0e, $1c, $1d, $af
     .byte $00
 
-WorldSelectMessage1:
+off_world_select_message_1:
 ; "PUSH BUTTON B"
     .byte $26, $4a, $0d
     .byte $19, $1e, $1c, $11, $24
     .byte $0b, $1e, $1d, $1d, $18, $17, $24, $0b
     .byte $00
 
-WorldSelectMessage2:
+off_world_select_message_2:
 ; "TO SELECT A WORLD"
     .byte $26, $88, $11
     .byte $1d, $18, $24, $1c, $0e, $15, $0e, $0c, $1d, $24

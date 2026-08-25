@@ -46,9 +46,9 @@ bra_remove_next_bridge_metatile:
     LDY ram_vram_buffer1_offset  ; increment vram buffer offset
     INY
     LDX #$0c  ; set offset for tile data for sub to draw blank metatile
-    JSR sub_rem_bridge  ; do sub here to remove bowser's bridge metatiles
+    JSR sub_write_block_or_bridge_metatile  ; do sub here to remove bowser's bridge metatiles
     LDX ram_object_offset  ; get enemy offset
-    JSR sub_move_v_offset  ; set new vram buffer offset
+    JSR sub_advance_primary_vram_buffer_offset  ; set new vram buffer offset
     LDA #con_sfx_blast  ; load the fireworks/gunfire sound into the square 2 sfx
     STA ram_square2_sound_queue  ; queue while at the same time loading the brick
     LDA #con_sfx_brick_shatter  ; shatter sound into the noise sfx queue thus

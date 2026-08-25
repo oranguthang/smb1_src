@@ -30,8 +30,8 @@
       "id": "palette_3_metatiles",
       "family": "metatile mappings",
       "source": "src/rendering/background.asm",
-      "start": "Palette3_MTiles",
-      "end": "WaterPaletteData",
+      "start": "off_palette_3_metatiles",
+      "end": "off_water_area_palette_packet",
       "codec": "fixed_records",
       "record_size": 4,
       "record_name": "metatile"
@@ -40,8 +40,8 @@
       "id": "top_status_bar_ppu_packets",
       "family": "PPU update packets and status blocks",
       "source": "src/rendering/screens.asm",
-      "start": "TopStatusBarLine",
-      "end": "WorldLivesDisplay",
+      "start": "off_top_status_bar_packet",
+      "end": "off_world_lives_display_packet",
       "codec": "ppu_packets",
       "terminator": 255
     },
@@ -49,8 +49,8 @@
       "id": "player_animation_tiles",
       "family": "player sprite mappings and animation tables",
       "source": "src/rendering/actors/player.asm",
-      "start": "PlayerGraphicsTable",
-      "end": "SwimKickTileNum",
+      "start": "tbl_player_graphics_tiles",
+      "end": "tbl_player_swim_kick_tiles",
       "codec": "fixed_records",
       "record_size": 8,
       "record_name": "frame"
@@ -81,8 +81,8 @@
       "id": "swim_stomp_envelope",
       "family": "sound-effect envelopes",
       "source": "src/audio/sound_effects.asm",
-      "start": "SwimStompEnvelopeData",
-      "end": "PlayFlagpoleSlide",
+      "start": "tbl_swim_stomp_volume_envelope",
+      "end": "bra_start_flagpole_slide_sound",
       "codec": "apu_envelope"
     },
     {

@@ -108,7 +108,7 @@ bra_update_active_fireball:
     AND #%11001100  ; mask out certain bits
     BNE bra_erase_fireball  ; if any bits still set, branch to kill fireball
     JSR sub_fireball_enemy_collision  ; do fireball to enemy collision detection and deal with collisions
-    JMP DrawFireball  ; draw fireball appropriately and leave
+    JMP loc_draw_fireball  ; draw fireball appropriately and leave
 bra_erase_fireball:
     LDA #$00  ; erase fireball state
     STA ram_fireball_state,x
@@ -117,7 +117,7 @@ bra_skip_inactive_fireball:
 
 bra_process_fireball_explosion:
     JSR sub_relative_fireball_position
-    JMP DrawExplosion_Fireball
+    JMP loc_draw_fireball_explosion
 
 sub_bubble_check:
     LDA ram_pseudo_random_bit_reg+1,x  ; get part of LSFR
@@ -371,7 +371,7 @@ bra_award_flagpole_score:
 loc_render_flagpole_objects:
     JSR sub_get_enemy_offscreen_bits  ; get offscreen information
     JSR sub_relative_enemy_position  ; get relative coordinates
-    JSR sub_flagpole_gfx_handler  ; draw flagpole flag and floatey number
+    JSR sub_render_flagpole_graphics  ; draw flagpole flag and floatey number
 bra_exit_flagpole:
     RTS
 
@@ -420,7 +420,7 @@ bra_apply_jumpspring_bounce:
     STA ram_jumpspring_anim_ctrl  ; initialize jumpspring frame control
 bra_draw_jumpspring_object:
     JSR sub_relative_enemy_position  ; get jumpspring's relative coordinates
-    JSR sub_enemy_gfx_handler  ; draw jumpspring
+    JSR sub_render_enemy_graphics  ; draw jumpspring
     JSR sub_offscreen_bounds_check  ; check to see if we need to kill it
     LDA ram_jumpspring_anim_ctrl  ; if frame control at zero, don't bother
     BEQ bra_exit_jumpspring  ; trying to animate it, just leave

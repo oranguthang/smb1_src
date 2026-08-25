@@ -5,7 +5,7 @@ handler_run_title_screen_mode:
     JSR sub_dispatch_inline_handler
 
     .word handler_initialize_game
-    .word ScreenRoutines
+    .word handler_run_screen_task
     .word handler_primary_game_setup
     .word handler_game_menu
 
@@ -182,7 +182,7 @@ handler_run_victory_mode:
     JSR sub_enemies_and_loops_core  ; and run enemy code
 bra_render_victory_player:
     JSR sub_relative_player_position  ; get player's relative coordinates
-    JMP sub_player_gfx_handler  ; draw the player, then leave
+    JMP sub_render_player_graphics  ; draw the player, then leave
 
 sub_victory_mode_subroutines:
     LDA ram_oper_mode_task
@@ -202,7 +202,7 @@ handler_setup_victory_mode:
     STX ram_destination_page_loc  ; store here
     LDA #con_end_of_castle_music
     STA ram_event_music_queue  ; play win castle music
-    JMP IncModeTask_B  ; jump to set next major task in victory mode
+    JMP loc_advance_operation_mode_task  ; jump to set next major task in victory mode
 
 ; -------------------------------------------------------------------------------------
 
@@ -424,7 +424,7 @@ bra_update_floating_score_position:
 bra_render_floating_score_sprites:
     LDA ram_floatey_num_y_pos,x  ; get vertical coordinate
     SBC #$08  ; subtract eight and dump into the
-    JSR sub_dump_two_spr  ; left and right sprite's Y coordinates
+    JSR sub_fill_two_sprite_fields  ; left and right sprite's Y coordinates
     LDA ram_floatey_num_x_pos,x  ; get horizontal coordinate
     STA ram_sprite_x_position,y  ; store into X coordinate of left sprite
     CLC

@@ -7,7 +7,7 @@ handler_run_game_mode:
     JSR sub_dispatch_inline_handler
 
     .word handler_initialize_area
-    .word ScreenRoutines
+    .word handler_run_screen_task
     .word handler_secondary_game_setup
     .word sub_game_core_routine
 
@@ -35,7 +35,7 @@ bra_process_enemy_slots:
     BNE bra_process_enemy_slots
     JSR sub_get_player_offscreen_bits  ; get offscreen bits for player object
     JSR sub_relative_player_position  ; get relative coordinates for player object
-    JSR sub_player_gfx_handler  ; draw the player
+    JSR sub_render_player_graphics  ; draw the player
     JSR sub_update_block_object_metatile  ; replace block objects with metatiles if necessary
     LDX #$01
     STX ram_object_offset  ; set offset for second
@@ -152,7 +152,7 @@ bra_clear_scroll_amount:
     STA ram_scroll_amount  ; initialize value here
 loc_clamp_player_to_screen:
     LDX #$00  ; set X for player offset
-    JSR sub_get_x_offscreen_bits  ; get horizontal offscreen bits for player
+    JSR sub_get_horizontal_offscreen_bits  ; get horizontal offscreen bits for player
     STA $00  ; save them here
     LDY #$00  ; load default offset (left side)
     ASL  ; if d7 of offscreen bits are set,

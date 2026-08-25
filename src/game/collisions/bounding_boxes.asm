@@ -68,7 +68,7 @@ bra_store_masked_offscreen_bits:
 
 sub_large_platform_bound_box:
     INX  ; increment X to get the proper offset
-    JSR sub_get_x_offscreen_bits  ; then jump directly to the sub for horizontal offscreen bits
+    JSR sub_get_horizontal_offscreen_bits  ; then jump directly to the sub for horizontal offscreen bits
     DEX  ; decrement to return to original offset
     CMP #$fe  ; if completely offscreen, branch to put entire bounding
     BCS bra_move_bounding_box_offscreen  ; box offscreen, otherwise start getting coordinates

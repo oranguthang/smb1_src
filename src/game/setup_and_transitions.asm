@@ -337,7 +337,7 @@ handler_run_game_over_mode:
     JSR sub_dispatch_inline_handler
 
     .word handler_setup_game_over
-    .word ScreenRoutines
+    .word handler_run_screen_task
     .word handler_run_game_over_screen
 
 ; -------------------------------------------------------------------------------------

@@ -26,12 +26,12 @@ sub_area_parser_tasks:
     JSR sub_dispatch_inline_handler
 
     .word handler_advance_area_parser_column
-    .word RenderAreaGraphics
-    .word RenderAreaGraphics
+    .word handler_render_area_column
+    .word handler_render_area_column
     .word handler_build_area_column
     .word handler_advance_area_parser_column
-    .word RenderAreaGraphics
-    .word RenderAreaGraphics
+    .word handler_render_area_column
+    .word handler_render_area_column
     .word handler_build_area_column
 
 ; -------------------------------------------------------------------------------------

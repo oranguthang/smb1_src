@@ -58,22 +58,22 @@ loc_wait_forever_after_reset_failure:
 ; $01 - vram buffer address table high
 
 tbl_vram_buffer_addresses_low:
-    .byte <ram_vram_buffer1, <WaterPaletteData, <GroundPaletteData
-    .byte <UndergroundPaletteData, <CastlePaletteData, <ram_vram_buffer1_offset
-    .byte <ram_vram_buffer2, <ram_vram_buffer2, <BowserPaletteData
-    .byte <DaySnowPaletteData, <NightSnowPaletteData, <MushroomPaletteData
-    .byte <MarioThanksMessage, <LuigiThanksMessage, <MushroomRetainerSaved
-    .byte <PrincessSaved1, <PrincessSaved2, <WorldSelectMessage1
-    .byte <WorldSelectMessage2
+    .byte <ram_vram_buffer1, <off_water_area_palette_packet, <off_ground_area_palette_packet
+    .byte <off_underground_area_palette_packet, <off_castle_area_palette_packet, <ram_vram_buffer1_offset
+    .byte <ram_vram_buffer2, <ram_vram_buffer2, <off_bowser_palette_packet
+    .byte <off_day_snow_palette_packet, <off_night_snow_palette_packet, <off_mushroom_palette_packet
+    .byte <off_mario_thanks_message, <off_luigi_thanks_message, <off_mushroom_retainer_saved_message
+    .byte <off_princess_saved_message_1, <off_princess_saved_message_2, <off_world_select_message_1
+    .byte <off_world_select_message_2
 
 tbl_vram_buffer_addresses_high:
-    .byte >ram_vram_buffer1, >WaterPaletteData, >GroundPaletteData
-    .byte >UndergroundPaletteData, >CastlePaletteData, >ram_vram_buffer1_offset
-    .byte >ram_vram_buffer2, >ram_vram_buffer2, >BowserPaletteData
-    .byte >DaySnowPaletteData, >NightSnowPaletteData, >MushroomPaletteData
-    .byte >MarioThanksMessage, >LuigiThanksMessage, >MushroomRetainerSaved
-    .byte >PrincessSaved1, >PrincessSaved2, >WorldSelectMessage1
-    .byte >WorldSelectMessage2
+    .byte >ram_vram_buffer1, >off_water_area_palette_packet, >off_ground_area_palette_packet
+    .byte >off_underground_area_palette_packet, >off_castle_area_palette_packet, >ram_vram_buffer1_offset
+    .byte >ram_vram_buffer2, >ram_vram_buffer2, >off_bowser_palette_packet
+    .byte >off_day_snow_palette_packet, >off_night_snow_palette_packet, >off_mushroom_palette_packet
+    .byte >off_mario_thanks_message, >off_luigi_thanks_message, >off_mushroom_retainer_saved_message
+    .byte >off_princess_saved_message_1, >off_princess_saved_message_2, >off_world_select_message_1
+    .byte >off_world_select_message_2
 
 tbl_vram_buffer_offset_addresses:
     .byte <ram_vram_buffer1_offset, <ram_vram_buffer2_offset

@@ -446,7 +446,7 @@ sub_handle_pipe_entry:
     BCC bra_select_warp_zone_world  ; if player at middle, but not too far right, use offset and skip
     INX  ; otherwise increment for last pipe
 bra_select_warp_zone_world:
-    LDY WarpZoneNumbers,x  ; get warp zone numbers
+    LDY tbl_warp_zone_number_tiles,x  ; get warp zone numbers
     DEY  ; decrement for use as world number
     STY ram_world_number  ; store as world number and offset
     LDX tbl_world_area_pointer_offsets,y  ; get offset to where this world's area offsets are

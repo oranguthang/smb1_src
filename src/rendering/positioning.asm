@@ -4,53 +4,53 @@
 sub_relative_player_position:
     LDX #$00  ; set offsets for relative cooordinates
     LDY #$00  ; routine to correspond to player object
-    JMP RelWOfs  ; get the coordinates
+    JMP loc_finish_relative_object_position  ; get the coordinates
 
 sub_relative_bubble_position:
     LDY #$01  ; set for air bubble offsets
-    JSR sub_get_proper_obj_offset  ; modify X to get proper air bubble offset
+    JSR sub_get_sprite_object_array_offset  ; modify X to get proper air bubble offset
     LDY #$03
-    JMP RelWOfs  ; get the coordinates
+    JMP loc_finish_relative_object_position  ; get the coordinates
 
 sub_relative_fireball_position:
     LDY #$00  ; set for fireball offsets
-    JSR sub_get_proper_obj_offset  ; modify X to get proper fireball offset
+    JSR sub_get_sprite_object_array_offset  ; modify X to get proper fireball offset
     LDY #$02
-RelWOfs:
-    JSR sub_get_obj_relative_position  ; get the coordinates
+loc_finish_relative_object_position:
+    JSR sub_get_object_relative_position  ; get the coordinates
     LDX ram_object_offset  ; return original offset
     RTS  ; leave
 
 sub_relative_misc_position:
     LDY #$02  ; set for misc object offsets
-    JSR sub_get_proper_obj_offset  ; modify X to get proper misc object offset
+    JSR sub_get_sprite_object_array_offset  ; modify X to get proper misc object offset
     LDY #$06
-    JMP RelWOfs  ; get the coordinates
+    JMP loc_finish_relative_object_position  ; get the coordinates
 
 sub_relative_enemy_position:
     LDA #$01  ; get coordinates of enemy object
     LDY #$01  ; relative to the screen
-    JMP sub_variable_obj_ofs_rel_pos
+    JMP sub_get_variable_object_relative_position
 
 sub_relative_block_position:
     LDA #$09  ; get coordinates of one block object
     LDY #$04  ; relative to the screen
-    JSR sub_variable_obj_ofs_rel_pos
+    JSR sub_get_variable_object_relative_position
     INX  ; adjust offset for other block object if any
     INX
     LDA #$09
     INY  ; adjust other and get coordinates for other one
 
-sub_variable_obj_ofs_rel_pos:
+sub_get_variable_object_relative_position:
     STX $00  ; store value to add to A here
     CLC
     ADC $00  ; add A to value stored
     TAX  ; use as enemy offset
-    JSR sub_get_obj_relative_position
+    JSR sub_get_object_relative_position
     LDX ram_object_offset  ; reload old object offset and leave
     RTS
 
-sub_get_obj_relative_position:
+sub_get_object_relative_position:
     LDA ram_spr_object_y_position,x  ; load vertical coordinate low
     STA ram_spr_object_rel_y_pos,y  ; store here
     LDA ram_spr_object_x_position,x  ; load horizontal coordinate
@@ -65,55 +65,55 @@ sub_get_obj_relative_position:
 sub_get_player_offscreen_bits:
     LDX #$00  ; set offsets for player-specific variables
     LDY #$00  ; and get offscreen information about player
-    JMP GetOffScreenBitsSet
+    JMP loc_compute_and_store_offscreen_bits
 
 sub_get_fireball_offscreen_bits:
     LDY #$00  ; set for fireball offsets
-    JSR sub_get_proper_obj_offset  ; modify X to get proper fireball offset
+    JSR sub_get_sprite_object_array_offset  ; modify X to get proper fireball offset
     LDY #$02  ; set other offset for fireball's offscreen bits
-    JMP GetOffScreenBitsSet  ; and get offscreen information about fireball
+    JMP loc_compute_and_store_offscreen_bits  ; and get offscreen information about fireball
 
 sub_get_bubble_offscreen_bits:
     LDY #$01  ; set for air bubble offsets
-    JSR sub_get_proper_obj_offset  ; modify X to get proper air bubble offset
+    JSR sub_get_sprite_object_array_offset  ; modify X to get proper air bubble offset
     LDY #$03  ; set other offset for airbubble's offscreen bits
-    JMP GetOffScreenBitsSet  ; and get offscreen information about air bubble
+    JMP loc_compute_and_store_offscreen_bits  ; and get offscreen information about air bubble
 
 sub_get_misc_offscreen_bits:
     LDY #$02  ; set for misc object offsets
-    JSR sub_get_proper_obj_offset  ; modify X to get proper misc object offset
+    JSR sub_get_sprite_object_array_offset  ; modify X to get proper misc object offset
     LDY #$06  ; set other offset for misc object's offscreen bits
-    JMP GetOffScreenBitsSet  ; and get offscreen information about misc object
+    JMP loc_compute_and_store_offscreen_bits  ; and get offscreen information about misc object
 
-ObjOffsetData:
+tbl_sprite_object_array_offsets:
     .byte $07, $16, $0d
 
-sub_get_proper_obj_offset:
+sub_get_sprite_object_array_offset:
     TXA  ; move offset to A
     CLC
-    ADC ObjOffsetData,y  ; add amount of bytes to offset depending on setting in Y
+    ADC tbl_sprite_object_array_offsets,y  ; add amount of bytes to offset depending on setting in Y
     TAX  ; put back in X and leave
     RTS
 
 sub_get_enemy_offscreen_bits:
     LDA #$01  ; set A to add 1 byte in order to get enemy offset
     LDY #$01  ; set Y to put offscreen bits in ram_enemy_offscreen_bits
-    JMP SetOffscrBitsOffset
+    JMP loc_select_object_offscreen_slot
 
 sub_get_block_offscreen_bits:
     LDA #$09  ; set A to add 9 bytes in order to get block obj offset
     LDY #$04  ; set Y to put offscreen bits in ram_block_offscreen_bits
 
-SetOffscrBitsOffset:
+loc_select_object_offscreen_slot:
     STX $00
     CLC  ; add contents of X to A to get
     ADC $00  ; appropriate offset, then give back to X
     TAX
 
-GetOffScreenBitsSet:
+loc_compute_and_store_offscreen_bits:
     TYA  ; save offscreen bits offset to stack for now
     PHA
-    JSR sub_run_offscr_bits_subs
+    JSR sub_compute_object_offscreen_bits
     ASL  ; move low nybble to high nybble
     ASL
     ASL
@@ -127,119 +127,119 @@ GetOffScreenBitsSet:
     LDX ram_object_offset
     RTS
 
-sub_run_offscr_bits_subs:
-    JSR sub_get_x_offscreen_bits  ; do subroutine here
+sub_compute_object_offscreen_bits:
+    JSR sub_get_horizontal_offscreen_bits  ; do subroutine here
     LSR  ; move high nybble to low
     LSR
     LSR
     LSR
     STA $00  ; store here
-    JMP GetYOffscreenBits
+    JMP loc_get_vertical_offscreen_bits
 
 ; --------------------------------
 ; (these apply to these three subsections)
 ; $04 - used to store proper offset
-; $05 - used as adder in sub_divide_p_diff
+; $05 - used as adder in sub_select_offscreen_bits_by_distance
 ; $06 - used to store preset value used to compare to pixel difference in $07
 ; $07 - used to store difference between coordinates of object and screen edges
 
-XOffscreenBitsData:
+tbl_horizontal_offscreen_bit_masks:
     .byte $7f, $3f, $1f, $0f, $07, $03, $01, $00
     .byte $80, $c0, $e0, $f0, $f8, $fc, $fe, $ff
 
-DefaultXOnscreenOfs:
+tbl_horizontal_offscreen_default_indices:
     .byte $07, $0f, $07
 
-sub_get_x_offscreen_bits:
+sub_get_horizontal_offscreen_bits:
     STX $04  ; save position in buffer to here
     LDY #$01  ; start with right side of screen
-XOfsLoop:
+bra_check_horizontal_screen_edge:
     LDA ram_screen_edge_x_pos,y  ; get pixel coordinate of edge
     SEC  ; get difference between pixel coordinate of edge
     SBC ram_spr_object_x_position,x  ; and pixel coordinate of object position
     STA $07  ; store here
     LDA ram_screen_edge_page_loc,y  ; get page location of edge
     SBC ram_spr_object_page_loc,x  ; subtract from page location of object position
-    LDX DefaultXOnscreenOfs,y  ; load offset value here
+    LDX tbl_horizontal_offscreen_default_indices,y  ; load offset value here
     CMP #$00
-    BMI XLdBData  ; if beyond right edge or in front of left edge, branch
-    LDX DefaultXOnscreenOfs+1,y  ; if not, load alternate offset value here
+    BMI bra_load_horizontal_offscreen_bits  ; if beyond right edge or in front of left edge, branch
+    LDX tbl_horizontal_offscreen_default_indices+1,y  ; if not, load alternate offset value here
     CMP #$01
-    BPL XLdBData  ; if one page or more to the left of either edge, branch
+    BPL bra_load_horizontal_offscreen_bits  ; if one page or more to the left of either edge, branch
     LDA #$38  ; if no branching, load value here and store
     STA $06
     LDA #$08  ; load some other value and execute subroutine
-    JSR sub_divide_p_diff
-XLdBData:
-    LDA XOffscreenBitsData,x  ; get bits here
+    JSR sub_select_offscreen_bits_by_distance
+bra_load_horizontal_offscreen_bits:
+    LDA tbl_horizontal_offscreen_bit_masks,x  ; get bits here
     LDX $04  ; reobtain position in buffer
     CMP #$00  ; if bits not zero, branch to leave
-    BNE ExXOfsBS
+    BNE bra_exit_horizontal_offscreen_check
     DEY  ; otherwise, do left side of screen now
-    BPL XOfsLoop  ; branch if not already done with left side
-ExXOfsBS:
+    BPL bra_check_horizontal_screen_edge  ; branch if not already done with left side
+bra_exit_horizontal_offscreen_check:
     RTS
 
 ; --------------------------------
 
-YOffscreenBitsData:
+tbl_vertical_offscreen_bit_masks:
     .byte $00, $08, $0c, $0e
     .byte $0f, $07, $03, $01
     .byte $00
 
-DefaultYOnscreenOfs:
+tbl_vertical_offscreen_default_indices:
     .byte $04, $00, $04
 
-HighPosUnitData:
+tbl_vertical_screen_edge_units:
     .byte $ff, $00
 
-GetYOffscreenBits:
+loc_get_vertical_offscreen_bits:
     STX $04  ; save position in buffer to here
     LDY #$01  ; start with top of screen
-YOfsLoop:
-    LDA HighPosUnitData,y  ; load coordinate for edge of vertical unit
+bra_check_vertical_screen_edge:
+    LDA tbl_vertical_screen_edge_units,y  ; load coordinate for edge of vertical unit
     SEC
     SBC ram_spr_object_y_position,x  ; subtract from vertical coordinate of object
     STA $07  ; store here
     LDA #$01  ; subtract one from vertical high byte of object
     SBC ram_spr_object_y_high_pos,x
-    LDX DefaultYOnscreenOfs,y  ; load offset value here
+    LDX tbl_vertical_offscreen_default_indices,y  ; load offset value here
     CMP #$00
-    BMI YLdBData  ; if under top of the screen or beyond bottom, branch
-    LDX DefaultYOnscreenOfs+1,y  ; if not, load alternate offset value here
+    BMI bra_load_vertical_offscreen_bits  ; if under top of the screen or beyond bottom, branch
+    LDX tbl_vertical_offscreen_default_indices+1,y  ; if not, load alternate offset value here
     CMP #$01
-    BPL YLdBData  ; if one vertical unit or more above the screen, branch
+    BPL bra_load_vertical_offscreen_bits  ; if one vertical unit or more above the screen, branch
     LDA #$20  ; if no branching, load value here and store
     STA $06
     LDA #$04  ; load some other value and execute subroutine
-    JSR sub_divide_p_diff
-YLdBData:
-    LDA YOffscreenBitsData,x  ; get offscreen data bits using offset
+    JSR sub_select_offscreen_bits_by_distance
+bra_load_vertical_offscreen_bits:
+    LDA tbl_vertical_offscreen_bit_masks,x  ; get offscreen data bits using offset
     LDX $04  ; reobtain position in buffer
     CMP #$00
-    BNE ExYOfsBS  ; if bits not zero, branch to leave
+    BNE bra_exit_vertical_offscreen_check  ; if bits not zero, branch to leave
     DEY  ; otherwise, do bottom of the screen now
-    BPL YOfsLoop
-ExYOfsBS:
+    BPL bra_check_vertical_screen_edge
+bra_exit_vertical_offscreen_check:
     RTS
 
 ; --------------------------------
 
-sub_divide_p_diff:
+sub_select_offscreen_bits_by_distance:
     STA $05  ; store current value in A here
     LDA $07  ; get pixel difference
     CMP $06  ; compare to preset value
-    BCS ExDivPD  ; if pixel difference >= preset value, branch
+    BCS bra_exit_offscreen_distance_division  ; if pixel difference >= preset value, branch
     LSR  ; divide by eight
     LSR
     LSR
     AND #$07  ; mask out all but 3 LSB
     CPY #$01  ; right side of the screen or top?
-    BCS SetOscrO  ; if so, branch, use difference / 8 as offset
+    BCS bra_select_offscreen_bit_index  ; if so, branch, use difference / 8 as offset
     ADC $05  ; if not, add value to difference / 8
-SetOscrO:
+bra_select_offscreen_bit_index:
     TAX  ; use as offset
-ExDivPD:
+bra_exit_offscreen_distance_division:
     RTS  ; leave
 
 ; -------------------------------------------------------------------------------------
@@ -249,23 +249,23 @@ ExDivPD:
 ; $04 - sprite attributes
 ; $05 - X coordinate
 
-DrawSpriteObject:
+loc_draw_two_tile_sprite_row:
     LDA $03  ; get saved flip control bits
     LSR
     LSR  ; move d1 into carry
     LDA $00
-    BCC NoHFlip  ; if d1 not set, branch
+    BCC bra_draw_unflipped_sprite_row  ; if d1 not set, branch
     STA ram_sprite_tilenumber+4,y  ; store first tile into second sprite
     LDA $01  ; and second into first sprite
     STA ram_sprite_tilenumber,y
     LDA #$40  ; activate horizontal flip OAM attribute
-    BNE SetHFAt  ; and unconditionally branch
-NoHFlip:
+    BNE bra_store_sprite_row_attributes  ; and unconditionally branch
+bra_draw_unflipped_sprite_row:
     STA ram_sprite_tilenumber,y  ; store first tile into first sprite
     LDA $01  ; and second into second sprite
     STA ram_sprite_tilenumber+4,y
     LDA #$00  ; clear bit for horizontal flip
-SetHFAt:
+bra_store_sprite_row_attributes:
     ORA $04  ; add other OAM attributes if necessary
     STA ram_sprite_attributes,y  ; store sprite attributes
     STA ram_sprite_attributes+4,y

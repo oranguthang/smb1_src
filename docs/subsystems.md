@@ -48,7 +48,7 @@ The screen task dispatcher builds palettes, text packets, title transfers, and
 area setup over multiple frames. `sub_scroll_handler` derives player-relative
 scroll, while the area parser produces one metatile column at a time.
 
-`RenderAreaGraphics` expands the metatile buffer into four pattern-table indexes
+`handler_render_area_column` expands the metatile buffer into four pattern-table indexes
 per metatile and accumulates palette quadrants into attribute bytes. The result
 is appended to a VRAM update buffer. The HUD uses decimal digit arrays in RAM;
 score operations update those arrays first and emit display packets separately.

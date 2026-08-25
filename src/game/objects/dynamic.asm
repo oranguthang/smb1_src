@@ -108,7 +108,7 @@ bra_run_bullet_bill_subsystems:
     JSR sub_relative_enemy_position  ; get relative coordinates
     JSR sub_get_enemy_bound_box  ; get bounding box coordinates
     JSR sub_player_enemy_collision  ; handle player to enemy collisions
-    JMP sub_enemy_gfx_handler  ; draw the bullet bill and leave
+    JMP sub_render_enemy_graphics  ; draw the bullet bill and leave
 bra_erase_bullet_bill:
     JSR sub_erase_enemy_object  ; kill bullet bill and leave
     RTS
@@ -327,7 +327,7 @@ bra_run_jump_coin_subsystems:
     JSR sub_relative_misc_position  ; get relative coordinates
     JSR sub_get_misc_offscreen_bits  ; get offscreen information
     JSR sub_get_misc_bound_box  ; get bounding box coordinates (why?)
-    JSR sub_j_coin_gfx_handler  ; draw the coin or floatey number
+    JSR sub_render_jumping_coin_graphics  ; draw the coin or floatey number
 
 loc_advance_misc_object_slot:
     DEX  ; decrement misc object offset

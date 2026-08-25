@@ -59,7 +59,7 @@ handler_no_enemy_object_handler:
 sub_run_retainer_obj:
     JSR sub_get_enemy_offscreen_bits
     JSR sub_relative_enemy_position
-    JMP sub_enemy_gfx_handler
+    JMP sub_render_enemy_graphics
 
 ; --------------------------------
 
@@ -68,7 +68,7 @@ handler_run_normal_enemy:
     STA ram_enemy_spr_attrib,x
     JSR sub_get_enemy_offscreen_bits
     JSR sub_relative_enemy_position
-    JSR sub_enemy_gfx_handler
+    JSR sub_render_enemy_graphics
     JSR sub_get_enemy_bound_box
     JSR sub_detect_enemy_background_collision
     JSR sub_enemies_collision

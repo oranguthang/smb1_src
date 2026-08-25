@@ -12,24 +12,24 @@
 ; A, X, Y
 sub_sound_engine:
     LDA ram_oper_mode  ; are we in title screen mode?
-    BNE SndOn
+    BNE bra_enable_sound_engine
     STA SND_MASTERCTRL_REG  ; if so, disable sound and leave
     RTS
-SndOn:
+bra_enable_sound_engine:
     LDA #$ff
     STA JOYPAD_PORT2  ; disable irqs and set frame counter mode???
     LDA #$0f
     STA SND_MASTERCTRL_REG  ; enable first four channels
     LDA ram_pause_mode_flag  ; is sound already in pause mode?
-    BNE InPause
+    BNE bra_handle_pause_sound
     LDA ram_pause_sound_queue  ; if not, check pause sfx queue
     CMP #$01
-    BNE RunSoundSubroutines  ; if queue is empty, skip pause mode routine
-InPause:
+    BNE bra_run_sound_channels  ; if queue is empty, skip pause mode routine
+bra_handle_pause_sound:
     LDA ram_pause_sound_buffer  ; check pause sfx buffer
-    BNE ContPau
+    BNE bra_continue_pause_sound
     LDA ram_pause_sound_queue  ; check pause queue
-    BEQ SkipSoundSubroutines
+    BEQ bra_clear_sound_queues
     STA ram_pause_sound_buffer  ; if queue full, store in buffer and activate
     STA ram_pause_mode_flag  ; pause mode to interrupt game sounds
     LDA #$00  ; disable sound and clear sfx buffers
@@ -41,48 +41,48 @@ InPause:
     STA SND_MASTERCTRL_REG  ; enable sound again
     LDA #$2a  ; store length of sound in pause counter
     STA ram_squ1_sfx_len_counter
-PTone1F:
+bra_play_pause_first_tone:
     LDA #$44  ; play first tone
-    BNE PTRegC  ; unconditional branch
-ContPau:
+    BNE bra_store_pause_tone_registers  ; unconditional branch
+bra_continue_pause_sound:
     LDA ram_squ1_sfx_len_counter  ; check pause length left
     CMP #$24  ; time to play second?
-    BEQ PTone2F
+    BEQ bra_play_pause_second_tone
     CMP #$1e  ; time to play first again?
-    BEQ PTone1F
+    BEQ bra_play_pause_first_tone
     CMP #$18  ; time to play second again?
-    BNE DecPauC  ; only load regs during times, otherwise skip
-PTone2F:
+    BNE bra_decrement_pause_sound_counter  ; only load regs during times, otherwise skip
+bra_play_pause_second_tone:
     LDA #$64  ; store reg contents and play the pause sfx
-PTRegC:
+bra_store_pause_tone_registers:
     LDX #$84
     LDY #$7f
-    JSR sub_play_squ1_sfx
-DecPauC:
+    JSR sub_play_square_1_sound_effect
+bra_decrement_pause_sound_counter:
     DEC ram_squ1_sfx_len_counter  ; decrement pause sfx counter
-    BNE SkipSoundSubroutines
+    BNE bra_clear_sound_queues
     LDA #$00  ; disable sound if in pause mode and
     STA SND_MASTERCTRL_REG  ; not currently playing the pause sfx
     LDA ram_pause_sound_buffer  ; if no longer playing pause sfx, check to see
     CMP #$02  ; if we need to be playing sound again
-    BNE SkipPIn
+    BNE bra_finish_pause_sound
     LDA #$00  ; clear pause mode to allow game sounds again
     STA ram_pause_mode_flag
-SkipPIn:
+bra_finish_pause_sound:
     LDA #$00  ; clear pause sfx buffer
     STA ram_pause_sound_buffer
-    BEQ SkipSoundSubroutines
+    BEQ bra_clear_sound_queues
 
-RunSoundSubroutines:
-    JSR sub_square1_sfx_handler  ; play sfx on square channel 1
-    JSR sub_square2_sfx_handler  ; ''  ''  '' square channel 2
-    JSR sub_noise_sfx_handler  ; ''  ''  '' noise channel
+bra_run_sound_channels:
+    JSR sub_handle_square_1_sound_effect  ; play sfx on square channel 1
+    JSR sub_handle_square_2_sound_effect  ; ''  ''  '' square channel 2
+    JSR sub_handle_noise_sound_effect  ; ''  ''  '' noise channel
     JSR sub_music_handler  ; play music on all channels
     LDA #$00  ; clear the music queues
     STA ram_area_music_queue
     STA ram_event_music_queue
 
-SkipSoundSubroutines:
+bra_clear_sound_queues:
     LDA #$00  ; clear the sound effects queues
     STA ram_square1_sound_queue
     STA ram_square2_sound_queue
@@ -91,248 +91,248 @@ SkipSoundSubroutines:
     LDY ram_dac_counter  ; load some sort of counter
     LDA ram_area_music_buffer
     AND #%00000011  ; check for specific music
-    BEQ NoIncDAC
+    BEQ bra_decay_dmc_load_counter
     INC ram_dac_counter  ; increment and check counter
     CPY #$30
-    BCC StrWave  ; if not there yet, just store it
-NoIncDAC:
+    BCC bra_store_dmc_load_counter  ; if not there yet, just store it
+bra_decay_dmc_load_counter:
     TYA
-    BEQ StrWave  ; if we are at zero, do not decrement
+    BEQ bra_store_dmc_load_counter  ; if we are at zero, do not decrement
     DEC ram_dac_counter  ; decrement counter
-StrWave:
+bra_store_dmc_load_counter:
     STY SND_DELTA_REG+1  ; store into DMC load register (??)
     RTS  ; we are done here
 
 ; --------------------------------
 
-sub_dump_squ1_regs:
+sub_store_square_1_registers:
     STY SND_SQUARE1_REG+1  ; dump the contents of X and Y into square 1's control regs
     STX SND_SQUARE1_REG
     RTS
 
-sub_play_squ1_sfx:
-    JSR sub_dump_squ1_regs  ; do sub to set ctrl regs for square 1, then set frequency regs
+sub_play_square_1_sound_effect:
+    JSR sub_store_square_1_registers  ; do sub to set ctrl regs for square 1, then set frequency regs
 
-sub_set_freq_squ1:
+sub_set_square_1_frequency:
     LDX #$00  ; set frequency reg offset for square 1 sound channel
 
-Dump_Freq_Regs:
+bra_store_frequency_registers:
     TAY
     LDA tbl_music_note_periods+1,y  ; use previous contents of A for sound reg offset
-    BEQ NoTone  ; if zero, then do not load
+    BEQ bra_exit_frequency_update  ; if zero, then do not load
     STA SND_REGISTER+2,x  ; first byte goes into LSB of frequency divider
     LDA tbl_music_note_periods,y  ; second byte goes into 3 MSB plus extra bit for
     ORA #%00001000  ; length counter
     STA SND_REGISTER+3,x
-NoTone:
+bra_exit_frequency_update:
     RTS
 
-sub_dump_sq2_regs:
+sub_store_square_2_registers:
     STX SND_SQUARE2_REG  ; dump the contents of X and Y into square 2's control regs
     STY SND_SQUARE2_REG+1
     RTS
 
-sub_play_squ2_sfx:
-    JSR sub_dump_sq2_regs  ; do sub to set ctrl regs for square 2, then set frequency regs
+sub_play_square_2_sound_effect:
+    JSR sub_store_square_2_registers  ; do sub to set ctrl regs for square 2, then set frequency regs
 
-sub_set_freq_squ2:
+sub_set_square_2_frequency:
     LDX #$04  ; set frequency reg offset for square 2 sound channel
-    BNE Dump_Freq_Regs  ; unconditional branch
+    BNE bra_store_frequency_registers  ; unconditional branch
 
-sub_set_freq_tri:
+sub_set_triangle_frequency:
     LDX #$08  ; set frequency reg offset for triangle sound channel
-    BNE Dump_Freq_Regs  ; unconditional branch
+    BNE bra_store_frequency_registers  ; unconditional branch
 
 ; --------------------------------
 
-SwimStompEnvelopeData:
+tbl_swim_stomp_volume_envelope:
     .byte $9f, $9b, $98, $96, $95, $94, $92, $90
     .byte $90, $9a, $97, $95, $93, $92
 
-PlayFlagpoleSlide:
+bra_start_flagpole_slide_sound:
     LDA #$40  ; store length of flagpole sound
     STA ram_squ1_sfx_len_counter
     LDA #$62  ; load part of reg contents for flagpole sound
-    JSR sub_set_freq_squ1
+    JSR sub_set_square_1_frequency
     LDX #$99  ; now load the rest
-    BNE FPS2nd
+    BNE bra_load_flagpole_or_jump_sweep_register
 
-PlaySmallJump:
+bra_start_small_jump_sound:
     LDA #$26  ; branch here for small mario jumping sound
-    BNE JumpRegContents
+    BNE bra_store_jump_sound_registers
 
-PlayBigJump:
+bra_start_big_jump_sound:
     LDA #$18  ; branch here for big mario jumping sound
 
-JumpRegContents:
+bra_store_jump_sound_registers:
     LDX #$82  ; note that small and big jump borrow each others' reg contents
     LDY #$a7  ; anyway, this loads the first part of mario's jumping sound
-    JSR sub_play_squ1_sfx
+    JSR sub_play_square_1_sound_effect
     LDA #$28  ; store length of sfx for both jumping sounds
     STA ram_squ1_sfx_len_counter  ; then continue on here
 
-ContinueSndJump:
+bra_continue_jump_sound:
     LDA ram_squ1_sfx_len_counter  ; jumping sounds seem to be composed of three parts
     CMP #$25  ; check for time to play second part yet
-    BNE N2Prt
+    BNE bra_check_jump_sound_third_part
     LDX #$5f  ; load second part
     LDY #$f6
-    BNE DmpJpFPS  ; unconditional branch
-N2Prt:
+    BNE bra_store_flagpole_or_jump_registers  ; unconditional branch
+bra_check_jump_sound_third_part:
     CMP #$20  ; check for third part
-    BNE DecJpFPS
+    BNE bra_decrement_jump_flagpole_or_bump_sound
     LDX #$48  ; load third part
-FPS2nd:
+bra_load_flagpole_or_jump_sweep_register:
     LDY #$bc  ; the flagpole slide sound shares part of third part
-DmpJpFPS:
-    JSR sub_dump_squ1_regs
-    BNE DecJpFPS  ; unconditional branch outta here
+bra_store_flagpole_or_jump_registers:
+    JSR sub_store_square_1_registers
+    BNE bra_decrement_jump_flagpole_or_bump_sound  ; unconditional branch outta here
 
-PlayFireballThrow:
+bra_start_fireball_throw_sound:
     LDA #$05
     LDY #$99  ; load reg contents for fireball throw sound
-    BNE Fthrow  ; unconditional branch
+    BNE bra_store_bump_or_fireball_sound_registers  ; unconditional branch
 
-PlayBump:
+bra_start_bump_sound:
     LDA #$0a  ; load length of sfx and reg contents for bump sound
     LDY #$93
-Fthrow:
+bra_store_bump_or_fireball_sound_registers:
     LDX #$9e  ; the fireball sound shares reg contents with the bump sound
     STA ram_squ1_sfx_len_counter
     LDA #$0c  ; load offset for bump sound
-    JSR sub_play_squ1_sfx
+    JSR sub_play_square_1_sound_effect
 
-ContinueBumpThrow:
+bra_continue_bump_or_fireball_sound:
     LDA ram_squ1_sfx_len_counter  ; check for second part of bump sound
     CMP #$06
-    BNE DecJpFPS
+    BNE bra_decrement_jump_flagpole_or_bump_sound
     LDA #$bb  ; load second part directly
     STA SND_SQUARE1_REG+1
-DecJpFPS:
-    BNE BranchToDecLength1  ; unconditional branch
+bra_decrement_jump_flagpole_or_bump_sound:
+    BNE bra_decrement_square_1_sound  ; unconditional branch
 
-sub_square1_sfx_handler:
+sub_handle_square_1_sound_effect:
     LDY ram_square1_sound_queue  ; check for sfx in queue
-    BEQ CheckSfx1Buffer
+    BEQ bra_continue_square_1_sound
     STY ram_square1_sound_buffer  ; if found, put in buffer
-    BMI PlaySmallJump  ; small jump
+    BMI bra_start_small_jump_sound  ; small jump
     LSR ram_square1_sound_queue
-    BCS PlayBigJump  ; big jump
+    BCS bra_start_big_jump_sound  ; big jump
     LSR ram_square1_sound_queue
-    BCS PlayBump  ; bump
+    BCS bra_start_bump_sound  ; bump
     LSR ram_square1_sound_queue
-    BCS PlaySwimStomp  ; swim/stomp
+    BCS bra_start_swim_stomp_sound  ; swim/stomp
     LSR ram_square1_sound_queue
-    BCS PlaySmackEnemy  ; smack enemy
+    BCS bra_start_smack_enemy_sound  ; smack enemy
     LSR ram_square1_sound_queue
-    BCS PlayPipeDownInj  ; pipedown/injury
+    BCS bra_start_pipe_or_injury_sound  ; pipedown/injury
     LSR ram_square1_sound_queue
-    BCS PlayFireballThrow  ; fireball throw
+    BCS bra_start_fireball_throw_sound  ; fireball throw
     LSR ram_square1_sound_queue
-    BCS PlayFlagpoleSlide  ; slide flagpole
+    BCS bra_start_flagpole_slide_sound  ; slide flagpole
 
-CheckSfx1Buffer:
+bra_continue_square_1_sound:
     LDA ram_square1_sound_buffer  ; check for sfx in buffer
-    BEQ ExS1H  ; if not found, exit sub
-    BMI ContinueSndJump  ; small mario jump
+    BEQ bra_exit_square_1_sound_handler  ; if not found, exit sub
+    BMI bra_continue_jump_sound  ; small mario jump
     LSR
-    BCS ContinueSndJump  ; big mario jump
+    BCS bra_continue_jump_sound  ; big mario jump
     LSR
-    BCS ContinueBumpThrow  ; bump
+    BCS bra_continue_bump_or_fireball_sound  ; bump
     LSR
-    BCS ContinueSwimStomp  ; swim/stomp
+    BCS bra_continue_swim_stomp_sound  ; swim/stomp
     LSR
-    BCS ContinueSmackEnemy  ; smack enemy
+    BCS bra_continue_smack_enemy_sound  ; smack enemy
     LSR
-    BCS ContinuePipeDownInj  ; pipedown/injury
+    BCS bra_continue_pipe_or_injury_sound  ; pipedown/injury
     LSR
-    BCS ContinueBumpThrow  ; fireball throw
+    BCS bra_continue_bump_or_fireball_sound  ; fireball throw
     LSR
-    BCS DecrementSfx1Length  ; slide flagpole
-ExS1H:
+    BCS loc_decrement_square_1_sound_length  ; slide flagpole
+bra_exit_square_1_sound_handler:
     RTS
 
-PlaySwimStomp:
+bra_start_swim_stomp_sound:
     LDA #$0e  ; store length of swim/stomp sound
     STA ram_squ1_sfx_len_counter
     LDY #$9c  ; store reg contents for swim/stomp sound
     LDX #$9e
     LDA #$26
-    JSR sub_play_squ1_sfx
+    JSR sub_play_square_1_sound_effect
 
-ContinueSwimStomp:
+bra_continue_swim_stomp_sound:
     LDY ram_squ1_sfx_len_counter  ; look up reg contents in data section based on
-    LDA SwimStompEnvelopeData-1,y  ; length of sound left, used to control sound's
+    LDA tbl_swim_stomp_volume_envelope-1,y  ; length of sound left, used to control sound's
     STA SND_SQUARE1_REG  ; envelope
     CPY #$06
-    BNE BranchToDecLength1
+    BNE bra_decrement_square_1_sound
     LDA #$9e  ; when the length counts down to a certain point, put this
     STA SND_SQUARE1_REG+2  ; directly into the LSB of square 1's frequency divider
 
-BranchToDecLength1:
-    BNE DecrementSfx1Length  ; unconditional branch (regardless of how we got here)
+bra_decrement_square_1_sound:
+    BNE loc_decrement_square_1_sound_length  ; unconditional branch (regardless of how we got here)
 
-PlaySmackEnemy:
+bra_start_smack_enemy_sound:
     LDA #$0e  ; store length of smack enemy sound
     LDY #$cb
     LDX #$9f
     STA ram_squ1_sfx_len_counter
     LDA #$28  ; store reg contents for smack enemy sound
-    JSR sub_play_squ1_sfx
-    BNE DecrementSfx1Length  ; unconditional branch
+    JSR sub_play_square_1_sound_effect
+    BNE loc_decrement_square_1_sound_length  ; unconditional branch
 
-ContinueSmackEnemy:
+bra_continue_smack_enemy_sound:
     LDY ram_squ1_sfx_len_counter  ; check about halfway through
     CPY #$08
-    BNE SmSpc
+    BNE bra_insert_smack_enemy_silence
     LDA #$a0  ; if we're at the about-halfway point, make the second tone
     STA SND_SQUARE1_REG+2  ; in the smack enemy sound
     LDA #$9f
-    BNE SmTick
-SmSpc:
+    BNE bra_store_smack_enemy_envelope
+bra_insert_smack_enemy_silence:
     LDA #$90  ; this creates spaces in the sound, giving it its distinct noise
-SmTick:
+bra_store_smack_enemy_envelope:
     STA SND_SQUARE1_REG
 
-DecrementSfx1Length:
+loc_decrement_square_1_sound_length:
     DEC ram_squ1_sfx_len_counter  ; decrement length of sfx
-    BNE ExSfx1
+    BNE bra_exit_square_1_sound
 
-sub_stop_square1_sfx:
+sub_stop_square_1_sound_effect:
     LDX #$00  ; if end of sfx reached, clear buffer
     STX $f1  ; and stop making the sfx
     LDX #$0e
     STX SND_MASTERCTRL_REG
     LDX #$0f
     STX SND_MASTERCTRL_REG
-ExSfx1:
+bra_exit_square_1_sound:
     RTS
 
-PlayPipeDownInj:
+bra_start_pipe_or_injury_sound:
     LDA #$2f  ; load length of pipedown sound
     STA ram_squ1_sfx_len_counter
 
-ContinuePipeDownInj:
+bra_continue_pipe_or_injury_sound:
     LDA ram_squ1_sfx_len_counter  ; some bitwise logic, forces the regs
     LSR  ; to be written to only during six specific times
-    BCS NoPDwnL  ; during which d3 must be set and d1-0 must be clear
+    BCS bra_skip_pipe_or_injury_register_update  ; during which d3 must be set and d1-0 must be clear
     LSR
-    BCS NoPDwnL
+    BCS bra_skip_pipe_or_injury_register_update
     AND #%00000010
-    BEQ NoPDwnL
+    BEQ bra_skip_pipe_or_injury_register_update
     LDY #$91  ; and this is where it actually gets written in
     LDX #$9a
     LDA #$44
-    JSR sub_play_squ1_sfx
-NoPDwnL:
-    JMP DecrementSfx1Length
+    JSR sub_play_square_1_sound_effect
+bra_skip_pipe_or_injury_register_update:
+    JMP loc_decrement_square_1_sound_length
 
 ; --------------------------------
 
-ExtraLifeFreqData:
+tbl_extra_life_frequency_sequence:
     .byte $58, $02, $54, $56, $4e, $44
 
-PowerUpGrabFreqData:
+tbl_power_up_grab_frequency_sequence:
     .byte $4c, $52, $4c, $48, $3e, $36, $3e, $36, $30
     .byte $28, $4a, $50, $4a, $64, $3c, $32, $3c, $32
     .byte $2c, $24, $3a, $64, $3a, $34, $2c, $22, $2c
@@ -340,262 +340,262 @@ PowerUpGrabFreqData:
 ; residual frequency data
     .byte $22, $1c, $14
 
-PUp_VGrow_FreqData:
+tbl_power_up_reveal_and_vine_frequency_sequence:
     .byte $14, $04, $22, $24, $16, $04, $24, $26  ; used by both
     .byte $18, $04, $26, $28, $1a, $04, $28, $2a
     .byte $1c, $04, $2a, $2c, $1e, $04, $2c, $2e  ; used by vinegrow
     .byte $20, $04, $2e, $30, $22, $04, $30, $32
 
-PlayCoinGrab:
+bra_start_coin_grab_sound:
     LDA #$35  ; load length of coin grab sound
     LDX #$8d  ; and part of reg contents
-    BNE CGrab_TTickRegL
+    BNE bra_store_coin_or_timer_sound_registers
 
-PlayTimerTick:
+bra_start_timer_tick_sound:
     LDA #$06  ; load length of timer tick sound
     LDX #$98  ; and part of reg contents
 
-CGrab_TTickRegL:
+bra_store_coin_or_timer_sound_registers:
     STA ram_squ2_sfx_len_counter
     LDY #$7f  ; load the rest of reg contents
     LDA #$42  ; of coin grab and timer tick sound
-    JSR sub_play_squ2_sfx
+    JSR sub_play_square_2_sound_effect
 
-ContinueCGrabTTick:
+loc_continue_coin_or_timer_sound:
     LDA ram_squ2_sfx_len_counter  ; check for time to play second tone yet
     CMP #$30  ; !(WHY?) SND-001 - timer tick shares this path
-    BNE N2Tone
+    BNE bra_decrement_coin_or_timer_sound
     LDA #$54  ; if so, load the tone directly into the reg
     STA SND_SQUARE2_REG+2
-N2Tone:
-    BNE DecrementSfx2Length
+bra_decrement_coin_or_timer_sound:
+    BNE loc_decrement_square_2_sound_length
 
-PlayBlast:
+bra_start_blast_sound:
     LDA #$20  ; load length of fireworks/gunfire sound
     STA ram_squ2_sfx_len_counter
     LDY #$94  ; load reg contents of fireworks/gunfire sound
     LDA #$5e
-    BNE SBlasJ
+    BNE bra_store_blast_sound_registers
 
-ContinueBlast:
+bra_continue_blast_sound:
     LDA ram_squ2_sfx_len_counter  ; check for time to play second part
     CMP #$18
-    BNE DecrementSfx2Length
+    BNE loc_decrement_square_2_sound_length
     LDY #$93  ; load second part reg contents then
     LDA #$18
-SBlasJ:
-    BNE BlstSJp  ; unconditional branch to load rest of reg contents
+bra_store_blast_sound_registers:
+    BNE bra_store_blast_or_bowser_fall_registers  ; unconditional branch to load rest of reg contents
 
-PlayPowerUpGrab:
+bra_start_power_up_grab_sound:
     LDA #$36  ; load length of power-up grab sound
     STA ram_squ2_sfx_len_counter
 
-ContinuePowerUpGrab:
+bra_continue_power_up_grab_sound:
     LDA ram_squ2_sfx_len_counter  ; load frequency reg based on length left over
     LSR  ; divide by 2
-    BCS DecrementSfx2Length  ; alter frequency every other frame
+    BCS loc_decrement_square_2_sound_length  ; alter frequency every other frame
     TAY
-    LDA PowerUpGrabFreqData-1,y  ; use length left over / 2 for frequency offset
+    LDA tbl_power_up_grab_frequency_sequence-1,y  ; use length left over / 2 for frequency offset
     LDX #$5d  ; store reg contents of power-up grab sound
     LDY #$7f
 
-LoadSqu2Regs:
-    JSR sub_play_squ2_sfx
+bra_store_square_2_sound_registers:
+    JSR sub_play_square_2_sound_effect
 
-DecrementSfx2Length:
+loc_decrement_square_2_sound_length:
     DEC ram_squ2_sfx_len_counter  ; decrement length of sfx
-    BNE ExSfx2
+    BNE bra_exit_square_2_sound
 
-EmptySfx2Buffer:
+loc_clear_square_2_sound_buffer:
     LDX #$00  ; initialize square 2's sound effects buffer
     STX ram_square2_sound_buffer
 
-sub_stop_square2_sfx:
+sub_stop_square_2_sound_effect:
     LDX #$0d  ; stop playing the sfx
     STX SND_MASTERCTRL_REG
     LDX #$0f
     STX SND_MASTERCTRL_REG
-ExSfx2:
+bra_exit_square_2_sound:
     RTS
 
-sub_square2_sfx_handler:
+sub_handle_square_2_sound_effect:
     LDA ram_square2_sound_buffer  ; special handling for the 1-up sound to keep it
     AND #con_sfx_extra_life  ; from being interrupted by other sounds on square 2
-    BNE ContinueExtraLife
+    BNE bra_continue_extra_life_sound
     LDY ram_square2_sound_queue  ; check for sfx in queue
-    BEQ CheckSfx2Buffer
+    BEQ bra_continue_square_2_sound
     STY ram_square2_sound_buffer  ; if found, put in buffer and check for the following
-    BMI PlayBowserFall  ; bowser fall
+    BMI bra_start_bowser_fall_sound  ; bowser fall
     LSR ram_square2_sound_queue
-    BCS PlayCoinGrab  ; coin grab
+    BCS bra_start_coin_grab_sound  ; coin grab
     LSR ram_square2_sound_queue
-    BCS PlayGrowPowerUp  ; power-up reveal
+    BCS bra_start_power_up_reveal_sound  ; power-up reveal
     LSR ram_square2_sound_queue
-    BCS PlayGrowVine  ; vine grow
+    BCS bra_start_vine_grow_sound  ; vine grow
     LSR ram_square2_sound_queue
-    BCS PlayBlast  ; fireworks/gunfire
+    BCS bra_start_blast_sound  ; fireworks/gunfire
     LSR ram_square2_sound_queue
-    BCS PlayTimerTick  ; timer tick
+    BCS bra_start_timer_tick_sound  ; timer tick
     LSR ram_square2_sound_queue
-    BCS PlayPowerUpGrab  ; power-up grab
+    BCS bra_start_power_up_grab_sound  ; power-up grab
     LSR ram_square2_sound_queue
-    BCS PlayExtraLife  ; 1-up
+    BCS bra_start_extra_life_sound  ; 1-up
 
-CheckSfx2Buffer:
+bra_continue_square_2_sound:
     LDA ram_square2_sound_buffer  ; check for sfx in buffer
-    BEQ ExS2H  ; if not found, exit sub
-    BMI ContinueBowserFall  ; bowser fall
+    BEQ bra_exit_square_2_sound_handler  ; if not found, exit sub
+    BMI bra_continue_bowser_fall_sound  ; bowser fall
     LSR
-    BCS Cont_CGrab_TTick  ; coin grab
+    BCS bra_continue_coin_or_timer_sound  ; coin grab
     LSR
-    BCS ContinueGrowItems  ; power-up reveal
+    BCS bra_continue_growing_item_sound  ; power-up reveal
     LSR
-    BCS ContinueGrowItems  ; vine grow
+    BCS bra_continue_growing_item_sound  ; vine grow
     LSR
-    BCS ContinueBlast  ; fireworks/gunfire
+    BCS bra_continue_blast_sound  ; fireworks/gunfire
     LSR
-    BCS Cont_CGrab_TTick  ; timer tick
+    BCS bra_continue_coin_or_timer_sound  ; timer tick
     LSR
-    BCS ContinuePowerUpGrab  ; power-up grab
+    BCS bra_continue_power_up_grab_sound  ; power-up grab
     LSR
-    BCS ContinueExtraLife  ; 1-up
-ExS2H:
+    BCS bra_continue_extra_life_sound  ; 1-up
+bra_exit_square_2_sound_handler:
     RTS
 
-Cont_CGrab_TTick:
-    JMP ContinueCGrabTTick
+bra_continue_coin_or_timer_sound:
+    JMP loc_continue_coin_or_timer_sound
 
-JumpToDecLength2:
-    JMP DecrementSfx2Length
+bra_decrement_square_2_sound:
+    JMP loc_decrement_square_2_sound_length
 
-PlayBowserFall:
+bra_start_bowser_fall_sound:
     LDA #$38  ; load length of bowser defeat sound
     STA ram_squ2_sfx_len_counter
     LDY #$c4  ; load contents of reg for bowser defeat sound
     LDA #$18
-BlstSJp:
-    BNE PBFRegs
+bra_store_blast_or_bowser_fall_registers:
+    BNE bra_store_bowser_fall_registers
 
-ContinueBowserFall:
+bra_continue_bowser_fall_sound:
     LDA ram_squ2_sfx_len_counter  ; check for almost near the end
     CMP #$08
-    BNE DecrementSfx2Length
+    BNE loc_decrement_square_2_sound_length
     LDY #$a4  ; if so, load the rest of reg contents for bowser defeat sound
     LDA #$5a
-PBFRegs:
+bra_store_bowser_fall_registers:
     LDX #$9f  ; the fireworks/gunfire sound shares part of reg contents here
-EL_LRegs:
-    BNE LoadSqu2Regs  ; this is an unconditional branch outta here
+bra_load_square_2_sound_registers:
+    BNE bra_store_square_2_sound_registers  ; this is an unconditional branch outta here
 
-PlayExtraLife:
+bra_start_extra_life_sound:
     LDA #$30  ; load length of 1-up sound
     STA ram_squ2_sfx_len_counter
 
-ContinueExtraLife:
+bra_continue_extra_life_sound:
     LDA ram_squ2_sfx_len_counter
     LDX #$03  ; load new tones only every eight frames
-DivLLoop:
+bra_check_extra_life_note_interval:
     LSR
-    BCS JumpToDecLength2  ; if any bits set here, branch to dec the length
+    BCS bra_decrement_square_2_sound  ; if any bits set here, branch to dec the length
     DEX
-    BNE DivLLoop  ; do this until all bits checked, if none set, continue
+    BNE bra_check_extra_life_note_interval  ; do this until all bits checked, if none set, continue
     TAY
-    LDA ExtraLifeFreqData-1,y  ; load our reg contents
+    LDA tbl_extra_life_frequency_sequence-1,y  ; load our reg contents
     LDX #$82
     LDY #$7f
-    BNE EL_LRegs  ; unconditional branch
+    BNE bra_load_square_2_sound_registers  ; unconditional branch
 
-PlayGrowPowerUp:
+bra_start_power_up_reveal_sound:
     LDA #$10  ; load length of power-up reveal sound
-    BNE GrowItemRegs
+    BNE bra_initialize_growing_item_sound
 
-PlayGrowVine:
+bra_start_vine_grow_sound:
     LDA #$20  ; load length of vine grow sound
 
-GrowItemRegs:
+bra_initialize_growing_item_sound:
     STA ram_squ2_sfx_len_counter
     LDA #$7f  ; load contents of reg for both sounds directly
     STA SND_SQUARE2_REG+1
     LDA #$00  ; start secondary counter for both sounds
     STA ram_sfx_secondary_counter
 
-ContinueGrowItems:
+bra_continue_growing_item_sound:
     INC ram_sfx_secondary_counter  ; increment secondary counter for both sounds
     LDA ram_sfx_secondary_counter  ; this sound doesn't decrement the usual counter
     LSR  ; divide by 2 to get the offset
     TAY
     CPY ram_squ2_sfx_len_counter  ; have we reached the end yet?
-    BEQ StopGrowItems  ; if so, branch to jump, and stop playing sounds
+    BEQ bra_stop_growing_item_sound  ; if so, branch to jump, and stop playing sounds
     LDA #$9d  ; load contents of other reg directly
     STA SND_SQUARE2_REG
-    LDA PUp_VGrow_FreqData,y  ; use secondary counter / 2 as offset for frequency regs
-    JSR sub_set_freq_squ2
+    LDA tbl_power_up_reveal_and_vine_frequency_sequence,y  ; use secondary counter / 2 as offset for frequency regs
+    JSR sub_set_square_2_frequency
     RTS
 
-StopGrowItems:
-    JMP EmptySfx2Buffer  ; branch to stop playing sounds
+bra_stop_growing_item_sound:
+    JMP loc_clear_square_2_sound_buffer  ; branch to stop playing sounds
 
 ; --------------------------------
 
-BrickShatterFreqData:
+tbl_brick_shatter_noise_frequencies:
     .byte $01, $0e, $0e, $0d, $0b, $06, $0c, $0f
     .byte $0a, $09, $03, $0d, $08, $0d, $06, $0c
 
-PlayBrickShatter:
+bra_start_brick_shatter_sound:
     LDA #$20  ; load length of brick shatter sound
     STA ram_noise_sfx_len_counter
 
-ContinueBrickShatter:
+bra_continue_brick_shatter_sound:
     LDA ram_noise_sfx_len_counter
     LSR  ; divide by 2 and check for bit set to use offset
-    BCC DecrementSfx3Length
+    BCC bra_decrement_noise_sound_length
     TAY
-    LDX BrickShatterFreqData,y  ; load reg contents of brick shatter sound
+    LDX tbl_brick_shatter_noise_frequencies,y  ; load reg contents of brick shatter sound
     LDA tbl_brick_shatter_volume_envelope,y
 
-PlayNoiseSfx:
+bra_store_noise_sound_registers:
     STA SND_NOISE_REG  ; play the sfx
     STX SND_NOISE_REG+2
     LDA #$18
     STA SND_NOISE_REG+3
 
-DecrementSfx3Length:
+bra_decrement_noise_sound_length:
     DEC ram_noise_sfx_len_counter  ; decrement length of sfx
-    BNE ExSfx3
+    BNE bra_exit_noise_sound
     LDA #$f0  ; if done, stop playing the sfx
     STA SND_NOISE_REG
     LDA #$00
     STA ram_noise_sound_buffer
-ExSfx3:
+bra_exit_noise_sound:
     RTS
 
-sub_noise_sfx_handler:
+sub_handle_noise_sound_effect:
     LDY ram_noise_sound_queue  ; check for sfx in queue
-    BEQ CheckNoiseBuffer
+    BEQ bra_continue_noise_sound
     STY ram_noise_sound_buffer  ; if found, put in buffer
     LSR ram_noise_sound_queue
-    BCS PlayBrickShatter  ; brick shatter
+    BCS bra_start_brick_shatter_sound  ; brick shatter
     LSR ram_noise_sound_queue
-    BCS PlayBowserFlame  ; bowser flame
+    BCS bra_start_bowser_flame_sound  ; bowser flame
 
-CheckNoiseBuffer:
+bra_continue_noise_sound:
     LDA ram_noise_sound_buffer  ; check for sfx in buffer
-    BEQ ExNH  ; if not found, exit sub
+    BEQ bra_exit_noise_sound_handler  ; if not found, exit sub
     LSR
-    BCS ContinueBrickShatter  ; brick shatter
+    BCS bra_continue_brick_shatter_sound  ; brick shatter
     LSR
-    BCS ContinueBowserFlame  ; bowser flame
-ExNH:
+    BCS bra_continue_bowser_flame_sound  ; bowser flame
+bra_exit_noise_sound_handler:
     RTS
 
-PlayBowserFlame:
+bra_start_bowser_flame_sound:
     LDA #$40  ; load length of bowser flame sound
     STA ram_noise_sfx_len_counter
 
-ContinueBowserFlame:
+bra_continue_bowser_flame_sound:
     LDA ram_noise_sfx_len_counter
     LSR
     TAY
     LDX #$0f  ; load reg contents of bowser flame sound
     LDA tbl_bowser_flame_volume_envelope-1,y
-    BNE PlayNoiseSfx  ; unconditional branch here
+    BNE bra_store_noise_sound_registers  ; unconditional branch here
