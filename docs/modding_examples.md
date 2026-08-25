@@ -43,7 +43,7 @@ In `sub_update_player_physics`, replace:
 
 ```asm
     LDA SwimmingFlag  ; if swimming flag not set, jump to do something else
-    BEQ NoJump  ; to prevent midair jumping, otherwise continue
+    BEQ bra_skip_jump_initialization  ; to prevent midair jumping, otherwise continue
 ```
 
 With:
