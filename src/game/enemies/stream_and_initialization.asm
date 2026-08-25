@@ -320,7 +320,7 @@ CheckpointEnemyID:
     TYA  ; get identifier back and use as offset for jump engine
 
 InitEnemyRoutines:
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
 ; jump engine table for newly loaded enemy objects
 

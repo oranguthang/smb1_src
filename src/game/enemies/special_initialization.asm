@@ -493,7 +493,7 @@ InitEnemyFrenzy:
     STA EnemyFrenzyBuffer  ; save in enemy frenzy buffer
     SEC
     SBC #$12  ; subtract 12 and use as offset for jump engine
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
 ; frenzy object jump table
     .word LakituAndSpinyHandler

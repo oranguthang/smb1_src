@@ -124,7 +124,7 @@ BumpBlock:
     BCC BlockCode  ; branch to use current number
     SBC #$05  ; otherwise subtract 5 for second set to get proper number
 BlockCode:
-    JSR JumpEngine  ; run appropriate subroutine depending on block number
+    JSR sub_dispatch_inline_handler  ; run appropriate subroutine depending on block number
 
     .word MushFlowerBlock
     .word CoinBlock
@@ -258,14 +258,14 @@ BlockObjectsCore:
     TAX  ; when using brick chunks, but only one offset for both)
     DEY  ; decrement Y to check for solid block state
     BEQ BouncingBlockHandler  ; branch if found, otherwise continue for brick chunks
-    JSR ImposeGravityBlock  ; do sub to impose gravity on one block object object
-    JSR MoveObjectHorizontally  ; do another sub to move horizontally
+    JSR sub_apply_block_gravity  ; do sub to impose gravity on one block object object
+    JSR sub_move_object_horizontally  ; do another sub to move horizontally
     TXA
     CLC  ; move onto next block object
     ADC #$02
     TAX
-    JSR ImposeGravityBlock  ; do sub to impose gravity on other block object
-    JSR MoveObjectHorizontally  ; do another sub to move horizontally
+    JSR sub_apply_block_gravity  ; do sub to impose gravity on other block object
+    JSR sub_move_object_horizontally  ; do another sub to move horizontally
     LDX ObjectOffset  ; get block object offset used for both
     JSR RelativeBlockPosition  ; get relative coordinates
     JSR GetBlockOffscreenBits  ; get offscreen information
@@ -286,7 +286,7 @@ ChkTop:
     BCS KillBlock  ; otherwise do unconditional branch to kill it
 
 BouncingBlockHandler:
-    JSR ImposeGravityBlock  ; do sub to impose gravity on block object
+    JSR sub_apply_block_gravity  ; do sub to impose gravity on block object
     LDX ObjectOffset  ; get block object offset
     JSR RelativeBlockPosition  ; get relative coordinates
     JSR GetBlockOffscreenBits  ; get offscreen information

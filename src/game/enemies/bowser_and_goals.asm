@@ -27,7 +27,7 @@ SetM2:
     JMP KillAllEnemies  ; jump to empty all enemy slots and then leave
 
 MoveD_Bowser:
-    JSR MoveEnemySlowVert  ; do a sub to move bowser downwards
+    JSR sub_move_enemy_downward_slow  ; do a sub to move bowser downwards
     JMP BowserGfxHandler  ; jump to draw bowser's front and rear, then leave
 
 RemoveBridge:
@@ -162,7 +162,7 @@ CompDToO:
 HammerChk:
     LDA EnemyFrameTimer,x  ; if timer set here not expired yet, skip ahead to
     BNE MakeBJump  ; some other section of code
-    JSR MoveEnemySlowVert  ; otherwise start by moving bowser downwards
+    JSR sub_move_enemy_downward_slow  ; otherwise start by moving bowser downwards
     LDA WorldNumber  ; check world number
     CMP #World6
     BCC SetHmrTmr  ; if world 1-5, skip this part (not time to throw hammers yet)
@@ -420,7 +420,7 @@ RunStarFlagObj:
     LDA StarFlagTaskControl  ; check star flag object task number here
     CMP #$05  ; if greater than 5, branch to exit
     BCS StarFlagExit
-    JSR JumpEngine  ; otherwise jump to appropriate sub
+    JSR sub_dispatch_inline_handler  ; otherwise jump to appropriate sub
 
     .word StarFlagExit
     .word GameTimerFireworks

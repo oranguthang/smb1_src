@@ -287,12 +287,12 @@ MoveFlyingCheepCheep:
     BEQ FlyCC  ; branch to continue code if not set
     LDA #$00
     STA Enemy_SprAttrib,x  ; otherwise clear sprite attributes
-    JMP MoveJ_EnemyVertically  ; and jump to move defeated cheep-cheep downwards
+    JMP sub_move_enemy_with_gravity  ; and jump to move defeated cheep-cheep downwards
 FlyCC:
-    JSR MoveEnemyHorizontally  ; move cheep-cheep horizontally based on speed and force
+    JSR sub_move_enemy_horizontally  ; move cheep-cheep horizontally based on speed and force
     LDY #$0d  ; set vertical movement amount
     LDA #$05  ; set maximum speed
-    JSR SetXMoveAmt  ; branch to impose gravity on flying cheep-cheep
+    JSR sub_apply_enemy_vertical_motion  ; branch to impose gravity on flying cheep-cheep
     LDA Enemy_Y_MoveForce,x
     LSR  ; get vertical movement force and
     LSR  ; move high nybble to low
@@ -334,7 +334,7 @@ MoveLakitu:
     LDA Enemy_State,x  ; check lakitu's enemy state
     AND #%00100000  ; for d5 set
     BEQ ChkLS  ; if not set, continue with code
-    JMP MoveD_EnemyVertically  ; otherwise jump to move defeated lakitu downwards
+    JMP sub_move_enemy_downward_fast  ; otherwise jump to move defeated lakitu downwards
 ChkLS:
     LDA Enemy_State,x  ; if lakitu's enemy state not set at all,
     BEQ Fr12S  ; go ahead and continue with code
@@ -367,7 +367,7 @@ SetLSpd:
     INY  ; increment moving direction to left
 SetLMov:
     STY Enemy_MovingDir,x  ; store moving direction
-    JMP MoveEnemyHorizontally  ; move lakitu horizontally
+    JMP sub_move_enemy_horizontally  ; move lakitu horizontally
 
 PlayerLakituDiff:
     LDY #$00  ; set Y for default value

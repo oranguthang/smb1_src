@@ -98,7 +98,7 @@ ExitAFrenzy:
 
 AreaStyleObject:
     LDA AreaStyle  ; load level object style and jump to the right sub
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
     .word TreeLedge  ; also used for cloud type levels
     .word MushroomLedge
     .word BulletBillCannon

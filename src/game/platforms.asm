@@ -66,13 +66,13 @@ ColFlg:
     CMP ObjectOffset  ; if collision flag matches
     BEQ PlatDn  ; current enemy object offset, branch
 PlatUp:
-    JSR MovePlatformUp  ; do a sub to move upwards
+    JSR sub_move_platform_up  ; do a sub to move upwards
     JMP DoOtherPlatform  ; jump ahead to remaining code
 PlatSt:
     JSR StopPlatforms  ; do a sub to stop movement
     JMP DoOtherPlatform  ; jump ahead to remaining code
 PlatDn:
-    JSR MovePlatformDown  ; do a sub to move downwards
+    JSR sub_move_platform_down  ; do a sub to move downwards
 
 DoOtherPlatform:
     LDY Enemy_State,x  ; get offset of other platform
@@ -230,10 +230,10 @@ StopPlatforms:
 PlatformFall:
     TYA  ; save offset for other platform to stack
     PHA
-    JSR MoveFallingPlatform  ; make current platform fall
+    JSR sub_move_falling_platform  ; make current platform fall
     PLA
     TAX  ; pull offset from stack and save to X
-    JSR MoveFallingPlatform  ; make other platform fall
+    JSR sub_move_falling_platform  ; make other platform fall
     LDX ObjectOffset
     LDA PlatformCollisionFlag,x  ; if player not standing on either platform,
     BMI ExPF  ; skip this part
@@ -264,10 +264,10 @@ ChkYCenterPos:
     LDA Enemy_Y_Position,x  ; if current vertical position < central position, branch
     CMP YPlatformCenterYPos,x  ; to slow ascent/move downwards
     BCC YMDown
-    JSR MovePlatformUp  ; otherwise start slowing descent/moving upwards
+    JSR sub_move_platform_up  ; otherwise start slowing descent/moving upwards
     JMP ChkYPCollision
 YMDown:
-    JSR MovePlatformDown  ; start slowing ascent/moving downwards
+    JSR sub_move_platform_down  ; start slowing ascent/moving downwards
 
 ChkYPCollision:
     LDA PlatformCollisionFlag,x  ; if collision flag not set here, branch
@@ -310,7 +310,7 @@ ExXMP:
 DropPlatform:
     LDA PlatformCollisionFlag,x  ; if no collision between platform and player
     BMI ExDPl  ; occurred, just leave without moving anything
-    JSR MoveDropPlatform  ; otherwise do a sub to move platform down very quickly
+    JSR sub_move_drop_platform  ; otherwise do a sub to move platform down very quickly
     JSR PositionPlayerOnVPlat  ; do a sub to position player appropriately
 ExDPl:
     RTS  ; leave
@@ -319,7 +319,7 @@ ExDPl:
 ; $00 - residual value from sub
 
 RightPlatform:
-    JSR MoveEnemyHorizontally  ; move platform with current horizontal speed, if any
+    JSR sub_move_enemy_horizontally  ; move platform with current horizontal speed, if any
     STA $00  ; store saved value here (residual code)
     LDA PlatformCollisionFlag,x  ; check collision flag, if no collision between player
     BMI ExRPl  ; and platform, branch ahead, leave speed unaltered

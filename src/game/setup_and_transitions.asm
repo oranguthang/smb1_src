@@ -334,7 +334,7 @@ SetHalfway:
 
 GameOverMode:
     LDA OperMode_Task
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
     .word SetupGameOver
     .word ScreenRoutines

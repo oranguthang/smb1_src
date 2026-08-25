@@ -2,7 +2,7 @@
 
 TitleScreenMode:
     LDA OperMode_Task
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
     .word InitializeGame
     .word ScreenRoutines
@@ -186,7 +186,7 @@ AutoPlayer:
 
 VictoryModeSubroutines:
     LDA OperMode_Task
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
     .word BridgeCollapse
     .word SetupVictoryMode

@@ -3,18 +3,18 @@
 ; $01 - used to store low nybble of horizontal speed
 ; $02 - used to store adder to page location
 
-MoveEnemyHorizontally:
+sub_move_enemy_horizontally:
     INX  ; increment offset for enemy offset
-    JSR MoveObjectHorizontally  ; position object horizontally according to
+    JSR sub_move_object_horizontally  ; position object horizontally according to
     LDX ObjectOffset  ; counters, return with saved value in A,
     RTS  ; put enemy offset back in X and leave
 
-MovePlayerHorizontally:
+sub_move_player_horizontally:
     LDA JumpspringAnimCtrl  ; if jumpspring currently animating,
-    BNE ExXMove  ; branch to leave
+    BNE bra_return_from_movement  ; branch to leave
     TAX  ; otherwise set zero for offset to use player's stuff
 
-MoveObjectHorizontally:
+sub_move_object_horizontally:
     LDA SprObject_X_Speed,x  ; get currently saved value (horizontal
     ASL  ; speed, secondary counter, whatever)
     ASL  ; and move low nybble to high
@@ -27,15 +27,15 @@ MoveObjectHorizontally:
     LSR
     LSR
     CMP #$08  ; if < 8, branch, do not change
-    BCC SaveXSpd
+    BCC bra_store_signed_x_speed
     ORA #%11110000  ; otherwise alter high nybble
-SaveXSpd:
+bra_store_signed_x_speed:
     STA $00  ; save result here
     LDY #$00  ; load default Y value here
     CMP #$00  ; if result positive, leave Y alone
-    BPL UseAdder
+    BPL bra_apply_horizontal_position_delta
     DEY  ; otherwise decrement Y
-UseAdder:
+bra_apply_horizontal_position_delta:
     STY $02  ; save Y here
     LDA SprObject_X_MoveForce,x  ; get whatever number's here
     CLC
@@ -54,7 +54,7 @@ UseAdder:
     PLA
     CLC  ; pull old carry from stack and add
     ADC $00  ; to high nybble moved to low
-ExXMove:
+bra_return_from_movement:
     RTS  ; and leave
 
 ; -------------------------------------------------------------------------------------
@@ -62,41 +62,41 @@ ExXMove:
 ; $01 - used for upward force
 ; $02 - used for maximum vertical speed
 
-MovePlayerVertically:
+loc_move_player_vertically:
     LDX #$00  ; set X for player offset
     LDA TimerControl
-    BNE NoJSChk  ; if master timer control set, branch ahead
+    BNE bra_load_player_vertical_force  ; if master timer control set, branch ahead
     LDA JumpspringAnimCtrl  ; otherwise check to see if jumpspring is animating
-    BNE ExXMove  ; branch to leave if so
-NoJSChk:
+    BNE bra_return_from_movement  ; branch to leave if so
+bra_load_player_vertical_force:
     LDA VerticalForce  ; dump vertical force
     STA $00
     LDA #$04  ; set maximum vertical speed here
-    JMP ImposeGravitySprObj  ; then jump to move player vertically
+    JMP sub_apply_sprite_object_gravity  ; then jump to move player vertically
 
 ; --------------------------------
 
-MoveD_EnemyVertically:
+sub_move_enemy_downward_fast:
     LDY #$3d  ; set quick movement amount downwards
     LDA Enemy_State,x  ; then check enemy state
     CMP #$05  ; if not set to unique state for spiny's egg, go ahead
-    BNE ContVMove  ; and use, otherwise set different movement amount, continue on
+    BNE bra_set_fast_vertical_motion  ; and use, otherwise set different movement amount, continue on
 
-MoveFallingPlatform:
+sub_move_falling_platform:
     LDY #$20  ; set movement amount
-ContVMove:
-    JMP SetHiMax  ; jump to skip the rest of this
+bra_set_fast_vertical_motion:
+    JMP bra_set_high_vertical_speed_limit  ; jump to skip the rest of this
 
 ; --------------------------------
 
-MoveRedPTroopaDown:
+loc_move_red_paratroopa_down:
     LDY #$00  ; set Y to move downwards
-    JMP MoveRedPTroopa  ; skip to movement routine
+    JMP loc_move_red_paratroopa_vertically  ; skip to movement routine
 
-MoveRedPTroopaUp:
+loc_move_red_paratroopa_up:
     LDY #$01  ; set Y to move upwards
 
-MoveRedPTroopa:
+loc_move_red_paratroopa_vertically:
     INX  ; increment X for enemy offset
     LDA #$03
     STA $00  ; set downward movement amount here
@@ -105,69 +105,69 @@ MoveRedPTroopa:
     LDA #$02
     STA $02  ; set maximum speed here
     TYA  ; set movement direction in A, and
-    JMP RedPTroopaGrav  ; jump to move this thing
+    JMP loc_apply_red_paratroopa_gravity  ; jump to move this thing
 
 ; --------------------------------
 
-MoveDropPlatform:
+sub_move_drop_platform:
     LDY #$7f  ; set movement amount for drop platform
-    BNE SetMdMax  ; skip ahead of other value set here
+    BNE bra_set_medium_vertical_speed_limit  ; skip ahead of other value set here
 
-MoveEnemySlowVert:
+sub_move_enemy_downward_slow:
     LDY #$0f  ; set movement amount for bowser/other objects
-SetMdMax:
+bra_set_medium_vertical_speed_limit:
     LDA #$02  ; set maximum speed in A
-    BNE SetXMoveAmt  ; unconditional branch
+    BNE sub_apply_enemy_vertical_motion  ; unconditional branch
 
 ; --------------------------------
 
-MoveJ_EnemyVertically:
+sub_move_enemy_with_gravity:
     LDY #$1c  ; set movement amount for podoboo/other objects
-SetHiMax:
+bra_set_high_vertical_speed_limit:
     LDA #$03  ; set maximum speed in A
-SetXMoveAmt:
+sub_apply_enemy_vertical_motion:
     STY $00  ; set movement amount here
     INX  ; increment X for enemy offset
-    JSR ImposeGravitySprObj  ; do a sub to move enemy object downwards
+    JSR sub_apply_sprite_object_gravity  ; do a sub to move enemy object downwards
     LDX ObjectOffset  ; get enemy object buffer offset and leave
     RTS
 
 ; --------------------------------
 
-MaxSpdBlockData:
+tbl_block_maximum_y_speed:
     .byte $06, $08
 
-ResidualGravityCode:
+unused_gravity_block_entry:
     LDY #$00  ; this part appears to be residual,
     .byte $2c  ; no code branches or jumps to it
 
-ImposeGravityBlock:
+sub_apply_block_gravity:
     LDY #$01  ; set offset for maximum speed
     LDA #$50  ; set movement amount here
     STA $00
-    LDA MaxSpdBlockData,y  ; get maximum speed
+    LDA tbl_block_maximum_y_speed,y  ; get maximum speed
 
-ImposeGravitySprObj:
+sub_apply_sprite_object_gravity:
     STA $02  ; set maximum speed here
     LDA #$00  ; set value to move downwards
-    JMP ImposeGravity  ; jump to the code that actually moves it
+    JMP sub_apply_object_gravity  ; jump to the code that actually moves it
 
 ; --------------------------------
 
-MovePlatformDown:
+sub_move_platform_down:
     LDA #$00  ; save value to stack (if branching here, execute next
     .byte $2c  ; part as BIT instruction)
 
-MovePlatformUp:
+sub_move_platform_up:
     LDA #$01  ; save value to stack
     PHA
     LDY Enemy_ID,x  ; get enemy object identifier
     INX  ; increment offset for enemy object
     LDA #$05  ; load default value here
     CPY #$29  ; residual comparison, object #29 never executes
-    BNE SetDplSpd  ; this code, thus unconditional branch here
+    BNE bra_set_platform_gravity_force  ; this code, thus unconditional branch here
     LDA #$09  ; residual code
-SetDplSpd:
+bra_set_platform_gravity_force:
     STA $00  ; save downward movement amount here
     LDA #$0a  ; save upward movement amount here
     STA $01
@@ -176,8 +176,8 @@ SetDplSpd:
     PLA  ; get value from stack
     TAY  ; use as Y, then move onto code shared by red koopa
 
-RedPTroopaGrav:
-    JSR ImposeGravity  ; do a sub to move object gradually
+loc_apply_red_paratroopa_gravity:
+    JSR sub_apply_object_gravity  ; do a sub to move object gradually
     LDX ObjectOffset  ; get enemy object offset and leave
     RTS
 
@@ -186,7 +186,7 @@ RedPTroopaGrav:
 ; $01 - used for upward force
 ; $07 - used as adder for vertical position
 
-ImposeGravity:
+sub_apply_object_gravity:
     PHA  ; push value to stack
     LDA SprObject_YMF_Dummy,x
     CLC  ; add value in movement force to contents of dummy variable
@@ -194,9 +194,9 @@ ImposeGravity:
     STA SprObject_YMF_Dummy,x
     LDY #$00  ; set Y to zero by default
     LDA SprObject_Y_Speed,x  ; get current vertical speed
-    BPL AlterYP  ; if currently moving downwards, do not decrement Y
+    BPL bra_update_object_y_position  ; if currently moving downwards, do not decrement Y
     DEY  ; otherwise decrement Y
-AlterYP:
+bra_update_object_y_position:
     STY $07  ; store Y here
     ADC SprObject_Y_Position,x  ; add vertical position to vertical speed plus carry
     STA SprObject_Y_Position,x  ; store as new vertical position
@@ -211,17 +211,17 @@ AlterYP:
     ADC #$00
     STA SprObject_Y_Speed,x
     CMP $02  ; compare to maximum speed
-    BMI ChkUpM  ; if less than preset value, skip this part
+    BMI bra_apply_upward_gravity  ; if less than preset value, skip this part
     LDA SprObject_Y_MoveForce,x
     CMP #$80  ; if less positively than preset maximum, skip this part
-    BCC ChkUpM
+    BCC bra_apply_upward_gravity
     LDA $02
     STA SprObject_Y_Speed,x  ; keep vertical speed within maximum value
     LDA #$00
     STA SprObject_Y_MoveForce,x  ; clear fractional
-ChkUpM:
+bra_apply_upward_gravity:
     PLA  ; get value from stack
-    BEQ ExVMove  ; if set to zero, branch to leave
+    BEQ bra_return_from_vertical_movement  ; if set to zero, branch to leave
     LDA $02
     EOR #%11111111  ; otherwise get two's compliment of maximum speed
     TAY
@@ -235,13 +235,13 @@ ChkUpM:
     SBC #$00  ; subtract borrow from vertical speed and store
     STA SprObject_Y_Speed,x
     CMP $07  ; compare vertical speed to two's compliment
-    BPL ExVMove  ; if less negatively than preset maximum, skip this part
+    BPL bra_return_from_vertical_movement  ; if less negatively than preset maximum, skip this part
     LDA SprObject_Y_MoveForce,x
     CMP #$80  ; check if fractional part is above certain amount,
-    BCS ExVMove  ; and if so, branch to leave
+    BCS bra_return_from_vertical_movement  ; and if so, branch to leave
     LDA $07
     STA SprObject_Y_Speed,x  ; keep vertical speed within maximum value
     LDA #$ff
     STA SprObject_Y_MoveForce,x  ; clear fractional
-ExVMove:
+bra_return_from_vertical_movement:
     RTS  ; leave!

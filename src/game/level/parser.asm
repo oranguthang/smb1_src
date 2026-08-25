@@ -16,7 +16,7 @@ SkipATRender:
     RTS
 
 AreaParserTasks:
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
     .word IncrementColumnPos
     .word RenderAreaGraphics
@@ -482,7 +482,7 @@ RunAObj:
     LDA $00  ; get stored value and add offset to it
     CLC  ; then use the jump engine with current contents of A
     ADC $07
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
 ; large objects (rows $00-$0b or 00-11, d6-d4 set)
     .word VerticalPipe  ; used by warp pipes

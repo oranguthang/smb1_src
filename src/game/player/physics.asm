@@ -20,7 +20,7 @@ bra_process_player_movement:
     LDY #$18
     STY ClimbSideTimer  ; otherwise reset timer now
 bra_dispatch_player_state_movement:
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
 tbl_player_state_movement_handlers:
     .word handler_player_on_ground
@@ -41,7 +41,7 @@ handler_player_on_ground:
     STA PlayerFacingDir  ; otherwise set new facing direction
 bra_apply_ground_movement:
     JSR sub_apply_player_horizontal_friction  ; do a sub to impose friction on player's walk/run
-    JSR MovePlayerHorizontally  ; do another sub to move player horizontally
+    JSR sub_move_player_horizontally  ; do another sub to move player horizontally
     STA Player_X_Scroll  ; set returned value as player's movement speed for scroll
     RTS
 
@@ -87,7 +87,7 @@ loc_process_airborne_horizontal_input:
     BEQ bra_move_airborne_player  ; if not pressing any, skip
     JSR sub_apply_player_horizontal_friction  ; otherwise process horizontal movement
 bra_move_airborne_player:
-    JSR MovePlayerHorizontally  ; do a sub to move player horizontally
+    JSR sub_move_player_horizontally  ; do a sub to move player horizontally
     STA Player_X_Scroll  ; set player's speed here, to be used for scroll later
     LDA GameEngineSubroutine
     CMP #$0b  ; check for specific routine selected
@@ -95,7 +95,7 @@ bra_move_airborne_player:
     LDA #$28
     STA VerticalForce  ; otherwise set fractional
 bra_move_player_vertically:
-    JMP MovePlayerVertically  ; jump to move player vertically, then leave
+    JMP loc_move_player_vertically  ; jump to move player vertically, then leave
 
 ; --------------------------------
 

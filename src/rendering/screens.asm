@@ -2,7 +2,7 @@
 
 ScreenRoutines:
     LDA ScreenRoutineTask  ; run one of the following subroutines
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
     .word InitScreen
     .word SetupIntermediate

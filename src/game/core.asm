@@ -4,7 +4,7 @@
 ; $0770 is set to 1
 GameMode:
     LDA OperMode_Task
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
     .word InitializeArea
     .word ScreenRoutines
@@ -201,7 +201,7 @@ GetScreenPosition:
 
 GameRoutines:
     LDA GameEngineSubroutine  ; run routine based on number (a few of these routines are
-    JSR JumpEngine  ; merely placeholders as conditions for other routines)
+    JSR sub_dispatch_inline_handler  ; merely placeholders as conditions for other routines)
 
     .word Entrance_GameTimerSetup
     .word Vine_AutoClimb

@@ -97,8 +97,8 @@ RunFB:
     LDA #$03  ; set maximum speed here
     STA $02
     LDA #$00
-    JSR ImposeGravity  ; do sub here to impose gravity on fireball and move vertically
-    JSR MoveObjectHorizontally  ; do another sub to move it horizontally
+    JSR sub_apply_object_gravity  ; do sub here to impose gravity on fireball and move vertically
+    JSR sub_move_object_horizontally  ; do another sub to move it horizontally
     LDX ObjectOffset  ; return fireball offset to X
     JSR RelativeFireballPosition  ; get relative coordinates
     JSR GetFireballOffscreenBits  ; get offscreen information
@@ -317,7 +317,7 @@ WhPull:
     STA $02  ; also set maximum vertical speed
     LSR
     TAX  ; set X for player offset
-    JMP ImposeGravity  ; jump to put whirlpool effect on player vertically, do not return
+    JMP sub_apply_object_gravity  ; jump to put whirlpool effect on player vertically, do not return
 
 ; -------------------------------------------------------------------------------------
 

@@ -9,7 +9,7 @@ RunEnemyObjectsCore:
     TYA  ; otherwise subtract $14 from the value and use
     SBC #$14  ; as value for jump engine
 JmpEO:
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
     .word RunNormalEnemies  ; for objects $00-$14
 
@@ -81,7 +81,7 @@ SkipMove:
 
 EnemyMovementSubs:
     LDA Enemy_ID,x
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
     .word MoveNormalEnemy  ; only objects $00-$14 use this table
     .word MoveNormalEnemy
@@ -159,7 +159,7 @@ LargePlatformSubroutines:
     LDA Enemy_ID,x  ; subtract $24 to get proper offset for jump table
     SEC
     SBC #$24
-    JSR JumpEngine
+    JSR sub_dispatch_inline_handler
 
     .word BalancePlatform  ; table used by objects $24-$2a
     .word YMovingPlatform
@@ -198,7 +198,7 @@ MovePodoboo:
     LDA #$f9
     STA Enemy_Y_Speed,x  ; set vertical speed to move podoboo upwards
 PdbM:
-    JMP MoveJ_EnemyVertically  ; branch to impose gravity on podoboo
+    JMP sub_move_enemy_with_gravity  ; branch to impose gravity on podoboo
 
 ; --------------------------------
 ; $00 - used in HammerBroJumpCode as bitmask
@@ -317,7 +317,7 @@ MoveNormalEnemy:
     CMP #$03
     BCS ReviveStunned  ; if enemy in states $03 or $04, skip ahead to yet another part
 FallE:
-    JSR MoveD_EnemyVertically  ; do a sub here to move enemy downwards
+    JSR sub_move_enemy_downward_fast  ; do a sub here to move enemy downwards
     LDY #$00
     LDA Enemy_State,x  ; check for enemy state $02
     CMP #$02
@@ -329,7 +329,7 @@ FallE:
     BEQ SteadM
     BNE SlowM  ; if any other object where d6 set, jump to set Y
 MEHor:
-    JMP MoveEnemyHorizontally  ; jump here to move enemy horizontally for <> $2e and d6 set
+    JMP sub_move_enemy_horizontally  ; jump here to move enemy horizontally for <> $2e and d6 set
 
 SlowM:
     LDY #$01  ; if branched here, increment Y to slow horizontal movement
@@ -343,7 +343,7 @@ AddHS:
     CLC
     ADC XSpeedAdderData,y  ; add value here to slow enemy down if necessary
     STA Enemy_X_Speed,x  ; save as horizontal speed temporarily
-    JSR MoveEnemyHorizontally  ; then do a sub to move horizontally
+    JSR sub_move_enemy_horizontally  ; then do a sub to move horizontally
     PLA
     STA Enemy_X_Speed,x  ; get old horizontal speed from stack and return to
     RTS  ; original memory location, then leave
@@ -368,8 +368,8 @@ SetRSpd:
     RTS
 
 MoveDefeatedEnemy:
-    JSR MoveD_EnemyVertically  ; execute sub to move defeated enemy downwards
-    JMP MoveEnemyHorizontally  ; now move defeated enemy horizontally
+    JSR sub_move_enemy_downward_fast  ; execute sub to move defeated enemy downwards
+    JMP sub_move_enemy_horizontally  ; now move defeated enemy horizontally
 
 ChkKillGoomba:
     CMP #$0e  ; check to see if enemy timer has reached
@@ -384,8 +384,8 @@ NKGmba:
 ; --------------------------------
 
 MoveJumpingEnemy:
-    JSR MoveJ_EnemyVertically  ; do a sub to impose gravity on green paratroopa
-    JMP MoveEnemyHorizontally  ; jump to move enemy horizontally
+    JSR sub_move_enemy_with_gravity  ; do a sub to impose gravity on green paratroopa
+    JMP sub_move_enemy_horizontally  ; jump to move enemy horizontally
 
 ; --------------------------------
 
@@ -408,9 +408,9 @@ MoveRedPTUpOrDown:
     LDA Enemy_Y_Position,x  ; check current vs. central vertical coordinate
     CMP RedPTroopaCenterYPos,x
     BCC MovPTDwn  ; if current < central, jump to move downwards
-    JMP MoveRedPTroopaUp  ; otherwise jump to move upwards
+    JMP loc_move_red_paratroopa_up  ; otherwise jump to move upwards
 MovPTDwn:
-    JMP MoveRedPTroopaDown  ; move downwards
+    JMP loc_move_red_paratroopa_down  ; move downwards
 
 ; --------------------------------
 ; $00 - used to store adder for movement, also used as adder for platform
@@ -477,7 +477,7 @@ MoveWithXMCntrs:
     LDY #$02  ; load alternate value here
 XMRight:
     STY Enemy_MovingDir,x  ; store as moving direction
-    JSR MoveEnemyHorizontally
+    JSR sub_move_enemy_horizontally
     STA $00  ; save value obtained from sub here
     PLA  ; get secondary counter from stack
     STA XMoveSecondaryCounter,x  ; and return to original place
@@ -541,7 +541,7 @@ LeftSwim:
     RTS
 
 MoveDefeatedBloober:
-    JMP MoveEnemySlowVert  ; jump to move defeated bloober downwards
+    JMP sub_move_enemy_downward_slow  ; jump to move defeated bloober downwards
 
 ProcSwimmingB:
     LDA BlooperMoveCounter,x  ; get enemy's movement counter
@@ -608,11 +608,11 @@ MoveBulletBill:
     LDA Enemy_State,x  ; check bullet bill's enemy object state for d5 set
     AND #%00100000
     BEQ NotDefB  ; if not set, continue with movement code
-    JMP MoveJ_EnemyVertically  ; otherwise jump to move defeated bullet bill downwards
+    JMP sub_move_enemy_with_gravity  ; otherwise jump to move defeated bullet bill downwards
 NotDefB:
     LDA #$e8  ; set bullet bill's horizontal speed
     STA Enemy_X_Speed,x  ; and move it accordingly (note: this bullet bill
-    JMP MoveEnemyHorizontally  ; object occurs in frenzy object $17, not from cannons)
+    JMP sub_move_enemy_horizontally  ; object occurs in frenzy object $17, not from cannons)
 
 ; --------------------------------
 ; $02 - used to hold preset values
@@ -626,7 +626,7 @@ MoveSwimmingCheepCheep:
     LDA Enemy_State,x  ; check cheep-cheep's enemy object state
     AND #%00100000  ; for d5 set
     BEQ CCSwim  ; if not set, continue with movement code
-    JMP MoveEnemySlowVert  ; otherwise jump to move defeated cheep-cheep downwards
+    JMP sub_move_enemy_downward_slow  ; otherwise jump to move defeated cheep-cheep downwards
 CCSwim:
     STA $03  ; save enemy state in $03
     LDA Enemy_ID,x  ; get enemy identifier

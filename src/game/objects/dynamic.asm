@@ -100,9 +100,9 @@ ChkDSte:
     LDA Enemy_State,x  ; check enemy state for d5 set
     AND #%00100000
     BEQ BBFly  ; if not set, skip to move horizontally
-    JSR MoveD_EnemyVertically  ; otherwise do sub to move bullet bill vertically
+    JSR sub_move_enemy_downward_fast  ; otherwise do sub to move bullet bill vertically
 BBFly:
-    JSR MoveEnemyHorizontally  ; do sub to move bullet bill horizontally
+    JSR sub_move_enemy_horizontally  ; do sub to move bullet bill horizontally
 RunBBSubs:
     JSR GetEnemyOffscreenBits  ; get offscreen information
     JSR RelativeEnemyPosition  ; get relative coordinates
@@ -174,8 +174,8 @@ ProcHammerObj:
     LDA #$04
     STA $02  ; set maximum vertical speed
     LDA #$00  ; set A to impose gravity on hammer
-    JSR ImposeGravity  ; do sub to impose gravity on hammer and move vertically
-    JSR MoveObjectHorizontally  ; do sub to move it horizontally
+    JSR sub_apply_object_gravity  ; do sub to impose gravity on hammer and move vertically
+    JSR sub_move_object_horizontally  ; do sub to move it horizontally
     LDX ObjectOffset  ; get original misc object offset
     JMP RunAllH  ; branch to essential subroutines
 SetHSpd:
@@ -317,7 +317,7 @@ JCoinRun:
     LSR  ; divide by 2 and set
     STA $01  ; as upward movement amount (apparently residual)
     LDA #$00  ; set A to impose gravity on jumping coin
-    JSR ImposeGravity  ; do sub to move coin vertically and impose gravity on it
+    JSR sub_apply_object_gravity  ; do sub to move coin vertically and impose gravity on it
     LDX ObjectOffset  ; get original misc object offset
     LDA Misc_Y_Speed,x  ; check vertical speed
     CMP #$05

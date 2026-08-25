@@ -285,7 +285,7 @@ SetMiscOffset:
 
 OperModeExecutionTree:
     LDA OperMode  ; this is the heart of the entire program,
-    JSR JumpEngine  ; most of what goes on starts here
+    JSR sub_dispatch_inline_handler  ; most of what goes on starts here
 
     .word TitleScreenMode
     .word GameMode

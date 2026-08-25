@@ -4,7 +4,7 @@
 ; $06 - jump address low
 ; $07 - jump address high
 
-JumpEngine:
+sub_dispatch_inline_handler:
     ASL  ; shift bit from contents of A
     TAY
     PLA  ; pull saved return address from stack
