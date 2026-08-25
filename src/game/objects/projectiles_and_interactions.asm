@@ -29,7 +29,7 @@ sub_proc_fireball_bubble:
     STA ram_square1_sound_queue
     LDA #$02  ; load state
     STA ram_fireball_state,x
-    LDY ram_player_anim_timer_set  ; copy animation frame timer setting
+    LDY ram_player_anim_timer_reload  ; copy animation frame timer setting
     STY ram_fireball_throwing_timer  ; into fireball throwing timer
     DEY
     STY ram_player_anim_timer  ; decrement and store in player's animation timer

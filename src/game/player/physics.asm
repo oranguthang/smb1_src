@@ -1,5 +1,18 @@
 ; -------------------------------------------------------------------------------------
 
+; Apply input and state-specific movement for the current player frame
+
+; Inputs:
+; ram_player_state - ground, jump/swim, fall, or climb state
+; ram_a_b_buttons - current A/B button bits
+; ram_left_right_buttons - current horizontal input bits
+; ram_up_down_buttons - current vertical input bits
+
+; Outputs:
+; Player position, speed, facing, crouch, and animation timing may change
+
+; Clobbers:
+; A, X, Y
 sub_update_player_movement:
     LDA #$00  ; set A to init crouch flag by default
     LDY ram_player_size  ; is player small?
@@ -34,6 +47,7 @@ bra_return_from_player_movement:
 ; -------------------------------------------------------------------------------------
 ; $00 - used by handler_player_climbing to store high vertical adder
 
+; Apply animation, friction, and horizontal motion while grounded
 handler_player_on_ground:
     JSR sub_update_player_animation_speed  ; do a sub to set animation frame timing
     LDA ram_left_right_buttons
@@ -47,13 +61,15 @@ bra_apply_ground_movement:
 
 ; --------------------------------
 
+; Select falling gravity before entering shared airborne movement
 handler_player_falling:
-    LDA ram_vertical_force_down
-    STA ram_vertical_force  ; dump vertical movement force for falling into main one
+    LDA ram_player_fall_gravity
+    STA ram_player_active_gravity  ; dump vertical movement force for falling into main one
     JMP loc_process_airborne_horizontal_input  ; movement force, then skip ahead to process left/right movement
 
 ; --------------------------------
 
+; Apply variable-height jump or swimming motion and horizontal air control
 handler_player_jumping_or_swimming:
     LDY ram_player_y_speed  ; if player's vertical speed zero
     BPL bra_use_falling_vertical_force  ; or moving downwards, branch to falling
@@ -64,11 +80,11 @@ handler_player_jumping_or_swimming:
     LDA ram_jump_origin_y_position  ; get vertical position player jumped from
     SEC
     SBC ram_player_y_position  ; subtract current from original vertical coordinate
-    CMP ram_diff_to_halt_jump  ; compare to value set here to see if player is in mid-jump
+    CMP ram_jump_release_min_displacement  ; compare to value set here to see if player is in mid-jump
     BCC bra_check_swimming_state  ; or just starting to jump, if just starting, skip ahead
 bra_use_falling_vertical_force:
-    LDA ram_vertical_force_down  ; otherwise dump falling into main fractional
-    STA ram_vertical_force
+    LDA ram_player_fall_gravity  ; otherwise dump falling into main fractional
+    STA ram_player_active_gravity
 bra_check_swimming_state:
     LDA ram_swimming_flag  ; if swimming flag not set,
     BEQ loc_process_airborne_horizontal_input  ; branch ahead to last part
@@ -77,7 +93,7 @@ bra_check_swimming_state:
     CMP #$14  ; check vertical position against preset value
     BCS bra_process_swimming_horizontal_input  ; if not yet reached a certain position, branch ahead
     LDA #$18
-    STA ram_vertical_force  ; otherwise set fractional
+    STA ram_player_active_gravity  ; otherwise set fractional
 bra_process_swimming_horizontal_input:
     LDA ram_left_right_buttons  ; check left/right controller bits (check for swimming)
     BEQ loc_process_airborne_horizontal_input  ; if not pressing any, skip
@@ -93,7 +109,7 @@ bra_move_airborne_player:
     CMP #$0b  ; check for specific routine selected
     BNE bra_move_player_vertically  ; branch if not set to run
     LDA #$28
-    STA ram_vertical_force  ; otherwise set fractional
+    STA ram_player_active_gravity  ; otherwise set fractional
 bra_move_player_vertically:
     JMP loc_move_player_vertically  ; jump to move player vertically, then leave
 
@@ -104,11 +120,12 @@ tbl_climb_side_x_delta_low:
 tbl_climb_side_x_delta_high:
     .byte $00, $00, $ff, $ff
 
+; Move the player vertically on a vine and handle side switching
 handler_player_climbing:
-    LDA ram_player_ymf_dummy
+    LDA ram_player_y_position_fraction
     CLC  ; add movement force to dummy variable
-    ADC ram_player_y_move_force  ; save with carry
-    STA ram_player_ymf_dummy
+    ADC ram_player_y_speed_fraction  ; save with carry
+    STA ram_player_y_position_fraction
     LDY #$00  ; set default adder here
     LDA ram_player_y_speed  ; get player's vertical speed
     BPL bra_apply_climbing_position  ; if not moving upwards, branch
@@ -157,16 +174,16 @@ bra_clear_climb_side_timer:
 ; -------------------------------------------------------------------------------------
 ; $00 - used to store offset to friction data
 
-tbl_jump_vertical_force:
+tbl_jump_gravity:
     .byte $20, $20, $1e, $28, $28, $0d, $04
 
-tbl_fall_vertical_force:
+tbl_fall_gravity:
     .byte $70, $70, $60, $90, $90, $0a, $09
 
 tbl_initial_player_y_speed:
     .byte $fc, $fc, $fc, $fb, $fb, $fe, $ff
 
-tbl_initial_player_y_move_force:
+tbl_initial_player_y_speed_fraction:
     .byte $00, $00, $00, $00, $00, $80, $00
 
 tbl_maximum_left_speed:
@@ -182,9 +199,22 @@ tbl_horizontal_friction:
 tbl_climb_y_speed:
     .byte $00, $ff, $01
 
-tbl_climb_y_move_force:
+tbl_climb_y_speed_fraction:
     .byte $00, $20, $ff
 
+; Select vertical and horizontal physics parameters for this frame
+
+; Inputs:
+; ram_player_state - current movement state
+; ram_player_x_speed_absolute - unsigned horizontal speed magnitude
+; ram_a_b_buttons - current A/B input
+; ram_previous_a_b_buttons - prior-frame A/B input
+
+; Outputs:
+; Jump state, gravity, speed limits, friction, and climb motion may change
+
+; Clobbers:
+; A, X, Y
 sub_update_player_physics:
     LDA ram_player_state  ; check player state
     CMP #$03
@@ -198,15 +228,15 @@ sub_update_player_physics:
     BNE bra_set_climbing_motion
     INY
 bra_set_climbing_motion:
-    LDX tbl_climb_y_move_force,y  ; load value here
-    STX ram_player_y_move_force  ; store as vertical movement force
+    LDX tbl_climb_y_speed_fraction,y  ; load value here
+    STX ram_player_y_speed_fraction  ; store as vertical movement force
     LDA #$08  ; load default animation timing
     LDX tbl_climb_y_speed,y  ; load some other value here
     STX ram_player_y_speed  ; store as vertical speed
     BMI bra_store_climbing_animation_timer  ; if climbing down, use default animation timing value
     LSR  ; otherwise divide timer setting by 2
 bra_store_climbing_animation_timer:
-    STA ram_player_anim_timer_set  ; store animation timer setting and leave
+    STA ram_player_anim_timer_reload  ; store animation timer setting and leave
     RTS
 
 bra_check_jump_input:
@@ -234,8 +264,8 @@ bra_initialize_jump_or_swim:
     LDA #$20  ; set jump/swim timer
     STA ram_jump_swim_timer
     LDY #$00  ; initialize vertical force and dummy variable
-    STY ram_player_ymf_dummy
-    STY ram_player_y_move_force
+    STY ram_player_y_position_fraction
+    STY ram_player_y_speed_fraction
     LDA ram_player_y_high_pos  ; get vertical high and low bytes of jump origin
     STA ram_jump_origin_y_high_pos  ; and store them next to each other here
     LDA ram_player_y_position
@@ -257,7 +287,7 @@ bra_initialize_jump_or_swim:
     INY
 bra_select_water_jump_profile:
     LDA #$01  ; set value here (apparently always set to 1)
-    STA ram_diff_to_halt_jump
+    STA ram_jump_release_min_displacement
     LDA ram_swimming_flag  ; if swimming flag disabled, branch
     BEQ bra_load_vertical_physics_profile
     LDY #$05  ; otherwise set Y to 5, range is 5-6
@@ -265,12 +295,12 @@ bra_select_water_jump_profile:
     BEQ bra_load_vertical_physics_profile
     INY  ; otherwise increment to 6
 bra_load_vertical_physics_profile:
-    LDA tbl_jump_vertical_force,y  ; store appropriate jump/swim
-    STA ram_vertical_force  ; data here
-    LDA tbl_fall_vertical_force,y
-    STA ram_vertical_force_down
-    LDA tbl_initial_player_y_move_force,y
-    STA ram_player_y_move_force
+    LDA tbl_jump_gravity,y  ; store appropriate jump/swim
+    STA ram_player_active_gravity  ; data here
+    LDA tbl_fall_gravity,y
+    STA ram_player_fall_gravity
+    LDA tbl_initial_player_y_speed_fraction,y
+    STA ram_player_y_speed_fraction
     LDA tbl_initial_player_y_speed,y
     STA ram_player_y_speed
     LDA ram_swimming_flag  ; if swimming flag disabled, branch
@@ -328,24 +358,24 @@ bra_set_running_timer:
     STA ram_running_timer
 loc_load_horizontal_speed_limits:
     LDA tbl_maximum_left_speed,y  ; get maximum speed to the left
-    STA ram_maximum_left_speed
+    STA ram_player_maximum_left_speed
     LDA ram_game_engine_subroutine  ; check for specific routine running
     CMP #$07  ; (player entrance)
     BNE bra_load_right_speed_limit  ; if not running, skip and use old value of Y
     LDY #$03  ; otherwise set Y to 3
 bra_load_right_speed_limit:
     LDA tbl_maximum_right_speed,y  ; get maximum speed to the right
-    STA ram_maximum_right_speed
+    STA ram_player_maximum_right_speed
     LDY $00  ; get other value in memory
     LDA tbl_horizontal_friction,y  ; get value using value in memory as offset
-    STA ram_friction_adder_low
+    STA ram_player_friction_low
     LDA #$00
-    STA ram_friction_adder_high  ; init something here
+    STA ram_player_friction_high  ; init something here
     LDA ram_player_facing_dir
     CMP ram_player_moving_dir  ; check facing direction against moving direction
     BEQ bra_return_from_player_physics  ; if the same, branch to leave
-    ASL ram_friction_adder_low  ; otherwise shift d7 of friction adder low into carry
-    ROL ram_friction_adder_high  ; then rotate carry onto d0 of friction adder high
+    ASL ram_player_friction_low  ; otherwise shift d7 of friction adder low into carry
+    ROL ram_player_friction_high  ; then rotate carry onto d0 of friction adder high
 bra_return_from_player_physics:
     RTS  ; and then leave
 
@@ -354,6 +384,13 @@ bra_return_from_player_physics:
 tbl_player_animation_timer:
     .byte $02, $04, $07
 
+; Select the animation timer and detect running or skidding
+
+; Outputs:
+; ram_player_anim_timer_reload and running/skid motion fields may change
+
+; Clobbers:
+; A, Y
 sub_update_player_animation_speed:
     LDY #$00  ; initialize offset in Y
     LDA ram_player_x_speed_absolute  ; check player's walking/running speed
@@ -382,14 +419,25 @@ bra_process_player_skid:
     STA ram_player_moving_dir  ; otherwise use facing direction to set moving direction
     LDA #$00
     STA ram_player_x_speed  ; nullify player's horizontal speed
-    STA ram_player_x_move_force  ; and dummy variable for player
+    STA ram_player_x_speed_fraction  ; and dummy variable for player
 loc_store_player_animation_timer:
     LDA tbl_player_animation_timer,y  ; get animation timer setting using Y as offset
-    STA ram_player_anim_timer_set
+    STA ram_player_anim_timer_reload
     RTS
 
 ; -------------------------------------------------------------------------------------
 
+; Accelerate, decelerate, or reverse horizontal player velocity
+
+; Inputs:
+; A - left/right input bits
+; ram_player_collision_bits - directions not blocked by background collision
+
+; Outputs:
+; Horizontal speed, speed fraction, and absolute speed are updated
+
+; Clobbers:
+; A
 sub_apply_player_horizontal_friction:
     AND ram_player_collision_bits  ; perform AND between left/right controller bits and collision flag
     CMP #$00  ; then compare to zero (this instruction is redundant)
@@ -402,29 +450,29 @@ bra_apply_input_friction:
     LSR  ; put right controller bit into carry
     BCC bra_accelerate_player_left  ; if left button pressed, carry = 0, thus branch
 bra_accelerate_player_right:
-    LDA ram_player_x_move_force  ; load value set here
+    LDA ram_player_x_speed_fraction  ; load value set here
     CLC
-    ADC ram_friction_adder_low  ; add to it another value set here
-    STA ram_player_x_move_force  ; store here
+    ADC ram_player_friction_low  ; add to it another value set here
+    STA ram_player_x_speed_fraction  ; store here
     LDA ram_player_x_speed
-    ADC ram_friction_adder_high  ; add value plus carry to horizontal speed
+    ADC ram_player_friction_high  ; add value plus carry to horizontal speed
     STA ram_player_x_speed  ; set as new horizontal speed
-    CMP ram_maximum_right_speed  ; compare against maximum value for right movement
+    CMP ram_player_maximum_right_speed  ; compare against maximum value for right movement
     BMI bra_compute_absolute_x_speed  ; if horizontal speed greater negatively, branch
-    LDA ram_maximum_right_speed  ; otherwise set preset value as horizontal speed
+    LDA ram_player_maximum_right_speed  ; otherwise set preset value as horizontal speed
     STA ram_player_x_speed  ; thus slowing the player's left movement down
     JMP loc_store_absolute_x_speed  ; skip to the end
 bra_accelerate_player_left:
-    LDA ram_player_x_move_force  ; load value set here
+    LDA ram_player_x_speed_fraction  ; load value set here
     SEC
-    SBC ram_friction_adder_low  ; subtract from it another value set here
-    STA ram_player_x_move_force  ; store here
+    SBC ram_player_friction_low  ; subtract from it another value set here
+    STA ram_player_x_speed_fraction  ; store here
     LDA ram_player_x_speed
-    SBC ram_friction_adder_high  ; subtract value plus borrow from horizontal speed
+    SBC ram_player_friction_high  ; subtract value plus borrow from horizontal speed
     STA ram_player_x_speed  ; set as new horizontal speed
-    CMP ram_maximum_left_speed  ; compare against maximum value for left movement
+    CMP ram_player_maximum_left_speed  ; compare against maximum value for left movement
     BPL bra_compute_absolute_x_speed  ; if horizontal speed greater positively, branch
-    LDA ram_maximum_left_speed  ; otherwise set preset value as horizontal speed
+    LDA ram_player_maximum_left_speed  ; otherwise set preset value as horizontal speed
     STA ram_player_x_speed  ; thus slowing the player's right movement down
 bra_compute_absolute_x_speed:
     CMP #$00  ; if player not moving or moving to the right,

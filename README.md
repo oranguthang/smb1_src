@@ -13,6 +13,8 @@ This repository contains:
 - **docs/6502jsm.txt** - Summary of 6502 CPU instructions
 - **docs/modding_examples.md** - Example gameplay edits and patch ideas
 - **docs/naming.md** - Semantic symbol vocabulary and evidence rules
+- **docs/player_movement.md** - Player input, physics, collision, and traces
+- **docs/ram_fields.md** - Verified semantic RAM-field registry
 
 ## Project Structure
 

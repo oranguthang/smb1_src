@@ -284,7 +284,7 @@ AnimationControl:
     PHA  ; save offset to stack
     LDA ram_player_anim_timer  ; load animation frame timer
     BNE ExAnimC  ; branch if not expired
-    LDA ram_player_anim_timer_set  ; get animation frame timer amount
+    LDA ram_player_anim_timer_reload  ; get animation frame timer amount
     STA ram_player_anim_timer  ; and set timer accordingly
     LDA ram_player_anim_ctrl
     CLC  ; add one to animation frame control

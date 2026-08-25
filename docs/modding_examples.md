@@ -8,16 +8,16 @@ in `src/game/player/physics.asm` and the other subsystem modules.
 Mario's physics are controlled by these data tables:
 
 ```asm
-tbl_jump_vertical_force:
+tbl_jump_gravity:
     .byte $20, $20, $1e, $28, $28, $0d, $04
 
-tbl_fall_vertical_force:
+tbl_fall_gravity:
     .byte $70, $70, $60, $90, $90, $0a, $09
 
 tbl_initial_player_y_speed:
     .byte $fc, $fc, $fc, $fb, $fb, $fe, $ff
 
-tbl_initial_player_y_move_force:
+tbl_initial_player_y_speed_fraction:
     .byte $00, $00, $00, $00, $00, $80, $00
 
 tbl_maximum_left_speed:
@@ -31,8 +31,8 @@ tbl_horizontal_friction:
     .byte $e4, $98, $d0
 ```
 
-- **tbl_jump_vertical_force** - Controls jump arc decay when moving upward. Larger values = shorter jumps
-- **tbl_fall_vertical_force** - Controls fall speed. Larger values = faster falling
+- **tbl_jump_gravity** - Controls jump arc decay when moving upward. Larger values = shorter jumps
+- **tbl_fall_gravity** - Controls fall speed. Larger values = faster falling
 - **tbl_initial_player_y_speed** - Initial jump force (negative signed value) based on running speed. Values below `$fa` result in very high jumps
 - **tbl_maximum_left_speed** / **tbl_maximum_right_speed** - Running, walking, and water-walking speeds
 - **tbl_horizontal_friction** - Friction applied at different speeds (fastest to slowest)

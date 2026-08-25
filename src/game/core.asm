@@ -211,7 +211,7 @@ sub_game_routines:
     .word PlayerEndLevel
     .word PlayerLoseLife
     .word PlayerEntrance
-    .word PlayerCtrlRoutine
+    .word handler_player_control
     .word PlayerChangeSize
     .word PlayerInjuryBlink
     .word PlayerDeath
@@ -290,7 +290,18 @@ ExitEntr:
 sub_auto_control_player:
     STA ram_saved_joypad_bits  ; override controller bits with contents of A if executing here
 
-PlayerCtrlRoutine:
+; Run player input, movement, scrolling, bounds, and background collision
+
+; Inputs:
+; ram_saved_joypad_bits - current or scripted controller state
+; ram_game_engine_subroutine - active player/gameplay task
+
+; Outputs:
+; Player position, motion, state, bounds, and scroll state may be updated
+
+; Clobbers:
+; A, X, Y
+handler_player_control:
     LDA ram_game_engine_subroutine  ; check task here
     CMP #$0b  ; if certain value is set, branch to skip controller bit loading
     BEQ SizeChk
@@ -501,7 +512,7 @@ PlayerInjuryBlink:
     BCS ExitBlink  ; branch if before that point
     CMP #$c8  ; check again for another specific point
     BEQ sub_done_player_task  ; branch if at that point, and not before or after
-    JMP PlayerCtrlRoutine  ; otherwise run player control routine
+    JMP handler_player_control  ; otherwise run player control routine
 ExitBlink:
     BNE ExitBoth  ; do unconditional branch to leave
 
@@ -523,7 +534,7 @@ PlayerDeath:
     LDA ram_timer_control  ; check master timer control
     CMP #$f0  ; for specific moment in time
     BCS ExitDeath  ; branch to leave if before that point
-    JMP PlayerCtrlRoutine  ; otherwise run player control routine
+    JMP handler_player_control  ; otherwise run player control routine
 
 sub_done_player_task:
     LDA #$00

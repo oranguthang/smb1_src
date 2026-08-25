@@ -214,7 +214,7 @@ Entrance_GameTimerSetup:
     LDA ram_screen_left_page_loc  ; set current page for area objects
     STA ram_player_page_loc  ; as page location for player
     LDA #$28  ; store value here
-    STA ram_vertical_force_down  ; for fractional movement downwards if necessary
+    STA ram_player_fall_gravity  ; for fractional movement downwards if necessary
     LDA #$01  ; set high byte of player position and
     STA ram_player_facing_dir  ; set facing direction so that player faces right
     STA ram_player_y_high_pos

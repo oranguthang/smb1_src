@@ -9,6 +9,14 @@ sub_move_enemy_horizontally:
     LDX ram_object_offset  ; counters, return with saved value in A,
     RTS  ; put enemy offset back in X and leave
 
+; Integrate the player's signed horizontal speed into world position
+
+; Outputs:
+; Player page, pixel, and fractional horizontal position are updated
+; A returns the signed integer displacement used by scrolling
+
+; Clobbers:
+; A, X, Y
 sub_move_player_horizontally:
     LDA ram_jumpspring_anim_ctrl  ; if jumpspring currently animating,
     BNE bra_return_from_movement  ; branch to leave
@@ -62,6 +70,16 @@ bra_return_from_movement:
 ; $01 - used for upward force
 ; $02 - used for maximum vertical speed
 
+; Integrate player vertical position and apply the selected gravity
+
+; Inputs:
+; ram_player_active_gravity - fractional downward acceleration
+
+; Outputs:
+; Player vertical position and velocity are updated
+
+; Clobbers:
+; A, X, Y
 loc_move_player_vertically:
     LDX #$00  ; set X for player offset
     LDA ram_timer_control
@@ -69,7 +87,7 @@ loc_move_player_vertically:
     LDA ram_jumpspring_anim_ctrl  ; otherwise check to see if jumpspring is animating
     BNE bra_return_from_movement  ; branch to leave if so
 bra_load_player_vertical_force:
-    LDA ram_vertical_force  ; dump vertical force
+    LDA ram_player_active_gravity  ; dump vertical force
     STA $00
     LDA #$04  ; set maximum vertical speed here
     JMP sub_apply_sprite_object_gravity  ; then jump to move player vertically
@@ -186,6 +204,21 @@ loc_apply_red_paratroopa_gravity:
 ; $01 - used for upward force
 ; $07 - used as adder for vertical position
 
+; Integrate an object's 8.8 vertical position and velocity with acceleration
+
+; Inputs:
+; A - zero for downward-only motion, nonzero to apply upward acceleration
+; X - sprite-object slot
+; $00 - downward acceleration
+; $01 - upward acceleration
+; $02 - maximum vertical speed magnitude
+
+; Outputs:
+; Object vertical page, pixel, position fraction, speed, and speed fraction
+; are updated
+
+; Clobbers:
+; A, Y
 sub_apply_object_gravity:
     PHA  ; push value to stack
     LDA ram_spr_object_ymf_dummy,x

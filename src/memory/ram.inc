@@ -308,12 +308,12 @@ ram_spr_object_x_move_force = $0400
 ram_enemy_x_move_force     = $0401
 
 ram_spr_object_ymf_dummy   = $0416
-ram_player_ymf_dummy      = $0416
+ram_player_y_position_fraction      = $0416
 ram_enemy_ymf_dummy       = $0417
 ram_bubble_ymf_dummy      = $042c
 
 ram_spr_object_y_move_force = $0433
-ram_player_y_move_force    = $0433
+ram_player_y_speed_fraction    = $0433
 ram_enemy_y_move_force     = $0434
 ram_block_y_move_force     = $043c
 
@@ -334,24 +334,24 @@ ram_enemy_id              = $16
 
 ram_player_gfx_offset       = $06d5
 ram_player_x_speed_absolute = $0700
-ram_friction_adder_high     = $0701
-ram_friction_adder_low      = $0702
+ram_player_friction_high     = $0701
+ram_player_friction_low      = $0702
 ram_running_speed          = $0703
 ram_swimming_flag          = $0704
-ram_player_x_move_force    = $0705
-ram_diff_to_halt_jump        = $0706
+ram_player_x_speed_fraction    = $0705
+ram_jump_release_min_displacement        = $0706
 ram_jump_origin_y_high_pos  = $0707
 ram_jump_origin_y_position = $0708
-ram_vertical_force         = $0709
-ram_vertical_force_down     = $070a
+ram_player_active_gravity         = $0709
+ram_player_fall_gravity     = $070a
 ram_player_change_size_flag  = $070b
-ram_player_anim_timer_set    = $070c
+ram_player_anim_timer_reload    = $070c
 ram_player_anim_ctrl        = $070d
 ram_death_music_loaded      = $0712
 ram_flagpole_sound_queue    = $0713
 ram_crouching_flag         = $0714
-ram_maximum_left_speed      = $0450
-ram_maximum_right_speed     = $0456
+ram_player_maximum_left_speed      = $0450
+ram_player_maximum_right_speed     = $0456
 
 ram_spr_object_offscr_bits  = $03d0
 ram_player_offscreen_bits  = $03d0

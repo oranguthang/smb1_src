@@ -6,6 +6,17 @@
 PlayerBGUpperExtent:
     .byte $20, $10
 
+; Resolve player contact with head, feet, side, climb, coin, and pipe metatiles
+
+; Inputs:
+; Player position, bounding box, motion state, size, and block buffer
+
+; Outputs:
+; Player state, position, velocity, collision bits, and gameplay events may
+; change
+
+; Clobbers:
+; A, X, Y
 sub_player_bg_collision:
     LDA ram_disable_collision_det  ; if collision detection disabled flag set,
     BNE ExPBGCol  ; branch to leave
@@ -135,7 +146,7 @@ LandPlyr:
     JSR sub_handle_pipe_entry  ; do sub to process potential pipe entry
     LDA #$00
     STA ram_player_y_speed  ; initialize vertical speed and fractional
-    STA ram_player_y_move_force  ; movement force to stop player's vertical movement
+    STA ram_player_y_speed_fraction  ; movement force to stop player's vertical movement
     STA ram_stomp_chain_counter  ; initialize enemy stomp counter
 InitSteP:
     LDA #$00
@@ -338,7 +349,7 @@ PutPlayerOnVine:
     STA ram_player_state
     LDA #$00  ; nullify player's horizontal speed
     STA ram_player_x_speed  ; and fractional horizontal movement force
-    STA ram_player_x_move_force
+    STA ram_player_x_speed_fraction
     LDA ram_player_x_position  ; get player's horizontal coordinate
     SEC
     SBC ram_screen_left_x_pos  ; subtract from left side horizontal coordinate
@@ -382,7 +393,7 @@ sub_chk_for_land_jump_spring:
     JSR sub_chk_jumpspring_metatiles  ; do sub to check if player landed on jumpspring
     BCC ExCJSp  ; if carry not set, jumpspring not found, therefore leave
     LDA #$70
-    STA ram_vertical_force  ; otherwise set vertical movement force for player
+    STA ram_player_active_gravity  ; otherwise set vertical movement force for player
     LDA #$f9
     STA ram_jumpspring_force  ; set default jumpspring force
     LDA #$03

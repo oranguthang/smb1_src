@@ -268,7 +268,7 @@ module exceeds the agreed size budget.
 Exit criterion: symbols communicate verified roles and every rename/macro batch
 passes byte verification.
 
-### 4. Player Movement Reference Documentation - Planned
+### 4. Player Movement Reference Documentation - Complete
 
 Use player movement and physics as the first complete documentation standard:
 
@@ -281,6 +281,11 @@ Use player movement and physics as the first complete documentation standard:
 
 Produce procedure contracts, a subsystem narrative, RAM aliases, tuning-table
 formats, and deterministic jump/movement traces.
+
+The reference pass is recorded in `docs/player_movement.md` and
+`docs/ram_fields.md`. `make trace-player` parses the source tables and emits a
+tested deterministic 6502 fixed-point jump trace. Emulator-backed comparison is
+owned by milestone 6 rather than being implied by the static model.
 
 ### 5. Systematic Subsystem Documentation - Planned
 

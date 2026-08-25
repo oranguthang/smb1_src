@@ -598,7 +598,7 @@ sub_position_player_on_v_plat:
     STA ram_player_y_high_pos  ; new vertical high byte
     LDA #$00
     STA ram_player_y_speed  ; initialize vertical speed and low byte of force
-    STA ram_player_y_move_force  ; and then leave
+    STA ram_player_y_speed_fraction  ; and then leave
 ExPlPos:
     RTS
 

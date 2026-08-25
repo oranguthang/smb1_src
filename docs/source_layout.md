@@ -39,12 +39,12 @@ limit, not a mandate to fragment cohesive code.
 | `src/game/level/terrain_objects.asm` | `$9957-$9BF7` | 459 | Holes, bridges, blocks, cannons, stairs, springs, and buffer helpers |
 | `src/data/levels/index_and_enemies.asm` | `$9BF8-$A1AE` | 431 | Area lookup tables and enemy object streams |
 | `src/data/levels/areas.asm` | `$A1AF-$AEDB` | 514 | Encoded area-object streams |
-| `src/game/core.asm` | `$AEDC-$B328` | 633 | Game mode, scrolling, player control states, and area transitions |
-| `src/game/player/physics.asm` | `$B329-$B623` | 437 | Walking, running, jumping, swimming, climbing, and friction |
+| `src/game/core.asm` | `$AEDC-$B328` | 644 | Game mode, scrolling, player control states, and area transitions |
+| `src/game/player/physics.asm` | `$B329-$B623` | 485 | Walking, running, jumping, swimming, climbing, and friction |
 | `src/game/objects/projectiles_and_interactions.asm` | `$B624-$B9B9` | 522 | Fireballs, bubbles, timer, warp zones, flagpole, spring, and vine |
 | `src/game/objects/dynamic.asm` | `$B9BA-$BCEA` | 479 | Cannons, bullets, hammers, coins, scoring, and power-ups |
 | `src/game/objects/blocks.asm` | `$BCEB-$BF01` | 334 | Player/block interaction, brick chunks, and block runtime |
-| `src/game/physics/movement.asm` | `$BF02-$C046` | 247 | Shared horizontal, vertical, and gravity movement primitives |
+| `src/game/physics/movement.asm` | `$BF02-$C046` | 280 | Shared horizontal, vertical, and gravity movement primitives |
 | `src/game/enemies/stream_and_initialization.asm` | `$C047-$C44E` | 637 | Enemy stream parsing, loop commands, and common initialization |
 | `src/game/enemies/special_initialization.asm` | `$C44F-$C881` | 671 | Firebars, flying enemies, Bowser, groups, and platforms |
 | `src/game/enemies/runtime.asm` | `$C882-$CCC6` | 694 | Enemy dispatcher and common movement behaviors |
@@ -53,7 +53,7 @@ limit, not a mandate to fragment cohesive code.
 | `src/game/platforms.asm` | `$D432-$D6D8` | 420 | Balance, moving, falling, and lift platforms |
 | `src/game/collisions/projectiles.asm` | `$D6D9-$D852` | 233 | Fireball/enemy, hammer/player, and power-up collisions |
 | `src/game/collisions/actors.asm` | `$D853-$DC61` | 633 | Player/enemy, enemy/enemy, and platform collisions |
-| `src/game/collisions/player_background.asm` | `$DC62-$DFB8` | 534 | Player metatile collision, climbing, pipes, coins, and movement blocking |
+| `src/game/collisions/player_background.asm` | `$DC62-$DFB8` | 545 | Player metatile collision, climbing, pipes, coins, and movement blocking |
 | `src/game/collisions/enemy_background.asm` | `$DFB9-$E1FC` | 390 | Enemy and fireball interactions with background metatiles |
 | `src/game/collisions/bounding_boxes.asm` | `$E1FD-$E432` | 347 | Bounding-box construction and generic overlap/block-buffer tests |
 | `src/rendering/actors/misc.asm` | `$E433-$E73D` | 460 | Vines, hammers, flags, platforms, coins, and power-ups |

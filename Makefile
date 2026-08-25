@@ -20,7 +20,7 @@ NATIVE_ROM ?= $(NATIVE_BUILD_DIR)/smb.nes
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg split check-assets lint format test clean _require-assets
+.PHONY: build verify build-prg verify-prg split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -99,6 +99,9 @@ format:
 
 test:
 	$(PYTHON) -m unittest discover -s "$(PROJECT_DIR)tests" -p "test_*.py"
+
+trace-player:
+	$(PYTHON) "$(PROJECT_DIR)scripts/player_physics.py"
 
 _require-assets:
 	$(PYTHON) "$(PROJECT_DIR)scripts/check_assets.py" \
