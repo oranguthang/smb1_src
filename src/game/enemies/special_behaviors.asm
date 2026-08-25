@@ -38,18 +38,18 @@ FirebarYPos:
 
 ProcFirebar:
     JSR GetEnemyOffscreenBits  ; get offscreen information
-    LDA Enemy_OffscreenBits  ; check for d3 set
+    LDA ram_enemy_offscreen_bits  ; check for d3 set
     AND #%00001000  ; if so, branch to leave
     BNE SkipFBar
-    LDA TimerControl  ; if master timer control set, branch
+    LDA ram_timer_control  ; if master timer control set, branch
     BNE SusFbar  ; ahead of this part
-    LDA FirebarSpinSpeed,x  ; load spinning speed of firebar
+    LDA ram_firebar_spin_speed,x  ; load spinning speed of firebar
     JSR FirebarSpin  ; modify current spinstate
     AND #%00011111  ; mask out all but 5 LSB
-    STA FirebarSpinState_High,x  ; and store as new high byte of spinstate
+    STA ram_firebar_spin_state_high,x  ; and store as new high byte of spinstate
 SusFbar:
-    LDA FirebarSpinState_High,x  ; get high byte of spinstate
-    LDY Enemy_ID,x  ; check enemy identifier
+    LDA ram_firebar_spin_state_high,x  ; get high byte of spinstate
+    LDY ram_enemy_id,x  ; check enemy identifier
     CPY #$1f
     BCC SetupGFB  ; if < $1f (long firebar), branch
     CMP #$08  ; check high byte of spinstate
@@ -59,23 +59,23 @@ SusFbar:
 SkpFSte:
     CLC
     ADC #$01  ; add one to spinning thing to avoid horizontal state
-    STA FirebarSpinState_High,x
+    STA ram_firebar_spin_state_high,x
 SetupGFB:
     STA $ef  ; save high byte of spinning thing, modified or otherwise
     JSR RelativeEnemyPosition  ; get relative coordinates to screen
     JSR GetFirebarPosition  ; do a sub here (residual, too early to be used now)
-    LDY Enemy_SprDataOffset,x  ; get OAM data offset
-    LDA Enemy_Rel_YPos  ; get relative vertical coordinate
-    STA Sprite_Y_Position,y  ; store as Y in OAM data
+    LDY ram_enemy_spr_data_offset,x  ; get OAM data offset
+    LDA ram_enemy_rel_y_pos  ; get relative vertical coordinate
+    STA ram_sprite_y_position,y  ; store as Y in OAM data
     STA $07  ; also save here
-    LDA Enemy_Rel_XPos  ; get relative horizontal coordinate
-    STA Sprite_X_Position,y  ; store as X in OAM data
+    LDA ram_enemy_rel_x_pos  ; get relative horizontal coordinate
+    STA ram_sprite_x_position,y  ; store as X in OAM data
     STA $06  ; also save here
     LDA #$01
     STA $00  ; set $01 value here (not necessary)
     JSR FirebarCollision  ; draw fireball part and do collision detection
     LDY #$05  ; load value for short firebars by default
-    LDA Enemy_ID,x
+    LDA ram_enemy_id,x
     CMP #$1f  ; are we doing a long firebar?
     BCC SetMFbar  ; no, branch then
     LDY #$0b  ; otherwise load value for long firebars
@@ -90,8 +90,8 @@ DrawFbar:
     LDA $00  ; check which firebar part
     CMP #$04
     BNE NextFbar
-    LDY DuplicateObj_Offset  ; if we arrive at fifth firebar part,
-    LDA Enemy_SprDataOffset,y  ; get offset from long firebar and load OAM data offset
+    LDY ram_duplicate_obj_offset  ; if we arrive at fifth firebar part,
+    LDA ram_enemy_spr_data_offset,y  ; get offset from long firebar and load OAM data offset
     STA $06  ; using long firebar offset, then store as new one here
 NextFbar:
     INC $00  ; move onto the next firebar part
@@ -112,25 +112,25 @@ DrawFirebar_Collision:
     ADC #$01  ; otherwise get two's compliment of horizontal adder
 AddHA:
     CLC  ; add horizontal coordinate relative to screen to
-    ADC Enemy_Rel_XPos  ; horizontal adder, modified or otherwise
-    STA Sprite_X_Position,y  ; store as X coordinate here
+    ADC ram_enemy_rel_x_pos  ; horizontal adder, modified or otherwise
+    STA ram_sprite_x_position,y  ; store as X coordinate here
     STA $06  ; store here for now, note offset is saved in Y still
-    CMP Enemy_Rel_XPos  ; compare X coordinate of sprite to original X of firebar
+    CMP ram_enemy_rel_x_pos  ; compare X coordinate of sprite to original X of firebar
     BCS SubtR1  ; if sprite coordinate => original coordinate, branch
-    LDA Enemy_Rel_XPos
+    LDA ram_enemy_rel_x_pos
     SEC  ; otherwise subtract sprite X from the
     SBC $06  ; original one and skip this part
     JMP ChkFOfs
 SubtR1:
     SEC  ; subtract original X from the
-    SBC Enemy_Rel_XPos  ; current sprite X
+    SBC ram_enemy_rel_x_pos  ; current sprite X
 ChkFOfs:
     CMP #$59  ; if difference of coordinates within a certain range,
     BCC VAHandl  ; continue by handling vertical adder
     LDA #$f8  ; otherwise, load offscreen Y coordinate
     BNE SetVFbr  ; and unconditionally branch to move sprite offscreen
 VAHandl:
-    LDA Enemy_Rel_YPos  ; if vertical relative coordinate offscreen,
+    LDA ram_enemy_rel_y_pos  ; if vertical relative coordinate offscreen,
     CMP #$f8  ; skip ahead of this part and write into sprite Y coordinate
     BEQ SetVFbr
     LDA $02  ; load vertical adder we got from position loader
@@ -140,26 +140,26 @@ VAHandl:
     ADC #$01  ; otherwise get two's compliment of second part
 AddVA:
     CLC  ; add vertical coordinate relative to screen to
-    ADC Enemy_Rel_YPos  ; the second data, modified or otherwise
+    ADC ram_enemy_rel_y_pos  ; the second data, modified or otherwise
 SetVFbr:
-    STA Sprite_Y_Position,y  ; store as Y coordinate here
+    STA ram_sprite_y_position,y  ; store as Y coordinate here
     STA $07  ; also store here for now
 
 FirebarCollision:
     JSR DrawFirebar  ; run sub here to draw current tile of firebar
     TYA  ; return OAM data offset and save
     PHA  ; to the stack for now
-    LDA StarInvincibleTimer  ; if star mario invincibility timer
-    ORA TimerControl  ; or master timer controls set
+    LDA ram_star_invincible_timer  ; if star mario invincibility timer
+    ORA ram_timer_control  ; or master timer controls set
     BNE NoColFB  ; then skip all of this
     STA $05  ; otherwise initialize counter
-    LDY Player_Y_HighPos
+    LDY ram_player_y_high_pos
     DEY  ; if player's vertical high byte offscreen,
     BNE NoColFB  ; skip all of this
-    LDY Player_Y_Position  ; get player's vertical position
-    LDA PlayerSize  ; get player's size
+    LDY ram_player_y_position  ; get player's vertical position
+    LDA ram_player_size  ; get player's size
     BNE AdjSm  ; if player small, branch to alter variables
-    LDA CrouchingFlag
+    LDA ram_crouching_flag
     BEQ BigJp  ; if player big and not crouching, jump ahead
 AdjSm:
     INC $05  ; if small or big but crouching, execute this part
@@ -183,7 +183,7 @@ ChkVFBD:
     LDA $06  ; if firebar on far right on the screen, skip this,
     CMP #$f0  ; because, really, what's the point?
     BCS Chk2Ofs
-    LDA Sprite_X_Position+4  ; get OAM X coordinate for sprite #1
+    LDA ram_sprite_x_position+4  ; get OAM X coordinate for sprite #1
     CLC
     ADC #$04  ; add four pixels
     STA $04  ; store here
@@ -201,7 +201,7 @@ Chk2Ofs:
     CMP #$02  ; branch to increment OAM offset and leave, no collision
     BEQ NoColFB
     LDY $05  ; otherwise get temp here and use as offset
-    LDA Player_Y_Position
+    LDA ram_player_y_position
     CLC
     ADC FirebarYPos,y  ; add value loaded with offset to player's vertical coordinate
     INC $05  ; then increment temp and jump back
@@ -213,7 +213,7 @@ ChgSDir:
     BCS SetSDir  ; then do not alter movement direction
     INX  ; otherwise increment it
 SetSDir:
-    STX Enemy_MovingDir  ; store movement direction here
+    STX ram_enemy_moving_dir  ; store movement direction here
     LDX #$00
     LDA $00  ; save value written to $00 to stack
     PHA
@@ -225,7 +225,7 @@ NoColFB:
     CLC  ; add four to it and save
     ADC #$04
     STA $06
-    LDX ObjectOffset  ; get enemy object buffer offset and leave
+    LDX ram_object_offset  ; get enemy object buffer offset and leave
     RTS
 
 GetFirebarPosition:
@@ -282,24 +282,24 @@ FlyCCBPriority:
     .byte $20, $20, $20, $00, $00
 
 MoveFlyingCheepCheep:
-    LDA Enemy_State,x  ; check cheep-cheep's enemy state
+    LDA ram_enemy_state,x  ; check cheep-cheep's enemy state
     AND #%00100000  ; for d5 set
     BEQ FlyCC  ; branch to continue code if not set
     LDA #$00
-    STA Enemy_SprAttrib,x  ; otherwise clear sprite attributes
+    STA ram_enemy_spr_attrib,x  ; otherwise clear sprite attributes
     JMP sub_move_enemy_with_gravity  ; and jump to move defeated cheep-cheep downwards
 FlyCC:
     JSR sub_move_enemy_horizontally  ; move cheep-cheep horizontally based on speed and force
     LDY #$0d  ; set vertical movement amount
     LDA #$05  ; set maximum speed
     JSR sub_apply_enemy_vertical_motion  ; branch to impose gravity on flying cheep-cheep
-    LDA Enemy_Y_MoveForce,x
+    LDA ram_enemy_y_move_force,x
     LSR  ; get vertical movement force and
     LSR  ; move high nybble to low
     LSR
     LSR
     TAY  ; save as offset (note this tends to go into reach of code)
-    LDA Enemy_Y_Position,x  ; get vertical position
+    LDA ram_enemy_y_position,x  ; get vertical position
     SEC  ; subtract pseudorandom value based on offset from position
     SBC PRandomSubtracter,y
     BPL AddCCF  ; if result within top half of screen, skip this part
@@ -309,10 +309,10 @@ FlyCC:
 AddCCF:
     CMP #$08  ; if result or two's compliment greater than eight,
     BCS BPGet  ; skip to the end without changing movement force
-    LDA Enemy_Y_MoveForce,x
+    LDA ram_enemy_y_move_force,x
     CLC
     ADC #$10  ; otherwise add to it
-    STA Enemy_Y_MoveForce,x
+    STA ram_enemy_y_move_force,x
     LSR  ; move high nybble to low again
     LSR
     LSR
@@ -320,7 +320,7 @@ AddCCF:
     TAY
 BPGet:
     LDA FlyCCBPriority,y  ; load bg priority data and store (this is very likely
-    STA Enemy_SprAttrib,x  ; broken or residual code, value is overwritten before
+    STA ram_enemy_spr_attrib,x  ; broken or residual code, value is overwritten before
     RTS  ; drawing it next frame), then leave
 
 ; --------------------------------
@@ -331,21 +331,21 @@ LakituDiffAdj:
     .byte $15, $30, $40
 
 MoveLakitu:
-    LDA Enemy_State,x  ; check lakitu's enemy state
+    LDA ram_enemy_state,x  ; check lakitu's enemy state
     AND #%00100000  ; for d5 set
     BEQ ChkLS  ; if not set, continue with code
     JMP sub_move_enemy_downward_fast  ; otherwise jump to move defeated lakitu downwards
 ChkLS:
-    LDA Enemy_State,x  ; if lakitu's enemy state not set at all,
+    LDA ram_enemy_state,x  ; if lakitu's enemy state not set at all,
     BEQ Fr12S  ; go ahead and continue with code
     LDA #$00
-    STA LakituMoveDirection,x  ; otherwise initialize moving direction to move to left
-    STA EnemyFrenzyBuffer  ; initialize frenzy buffer
+    STA ram_lakitu_move_direction,x  ; otherwise initialize moving direction to move to left
+    STA ram_enemy_frenzy_buffer  ; initialize frenzy buffer
     LDA #$10
     BNE SetLSpd  ; load horizontal speed and do unconditional branch
 Fr12S:
-    LDA #Spiny
-    STA EnemyFrenzyBuffer  ; set spiny identifier in frenzy buffer
+    LDA #con_spiny
+    STA ram_enemy_frenzy_buffer  ; set spiny identifier in frenzy buffer
     LDY #$02
 LdLDa:
     LDA LakituDiffAdj,y  ; load values
@@ -354,19 +354,19 @@ LdLDa:
     BPL LdLDa  ; do this until all values are stired
     JSR PlayerLakituDiff  ; execute sub to set speed and create spinys
 SetLSpd:
-    STA LakituMoveSpeed,x  ; set movement speed returned from sub
+    STA ram_lakitu_move_speed,x  ; set movement speed returned from sub
     LDY #$01  ; set moving direction to right by default
-    LDA LakituMoveDirection,x
+    LDA ram_lakitu_move_direction,x
     AND #$01  ; get LSB of moving direction
     BNE SetLMov  ; if set, branch to the end to use moving direction
-    LDA LakituMoveSpeed,x
+    LDA ram_lakitu_move_speed,x
     EOR #$ff  ; get two's compliment of moving speed
     CLC
     ADC #$01
-    STA LakituMoveSpeed,x  ; store as new moving speed
+    STA ram_lakitu_move_speed,x  ; store as new moving speed
     INY  ; increment moving direction to left
 SetLMov:
-    STY Enemy_MovingDir,x  ; store moving direction
+    STY ram_enemy_moving_dir,x  ; store moving direction
     JMP sub_move_enemy_horizontally  ; move lakitu horizontally
 
 PlayerLakituDiff:
@@ -385,20 +385,20 @@ ChkLakDif:
     BCC ChkPSpeed
     LDA #$3c  ; otherwise set maximum distance
     STA $00
-    LDA Enemy_ID,x  ; check if lakitu is in our current enemy slot
-    CMP #Lakitu
+    LDA ram_enemy_id,x  ; check if lakitu is in our current enemy slot
+    CMP #con_lakitu
     BNE ChkPSpeed  ; if not, branch elsewhere
     TYA  ; compare contents of Y, now in A
-    CMP LakituMoveDirection,x  ; to what is being used as horizontal movement direction
+    CMP ram_lakitu_move_direction,x  ; to what is being used as horizontal movement direction
     BEQ ChkPSpeed  ; if moving toward the player, branch, do not alter
-    LDA LakituMoveDirection,x  ; if moving to the left beyond maximum distance,
+    LDA ram_lakitu_move_direction,x  ; if moving to the left beyond maximum distance,
     BEQ SetLMovD  ; branch and alter without delay
-    DEC LakituMoveSpeed,x  ; decrement horizontal speed
-    LDA LakituMoveSpeed,x  ; if horizontal speed not yet at zero, branch to leave
+    DEC ram_lakitu_move_speed,x  ; decrement horizontal speed
+    LDA ram_lakitu_move_speed,x  ; if horizontal speed not yet at zero, branch to leave
     BNE ExMoveLak
 SetLMovD:
     TYA  ; set horizontal direction depending on horizontal
-    STA LakituMoveDirection,x  ; difference between enemy and player if necessary
+    STA ram_lakitu_move_direction,x  ; difference between enemy and player if necessary
 ChkPSpeed:
     LDA $00
     AND #%00111100  ; mask out all but four bits in the middle
@@ -406,26 +406,26 @@ ChkPSpeed:
     LSR
     STA $00  ; store as new value
     LDY #$00  ; init offset
-    LDA Player_X_Speed
+    LDA ram_player_x_speed
     BEQ SubDifAdj  ; if player not moving horizontally, branch
-    LDA ScrollAmount
+    LDA ram_scroll_amount
     BEQ SubDifAdj  ; if scroll speed not set, branch to same place
     INY  ; otherwise increment offset
-    LDA Player_X_Speed
+    LDA ram_player_x_speed
     CMP #$19  ; if player not running, branch
     BCC ChkSpinyO
-    LDA ScrollAmount
+    LDA ram_scroll_amount
     CMP #$02  ; if scroll speed below a certain amount, branch
     BCC ChkSpinyO  ; to same place
     INY  ; otherwise increment once more
 ChkSpinyO:
-    LDA Enemy_ID,x  ; check for spiny object
-    CMP #Spiny
+    LDA ram_enemy_id,x  ; check for spiny object
+    CMP #con_spiny
     BNE ChkEmySpd  ; branch if not found
-    LDA Player_X_Speed  ; if player not moving, skip this part
+    LDA ram_player_x_speed  ; if player not moving, skip this part
     BNE SubDifAdj
 ChkEmySpd:
-    LDA Enemy_Y_Speed,x  ; check vertical speed
+    LDA ram_enemy_y_speed,x  ; check vertical speed
     BNE SubDifAdj  ; branch if nonzero
     LDY #$00  ; otherwise reinit offset
 SubDifAdj:

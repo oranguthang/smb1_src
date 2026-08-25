@@ -49,20 +49,20 @@ SmallPlatformBoundBox:
     LDY #$04  ; store another bitmask here for now
 
 GetMaskedOffScrBits:
-    LDA Enemy_X_Position,x  ; get enemy object position relative
+    LDA ram_enemy_x_position,x  ; get enemy object position relative
     SEC  ; to the left side of the screen
-    SBC ScreenLeft_X_Pos
+    SBC ram_screen_left_x_pos
     STA $01  ; store here
-    LDA Enemy_PageLoc,x  ; subtract borrow from current page location
-    SBC ScreenLeft_PageLoc  ; of left side
+    LDA ram_enemy_page_loc,x  ; subtract borrow from current page location
+    SBC ram_screen_left_page_loc  ; of left side
     BMI CMBits  ; if enemy object is beyond left edge, branch
     ORA $01
     BEQ CMBits  ; if precisely at the left edge, branch
     LDY $00  ; if to the right of left edge, use value in $00 for A
 CMBits:
     TYA  ; otherwise use contents of Y
-    AND Enemy_OffscreenBits  ; preserve bitwise whatever's in here
-    STA EnemyOffscrBitsMasked,x  ; save masked offscreen bits here
+    AND ram_enemy_offscreen_bits  ; preserve bitwise whatever's in here
+    STA ram_enemy_offscr_bits_masked,x  ; save masked offscreen bits here
     BNE MoveBoundBoxOffscreen  ; if anything set here, branch
     JMP SetupEOffsetFBBox  ; otherwise, do something else
 
@@ -88,88 +88,88 @@ MoveBoundBoxOffscreen:
     ASL
     TAY  ; use as offset here
     LDA #$ff
-    STA EnemyBoundingBoxCoord,y  ; load value into four locations here and leave
-    STA EnemyBoundingBoxCoord+1,y
-    STA EnemyBoundingBoxCoord+2,y
-    STA EnemyBoundingBoxCoord+3,y
+    STA ram_enemy_bounding_box_coord,y  ; load value into four locations here and leave
+    STA ram_enemy_bounding_box_coord+1,y
+    STA ram_enemy_bounding_box_coord+2,y
+    STA ram_enemy_bounding_box_coord+3,y
     RTS
 
 BoundingBoxCore:
     STX $00  ; save offset here
-    LDA SprObject_Rel_YPos,y  ; store object coordinates relative to screen
+    LDA ram_spr_object_rel_y_pos,y  ; store object coordinates relative to screen
     STA $02  ; vertically and horizontally, respectively
-    LDA SprObject_Rel_XPos,y
+    LDA ram_spr_object_rel_x_pos,y
     STA $01
     TXA  ; multiply offset by four and save to stack
     ASL
     ASL
     PHA
     TAY  ; use as offset for Y, X is left alone
-    LDA SprObj_BoundBoxCtrl,x  ; load value here to be used as offset for X
+    LDA ram_spr_obj_bound_box_ctrl,x  ; load value here to be used as offset for X
     ASL  ; multiply that by four and use as X
     ASL
     TAX
     LDA $01  ; add the first number in the bounding box data to the
     CLC  ; relative horizontal coordinate using enemy object offset
     ADC BoundBoxCtrlData,x  ; and store somewhere using same offset * 4
-    STA BoundingBox_UL_Corner,y  ; store here
+    STA ram_bounding_box_ul_corner,y  ; store here
     LDA $01
     CLC
     ADC BoundBoxCtrlData+2,x  ; add the third number in the bounding box data to the
-    STA BoundingBox_LR_Corner,y  ; relative horizontal coordinate and store
+    STA ram_bounding_box_lr_corner,y  ; relative horizontal coordinate and store
     INX  ; increment both offsets
     INY
     LDA $02  ; add the second number to the relative vertical coordinate
     CLC  ; using incremented offset and store using the other
     ADC BoundBoxCtrlData,x  ; incremented offset
-    STA BoundingBox_UL_Corner,y
+    STA ram_bounding_box_ul_corner,y
     LDA $02
     CLC
     ADC BoundBoxCtrlData+2,x  ; add the fourth number to the relative vertical coordinate
-    STA BoundingBox_LR_Corner,y  ; and store
+    STA ram_bounding_box_lr_corner,y  ; and store
     PLA  ; get original offset loaded into $00 * y from stack
     TAY  ; use as Y
     LDX $00  ; get original offset and use as X again
     RTS
 
 CheckRightScreenBBox:
-    LDA ScreenLeft_X_Pos  ; add 128 pixels to left side of screen
+    LDA ram_screen_left_x_pos  ; add 128 pixels to left side of screen
     CLC  ; and store as horizontal coordinate of middle
     ADC #$80
     STA $02
-    LDA ScreenLeft_PageLoc  ; add carry to page location of left side of screen
+    LDA ram_screen_left_page_loc  ; add carry to page location of left side of screen
     ADC #$00  ; and store as page location of middle
     STA $01
-    LDA SprObject_X_Position,x  ; get horizontal coordinate
+    LDA ram_spr_object_x_position,x  ; get horizontal coordinate
     CMP $02  ; compare against middle horizontal coordinate
-    LDA SprObject_PageLoc,x  ; get page location
+    LDA ram_spr_object_page_loc,x  ; get page location
     SBC $01  ; subtract from middle page location
     BCC CheckLeftScreenBBox  ; if object is on the left side of the screen, branch
-    LDA BoundingBox_DR_XPos,y  ; check right-side edge of bounding box for offscreen
+    LDA ram_bounding_box_dr_x_pos,y  ; check right-side edge of bounding box for offscreen
     BMI NoOfs  ; coordinates, branch if still on the screen
     LDA #$ff  ; load offscreen value here to use on one or both horizontal sides
-    LDX BoundingBox_UL_XPos,y  ; check left-side edge of bounding box for offscreen
+    LDX ram_bounding_box_ul_x_pos,y  ; check left-side edge of bounding box for offscreen
     BMI SORte  ; coordinates, and branch if still on the screen
-    STA BoundingBox_UL_XPos,y  ; store offscreen value for left side
+    STA ram_bounding_box_ul_x_pos,y  ; store offscreen value for left side
 SORte:
-    STA BoundingBox_DR_XPos,y  ; store offscreen value for right side
+    STA ram_bounding_box_dr_x_pos,y  ; store offscreen value for right side
 NoOfs:
-    LDX ObjectOffset  ; get object offset and leave
+    LDX ram_object_offset  ; get object offset and leave
     RTS
 
 CheckLeftScreenBBox:
-    LDA BoundingBox_UL_XPos,y  ; check left-side edge of bounding box for offscreen
+    LDA ram_bounding_box_ul_x_pos,y  ; check left-side edge of bounding box for offscreen
     BPL NoOfs2  ; coordinates, and branch if still on the screen
     CMP #$a0  ; check to see if left-side edge is in the middle of the
     BCC NoOfs2  ; screen or really offscreen, and branch if still on
     LDA #$00
-    LDX BoundingBox_DR_XPos,y  ; check right-side edge of bounding box for offscreen
+    LDX ram_bounding_box_dr_x_pos,y  ; check right-side edge of bounding box for offscreen
     BPL SOLft  ; coordinates, branch if still onscreen
-    STA BoundingBox_DR_XPos,y  ; store offscreen value for right side
+    STA ram_bounding_box_dr_x_pos,y  ; store offscreen value for right side
 SOLft:
-    STA BoundingBox_UL_XPos,y  ; store offscreen value for left side
+    STA ram_bounding_box_ul_x_pos,y  ; store offscreen value for left side
 NoOfs2:
-    LDX ObjectOffset  ; get object offset and leave
+    LDX ram_object_offset  ; get object offset and leave
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -185,41 +185,41 @@ SprObjectCollisionCore:
     STA $07  ; save value 1 here as counter, compare horizontal coordinates first
 
 CollisionCoreLoop:
-    LDA BoundingBox_UL_Corner,y  ; compare left/top coordinates
-    CMP BoundingBox_UL_Corner,x  ; of first and second objects' bounding boxes
+    LDA ram_bounding_box_ul_corner,y  ; compare left/top coordinates
+    CMP ram_bounding_box_ul_corner,x  ; of first and second objects' bounding boxes
     BCS FirstBoxGreater  ; if first left/top => second, branch
-    CMP BoundingBox_LR_Corner,x  ; otherwise compare to right/bottom of second
+    CMP ram_bounding_box_lr_corner,x  ; otherwise compare to right/bottom of second
     BCC SecondBoxVerticalChk  ; if first left/top < second right/bottom, branch elsewhere
     BEQ CollisionFound  ; if somehow equal, collision, thus branch
-    LDA BoundingBox_LR_Corner,y  ; if somehow greater, check to see if bottom of
-    CMP BoundingBox_UL_Corner,y  ; first object's bounding box is greater than its top
+    LDA ram_bounding_box_lr_corner,y  ; if somehow greater, check to see if bottom of
+    CMP ram_bounding_box_ul_corner,y  ; first object's bounding box is greater than its top
     BCC CollisionFound  ; if somehow less, vertical wrap collision, thus branch
-    CMP BoundingBox_UL_Corner,x  ; otherwise compare bottom of first bounding box to the top
+    CMP ram_bounding_box_ul_corner,x  ; otherwise compare bottom of first bounding box to the top
     BCS CollisionFound  ; of second box, and if equal or greater, collision, thus branch
     LDY $06  ; otherwise return with carry clear and Y = $0006
     RTS  ; note horizontal wrapping never occurs
 
 SecondBoxVerticalChk:
-    LDA BoundingBox_LR_Corner,x  ; check to see if the vertical bottom of the box
-    CMP BoundingBox_UL_Corner,x  ; is greater than the vertical top
+    LDA ram_bounding_box_lr_corner,x  ; check to see if the vertical bottom of the box
+    CMP ram_bounding_box_ul_corner,x  ; is greater than the vertical top
     BCC CollisionFound  ; if somehow less, vertical wrap collision, thus branch
-    LDA BoundingBox_LR_Corner,y  ; otherwise compare horizontal right or vertical bottom
-    CMP BoundingBox_UL_Corner,x  ; of first box with horizontal left or vertical top of second box
+    LDA ram_bounding_box_lr_corner,y  ; otherwise compare horizontal right or vertical bottom
+    CMP ram_bounding_box_ul_corner,x  ; of first box with horizontal left or vertical top of second box
     BCS CollisionFound  ; if equal or greater, collision, thus branch
     LDY $06  ; otherwise return with carry clear and Y = $0006
     RTS
 
 FirstBoxGreater:
-    CMP BoundingBox_UL_Corner,x  ; compare first and second box horizontal left/vertical top again
+    CMP ram_bounding_box_ul_corner,x  ; compare first and second box horizontal left/vertical top again
     BEQ CollisionFound  ; if first coordinate = second, collision, thus branch
-    CMP BoundingBox_LR_Corner,x  ; if not, compare with second object right or bottom edge
+    CMP ram_bounding_box_lr_corner,x  ; if not, compare with second object right or bottom edge
     BCC CollisionFound  ; if left/top of first less than or equal to right/bottom of second
     BEQ CollisionFound  ; then collision, thus branch
-    CMP BoundingBox_LR_Corner,y  ; otherwise check to see if top of first box is greater than bottom
+    CMP ram_bounding_box_lr_corner,y  ; otherwise check to see if top of first box is greater than bottom
     BCC NoCollisionFound  ; if less than or equal, no collision, branch to end
     BEQ NoCollisionFound
-    LDA BoundingBox_LR_Corner,y  ; otherwise compare bottom of first to top of second
-    CMP BoundingBox_UL_Corner,x  ; if bottom of first is greater than top of second, vertical wrap
+    LDA ram_bounding_box_lr_corner,y  ; otherwise compare bottom of first to top of second
+    CMP ram_bounding_box_ul_corner,x  ; if bottom of first is greater than top of second, vertical wrap
     BCS CollisionFound  ; collision, and branch, otherwise, proceed onwards here
 
 NoCollisionFound:
@@ -270,7 +270,7 @@ ResJmpM:
     LDA #$00  ; set A to return vertical coordinate
 BBChk_E:
     JSR BlockBufferCollision  ; do collision detection subroutine for sprite object
-    LDX ObjectOffset  ; get object offset
+    LDX ram_object_offset  ; get object offset
     CMP #$00  ; check to see if object bumped into anything
     RTS
 
@@ -305,9 +305,9 @@ BlockBufferCollision:
     STY $04  ; save contents of Y here
     LDA BlockBuffer_X_Adder,y  ; add horizontal coordinate
     CLC  ; of object to value obtained using Y as offset
-    ADC SprObject_X_Position,x
+    ADC ram_spr_object_x_position,x
     STA $05  ; store here
-    LDA SprObject_PageLoc,x
+    LDA ram_spr_object_page_loc,x
     ADC #$00  ; add carry to page location
     AND #$01  ; get LSB, mask out all other bits
     LSR  ; move to carry
@@ -318,7 +318,7 @@ BlockBufferCollision:
     LSR  ; d4 at this point
     JSR GetBlockBufferAddr  ; get address of block buffer into $06, $07
     LDY $04  ; get old contents of Y
-    LDA SprObject_Y_Position,x  ; get vertical coordinate of object
+    LDA ram_spr_object_y_position,x  ; get vertical coordinate of object
     CLC
     ADC BlockBuffer_Y_Adder,y  ; add it to value obtained using Y as offset
     AND #%11110000  ; mask out low nybble
@@ -331,10 +331,10 @@ BlockBufferCollision:
     LDY $04  ; get old contents of Y again
     PLA  ; pull A from stack
     BNE RetXC  ; if A = 1, branch
-    LDA SprObject_Y_Position,x  ; if A = 0, load vertical coordinate
+    LDA ram_spr_object_y_position,x  ; if A = 0, load vertical coordinate
     JMP RetYC  ; and jump
 RetXC:
-    LDA SprObject_X_Position,x  ; otherwise load horizontal coordinate
+    LDA ram_spr_object_x_position,x  ; otherwise load horizontal coordinate
 RetYC:
     AND #%00001111  ; and mask out high nybble
     STA $04  ; store masked out result here

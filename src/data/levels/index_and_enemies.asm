@@ -7,78 +7,78 @@ AreaDataOfsLoopback:
 
 LoadAreaPointer:
     JSR FindAreaPointer  ; find it and store it here
-    STA AreaPointer
+    STA ram_area_pointer
 GetAreaType:
     AND #%01100000  ; mask out all but d6 and d5
     ASL
     ROL
     ROL
     ROL  ; make %0xx00000 into %000000xx
-    STA AreaType  ; save 2 MSB as area type
+    STA ram_area_type  ; save 2 MSB as area type
     RTS
 
 FindAreaPointer:
-    LDY WorldNumber  ; load offset from world variable
+    LDY ram_world_number  ; load offset from world variable
     LDA WorldAddrOffsets,y
     CLC  ; add area number used to find data
-    ADC AreaNumber
+    ADC ram_area_number
     TAY
     LDA AreaAddrOffsets,y  ; from there we have our area pointer
     RTS
 
 GetAreaDataAddrs:
-    LDA AreaPointer  ; use 2 MSB for Y
+    LDA ram_area_pointer  ; use 2 MSB for Y
     JSR GetAreaType
     TAY
-    LDA AreaPointer  ; mask out all but 5 LSB
+    LDA ram_area_pointer  ; mask out all but 5 LSB
     AND #%00011111
-    STA AreaAddrsLOffset  ; save as low offset
+    STA ram_area_addrs_l_offset  ; save as low offset
     LDA EnemyAddrHOffsets,y  ; load base value with 2 altered MSB,
     CLC  ; then add base value to 5 LSB, result
-    ADC AreaAddrsLOffset  ; becomes offset for level data
+    ADC ram_area_addrs_l_offset  ; becomes offset for level data
     TAY
     LDA EnemyDataAddrLow,y  ; use offset to load pointer
-    STA EnemyDataLow
+    STA ram_enemy_data_low
     LDA EnemyDataAddrHigh,y
-    STA EnemyDataHigh
-    LDY AreaType  ; use area type as offset
+    STA ram_enemy_data_high
+    LDY ram_area_type  ; use area type as offset
     LDA AreaDataHOffsets,y  ; do the same thing but with different base value
     CLC
-    ADC AreaAddrsLOffset
+    ADC ram_area_addrs_l_offset
     TAY
     LDA AreaDataAddrLow,y  ; use this offset to load another pointer
-    STA AreaDataLow
+    STA ram_area_data_low
     LDA AreaDataAddrHigh,y
-    STA AreaDataHigh
+    STA ram_area_data_high
     LDY #$00  ; load first byte of header
-    LDA (AreaData),y
+    LDA (ram_area_data),y
     PHA  ; save it to the stack for now
     AND #%00000111  ; save 3 LSB for foreground scenery or bg color control
     CMP #$04
     BCC StoreFore
-    STA BackgroundColorCtrl  ; if 4 or greater, save value here as bg color control
+    STA ram_background_color_ctrl  ; if 4 or greater, save value here as bg color control
     LDA #$00
 StoreFore:
-    STA ForegroundScenery  ; if less, save value here as foreground scenery
+    STA ram_foreground_scenery  ; if less, save value here as foreground scenery
     PLA  ; pull byte from stack and push it back
     PHA
     AND #%00111000  ; save player entrance control bits
     LSR  ; shift bits over to LSBs
     LSR
     LSR
-    STA PlayerEntranceCtrl  ; save value here as player entrance control
+    STA ram_player_entrance_ctrl  ; save value here as player entrance control
     PLA  ; pull byte again but do not push it back
     AND #%11000000  ; save 2 MSB for game timer setting
     CLC
     ROL  ; rotate bits over to LSBs
     ROL
     ROL
-    STA GameTimerSetting  ; save value here as game timer setting
+    STA ram_game_timer_setting  ; save value here as game timer setting
     INY
-    LDA (AreaData),y  ; load second byte of header
+    LDA (ram_area_data),y  ; load second byte of header
     PHA  ; save to stack
     AND #%00001111  ; mask out all but lower nybble
-    STA TerrainControl
+    STA ram_terrain_control
     PLA  ; pull and push byte to copy it to A
     PHA
     AND #%00110000  ; save 2 MSB for background scenery type
@@ -86,7 +86,7 @@ StoreFore:
     LSR  ; shift bits to LSBs
     LSR
     LSR
-    STA BackgroundScenery  ; save as background scenery
+    STA ram_background_scenery  ; save as background scenery
     PLA
     AND #%11000000
     CLC
@@ -95,17 +95,17 @@ StoreFore:
     ROL
     CMP #%00000011  ; if set to 3, store here
     BNE StoreStyle  ; and nullify other value
-    STA CloudTypeOverride  ; otherwise store value in other place
+    STA ram_cloud_type_override  ; otherwise store value in other place
     LDA #$00
 StoreStyle:
-    STA AreaStyle
-    LDA AreaDataLow  ; increment area data address by 2 bytes
+    STA ram_area_style
+    LDA ram_area_data_low  ; increment area data address by 2 bytes
     CLC
     ADC #$02
-    STA AreaDataLow
-    LDA AreaDataHigh
+    STA ram_area_data_low
+    LDA ram_area_data_high
     ADC #$00
-    STA AreaDataHigh
+    STA ram_area_data_high
     RTS
 
 ; -------------------------------------------------------------------------------------

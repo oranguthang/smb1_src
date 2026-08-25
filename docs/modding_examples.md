@@ -42,7 +42,7 @@ tbl_horizontal_friction:
 In `sub_update_player_physics`, replace:
 
 ```asm
-    LDA SwimmingFlag  ; if swimming flag not set, jump to do something else
+    LDA ram_swimming_flag  ; if swimming flag not set, jump to do something else
     BEQ bra_skip_jump_initialization  ; to prevent midair jumping, otherwise continue
 ```
 

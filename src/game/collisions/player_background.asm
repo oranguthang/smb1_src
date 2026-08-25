@@ -7,31 +7,31 @@ PlayerBGUpperExtent:
     .byte $20, $10
 
 PlayerBGCollision:
-    LDA DisableCollisionDet  ; if collision detection disabled flag set,
+    LDA ram_disable_collision_det  ; if collision detection disabled flag set,
     BNE ExPBGCol  ; branch to leave
-    LDA GameEngineSubroutine
+    LDA ram_game_engine_subroutine
     CMP #$0b  ; if running routine #11 or $0b
     BEQ ExPBGCol  ; branch to leave
     CMP #$04
     BCC ExPBGCol  ; if running routines $00-$03 branch to leave
     LDA #$01  ; load default player state for swimming
-    LDY SwimmingFlag  ; if swimming flag set,
+    LDY ram_swimming_flag  ; if swimming flag set,
     BNE SetPSte  ; branch ahead to set default state
-    LDA Player_State  ; if player in normal state,
+    LDA ram_player_state  ; if player in normal state,
     BEQ SetFallS  ; branch to set default state for falling
     CMP #$03
     BNE ChkOnScr  ; if in any other state besides climbing, skip to next part
 SetFallS:
     LDA #$02  ; load default player state for falling
 SetPSte:
-    STA Player_State  ; set whatever player state is appropriate
+    STA ram_player_state  ; set whatever player state is appropriate
 ChkOnScr:
-    LDA Player_Y_HighPos
+    LDA ram_player_y_high_pos
     CMP #$01  ; check player's vertical high byte for still on the screen
     BNE ExPBGCol  ; branch to leave if not
     LDA #$ff
-    STA Player_CollisionBits  ; initialize player's collision flag
-    LDA Player_Y_Position
+    STA ram_player_collision_bits  ; initialize player's collision flag
+    LDA ram_player_y_position
     CMP #$cf  ; check player's vertical coordinate
     BCC ChkCollSize  ; if not too close to the bottom of screen, continue
 ExPBGCol:
@@ -39,40 +39,40 @@ ExPBGCol:
 
 ChkCollSize:
     LDY #$02  ; load default offset
-    LDA CrouchingFlag
+    LDA ram_crouching_flag
     BNE GBBAdr  ; if player crouching, skip ahead
-    LDA PlayerSize
+    LDA ram_player_size
     BNE GBBAdr  ; if player small, skip ahead
     DEY  ; otherwise decrement offset for big player not crouching
-    LDA SwimmingFlag
+    LDA ram_swimming_flag
     BNE GBBAdr  ; if swimming flag set, skip ahead
     DEY  ; otherwise decrement offset
 GBBAdr:
     LDA BlockBufferAdderData,y  ; get value using offset
     STA $eb  ; store value here
     TAY  ; put value into Y, as offset for block buffer routine
-    LDX PlayerSize  ; get player's size as offset
-    LDA CrouchingFlag
+    LDX ram_player_size  ; get player's size as offset
+    LDA ram_crouching_flag
     BEQ HeadChk  ; if player not crouching, branch ahead
     INX  ; otherwise increment size as offset
 HeadChk:
-    LDA Player_Y_Position  ; get player's vertical coordinate
+    LDA ram_player_y_position  ; get player's vertical coordinate
     CMP PlayerBGUpperExtent,x  ; compare with upper extent value based on offset
     BCC DoFootCheck  ; if player is too high, skip this part
     JSR BlockBufferColli_Head  ; do player-to-bg collision detection on top of
     BEQ DoFootCheck  ; player, and branch if nothing above player's head
     JSR CheckForCoinMTiles  ; check to see if player touched coin with their head
     BCS AwardTouchedCoin  ; if so, branch to some other part of code
-    LDY Player_Y_Speed  ; check player's vertical speed
+    LDY ram_player_y_speed  ; check player's vertical speed
     BPL DoFootCheck  ; if player not moving upwards, branch elsewhere
     LDY $04  ; check lower nybble of vertical coordinate returned
     CPY #$04  ; from collision detection routine
     BCC DoFootCheck  ; if low nybble < 4, branch
     JSR CheckForSolidMTiles  ; check to see what player's head bumped on
     BCS SolidOrClimb  ; if player collided with solid metatile, branch
-    LDY AreaType  ; otherwise check area type
+    LDY ram_area_type  ; otherwise check area type
     BEQ NYSpd  ; if water level, branch ahead
-    LDY BlockBounceTimer  ; if block bounce timer not expired,
+    LDY ram_block_bounce_timer  ; if block bounce timer not expired,
     BNE NYSpd  ; branch ahead, do not process collision
     JSR PlayerHeadCollision  ; otherwise do a sub to process collision
     JMP DoFootCheck  ; jump ahead to skip these other parts here
@@ -80,15 +80,15 @@ HeadChk:
 SolidOrClimb:
     CMP #$26  ; if climbing metatile,
     BEQ NYSpd  ; branch ahead and do not play sound
-    LDA #Sfx_Bump
-    STA Square1SoundQueue  ; otherwise load bump sound
+    LDA #con_sfx_bump
+    STA ram_square1_sound_queue  ; otherwise load bump sound
 NYSpd:
     LDA #$01  ; set player's vertical speed to nullify
-    STA Player_Y_Speed  ; jump or swim
+    STA ram_player_y_speed  ; jump or swim
 
 DoFootCheck:
     LDY $eb  ; get block buffer adder offset
-    LDA Player_Y_Position
+    LDA ram_player_y_position
     CMP #$cf  ; check to see how low player is
     BCS DoPlayerSideCheck  ; if player is too far down on screen, skip all of this
     JSR BlockBufferColli_Feet  ; do player-to-bg collision detection on bottom left of player
@@ -111,7 +111,7 @@ AwardTouchedCoin:
 ChkFootMTile:
     JSR CheckForClimbMTiles  ; check to see if player landed on climbable metatiles
     BCS DoPlayerSideCheck  ; if so, branch
-    LDY Player_Y_Speed  ; check player's vertical speed
+    LDY ram_player_y_speed  ; check player's vertical speed
     BMI DoPlayerSideCheck  ; if player moving upwards, branch
     CMP #$c5
     BNE ContChk  ; if player did not touch axe, skip ahead
@@ -119,27 +119,27 @@ ChkFootMTile:
 ContChk:
     JSR ChkInvisibleMTiles  ; do sub to check for hidden coin or 1-up blocks
     BEQ DoPlayerSideCheck  ; if either found, branch
-    LDY JumpspringAnimCtrl  ; if jumpspring animating right now,
+    LDY ram_jumpspring_anim_ctrl  ; if jumpspring animating right now,
     BNE InitSteP  ; branch ahead
     LDY $04  ; check lower nybble of vertical coordinate returned
     CPY #$05  ; from collision detection routine
     BCC LandPlyr  ; if lower nybble < 5, branch
-    LDA Player_MovingDir
+    LDA ram_player_moving_dir
     STA $00  ; use player's moving direction as temp variable
     JMP ImpedePlayerMove  ; jump to impede player's movement in that direction
 LandPlyr:
     JSR ChkForLandJumpSpring  ; do sub to check for jumpspring metatiles and deal with it
     LDA #$f0
-    AND Player_Y_Position  ; mask out lower nybble of player's vertical position
-    STA Player_Y_Position  ; and store as new vertical position to land player properly
+    AND ram_player_y_position  ; mask out lower nybble of player's vertical position
+    STA ram_player_y_position  ; and store as new vertical position to land player properly
     JSR HandlePipeEntry  ; do sub to process potential pipe entry
     LDA #$00
-    STA Player_Y_Speed  ; initialize vertical speed and fractional
-    STA Player_Y_MoveForce  ; movement force to stop player's vertical movement
-    STA StompChainCounter  ; initialize enemy stomp counter
+    STA ram_player_y_speed  ; initialize vertical speed and fractional
+    STA ram_player_y_move_force  ; movement force to stop player's vertical movement
+    STA ram_stomp_chain_counter  ; initialize enemy stomp counter
 InitSteP:
     LDA #$00
-    STA Player_State  ; set player's state to normal
+    STA ram_player_state  ; set player's state to normal
 
 DoPlayerSideCheck:
     LDY $eb  ; get block buffer adder offset
@@ -151,7 +151,7 @@ DoPlayerSideCheck:
 SideCheckLoop:
     INY  ; move onto the next one
     STY $eb  ; store it
-    LDA Player_Y_Position
+    LDA ram_player_y_position
     CMP #$20  ; check player's vertical position
     BCC BHalf  ; if player is in status bar area, branch ahead to skip this part
     CMP #$e4
@@ -167,7 +167,7 @@ SideCheckLoop:
 BHalf:
     LDY $eb  ; load block adder offset
     INY  ; increment it
-    LDA Player_Y_Position  ; get player's vertical position
+    LDA ram_player_y_position  ; get player's vertical position
     CMP #$08
     BCC ExSCH  ; if too high, branch to leave
     CMP #$d0
@@ -190,14 +190,14 @@ ContSChk:
     BCS HandleCoinMetatile  ; if so, execute code to erase coin and award to player 1 coin
     JSR ChkJumpspringMetatiles  ; check for jumpspring metatiles
     BCC ChkPBtm  ; if not found, branch ahead to continue cude
-    LDA JumpspringAnimCtrl  ; otherwise check jumpspring animation control
+    LDA ram_jumpspring_anim_ctrl  ; otherwise check jumpspring animation control
     BNE ExCSM  ; branch to leave if set
     JMP StopPlayerMove  ; otherwise jump to impede player's movement
 ChkPBtm:
-    LDY Player_State  ; get player's state
+    LDY ram_player_state  ; get player's state
     CPY #$00  ; check for player's state set to normal
     BNE StopPlayerMove  ; if not, branch to impede player's movement
-    LDY PlayerFacingDir  ; get player's facing direction
+    LDY ram_player_facing_dir  ; get player's facing direction
     DEY
     BNE StopPlayerMove  ; if facing left, branch to impede movement
     CMP #$6c  ; otherwise check for pipe metatiles
@@ -205,31 +205,31 @@ ChkPBtm:
     CMP #$1f  ; if collided with water pipe (bottom), continue
     BNE StopPlayerMove  ; otherwise branch to impede player's movement
 PipeDwnS:
-    LDA Player_SprAttrib  ; check player's attributes
+    LDA ram_player_spr_attrib  ; check player's attributes
     BNE PlyrPipe  ; if already set, branch, do not play sound again
-    LDY #Sfx_PipeDown_Injury
-    STY Square1SoundQueue  ; otherwise load pipedown/injury sound
+    LDY #con_sfx_pipe_down_injury
+    STY ram_square1_sound_queue  ; otherwise load pipedown/injury sound
 PlyrPipe:
     ORA #%00100000
-    STA Player_SprAttrib  ; set background priority bit in player attributes
-    LDA Player_X_Position
+    STA ram_player_spr_attrib  ; set background priority bit in player attributes
+    LDA ram_player_x_position
     AND #%00001111  ; get lower nybble of player's horizontal coordinate
     BEQ ChkGERtn  ; if at zero, branch ahead to skip this part
     LDY #$00  ; set default offset for timer setting data
-    LDA ScreenLeft_PageLoc  ; load page location for left side of screen
+    LDA ram_screen_left_page_loc  ; load page location for left side of screen
     BEQ SetCATmr  ; if at page zero, use default offset
     INY  ; otherwise increment offset
 SetCATmr:
     LDA AreaChangeTimerData,y  ; set timer for change of area as appropriate
-    STA ChangeAreaTimer
+    STA ram_change_area_timer
 ChkGERtn:
-    LDA GameEngineSubroutine  ; get number of game engine routine running
+    LDA ram_game_engine_subroutine  ; get number of game engine routine running
     CMP #$07
     BEQ ExCSM  ; if running player entrance routine or
     CMP #$08  ; player control routine, go ahead and branch to leave
     BNE ExCSM
     LDA #$02
-    STA GameEngineSubroutine  ; otherwise set sideways pipe entry routine to run
+    STA ram_game_engine_subroutine  ; otherwise set sideways pipe entry routine to run
     RTS  ; and leave
 
 ; --------------------------------
@@ -247,16 +247,16 @@ AreaChangeTimerData:
 
 HandleCoinMetatile:
     JSR ErACM  ; do sub to erase coin metatile from block buffer
-    INC CoinTallyFor1Ups  ; increment coin tally used for 1-up blocks
+    INC ram_coin_tally_for1_ups  ; increment coin tally used for 1-up blocks
     JMP GiveOneCoin  ; update coin amount and tally on the screen
 
 HandleAxeMetatile:
     LDA #$00
-    STA OperMode_Task  ; reset secondary mode
+    STA ram_oper_mode_task  ; reset secondary mode
     LDA #$02
-    STA OperMode  ; set primary mode to autoctrl mode
+    STA ram_oper_mode  ; set primary mode to autoctrl mode
     LDA #$18
-    STA Player_X_Speed  ; set horizontal speed and continue to erase axe metatile
+    STA ram_player_x_speed  ; set horizontal speed and continue to erase axe metatile
 ErACM:
     LDY $02  ; load vertical high nybble offset for block buffer
     LDA #$00  ; load blank metatile
@@ -293,24 +293,24 @@ ChkForFlagpole:
     BNE VineCollision  ; branch to alternate code if flagpole shaft not found
 
 FlagpoleCollision:
-    LDA GameEngineSubroutine
+    LDA ram_game_engine_subroutine
     CMP #$05  ; check for end-of-level routine running
     BEQ PutPlayerOnVine  ; if running, branch to end of climbing code
     LDA #$01
-    STA PlayerFacingDir  ; set player's facing direction to right
-    INC ScrollLock  ; set scroll lock flag
-    LDA GameEngineSubroutine
+    STA ram_player_facing_dir  ; set player's facing direction to right
+    INC ram_scroll_lock  ; set scroll lock flag
+    LDA ram_game_engine_subroutine
     CMP #$04  ; check for flagpole slide routine running
     BEQ RunFR  ; if running, branch to end of flagpole code here
-    LDA #BulletBill_CannonVar  ; load identifier for bullet bills (cannon variant)
+    LDA #con_bullet_bill_cannon_var  ; load identifier for bullet bills (cannon variant)
     JSR KillEnemies  ; get rid of them
-    LDA #Silence
-    STA EventMusicQueue  ; silence music
+    LDA #con_silence
+    STA ram_event_music_queue  ; silence music
     LSR
-    STA FlagpoleSoundQueue  ; load flagpole sound into flagpole sound queue
+    STA ram_flagpole_sound_queue  ; load flagpole sound into flagpole sound queue
     LDX #$04  ; start at end of vertical coordinate data
-    LDA Player_Y_Position
-    STA FlagpoleCollisionYPos  ; store player's vertical coordinate here to be used later
+    LDA ram_player_y_position
+    STA ram_flagpole_collision_y_pos  ; store player's vertical coordinate here to be used later
 
 ChkFlagpoleYPosLoop:
     CMP FlagpoleYPosData,x  ; compare with current vertical coordinate data
@@ -318,36 +318,36 @@ ChkFlagpoleYPosLoop:
     DEX  ; otherwise decrement offset to use
     BNE ChkFlagpoleYPosLoop  ; do this until all data is checked (use last one if all checked)
 MtchF:
-    STX FlagpoleScore  ; store offset here to be used later
+    STX ram_flagpole_score  ; store offset here to be used later
 RunFR:
     LDA #$04
-    STA GameEngineSubroutine  ; set value to run flagpole slide routine
+    STA ram_game_engine_subroutine  ; set value to run flagpole slide routine
     JMP PutPlayerOnVine  ; jump to end of climbing code
 
 VineCollision:
     CMP #$26  ; check for climbing metatile used on vines
     BNE PutPlayerOnVine
-    LDA Player_Y_Position  ; check player's vertical coordinate
+    LDA ram_player_y_position  ; check player's vertical coordinate
     CMP #$20  ; for being in status bar area
     BCS PutPlayerOnVine  ; branch if not that far up
     LDA #$01
-    STA GameEngineSubroutine  ; otherwise set to run autoclimb routine next frame
+    STA ram_game_engine_subroutine  ; otherwise set to run autoclimb routine next frame
 
 PutPlayerOnVine:
     LDA #$03  ; set player state to climbing
-    STA Player_State
+    STA ram_player_state
     LDA #$00  ; nullify player's horizontal speed
-    STA Player_X_Speed  ; and fractional horizontal movement force
-    STA Player_X_MoveForce
-    LDA Player_X_Position  ; get player's horizontal coordinate
+    STA ram_player_x_speed  ; and fractional horizontal movement force
+    STA ram_player_x_move_force
+    LDA ram_player_x_position  ; get player's horizontal coordinate
     SEC
-    SBC ScreenLeft_X_Pos  ; subtract from left side horizontal coordinate
+    SBC ram_screen_left_x_pos  ; subtract from left side horizontal coordinate
     CMP #$10
     BCS SetVXPl  ; if 16 or more pixels difference, do not alter facing direction
     LDA #$02
-    STA PlayerFacingDir  ; otherwise force player to face left
+    STA ram_player_facing_dir  ; otherwise force player to face left
 SetVXPl:
-    LDY PlayerFacingDir  ; get current facing direction, use as offset
+    LDY ram_player_facing_dir  ; get current facing direction, use as offset
     LDA $06  ; get low byte of block buffer address
     ASL
     ASL  ; move low nybble to high
@@ -355,13 +355,13 @@ SetVXPl:
     ASL
     CLC
     ADC ClimbXPosAdder-1,y  ; add pixels depending on facing direction
-    STA Player_X_Position  ; store as player's horizontal coordinate
+    STA ram_player_x_position  ; store as player's horizontal coordinate
     LDA $06  ; get low byte of block buffer address again
     BNE ExPVne  ; if not zero, branch
-    LDA ScreenRight_PageLoc  ; load page location of right side of screen
+    LDA ram_screen_right_page_loc  ; load page location of right side of screen
     CLC
     ADC ClimbPLocAdder-1,y  ; add depending on facing location
-    STA Player_PageLoc  ; store as player's page location
+    STA ram_player_page_loc  ; store as player's page location
 ExPVne:
     RTS  ; finally, we're done!
 
@@ -382,13 +382,13 @@ ChkForLandJumpSpring:
     JSR ChkJumpspringMetatiles  ; do sub to check if player landed on jumpspring
     BCC ExCJSp  ; if carry not set, jumpspring not found, therefore leave
     LDA #$70
-    STA VerticalForce  ; otherwise set vertical movement force for player
+    STA ram_vertical_force  ; otherwise set vertical movement force for player
     LDA #$f9
-    STA JumpspringForce  ; set default jumpspring force
+    STA ram_jumpspring_force  ; set default jumpspring force
     LDA #$03
-    STA JumpspringTimer  ; set jumpspring timer to be used later
+    STA ram_jumpspring_timer  ; set jumpspring timer to be used later
     LSR
-    STA JumpspringAnimCtrl  ; set jumpspring animation control to start animating
+    STA ram_jumpspring_anim_ctrl  ; set jumpspring animation control to start animating
 ExCJSp:
     RTS  ; and leave
 
@@ -404,7 +404,7 @@ NoJSFnd:
     RTS  ; leave
 
 HandlePipeEntry:
-    LDA Up_Down_Buttons  ; check saved controller bits from earlier
+    LDA ram_up_down_buttons  ; check saved controller bits from earlier
     AND #%00000100  ; for pressing down
     BEQ ExPipeE  ; if not pressing down, branch to leave
     LDA $00
@@ -414,20 +414,20 @@ HandlePipeEntry:
     CMP #$10  ; check left foot metatile for warp pipe left metatile
     BNE ExPipeE  ; branch to leave if not found
     LDA #$30
-    STA ChangeAreaTimer  ; set timer for change of area
+    STA ram_change_area_timer  ; set timer for change of area
     LDA #$03
-    STA GameEngineSubroutine  ; set to run vertical pipe entry routine on next frame
-    LDA #Sfx_PipeDown_Injury
-    STA Square1SoundQueue  ; load pipedown/injury sound
+    STA ram_game_engine_subroutine  ; set to run vertical pipe entry routine on next frame
+    LDA #con_sfx_pipe_down_injury
+    STA ram_square1_sound_queue  ; load pipedown/injury sound
     LDA #%00100000
-    STA Player_SprAttrib  ; set background priority bit in player's attributes
-    LDA WarpZoneControl  ; check warp zone control
+    STA ram_player_spr_attrib  ; set background priority bit in player's attributes
+    LDA ram_warp_zone_control  ; check warp zone control
     BEQ ExPipeE  ; branch to leave if none found
     AND #%00000011  ; mask out all but 2 LSB
     ASL
     ASL  ; multiply by four
     TAX  ; save as offset to warp zone numbers (starts at left pipe)
-    LDA Player_X_Position  ; get player's horizontal position
+    LDA ram_player_x_position  ; get player's horizontal position
     CMP #$60
     BCC GetWNum  ; if player at left, not near middle, use offset and skip ahead
     INX  ; otherwise increment for middle pipe
@@ -437,25 +437,25 @@ HandlePipeEntry:
 GetWNum:
     LDY WarpZoneNumbers,x  ; get warp zone numbers
     DEY  ; decrement for use as world number
-    STY WorldNumber  ; store as world number and offset
+    STY ram_world_number  ; store as world number and offset
     LDX WorldAddrOffsets,y  ; get offset to where this world's area offsets are
     LDA AreaAddrOffsets,x  ; get area offset based on world offset
-    STA AreaPointer  ; store area offset here to be used to change areas
-    LDA #Silence
-    STA EventMusicQueue  ; silence music
+    STA ram_area_pointer  ; store area offset here to be used to change areas
+    LDA #con_silence
+    STA ram_event_music_queue  ; silence music
     LDA #$00
-    STA EntrancePage  ; initialize starting page number
-    STA AreaNumber  ; initialize area number used for area address offset
-    STA LevelNumber  ; initialize level number used for world display
-    STA AltEntranceControl  ; initialize mode of entry
-    INC Hidden1UpFlag  ; set flag for hidden 1-up blocks
-    INC FetchNewGameTimerFlag  ; set flag to load new game timer
+    STA ram_entrance_page  ; initialize starting page number
+    STA ram_area_number  ; initialize area number used for area address offset
+    STA ram_level_number  ; initialize level number used for world display
+    STA ram_alt_entrance_control  ; initialize mode of entry
+    INC ram_hidden1_up_flag  ; set flag for hidden 1-up blocks
+    INC ram_fetch_new_game_timer_flag  ; set flag to load new game timer
 ExPipeE:
     RTS  ; leave!!!
 
 ImpedePlayerMove:
     LDA #$00  ; initialize value here
-    LDY Player_X_Speed  ; get player's horizontal speed
+    LDY ram_player_x_speed  ; get player's horizontal speed
     LDX $00  ; check value set earlier for
     DEX  ; left side collision
     BNE RImpd  ; if right side collision, skip this part
@@ -471,25 +471,25 @@ RImpd:
     LDA #$01  ; otherwise load A with value to be used here
 NXSpd:
     LDY #$10
-    STY SideCollisionTimer  ; set timer of some sort
+    STY ram_side_collision_timer  ; set timer of some sort
     LDY #$00
-    STY Player_X_Speed  ; nullify player's horizontal speed
+    STY ram_player_x_speed  ; nullify player's horizontal speed
     CMP #$00  ; if value set in A not set to $ff,
     BPL PlatF  ; branch ahead, do not decrement Y
     DEY  ; otherwise decrement Y now
 PlatF:
     STY $00  ; store Y as high bits of horizontal adder
     CLC
-    ADC Player_X_Position  ; add contents of A to player's horizontal
-    STA Player_X_Position  ; position to move player left or right
-    LDA Player_PageLoc
+    ADC ram_player_x_position  ; add contents of A to player's horizontal
+    STA ram_player_x_position  ; position to move player left or right
+    LDA ram_player_page_loc
     ADC $00  ; add high bits and carry to
-    STA Player_PageLoc  ; page location if necessary
+    STA ram_player_page_loc  ; page location if necessary
 ExIPM:
     TXA  ; invert contents of X
     EOR #$ff
-    AND Player_CollisionBits  ; mask out bit that was set here
-    STA Player_CollisionBits  ; store to clear bit
+    AND ram_player_collision_bits  ; mask out bit that was set here
+    STA ram_player_collision_bits  ; store to clear bit
     RTS
 
 ; --------------------------------
@@ -518,8 +518,8 @@ CheckForCoinMTiles:
     CLC  ; otherwise clear carry and leave
     RTS
 CoinSd:
-    LDA #Sfx_CoinGrab
-    STA Square2SoundQueue  ; load coin grab sound and leave
+    LDA #con_sfx_coin_grab
+    STA ram_square2_sound_queue  ; load coin grab sound and leave
     RTS
 
 GetMTileAttrib:

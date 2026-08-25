@@ -7,7 +7,7 @@
 ; $eb - used to hold sprite data offset
 ; $ec - used to hold either altered enemy state or special value used in gfx handler as condition
 ; $ed - used to hold enemy state from buffer
-; $ef - used to hold enemy code used in gfx handler (may or may not resemble Enemy_ID values)
+; $ef - used to hold enemy code used in gfx handler (may or may not resemble ram_enemy_id values)
 
 ; tiles arranged in top left, right, middle left, right, bottom left, right order
 EnemyGraphicsTable:
@@ -74,34 +74,34 @@ JumpspringFrameOffsets:
     .byte $18, $19, $1a, $19, $18
 
 EnemyGfxHandler:
-    LDA Enemy_Y_Position,x  ; get enemy object vertical position
+    LDA ram_enemy_y_position,x  ; get enemy object vertical position
     STA $02
-    LDA Enemy_Rel_XPos  ; get enemy object horizontal position
+    LDA ram_enemy_rel_x_pos  ; get enemy object horizontal position
     STA $05  ; relative to screen
-    LDY Enemy_SprDataOffset,x
+    LDY ram_enemy_spr_data_offset,x
     STY $eb  ; get sprite data offset
     LDA #$00
-    STA VerticalFlipFlag  ; initialize vertical flip flag by default
-    LDA Enemy_MovingDir,x
+    STA ram_vertical_flip_flag  ; initialize vertical flip flag by default
+    LDA ram_enemy_moving_dir,x
     STA $03  ; get enemy object moving direction
-    LDA Enemy_SprAttrib,x
+    LDA ram_enemy_spr_attrib,x
     STA $04  ; get enemy object sprite attributes
-    LDA Enemy_ID,x
-    CMP #PiranhaPlant  ; is enemy object piranha plant?
+    LDA ram_enemy_id,x
+    CMP #con_piranha_plant  ; is enemy object piranha plant?
     BNE CheckForRetainerObj  ; if not, branch
-    LDY PiranhaPlant_Y_Speed,x
+    LDY ram_piranha_plant_y_speed,x
     BMI CheckForRetainerObj  ; if piranha plant moving upwards, branch
-    LDY EnemyFrameTimer,x
+    LDY ram_enemy_frame_timer,x
     BEQ CheckForRetainerObj  ; if timer for movement expired, branch
     RTS  ; if all conditions fail, leave
 
 CheckForRetainerObj:
-    LDA Enemy_State,x  ; store enemy state
+    LDA ram_enemy_state,x  ; store enemy state
     STA $ed
     AND #%00011111  ; nullify all but 5 LSB and use as Y
     TAY
-    LDA Enemy_ID,x  ; check for mushroom retainer/princess object
-    CMP #RetainerObject
+    LDA ram_enemy_id,x  ; check for mushroom retainer/princess object
+    CMP #con_retainer_object
     BNE CheckForBulletBillCV  ; if not found, branch
     LDY #$00  ; if found, nullify saved state in Y
     LDA #$01  ; set value that will not be used
@@ -109,11 +109,11 @@ CheckForRetainerObj:
     LDA #$15  ; set value $15 as code for mushroom retainer/princess object
 
 CheckForBulletBillCV:
-    CMP #BulletBill_CannonVar  ; otherwise check for bullet bill object
+    CMP #con_bullet_bill_cannon_var  ; otherwise check for bullet bill object
     BNE CheckForJumpspring  ; if not found, branch again
     DEC $02  ; decrement saved vertical position
     LDA #$03
-    LDY EnemyFrameTimer,x  ; get timer for enemy object
+    LDY ram_enemy_frame_timer,x  ; get timer for enemy object
     BEQ SBBAt  ; if expired, do not set priority bit
     ORA #%00100000  ; otherwise do so
 SBBAt:
@@ -123,24 +123,24 @@ SBBAt:
     LDA #$08  ; set specific value to unconditionally branch once
 
 CheckForJumpspring:
-    CMP #JumpspringObject  ; check for jumpspring object
+    CMP #con_jumpspring_object  ; check for jumpspring object
     BNE CheckForPodoboo
     LDY #$03  ; set enemy state -2 MSB here for jumpspring object
-    LDX JumpspringAnimCtrl  ; get current frame number for jumpspring object
+    LDX ram_jumpspring_anim_ctrl  ; get current frame number for jumpspring object
     LDA JumpspringFrameOffsets,x  ; load data using frame number as offset
 
 CheckForPodoboo:
     STA $ef  ; store saved enemy object value here
     STY $ec  ; and Y here (enemy state -2 MSB if not changed)
-    LDX ObjectOffset  ; get enemy object offset
+    LDX ram_object_offset  ; get enemy object offset
     CMP #$0c  ; check for podoboo object
     BNE CheckBowserGfxFlag  ; branch if not found
-    LDA Enemy_Y_Speed,x  ; if moving upwards, branch
+    LDA ram_enemy_y_speed,x  ; if moving upwards, branch
     BMI CheckBowserGfxFlag
-    INC VerticalFlipFlag  ; otherwise, set flag for vertical flip
+    INC ram_vertical_flip_flag  ; otherwise, set flag for vertical flip
 
 CheckBowserGfxFlag:
-    LDA BowserGfxFlag  ; if not drawing bowser at all, skip to something else
+    LDA ram_bowser_gfx_flag  ; if not drawing bowser at all, skip to something else
     BEQ CheckForGoomba
     LDY #$16  ; if set to 1, draw bowser's front
     CMP #$01
@@ -151,18 +151,18 @@ SBwsrGfxOfs:
 
 CheckForGoomba:
     LDY $ef  ; check value for goomba object
-    CPY #Goomba
+    CPY #con_goomba
     BNE CheckBowserFront  ; branch if not found
-    LDA Enemy_State,x
+    LDA ram_enemy_state,x
     CMP #$02  ; check for defeated state
     BCC GmbaAnim  ; if not defeated, go ahead and animate
     LDX #$04  ; if defeated, write new value here
     STX $ec
 GmbaAnim:
     AND #%00100000  ; check for d5 set in enemy object state
-    ORA TimerControl  ; or timer disable flag set
+    ORA ram_timer_control  ; or timer disable flag set
     BNE CheckBowserFront  ; if either condition true, do not animate goomba
-    LDA FrameCounter
+    LDA ram_frame_counter
     AND #%00001000  ; check for every eighth frame
     BNE CheckBowserFront
     LDA $03
@@ -176,11 +176,11 @@ CheckBowserFront:
     LDA EnemyGfxTableOffsets,y  ; load value based on enemy object as offset
     TAX  ; save as X
     LDY $ec  ; get previously saved value
-    LDA BowserGfxFlag
+    LDA ram_bowser_gfx_flag
     BEQ CheckForSpiny  ; if not drawing bowser object at all, skip all of this
     CMP #$01
     BNE CheckBowserRear  ; if not drawing front part, branch to draw the rear part
-    LDA BowserBodyControls  ; check bowser's body control bits
+    LDA ram_bowser_body_controls  ; check bowser's body control bits
     BPL ChkFrontSte  ; branch if d7 not set (control's bowser's mouth)
     LDX #$de  ; otherwise load offset for second frame
 ChkFrontSte:
@@ -189,13 +189,13 @@ ChkFrontSte:
     BEQ DrawBowser
 
 FlipBowserOver:
-    STX VerticalFlipFlag  ; set vertical flip flag to nonzero
+    STX ram_vertical_flip_flag  ; set vertical flip flag to nonzero
 
 DrawBowser:
     JMP DrawEnemyObject  ; draw bowser's graphics now
 
 CheckBowserRear:
-    LDA BowserBodyControls  ; check bowser's body control bits
+    LDA ram_bowser_body_controls  ; check bowser's body control bits
     AND #$01
     BEQ ChkRearSte  ; branch if d0 not set (control's bowser's feet)
     LDX #$e4  ; otherwise load offset for second frame
@@ -228,7 +228,7 @@ CheckForLakitu:
     LDA $ed
     AND #%00100000  ; check for d5 set in enemy state
     BNE NoLAFr  ; branch if set
-    LDA FrenzyEnemyTimer
+    LDA ram_frenzy_enemy_timer
     CMP #$10  ; check timer to see if we've reached a certain range
     BCS NoLAFr  ; branch if not
     LDX #$96  ; if d6 not set and timer in range, load alt frame for lakitu
@@ -243,7 +243,7 @@ CheckUpsideDownShell:
     BCC CheckRightSideUpShell  ; branch if enemy state < $02
     LDX #$5a  ; set for upside-down koopa shell by default
     LDY $ef
-    CPY #BuzzyBeetle  ; check for buzzy beetle object
+    CPY #con_buzzy_beetle  ; check for buzzy beetle object
     BNE CheckRightSideUpShell
     LDX #$7e  ; set for upside-down buzzy beetle shell if found
     INC $02  ; increment vertical position by one pixel
@@ -255,13 +255,13 @@ CheckRightSideUpShell:
     LDX #$72  ; set right-side up buzzy beetle shell by default
     INC $02  ; increment saved vertical position by one pixel
     LDY $ef
-    CPY #BuzzyBeetle  ; check for buzzy beetle object
+    CPY #con_buzzy_beetle  ; check for buzzy beetle object
     BEQ CheckForDefdGoomba  ; branch if found
     LDX #$66  ; change to right-side up koopa shell if not found
     INC $02  ; and increment saved vertical position again
 
 CheckForDefdGoomba:
-    CPY #Goomba  ; check for goomba object (necessary if previously
+    CPY #con_goomba  ; check for goomba object (necessary if previously
     BNE CheckForHammerBro  ; failed buzzy beetle object test)
     LDX #$54  ; load for regular goomba
     LDA $ed  ; note that this only gets performed if enemy state => $02
@@ -271,9 +271,9 @@ CheckForDefdGoomba:
     DEC $02  ; set different value and decrement saved vertical position
 
 CheckForHammerBro:
-    LDY ObjectOffset
+    LDY ram_object_offset
     LDA $ef  ; check for hammer bro object
-    CMP #HammerBro
+    CMP #con_hammer_bro
     BNE CheckForBloober  ; branch if not found
     LDA $ed
     BEQ CheckToAnimateEnemy  ; branch if not in normal enemy state
@@ -285,7 +285,7 @@ CheckForHammerBro:
 CheckForBloober:
     CPX #$48  ; check for cheep-cheep offset loaded
     BEQ CheckToAnimateEnemy  ; branch if found
-    LDA EnemyIntervalTimer,y
+    LDA ram_enemy_interval_timer,y
     CMP #$05
     BCS CheckDefeatedState  ; branch if some timer is above a certain point
     CPX #$3c  ; check for bloober offset loaded
@@ -299,11 +299,11 @@ CheckForBloober:
 
 CheckToAnimateEnemy:
     LDA $ef  ; check for specific enemy objects
-    CMP #Goomba
+    CMP #con_goomba
     BEQ CheckDefeatedState  ; branch if goomba
     CMP #$08
     BEQ CheckDefeatedState  ; branch if bullet bill (note both variants use $08 here)
-    CMP #Podoboo
+    CMP #con_podoboo
     BEQ CheckDefeatedState  ; branch if podoboo
     CMP #$18  ; branch if => $18
     BCS CheckDefeatedState
@@ -311,8 +311,8 @@ CheckToAnimateEnemy:
     CMP #$15  ; check for mushroom retainer/princess object
     BNE CheckForSecondFrame  ; which uses different code here, branch if not found
     INY  ; residual instruction
-    LDA WorldNumber  ; are we on world 8?
-    CMP #World8
+    LDA ram_world_number  ; are we on world 8?
+    CMP #con_world8
     BCS CheckDefeatedState  ; if so, leave the offset alone (use princess)
     LDX #$a2  ; otherwise, set for mushroom retainer object instead
     LDA #$03  ; set alternate state here
@@ -320,14 +320,14 @@ CheckToAnimateEnemy:
     BNE CheckDefeatedState  ; unconditional branch
 
 CheckForSecondFrame:
-    LDA FrameCounter  ; load frame counter
+    LDA ram_frame_counter  ; load frame counter
     AND EnemyAnimTimingBMask,y  ; mask it (partly residual, one byte not ever used)
     BNE CheckDefeatedState  ; branch if timing is off
 
 CheckAnimationStop:
     LDA $ed  ; check saved enemy state
     AND #%10100000  ; for d7 or d5, or check for timers stopped
-    ORA TimerControl
+    ORA ram_timer_control
     BNE CheckDefeatedState  ; if either condition true, branch
     TXA
     CLC
@@ -342,7 +342,7 @@ CheckDefeatedState:
     CMP #$04  ; check for saved enemy object => $04
     BCC DrawEnemyObject  ; branch if less
     LDY #$01
-    STY VerticalFlipFlag  ; set vertical flip flag
+    STY ram_vertical_flip_flag  ; set vertical flip flag
     DEY
     STY $ec  ; init saved value here
 
@@ -351,8 +351,8 @@ DrawEnemyObject:
     JSR DrawEnemyObjRow  ; draw six tiles of data
     JSR DrawEnemyObjRow  ; into sprite data
     JSR DrawEnemyObjRow
-    LDX ObjectOffset  ; get enemy object offset
-    LDY Enemy_SprDataOffset,x  ; get sprite data offset
+    LDX ram_object_offset  ; get enemy object offset
+    LDY ram_enemy_spr_data_offset,x  ; get sprite data offset
     LDA $ef
     CMP #$08  ; get saved enemy object and check
     BNE CheckForVerticalFlip  ; for bullet bill, branch if not found
@@ -361,9 +361,9 @@ SkipToOffScrChk:
     JMP SprObjectOffscrChk  ; jump if found
 
 CheckForVerticalFlip:
-    LDA VerticalFlipFlag  ; check if vertical flip flag is set here
+    LDA ram_vertical_flip_flag  ; check if vertical flip flag is set here
     BEQ CheckForESymmetry  ; branch if not
-    LDA Sprite_Attributes,y  ; get attributes of first sprite we dealt with
+    LDA ram_sprite_attributes,y  ; get attributes of first sprite we dealt with
     ORA #%10000000  ; set bit for vertical flip
     INY
     INY  ; increment two bytes so that we store the vertical flip
@@ -373,9 +373,9 @@ CheckForVerticalFlip:
     TYA
     TAX  ; give offset to X
     LDA $ef
-    CMP #HammerBro  ; check saved enemy object for hammer bro
+    CMP #con_hammer_bro  ; check saved enemy object for hammer bro
     BEQ FlipEnemyVertically
-    CMP #Lakitu  ; check saved enemy object for lakitu
+    CMP #con_lakitu  ; check saved enemy object for lakitu
     BEQ FlipEnemyVertically  ; branch for hammer bro or lakitu
     CMP #$15
     BCS FlipEnemyVertically  ; also branch if enemy object => $15
@@ -385,21 +385,21 @@ CheckForVerticalFlip:
     TAX  ; offset in X for next row
 
 FlipEnemyVertically:
-    LDA Sprite_Tilenumber,x  ; load first or second row tiles
+    LDA ram_sprite_tilenumber,x  ; load first or second row tiles
     PHA  ; and save tiles to the stack
-    LDA Sprite_Tilenumber+4,x
+    LDA ram_sprite_tilenumber+4,x
     PHA
-    LDA Sprite_Tilenumber+16,y  ; exchange third row tiles
-    STA Sprite_Tilenumber,x  ; with first or second row tiles
-    LDA Sprite_Tilenumber+20,y
-    STA Sprite_Tilenumber+4,x
+    LDA ram_sprite_tilenumber+16,y  ; exchange third row tiles
+    STA ram_sprite_tilenumber,x  ; with first or second row tiles
+    LDA ram_sprite_tilenumber+20,y
+    STA ram_sprite_tilenumber+4,x
     PLA  ; pull first or second row tiles from stack
-    STA Sprite_Tilenumber+20,y  ; and save in third row
+    STA ram_sprite_tilenumber+20,y  ; and save in third row
     PLA
-    STA Sprite_Tilenumber+16,y
+    STA ram_sprite_tilenumber+16,y
 
 CheckForESymmetry:
-    LDA BowserGfxFlag  ; are we drawing bowser at all?
+    LDA ram_bowser_gfx_flag  ; are we drawing bowser at all?
     BNE SkipToOffScrChk  ; branch if so
     LDA $ef
     LDX $ec  ; get alternate enemy state
@@ -407,13 +407,13 @@ CheckForESymmetry:
     BNE ContES
     JMP SprObjectOffscrChk  ; jump if found
 ContES:
-    CMP #Bloober  ; check for bloober object
+    CMP #con_bloober  ; check for bloober object
     BEQ MirrorEnemyGfx
-    CMP #PiranhaPlant  ; check for piranha plant object
+    CMP #con_piranha_plant  ; check for piranha plant object
     BEQ MirrorEnemyGfx
-    CMP #Podoboo  ; check for podoboo object
+    CMP #con_podoboo  ; check for podoboo object
     BEQ MirrorEnemyGfx  ; branch if either of three are found
-    CMP #Spiny  ; check for spiny object
+    CMP #con_spiny  ; check for spiny object
     BNE ESRtnr  ; branch closer if not found
     CPX #$05  ; check spiny's state
     BNE CheckToMirrorLakitu  ; branch if not an egg, otherwise
@@ -421,78 +421,78 @@ ESRtnr:
     CMP #$15  ; check for princess/mushroom retainer object
     BNE SpnySC
     LDA #$42  ; set horizontal flip on bottom right sprite
-    STA Sprite_Attributes+20,y  ; note that palette bits were already set earlier
+    STA ram_sprite_attributes+20,y  ; note that palette bits were already set earlier
 SpnySC:
     CPX #$02  ; if alternate enemy state set to 1 or 0, branch
     BCC CheckToMirrorLakitu
 
 MirrorEnemyGfx:
-    LDA BowserGfxFlag  ; if enemy object is bowser, skip all of this
+    LDA ram_bowser_gfx_flag  ; if enemy object is bowser, skip all of this
     BNE CheckToMirrorLakitu
-    LDA Sprite_Attributes,y  ; load attribute bits of first sprite
+    LDA ram_sprite_attributes,y  ; load attribute bits of first sprite
     AND #%10100011
-    STA Sprite_Attributes,y  ; save vertical flip, priority, and palette bits
-    STA Sprite_Attributes+8,y  ; in left sprite column of enemy object OAM data
-    STA Sprite_Attributes+16,y
+    STA ram_sprite_attributes,y  ; save vertical flip, priority, and palette bits
+    STA ram_sprite_attributes+8,y  ; in left sprite column of enemy object OAM data
+    STA ram_sprite_attributes+16,y
     ORA #%01000000  ; set horizontal flip
     CPX #$05  ; check for state used by spiny's egg
     BNE EggExc  ; if alternate state not set to $05, branch
     ORA #%10000000  ; otherwise set vertical flip
 EggExc:
-    STA Sprite_Attributes+4,y  ; set bits of right sprite column
-    STA Sprite_Attributes+12,y  ; of enemy object sprite data
-    STA Sprite_Attributes+20,y
+    STA ram_sprite_attributes+4,y  ; set bits of right sprite column
+    STA ram_sprite_attributes+12,y  ; of enemy object sprite data
+    STA ram_sprite_attributes+20,y
     CPX #$04  ; check alternate enemy state
     BNE CheckToMirrorLakitu  ; branch if not $04
-    LDA Sprite_Attributes+8,y  ; get second row left sprite attributes
+    LDA ram_sprite_attributes+8,y  ; get second row left sprite attributes
     ORA #%10000000
-    STA Sprite_Attributes+8,y  ; store bits with vertical flip in
-    STA Sprite_Attributes+16,y  ; second and third row left sprites
+    STA ram_sprite_attributes+8,y  ; store bits with vertical flip in
+    STA ram_sprite_attributes+16,y  ; second and third row left sprites
     ORA #%01000000
-    STA Sprite_Attributes+12,y  ; store with horizontal and vertical flip in
-    STA Sprite_Attributes+20,y  ; second and third row right sprites
+    STA ram_sprite_attributes+12,y  ; store with horizontal and vertical flip in
+    STA ram_sprite_attributes+20,y  ; second and third row right sprites
 
 CheckToMirrorLakitu:
     LDA $ef  ; check for lakitu enemy object
-    CMP #Lakitu
+    CMP #con_lakitu
     BNE CheckToMirrorJSpring  ; branch if not found
-    LDA VerticalFlipFlag
+    LDA ram_vertical_flip_flag
     BNE NVFLak  ; branch if vertical flip flag not set
-    LDA Sprite_Attributes+16,y  ; save vertical flip and palette bits
+    LDA ram_sprite_attributes+16,y  ; save vertical flip and palette bits
     AND #%10000001  ; in third row left sprite
-    STA Sprite_Attributes+16,y
-    LDA Sprite_Attributes+20,y  ; set horizontal flip and palette bits
+    STA ram_sprite_attributes+16,y
+    LDA ram_sprite_attributes+20,y  ; set horizontal flip and palette bits
     ORA #%01000001  ; in third row right sprite
-    STA Sprite_Attributes+20,y
-    LDX FrenzyEnemyTimer  ; check timer
+    STA ram_sprite_attributes+20,y
+    LDX ram_frenzy_enemy_timer  ; check timer
     CPX #$10
     BCS SprObjectOffscrChk  ; branch if timer has not reached a certain range
-    STA Sprite_Attributes+12,y  ; otherwise set same for second row right sprite
+    STA ram_sprite_attributes+12,y  ; otherwise set same for second row right sprite
     AND #%10000001
-    STA Sprite_Attributes+8,y  ; preserve vertical flip and palette bits for left sprite
+    STA ram_sprite_attributes+8,y  ; preserve vertical flip and palette bits for left sprite
     BCC SprObjectOffscrChk  ; unconditional branch
 NVFLak:
-    LDA Sprite_Attributes,y  ; get first row left sprite attributes
+    LDA ram_sprite_attributes,y  ; get first row left sprite attributes
     AND #%10000001
-    STA Sprite_Attributes,y  ; save vertical flip and palette bits
-    LDA Sprite_Attributes+4,y  ; get first row right sprite attributes
+    STA ram_sprite_attributes,y  ; save vertical flip and palette bits
+    LDA ram_sprite_attributes+4,y  ; get first row right sprite attributes
     ORA #%01000001  ; set horizontal flip and palette bits
-    STA Sprite_Attributes+4,y  ; note that vertical flip is left as-is
+    STA ram_sprite_attributes+4,y  ; note that vertical flip is left as-is
 
 CheckToMirrorJSpring:
     LDA $ef  ; check for jumpspring object (any frame)
     CMP #$18
     BCC SprObjectOffscrChk  ; branch if not jumpspring object at all
     LDA #$82
-    STA Sprite_Attributes+8,y  ; set vertical flip and palette bits of
-    STA Sprite_Attributes+16,y  ; second and third row left sprites
+    STA ram_sprite_attributes+8,y  ; set vertical flip and palette bits of
+    STA ram_sprite_attributes+16,y  ; second and third row left sprites
     ORA #%01000000
-    STA Sprite_Attributes+12,y  ; set, in addition to those, horizontal flip
-    STA Sprite_Attributes+20,y  ; for second and third row right sprites
+    STA ram_sprite_attributes+12,y  ; set, in addition to those, horizontal flip
+    STA ram_sprite_attributes+20,y  ; for second and third row right sprites
 
 SprObjectOffscrChk:
-    LDX ObjectOffset  ; get enemy buffer offset
-    LDA Enemy_OffscreenBits  ; check offscreen information
+    LDX ram_object_offset  ; get enemy buffer offset
+    LDA ram_enemy_offscreen_bits  ; check offscreen information
     LSR
     LSR  ; shift three times to the right
     LSR  ; which puts d2 into carry
@@ -527,10 +527,10 @@ AllRowC:
     LSR  ; move d7 into carry
     BCC ExEGHandler
     JSR MoveESprRowOffscreen  ; move all sprites offscreen (A should be 0 by now)
-    LDA Enemy_ID,x
-    CMP #Podoboo  ; check enemy identifier for podoboo
+    LDA ram_enemy_id,x
+    CMP #con_podoboo  ; check enemy identifier for podoboo
     BEQ ExEGHandler  ; skip this part if found, we do not want to erase podoboo!
-    LDA Enemy_Y_HighPos,x  ; check high byte of vertical position
+    LDA ram_enemy_y_high_pos,x  ; check high byte of vertical position
     CMP #$02  ; if not yet past the bottom of the screen, branch
     BNE ExEGHandler
     JSR EraseEnemyObject  ; what it says
@@ -549,15 +549,15 @@ DrawOneSpriteRow:
 
 MoveESprRowOffscreen:
     CLC  ; add A to enemy object OAM data offset
-    ADC Enemy_SprDataOffset,x
+    ADC ram_enemy_spr_data_offset,x
     TAY  ; use as offset
     LDA #$f8
     JMP DumpTwoSpr  ; move first row of sprites offscreen
 
 MoveESprColOffscreen:
     CLC  ; add A to enemy object OAM data offset
-    ADC Enemy_SprDataOffset,x
+    ADC ram_enemy_spr_data_offset,x
     TAY  ; use as offset
     JSR MoveColOffscreen  ; move first and second row sprites in column offscreen
-    STA Sprite_Data+16,y  ; move third row sprite in column offscreen
+    STA ram_sprite_data+16,y  ; move third row sprite in column offscreen
     RTS

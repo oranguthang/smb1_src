@@ -11,29 +11,29 @@ BlockYPosAdderData:
 PlayerHeadCollision:
     PHA  ; store metatile number to stack
     LDA #$11  ; load unbreakable block object state by default
-    LDX SprDataOffset_Ctrl  ; load offset control bit here
-    LDY PlayerSize  ; check player's size
+    LDX ram_spr_data_offset_ctrl  ; load offset control bit here
+    LDY ram_player_size  ; check player's size
     BNE DBlockSte  ; if small, branch
     LDA #$12  ; otherwise load breakable block object state
 DBlockSte:
-    STA Block_State,x  ; store into block object buffer
+    STA ram_block_state,x  ; store into block object buffer
     JSR DestroyBlockMetatile  ; store blank metatile in vram buffer to write to name table
-    LDX SprDataOffset_Ctrl  ; load offset control bit
+    LDX ram_spr_data_offset_ctrl  ; load offset control bit
     LDA $02  ; get vertical high nybble offset used in block buffer routine
-    STA Block_Orig_YPos,x  ; set as vertical coordinate for block object
+    STA ram_block_orig_y_pos,x  ; set as vertical coordinate for block object
     TAY
     LDA $06  ; get low byte of block buffer address used in same routine
-    STA Block_BBuf_Low,x  ; save as offset here to be used later
+    STA ram_block_b_buf_low,x  ; save as offset here to be used later
     LDA ($06),y  ; get contents of block buffer at old address at $06, $07
     JSR BlockBumpedChk  ; do a sub to check which block player bumped head on
     STA $00  ; store metatile here
-    LDY PlayerSize  ; check player's size
+    LDY ram_player_size  ; check player's size
     BNE ChkBrick  ; if small, use metatile itself as contents of A
     TYA  ; otherwise init A (note: big = 0)
 ChkBrick:
     BCC PutMTileB  ; if no match was found in previous sub, skip ahead
     LDY #$11  ; otherwise load unbreakable state into block object buffer
-    STY Block_State,x  ; note this applies to both player sizes
+    STY ram_block_state,x  ; note this applies to both player sizes
     LDA #$c4  ; load empty block metatile into A for now
     LDY $00  ; get metatile from before
     CPY #$58  ; is it brick with coins (with line)?
@@ -41,41 +41,41 @@ ChkBrick:
     CPY #$5d  ; is it brick with coins (without line)?
     BNE PutMTileB  ; if not, branch ahead to store empty block metatile
 StartBTmr:
-    LDA BrickCoinTimerFlag  ; check brick coin timer flag
+    LDA ram_brick_coin_timer_flag  ; check brick coin timer flag
     BNE ContBTmr  ; if set, timer expired or counting down, thus branch
     LDA #$0b
-    STA BrickCoinTimer  ; if not set, set brick coin timer
-    INC BrickCoinTimerFlag  ; and set flag linked to it
+    STA ram_brick_coin_timer  ; if not set, set brick coin timer
+    INC ram_brick_coin_timer_flag  ; and set flag linked to it
 ContBTmr:
-    LDA BrickCoinTimer  ; check brick coin timer
+    LDA ram_brick_coin_timer  ; check brick coin timer
     BNE PutOldMT  ; if not yet expired, branch to use current metatile
     LDY #$c4  ; otherwise use empty block metatile
 PutOldMT:
     TYA  ; put metatile into A
 PutMTileB:
-    STA Block_Metatile,x  ; store whatever metatile be appropriate here
+    STA ram_block_metatile,x  ; store whatever metatile be appropriate here
     JSR InitBlock_XY_Pos  ; get block object horizontal coordinates saved
     LDY $02  ; get vertical high nybble offset
     LDA #$23
     STA ($06),y  ; write blank metatile $23 to block buffer
     LDA #$10
-    STA BlockBounceTimer  ; set block bounce timer
+    STA ram_block_bounce_timer  ; set block bounce timer
     PLA  ; pull original metatile from stack
     STA $05  ; and save here
     LDY #$00  ; set default offset
-    LDA CrouchingFlag  ; is player crouching?
+    LDA ram_crouching_flag  ; is player crouching?
     BNE SmallBP  ; if so, branch to increment offset
-    LDA PlayerSize  ; is player big?
+    LDA ram_player_size  ; is player big?
     BEQ BigBP  ; if so, branch to use default offset
 SmallBP:
     INY  ; increment for small or big and crouching
 BigBP:
-    LDA Player_Y_Position  ; get player's vertical coordinate
+    LDA ram_player_y_position  ; get player's vertical coordinate
     CLC
     ADC BlockYPosAdderData,y  ; add value determined by size
     AND #$f0  ; mask out low nybble to get 16-pixel correspondence
-    STA Block_Y_Position,x  ; save as vertical coordinate for block object
-    LDY Block_State,x  ; get block object state
+    STA ram_block_y_position,x  ; save as vertical coordinate for block object
+    LDY ram_block_state,x  ; get block object state
     CPY #$11
     BEQ Unbreak  ; if set to value loaded for unbreakable, branch
     JSR BrickShatter  ; execute code for breakable brick
@@ -83,39 +83,39 @@ BigBP:
 Unbreak:
     JSR BumpBlock  ; execute code for unbreakable brick or question block
 InvOBit:
-    LDA SprDataOffset_Ctrl  ; invert control bit used by block objects
+    LDA ram_spr_data_offset_ctrl  ; invert control bit used by block objects
     EOR #$01  ; and floatey numbers
-    STA SprDataOffset_Ctrl
+    STA ram_spr_data_offset_ctrl
     RTS  ; leave!
 
 ; --------------------------------
 
 InitBlock_XY_Pos:
-    LDA Player_X_Position  ; get player's horizontal coordinate
+    LDA ram_player_x_position  ; get player's horizontal coordinate
     CLC
     ADC #$08  ; add eight pixels
     AND #$f0  ; mask out low nybble to give 16-pixel correspondence
-    STA Block_X_Position,x  ; save as horizontal coordinate for block object
-    LDA Player_PageLoc
+    STA ram_block_x_position,x  ; save as horizontal coordinate for block object
+    LDA ram_player_page_loc
     ADC #$00  ; add carry to page location of player
-    STA Block_PageLoc,x  ; save as page location of block object
-    STA Block_PageLoc2,x  ; save elsewhere to be used later
-    LDA Player_Y_HighPos
-    STA Block_Y_HighPos,x  ; save vertical high byte of player into
+    STA ram_block_page_loc,x  ; save as page location of block object
+    STA ram_block_page_loc2,x  ; save elsewhere to be used later
+    LDA ram_player_y_high_pos
+    STA ram_block_y_high_pos,x  ; save vertical high byte of player into
     RTS  ; vertical high byte of block object and leave
 
 ; --------------------------------
 
 BumpBlock:
     JSR CheckTopOfBlock  ; check to see if there's a coin directly above this block
-    LDA #Sfx_Bump
-    STA Square1SoundQueue  ; play bump sound
+    LDA #con_sfx_bump
+    STA ram_square1_sound_queue  ; play bump sound
     LDA #$00
-    STA Block_X_Speed,x  ; initialize horizontal speed for block object
-    STA Block_Y_MoveForce,x  ; init fractional movement force
-    STA Player_Y_Speed  ; init player's vertical speed
+    STA ram_block_x_speed,x  ; initialize horizontal speed for block object
+    STA ram_block_y_move_force,x  ; init fractional movement force
+    STA ram_player_y_speed  ; init player's vertical speed
     LDA #$fe
-    STA Block_Y_Speed,x  ; set vertical speed for block object
+    STA ram_block_y_speed,x  ; set vertical speed for block object
     LDA $05  ; get original metatile from stack
     JSR BlockBumpedChk  ; do a sub to check which block player bumped head on
     BCC ExitBlockChk  ; if no match was found, branch to leave
@@ -153,7 +153,7 @@ ExtraLifeMushBlock:
 
 VineBlock:
     LDX #$05  ; load last slot for enemy object buffer
-    LDY SprDataOffset_Ctrl  ; get control bit
+    LDY ram_spr_data_offset_ctrl  ; get control bit
     JSR Setup_Vine  ; set up vine object
 
 ExitBlockChk:
@@ -183,22 +183,22 @@ MatchBump:
 
 BrickShatter:
     JSR CheckTopOfBlock  ; check to see if there's a coin directly above this block
-    LDA #Sfx_BrickShatter
-    STA Block_RepFlag,x  ; set flag for block object to immediately replace metatile
-    STA NoiseSoundQueue  ; load brick shatter sound
+    LDA #con_sfx_brick_shatter
+    STA ram_block_rep_flag,x  ; set flag for block object to immediately replace metatile
+    STA ram_noise_sound_queue  ; load brick shatter sound
     JSR SpawnBrickChunks  ; create brick chunk objects
     LDA #$fe
-    STA Player_Y_Speed  ; set vertical speed for player
+    STA ram_player_y_speed  ; set vertical speed for player
     LDA #$05
-    STA DigitModifier+5  ; set digit modifier to give player 50 points
+    STA ram_digit_modifier+5  ; set digit modifier to give player 50 points
     JSR AddToScore  ; do sub to update the score
-    LDX SprDataOffset_Ctrl  ; load control bit and leave
+    LDX ram_spr_data_offset_ctrl  ; load control bit and leave
     RTS
 
 ; --------------------------------
 
 CheckTopOfBlock:
-    LDX SprDataOffset_Ctrl  ; load control bit
+    LDX ram_spr_data_offset_ctrl  ; load control bit
     LDY $02  ; get vertical high nybble offset used in block buffer
     BEQ TopEx  ; branch to leave if set to zero, because we're at the top
     TYA  ; otherwise set to A
@@ -212,7 +212,7 @@ CheckTopOfBlock:
     LDA #$00
     STA ($06),y  ; otherwise put blank metatile where coin was
     JSR RemoveCoin_Axe  ; write blank metatile to vram buffer
-    LDX SprDataOffset_Ctrl  ; get control bit
+    LDX ram_spr_data_offset_ctrl  ; get control bit
     JSR SetupJumpCoin  ; create jumping coin object and update coin variables
 TopEx:
     RTS  ; leave!
@@ -220,34 +220,34 @@ TopEx:
 ; --------------------------------
 
 SpawnBrickChunks:
-    LDA Block_X_Position,x  ; set horizontal coordinate of block object
-    STA Block_Orig_XPos,x  ; as original horizontal coordinate here
+    LDA ram_block_x_position,x  ; set horizontal coordinate of block object
+    STA ram_block_orig_x_pos,x  ; as original horizontal coordinate here
     LDA #$f0
-    STA Block_X_Speed,x  ; set horizontal speed for brick chunk objects
-    STA Block_X_Speed+2,x
+    STA ram_block_x_speed,x  ; set horizontal speed for brick chunk objects
+    STA ram_block_x_speed+2,x
     LDA #$fa
-    STA Block_Y_Speed,x  ; set vertical speed for one
+    STA ram_block_y_speed,x  ; set vertical speed for one
     LDA #$fc
-    STA Block_Y_Speed+2,x  ; set lower vertical speed for the other
+    STA ram_block_y_speed+2,x  ; set lower vertical speed for the other
     LDA #$00
-    STA Block_Y_MoveForce,x  ; init fractional movement force for both
-    STA Block_Y_MoveForce+2,x
-    LDA Block_PageLoc,x
-    STA Block_PageLoc+2,x  ; copy page location
-    LDA Block_X_Position,x
-    STA Block_X_Position+2,x  ; copy horizontal coordinate
-    LDA Block_Y_Position,x
+    STA ram_block_y_move_force,x  ; init fractional movement force for both
+    STA ram_block_y_move_force+2,x
+    LDA ram_block_page_loc,x
+    STA ram_block_page_loc+2,x  ; copy page location
+    LDA ram_block_x_position,x
+    STA ram_block_x_position+2,x  ; copy horizontal coordinate
+    LDA ram_block_y_position,x
     CLC  ; add 8 pixels to vertical coordinate
     ADC #$08  ; and save as vertical coordinate for one of them
-    STA Block_Y_Position+2,x
+    STA ram_block_y_position+2,x
     LDA #$fa
-    STA Block_Y_Speed,x  ; set vertical speed...again??? (redundant)
+    STA ram_block_y_speed,x  ; set vertical speed...again??? (redundant)
     RTS
 
 ; -------------------------------------------------------------------------------------
 
 BlockObjectsCore:
-    LDA Block_State,x  ; get state of block object
+    LDA ram_block_state,x  ; get state of block object
     BEQ UpdSte  ; if not set, branch to leave
     AND #$0f  ; mask out high nybble
     PHA  ; push to stack
@@ -266,20 +266,20 @@ BlockObjectsCore:
     TAX
     JSR sub_apply_block_gravity  ; do sub to impose gravity on other block object
     JSR sub_move_object_horizontally  ; do another sub to move horizontally
-    LDX ObjectOffset  ; get block object offset used for both
+    LDX ram_object_offset  ; get block object offset used for both
     JSR RelativeBlockPosition  ; get relative coordinates
     JSR GetBlockOffscreenBits  ; get offscreen information
     JSR DrawBrickChunks  ; draw the brick chunks
     PLA  ; get lower nybble of saved state
-    LDY Block_Y_HighPos,x  ; check vertical high byte of block object
+    LDY ram_block_y_high_pos,x  ; check vertical high byte of block object
     BEQ UpdSte  ; if above the screen, branch to kill it
     PHA  ; otherwise save state back into stack
     LDA #$f0
-    CMP Block_Y_Position+2,x  ; check to see if bottom block object went
+    CMP ram_block_y_position+2,x  ; check to see if bottom block object went
     BCS ChkTop  ; to the bottom of the screen, and branch if not
-    STA Block_Y_Position+2,x  ; otherwise set offscreen coordinate
+    STA ram_block_y_position+2,x  ; otherwise set offscreen coordinate
 ChkTop:
-    LDA Block_Y_Position,x  ; get top block object's vertical coordinate
+    LDA ram_block_y_position,x  ; get top block object's vertical coordinate
     CMP #$f0  ; see if it went to the bottom of the screen
     PLA  ; pull block object state from stack
     BCC UpdSte  ; if not, branch to save state
@@ -287,21 +287,21 @@ ChkTop:
 
 BouncingBlockHandler:
     JSR sub_apply_block_gravity  ; do sub to impose gravity on block object
-    LDX ObjectOffset  ; get block object offset
+    LDX ram_object_offset  ; get block object offset
     JSR RelativeBlockPosition  ; get relative coordinates
     JSR GetBlockOffscreenBits  ; get offscreen information
     JSR DrawBlock  ; draw the block
-    LDA Block_Y_Position,x  ; get vertical coordinate
+    LDA ram_block_y_position,x  ; get vertical coordinate
     AND #$0f  ; mask out high nybble
     CMP #$05  ; check to see if low nybble wrapped around
     PLA  ; pull state from stack
     BCS UpdSte  ; if still above amount, not time to kill block yet, thus branch
     LDA #$01
-    STA Block_RepFlag,x  ; otherwise set flag to replace metatile
+    STA ram_block_rep_flag,x  ; otherwise set flag to replace metatile
 KillBlock:
     LDA #$00  ; if branched here, nullify object state
 UpdSte:
-    STA Block_State,x  ; store contents of A in block object state
+    STA ram_block_state,x  ; store contents of A in block object state
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -311,23 +311,23 @@ UpdSte:
 BlockObjMT_Updater:
     LDX #$01  ; set offset to start with second block object
 UpdateLoop:
-    STX ObjectOffset  ; set offset here
-    LDA VRAM_Buffer1  ; if vram buffer already being used here,
+    STX ram_object_offset  ; set offset here
+    LDA ram_vram_buffer1  ; if vram buffer already being used here,
     BNE NextBUpd  ; branch to move onto next block object
-    LDA Block_RepFlag,x  ; if flag for block object already clear,
+    LDA ram_block_rep_flag,x  ; if flag for block object already clear,
     BEQ NextBUpd  ; branch to move onto next block object
-    LDA Block_BBuf_Low,x  ; get low byte of block buffer
+    LDA ram_block_b_buf_low,x  ; get low byte of block buffer
     STA $06  ; store into block buffer address
     LDA #$05
     STA $07  ; set high byte of block buffer address
-    LDA Block_Orig_YPos,x  ; get original vertical coordinate of block object
+    LDA ram_block_orig_y_pos,x  ; get original vertical coordinate of block object
     STA $02  ; store here and use as offset to block buffer
     TAY
-    LDA Block_Metatile,x  ; get metatile to be written
+    LDA ram_block_metatile,x  ; get metatile to be written
     STA ($06),y  ; write it to the block buffer
     JSR ReplaceBlockMetatile  ; do sub to replace metatile where block object is
     LDA #$00
-    STA Block_RepFlag,x  ; clear block object flag
+    STA ram_block_rep_flag,x  ; clear block object flag
 NextBUpd:
     DEX  ; decrement block object offset
     BPL UpdateLoop  ; do this until both block objects are dealt with

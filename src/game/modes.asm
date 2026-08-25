@@ -1,7 +1,7 @@
 ; -------------------------------------------------------------------------------------
 
 TitleScreenMode:
-    LDA OperMode_Task
+    LDA ram_oper_mode_task
     JSR sub_dispatch_inline_handler
 
     .word InitializeGame
@@ -16,108 +16,108 @@ WSelectBufferTemplate:
 
 GameMenuRoutine:
     LDY #$00
-    LDA SavedJoypad1Bits  ; check to see if either player pressed
-    ORA SavedJoypad2Bits  ; only the start button (either joypad)
-    CMP #Start_Button
+    LDA ram_saved_joypad1_bits  ; check to see if either player pressed
+    ORA ram_saved_joypad2_bits  ; only the start button (either joypad)
+    CMP #con_btn_start
     BEQ StartGame
-    CMP #A_Button+Start_Button  ; check to see if A + start was pressed
+    CMP #con_btn_a+con_btn_start  ; check to see if A + start was pressed
     BNE ChkSelect  ; if not, branch to check select button
 StartGame:
     JMP ChkContinue  ; if either start or A + start, execute here
 ChkSelect:
-    CMP #Select_Button  ; check to see if the select button was pressed
+    CMP #con_btn_select  ; check to see if the select button was pressed
     BEQ SelectBLogic  ; if so, branch reset demo timer
-    LDX DemoTimer  ; otherwise check demo timer
+    LDX ram_demo_timer  ; otherwise check demo timer
     BNE ChkWorldSel  ; if demo timer not expired, branch to check world selection
-    STA SelectTimer  ; set controller bits here if running demo
+    STA ram_select_timer  ; set controller bits here if running demo
     JSR DemoEngine  ; run through the demo actions
     BCS ResetTitle  ; if carry flag set, demo over, thus branch
     JMP RunDemo  ; otherwise, run game engine for demo
 ChkWorldSel:
-    LDX WorldSelectEnableFlag  ; check to see if world selection has been enabled
+    LDX ram_world_select_enable_flag  ; check to see if world selection has been enabled
     BEQ NullJoypad
-    CMP #B_Button  ; if so, check to see if the B button was pressed
+    CMP #con_btn_b  ; if so, check to see if the B button was pressed
     BNE NullJoypad
     INY  ; if so, increment Y and execute same code as select
 SelectBLogic:
-    LDA DemoTimer  ; if select or B pressed, check demo timer one last time
+    LDA ram_demo_timer  ; if select or B pressed, check demo timer one last time
     BEQ ResetTitle  ; if demo timer expired, branch to reset title screen mode
     LDA #$18  ; otherwise reset demo timer
-    STA DemoTimer
-    LDA SelectTimer  ; check select/B button timer
+    STA ram_demo_timer
+    LDA ram_select_timer  ; check select/B button timer
     BNE NullJoypad  ; if not expired, branch
     LDA #$10  ; otherwise reset select button timer
-    STA SelectTimer
+    STA ram_select_timer
     CPY #$01  ; was the B button pressed earlier?  if so, branch
     BEQ IncWorldSel  ; note this will not be run if world selection is disabled
-    LDA NumberOfPlayers  ; if no, must have been the select button, therefore
+    LDA ram_number_of_players  ; if no, must have been the select button, therefore
     EOR #%00000001  ; change number of players and draw icon accordingly
-    STA NumberOfPlayers
+    STA ram_number_of_players
     JSR DrawMushroomIcon
     JMP NullJoypad
 IncWorldSel:
-    LDX WorldSelectNumber  ; increment world select number
+    LDX ram_world_select_number  ; increment world select number
     INX
     TXA
     AND #%00000111  ; mask out higher bits
-    STA WorldSelectNumber  ; store as current world select number
+    STA ram_world_select_number  ; store as current world select number
     JSR GoContinue
 UpdateShroom:
     LDA WSelectBufferTemplate,x  ; write template for world select in vram buffer
-    STA VRAM_Buffer1-1,x  ; do this until all bytes are written
+    STA ram_vram_buffer1-1,x  ; do this until all bytes are written
     INX
     CPX #$06
     BMI UpdateShroom
-    LDY WorldNumber  ; get world number from variable and increment for
+    LDY ram_world_number  ; get world number from variable and increment for
     INY  ; proper display, and put in blank byte before
-    STY VRAM_Buffer1+3  ; null terminator
+    STY ram_vram_buffer1+3  ; null terminator
 NullJoypad:
     LDA #$00  ; clear joypad bits for player 1
-    STA SavedJoypad1Bits
+    STA ram_saved_joypad1_bits
 RunDemo:
     JSR GameCoreRoutine  ; run game engine
-    LDA GameEngineSubroutine  ; check to see if we're running lose life routine
+    LDA ram_game_engine_subroutine  ; check to see if we're running lose life routine
     CMP #$06
     BNE ExitMenu  ; if not, do not do all the resetting below
 ResetTitle:
     LDA #$00  ; reset game modes, disable
-    STA OperMode  ; sprite 0 check and disable
-    STA OperMode_Task  ; screen output
-    STA Sprite0HitDetectFlag
-    INC DisableScreenFlag
+    STA ram_oper_mode  ; sprite 0 check and disable
+    STA ram_oper_mode_task  ; screen output
+    STA ram_sprite0_hit_detect_flag
+    INC ram_disable_screen_flag
     RTS
 ChkContinue:
-    LDY DemoTimer  ; if timer for demo has expired, reset modes
+    LDY ram_demo_timer  ; if timer for demo has expired, reset modes
     BEQ ResetTitle
     ASL  ; check to see if A button was also pushed
     BCC StartWorld1  ; if not, don't load continue function's world number
-    LDA ContinueWorld  ; load previously saved world number for secret
+    LDA ram_continue_world  ; load previously saved world number for secret
     JSR GoContinue  ; continue function when pressing A + start
 StartWorld1:
     JSR LoadAreaPointer
-    INC Hidden1UpFlag  ; set 1-up box flag for both players
-    INC OffScr_Hidden1UpFlag
-    INC FetchNewGameTimerFlag  ; set fetch new game timer flag
-    INC OperMode  ; set next game mode
-    LDA WorldSelectEnableFlag  ; if world select flag is on, then primary
-    STA PrimaryHardMode  ; hard mode must be on as well
+    INC ram_hidden1_up_flag  ; set 1-up box flag for both players
+    INC ram_off_scr_hidden1_up_flag
+    INC ram_fetch_new_game_timer_flag  ; set fetch new game timer flag
+    INC ram_oper_mode  ; set next game mode
+    LDA ram_world_select_enable_flag  ; if world select flag is on, then primary
+    STA ram_primary_hard_mode  ; hard mode must be on as well
     LDA #$00
-    STA OperMode_Task  ; set game mode here, and clear demo timer
-    STA DemoTimer
+    STA ram_oper_mode_task  ; set game mode here, and clear demo timer
+    STA ram_demo_timer
     LDX #$17
     LDA #$00
 InitScores:
-    STA ScoreAndCoinDisplay,x  ; clear player scores and coin displays
+    STA ram_score_and_coin_display,x  ; clear player scores and coin displays
     DEX
     BPL InitScores
 ExitMenu:
     RTS
 GoContinue:
-    STA WorldNumber  ; start both players at the first area
-    STA OffScr_WorldNumber  ; of the previously saved world number
+    STA ram_world_number  ; start both players at the first area
+    STA ram_off_scr_world_number  ; of the previously saved world number
     LDX #$00  ; note that on power-up using this function
-    STX AreaNumber  ; will make no difference
-    STX OffScr_AreaNumber
+    STX ram_area_number  ; will make no difference
+    STX ram_off_scr_area_number
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -129,15 +129,15 @@ DrawMushroomIcon:
     LDY #$07  ; read eight bytes to be read by transfer routine
 IconDataRead:
     LDA MushroomIconData,y  ; note that the default position is set for a
-    STA VRAM_Buffer1-1,y  ; 1-player game
+    STA ram_vram_buffer1-1,y  ; 1-player game
     DEY
     BPL IconDataRead
-    LDA NumberOfPlayers  ; check number of players
+    LDA ram_number_of_players  ; check number of players
     BEQ ExitIcon  ; if set to 1-player game, we're done
     LDA #$24  ; otherwise, load blank tile in 1-player position
-    STA VRAM_Buffer1+3
+    STA ram_vram_buffer1+3
     LDA #$ce  ; then load shroom icon tile in 2-player position
-    STA VRAM_Buffer1+5
+    STA ram_vram_buffer1+5
 ExitIcon:
     RTS
 
@@ -154,19 +154,19 @@ DemoTimingData:
     .byte $80, $20, $30, $30, $01, $ff, $00
 
 DemoEngine:
-    LDX DemoAction  ; load current demo action
-    LDA DemoActionTimer  ; load current action timer
+    LDX ram_demo_action  ; load current demo action
+    LDA ram_demo_action_timer  ; load current action timer
     BNE DoAction  ; if timer still counting down, skip
     INX
-    INC DemoAction  ; if expired, increment action, X, and
+    INC ram_demo_action  ; if expired, increment action, X, and
     SEC  ; set carry by default for demo over
     LDA DemoTimingData-1,x  ; get next timer
-    STA DemoActionTimer  ; store as current timer
+    STA ram_demo_action_timer  ; store as current timer
     BEQ DemoOver  ; if timer already at zero, skip
 DoAction:
     LDA DemoActionData-1,x  ; get and perform action (current or next)
-    STA SavedJoypad1Bits
-    DEC DemoActionTimer  ; decrement action timer
+    STA ram_saved_joypad1_bits
+    DEC ram_demo_action_timer  ; decrement action timer
     CLC  ; clear carry if demo still going
 DemoOver:
     RTS
@@ -175,17 +175,17 @@ DemoOver:
 
 VictoryMode:
     JSR VictoryModeSubroutines  ; run victory mode subroutines
-    LDA OperMode_Task  ; get current task of victory mode
+    LDA ram_oper_mode_task  ; get current task of victory mode
     BEQ AutoPlayer  ; if on bridge collapse, skip enemy processing
     LDX #$00
-    STX ObjectOffset  ; otherwise reset enemy object offset
+    STX ram_object_offset  ; otherwise reset enemy object offset
     JSR EnemiesAndLoopsCore  ; and run enemy code
 AutoPlayer:
     JSR RelativePlayerPosition  ; get player's relative coordinates
     JMP PlayerGfxHandler  ; draw the player, then leave
 
 VictoryModeSubroutines:
-    LDA OperMode_Task
+    LDA ram_oper_mode_task
     JSR sub_dispatch_inline_handler
 
     .word BridgeCollapse
@@ -197,59 +197,59 @@ VictoryModeSubroutines:
 ; -------------------------------------------------------------------------------------
 
 SetupVictoryMode:
-    LDX ScreenRight_PageLoc  ; get page location of right side of screen
+    LDX ram_screen_right_page_loc  ; get page location of right side of screen
     INX  ; increment to next page
-    STX DestinationPageLoc  ; store here
-    LDA #EndOfCastleMusic
-    STA EventMusicQueue  ; play win castle music
+    STX ram_destination_page_loc  ; store here
+    LDA #con_end_of_castle_music
+    STA ram_event_music_queue  ; play win castle music
     JMP IncModeTask_B  ; jump to set next major task in victory mode
 
 ; -------------------------------------------------------------------------------------
 
 PlayerVictoryWalk:
     LDY #$00  ; set value here to not walk player by default
-    STY VictoryWalkControl
-    LDA Player_PageLoc  ; get player's page location
-    CMP DestinationPageLoc  ; compare with destination page location
+    STY ram_victory_walk_control
+    LDA ram_player_page_loc  ; get player's page location
+    CMP ram_destination_page_loc  ; compare with destination page location
     BNE PerformWalk  ; if page locations don't match, branch
-    LDA Player_X_Position  ; otherwise get player's horizontal position
+    LDA ram_player_x_position  ; otherwise get player's horizontal position
     CMP #$60  ; compare with preset horizontal position
     BCS DontWalk  ; if still on other page, branch ahead
 PerformWalk:
-    INC VictoryWalkControl  ; otherwise increment value and Y
+    INC ram_victory_walk_control  ; otherwise increment value and Y
     INY  ; note Y will be used to walk the player
 DontWalk:
     TYA  ; put contents of Y in A and
     JSR AutoControlPlayer  ; use A to move player to the right or not
-    LDA ScreenLeft_PageLoc  ; check page location of left side of screen
-    CMP DestinationPageLoc  ; against set value here
+    LDA ram_screen_left_page_loc  ; check page location of left side of screen
+    CMP ram_destination_page_loc  ; against set value here
     BEQ ExitVWalk  ; branch if equal to change modes if necessary
-    LDA ScrollFractional
+    LDA ram_scroll_fractional
     CLC  ; do fixed point math on fractional part of scroll
     ADC #$80
-    STA ScrollFractional  ; save fractional movement amount
+    STA ram_scroll_fractional  ; save fractional movement amount
     LDA #$01  ; set 1 pixel per frame
     ADC #$00  ; add carry from previous addition
     TAY  ; use as scroll amount
     JSR ScrollScreen  ; do sub to scroll the screen
     JSR UpdScrollVar  ; do another sub to update screen and scroll variables
-    INC VictoryWalkControl  ; increment value to stay in this routine
+    INC ram_victory_walk_control  ; increment value to stay in this routine
 ExitVWalk:
-    LDA VictoryWalkControl  ; load value set here
+    LDA ram_victory_walk_control  ; load value set here
     BEQ IncModeTask_A  ; if zero, branch to change modes
     RTS  ; otherwise leave
 
 ; -------------------------------------------------------------------------------------
 
 PrintVictoryMessages:
-    LDA SecondaryMsgCounter  ; load secondary message counter
+    LDA ram_secondary_msg_counter  ; load secondary message counter
     BNE IncMsgCounter  ; if set, branch to increment message counters
-    LDA PrimaryMsgCounter  ; otherwise load primary message counter
+    LDA ram_primary_msg_counter  ; otherwise load primary message counter
     BEQ ThankPlayer  ; if set to zero, branch to print first message
     CMP #$09  ; if at 9 or above, branch elsewhere (this comparison
     BCS IncMsgCounter  ; is residual code, counter never reaches 9)
-    LDY WorldNumber  ; check world number
-    CPY #World8
+    LDY ram_world_number  ; check world number
+    CPY #con_world8
     BNE MRetainerMsg  ; if not at world 8, skip to next part
     CMP #$03  ; check primary message counter again
     BCC IncMsgCounter  ; if not at 3 yet (world 8 only), branch to increment
@@ -261,14 +261,14 @@ MRetainerMsg:
 ThankPlayer:
     TAY  ; put primary message counter into Y
     BNE SecondPartMsg  ; if counter nonzero, skip this part, do not print first message
-    LDA CurrentPlayer  ; otherwise get player currently on the screen
+    LDA ram_current_player  ; otherwise get player currently on the screen
     BEQ EvalForMusic  ; if mario, branch
     INY  ; otherwise increment Y once for luigi and
     BNE EvalForMusic  ; do an unconditional branch to the same place
 SecondPartMsg:
     INY  ; increment Y to do world 8's message
-    LDA WorldNumber
-    CMP #World8  ; check world number
+    LDA ram_world_number
+    CMP #con_world8  ; check world number
     BEQ EvalForMusic  ; if at world 8, branch to next part
     DEY  ; otherwise decrement Y for world 1-7's message
     CPY #$04  ; if counter at 4 (world 1-7 only)
@@ -278,59 +278,59 @@ SecondPartMsg:
 EvalForMusic:
     CPY #$03  ; if counter not yet at 3 (world 8 only), branch
     BNE PrintMsg  ; to print message only (note world 1-7 will only
-    LDA #VictoryMusic  ; reach this code if counter = 0, and will always branch)
-    STA EventMusicQueue  ; otherwise load victory music first (world 8 only)
+    LDA #con_victory_music  ; reach this code if counter = 0, and will always branch)
+    STA ram_event_music_queue  ; otherwise load victory music first (world 8 only)
 PrintMsg:
     TYA  ; put primary message counter in A
     CLC  ; add $0c or 12 to counter thus giving an appropriate value,
     ADC #$0c  ; ($0c-$0d = first), ($0e = world 1-7's), ($0f-$12 = world 8's)
-    STA VRAM_Buffer_AddrCtrl  ; write message counter to vram address controller
+    STA ram_vram_buffer_addr_ctrl  ; write message counter to vram address controller
 IncMsgCounter:
-    LDA SecondaryMsgCounter
+    LDA ram_secondary_msg_counter
     CLC
     ADC #$04  ; add four to secondary message counter
-    STA SecondaryMsgCounter
-    LDA PrimaryMsgCounter
+    STA ram_secondary_msg_counter
+    LDA ram_primary_msg_counter
     ADC #$00  ; add carry to primary message counter
-    STA PrimaryMsgCounter
+    STA ram_primary_msg_counter
     CMP #$07  ; check primary counter one more time
 SetEndTimer:
     BCC ExitMsgs  ; if not reached value yet, branch to leave
     LDA #$06
-    STA WorldEndTimer  ; otherwise set world end timer
+    STA ram_world_end_timer  ; otherwise set world end timer
 IncModeTask_A:
-    INC OperMode_Task  ; move onto next task in mode
+    INC ram_oper_mode_task  ; move onto next task in mode
 ExitMsgs:
     RTS  ; leave
 
 ; -------------------------------------------------------------------------------------
 
 PlayerEndWorld:
-    LDA WorldEndTimer  ; check to see if world end timer expired
+    LDA ram_world_end_timer  ; check to see if world end timer expired
     BNE EndExitOne  ; branch to leave if not
-    LDY WorldNumber  ; check world number
-    CPY #World8  ; if on world 8, player is done with game,
+    LDY ram_world_number  ; check world number
+    CPY #con_world8  ; if on world 8, player is done with game,
     BCS EndChkBButton  ; thus branch to read controller
     LDA #$00
-    STA AreaNumber  ; otherwise initialize area number used as offset
-    STA LevelNumber  ; and level number control to start at area 1
-    STA OperMode_Task  ; initialize secondary mode of operation
-    INC WorldNumber  ; increment world number to move onto the next world
+    STA ram_area_number  ; otherwise initialize area number used as offset
+    STA ram_level_number  ; and level number control to start at area 1
+    STA ram_oper_mode_task  ; initialize secondary mode of operation
+    INC ram_world_number  ; increment world number to move onto the next world
     JSR LoadAreaPointer  ; get area address offset for the next area
-    INC FetchNewGameTimerFlag  ; set flag to load game timer from header
-    LDA #GameModeValue
-    STA OperMode  ; set mode of operation to game mode
+    INC ram_fetch_new_game_timer_flag  ; set flag to load game timer from header
+    LDA #con_mode_game
+    STA ram_oper_mode  ; set mode of operation to game mode
 EndExitOne:
     RTS  ; and leave
 EndChkBButton:
-    LDA SavedJoypad1Bits
-    ORA SavedJoypad2Bits  ; check to see if B button was pressed on
-    AND #B_Button  ; either controller
+    LDA ram_saved_joypad1_bits
+    ORA ram_saved_joypad2_bits  ; check to see if B button was pressed on
+    AND #con_btn_b  ; either controller
     BEQ EndExitTwo  ; branch to leave if not
     LDA #$01  ; otherwise set world selection flag
-    STA WorldSelectEnableFlag
+    STA ram_world_select_enable_flag
     LDA #$ff  ; remove onscreen player's lives
-    STA NumberofLives
+    STA ram_numberof_lives
     JSR TerminateGame  ; do sub to continue other player or end game
 EndExitTwo:
     RTS  ; leave
@@ -361,27 +361,27 @@ ScoreUpdateData:
     .byte $31, $32, $34, $35, $38, $00
 
 FloateyNumbersRoutine:
-    LDA FloateyNum_Control,x  ; load control for floatey number
+    LDA ram_floatey_num_control,x  ; load control for floatey number
     BEQ EndExitOne  ; if zero, branch to leave
     CMP #$0b  ; if less than $0b, branch
     BCC ChkNumTimer
     LDA #$0b  ; otherwise set to $0b, thus keeping
-    STA FloateyNum_Control,x  ; it in range
+    STA ram_floatey_num_control,x  ; it in range
 ChkNumTimer:
     TAY  ; use as Y
-    LDA FloateyNum_Timer,x  ; check value here
+    LDA ram_floatey_num_timer,x  ; check value here
     BNE DecNumTimer  ; if nonzero, branch ahead
-    STA FloateyNum_Control,x  ; initialize floatey number control and leave
+    STA ram_floatey_num_control,x  ; initialize floatey number control and leave
     RTS
 DecNumTimer:
-    DEC FloateyNum_Timer,x  ; decrement value here
+    DEC ram_floatey_num_timer,x  ; decrement value here
     CMP #$2b  ; if not reached a certain point, branch
     BNE ChkTallEnemy
     CPY #$0b  ; check offset for $0b
     BNE LoadNumTiles  ; branch ahead if not found
-    INC NumberofLives  ; give player one extra life (1-up)
-    LDA #Sfx_ExtraLife
-    STA Square2SoundQueue  ; and play the 1-up sound
+    INC ram_numberof_lives  ; give player one extra life (1-up)
+    LDA #con_sfx_extra_life
+    STA ram_square2_sound_queue  ; and play the 1-up sound
 LoadNumTiles:
     LDA ScoreUpdateData,y  ; load point value here
     LSR  ; move high nybble to low
@@ -391,54 +391,54 @@ LoadNumTiles:
     TAX  ; use as X offset, essentially the digit
     LDA ScoreUpdateData,y  ; load again and this time
     AND #%00001111  ; mask out the high nybble
-    STA DigitModifier,x  ; store as amount to add to the digit
+    STA ram_digit_modifier,x  ; store as amount to add to the digit
     JSR AddToScore  ; update the score accordingly
 ChkTallEnemy:
-    LDY Enemy_SprDataOffset,x  ; get OAM data offset for enemy object
-    LDA Enemy_ID,x  ; get enemy object identifier
-    CMP #Spiny
+    LDY ram_enemy_spr_data_offset,x  ; get OAM data offset for enemy object
+    LDA ram_enemy_id,x  ; get enemy object identifier
+    CMP #con_spiny
     BEQ FloateyPart  ; branch if spiny
-    CMP #PiranhaPlant
+    CMP #con_piranha_plant
     BEQ FloateyPart  ; branch if piranha plant
-    CMP #HammerBro
+    CMP #con_hammer_bro
     BEQ GetAltOffset  ; branch elsewhere if hammer bro
-    CMP #GreyCheepCheep
+    CMP #con_grey_cheep_cheep
     BEQ FloateyPart  ; branch if cheep-cheep of either color
-    CMP #RedCheepCheep
+    CMP #con_red_cheep_cheep
     BEQ FloateyPart
-    CMP #TallEnemy
+    CMP #con_tall_enemy
     BCS GetAltOffset  ; branch elsewhere if enemy object => $09
-    LDA Enemy_State,x
+    LDA ram_enemy_state,x
     CMP #$02  ; if enemy state defeated or otherwise
     BCS FloateyPart  ; $02 or greater, branch beyond this part
 GetAltOffset:
-    LDX SprDataOffset_Ctrl  ; load some kind of control bit
-    LDY Alt_SprDataOffset,x  ; get alternate OAM data offset
-    LDX ObjectOffset  ; get enemy object offset again
+    LDX ram_spr_data_offset_ctrl  ; load some kind of control bit
+    LDY ram_alt_spr_data_offset,x  ; get alternate OAM data offset
+    LDX ram_object_offset  ; get enemy object offset again
 FloateyPart:
-    LDA FloateyNum_Y_Pos,x  ; get vertical coordinate for
+    LDA ram_floatey_num_y_pos,x  ; get vertical coordinate for
     CMP #$18  ; floatey number, if coordinate in the
     BCC SetupNumSpr  ; status bar, branch
     SBC #$01
-    STA FloateyNum_Y_Pos,x  ; otherwise subtract one and store as new
+    STA ram_floatey_num_y_pos,x  ; otherwise subtract one and store as new
 SetupNumSpr:
-    LDA FloateyNum_Y_Pos,x  ; get vertical coordinate
+    LDA ram_floatey_num_y_pos,x  ; get vertical coordinate
     SBC #$08  ; subtract eight and dump into the
     JSR DumpTwoSpr  ; left and right sprite's Y coordinates
-    LDA FloateyNum_X_Pos,x  ; get horizontal coordinate
-    STA Sprite_X_Position,y  ; store into X coordinate of left sprite
+    LDA ram_floatey_num_x_pos,x  ; get horizontal coordinate
+    STA ram_sprite_x_position,y  ; store into X coordinate of left sprite
     CLC
     ADC #$08  ; add eight pixels and store into X
-    STA Sprite_X_Position+4,y  ; coordinate of right sprite
+    STA ram_sprite_x_position+4,y  ; coordinate of right sprite
     LDA #$02
-    STA Sprite_Attributes,y  ; set palette control in attribute bytes
-    STA Sprite_Attributes+4,y  ; of left and right sprites
-    LDA FloateyNum_Control,x
+    STA ram_sprite_attributes,y  ; set palette control in attribute bytes
+    STA ram_sprite_attributes+4,y  ; of left and right sprites
+    LDA ram_floatey_num_control,x
     ASL  ; multiply our floatey number control by 2
     TAX  ; and use as offset for look-up table
     LDA FloateyNumTileData,x
-    STA Sprite_Tilenumber,y  ; display first half of number of points
+    STA ram_sprite_tilenumber,y  ; display first half of number of points
     LDA FloateyNumTileData+1,x
-    STA Sprite_Tilenumber+4,y  ; display the second half
-    LDX ObjectOffset  ; get enemy object offset and leave
+    STA ram_sprite_tilenumber+4,y  ; display the second half
+    LDX ram_object_offset  ; get enemy object offset and leave
     RTS

@@ -4,57 +4,57 @@
 ; $07 - starts with adder from area parser, used to store row offset
 
 AlterAreaAttributes:
-    LDY AreaObjOffsetBuffer,x  ; load offset for level object data saved in buffer
+    LDY ram_area_obj_offset_buffer,x  ; load offset for level object data saved in buffer
     INY  ; load second byte
-    LDA (AreaData),y
+    LDA (ram_area_data),y
     PHA  ; save in stack for now
     AND #%01000000
     BNE Alter2  ; branch if d6 is set
     PLA
     PHA  ; pull and push offset to copy to A
     AND #%00001111  ; mask out high nybble and store as
-    STA TerrainControl  ; new terrain height type bits
+    STA ram_terrain_control  ; new terrain height type bits
     PLA
     AND #%00110000  ; pull and mask out all but d5 and d4
     LSR  ; move bits to lower nybble and store
     LSR  ; as new background scenery bits
     LSR
     LSR
-    STA BackgroundScenery  ; then leave
+    STA ram_background_scenery  ; then leave
     RTS
 Alter2:
     PLA
     AND #%00000111  ; mask out all but 3 LSB
     CMP #$04  ; if four or greater, set color control bits
     BCC SetFore  ; and nullify foreground scenery bits
-    STA BackgroundColorCtrl
+    STA ram_background_color_ctrl
     LDA #$00
 SetFore:
-    STA ForegroundScenery  ; otherwise set new foreground scenery bits
+    STA ram_foreground_scenery  ; otherwise set new foreground scenery bits
     RTS
 
 ; --------------------------------
 
 ScrollLockObject_Warp:
     LDX #$04  ; load value of 4 for game text routine as default
-    LDA WorldNumber  ; warp zone (4-3-2), then check world number
+    LDA ram_world_number  ; warp zone (4-3-2), then check world number
     BEQ WarpNum
     INX  ; if world number > 1, increment for next warp zone (5)
-    LDY AreaType  ; check area type
+    LDY ram_area_type  ; check area type
     DEY
     BNE WarpNum  ; if ground area type, increment for last warp zone
     INX  ; (8-7-6) and move on
 WarpNum:
     TXA
-    STA WarpZoneControl  ; store number here to be used by warp zone routine
+    STA ram_warp_zone_control  ; store number here to be used by warp zone routine
     JSR WriteGameText  ; print text and warp zone numbers
-    LDA #PiranhaPlant
+    LDA #con_piranha_plant
     JSR KillEnemies  ; load identifier for piranha plants and do sub
 
 ScrollLockObject:
-    LDA ScrollLock  ; invert scroll lock to turn it on
+    LDA ram_scroll_lock  ; invert scroll lock to turn it on
     EOR #%00000001
-    STA ScrollLock
+    STA ram_scroll_lock
     RTS
 
 ; --------------------------------
@@ -65,10 +65,10 @@ KillEnemies:
     LDA #$00
     LDX #$04  ; check for identifier in enemy object buffer
 KillELoop:
-    LDY Enemy_ID,x
+    LDY ram_enemy_id,x
     CPY $00  ; if not found, branch
     BNE NoKillE
-    STA Enemy_Flag,x  ; if found, deactivate enemy object flag
+    STA ram_enemy_flag,x  ; if found, deactivate enemy object flag
 NoKillE:
     DEX  ; do this until all slots are checked
     BPL KillELoop
@@ -77,7 +77,7 @@ NoKillE:
 ; --------------------------------
 
 FrenzyIDData:
-    .byte FlyCheepCheepFrenzy, BBill_CCheep_Frenzy, Stop_Frenzy
+    .byte con_fly_cheep_cheep_frenzy, con_b_bill_c_cheep_frenzy, con_stop_frenzy
 
 AreaFrenzy:
     LDX $00  ; use area object identifier bit as offset
@@ -86,18 +86,18 @@ AreaFrenzy:
 FreCompLoop:
     DEY  ; check regular slots of enemy object buffer
     BMI ExitAFrenzy  ; if all slots checked and enemy object not found, branch to store
-    CMP Enemy_ID,y  ; check for enemy object in buffer versus frenzy object
+    CMP ram_enemy_id,y  ; check for enemy object in buffer versus frenzy object
     BNE FreCompLoop
     LDA #$00  ; if enemy object already present, nullify queue and leave
 ExitAFrenzy:
-    STA EnemyFrenzyQueue  ; store enemy into frenzy queue
+    STA ram_enemy_frenzy_queue  ; store enemy into frenzy queue
     RTS
 
 ; --------------------------------
 ; $06 - used by MushroomLedge to store length
 
 AreaStyleObject:
-    LDA AreaStyle  ; load level object style and jump to the right sub
+    LDA ram_area_style  ; load level object style and jump to the right sub
     JSR sub_dispatch_inline_handler
     .word TreeLedge  ; also used for cloud type levels
     .word MushroomLedge
@@ -105,20 +105,20 @@ AreaStyleObject:
 
 TreeLedge:
     JSR GetLrgObjAttrib  ; get row and length of green ledge
-    LDA AreaObjectLength,x  ; check length counter for expiration
+    LDA ram_area_object_length,x  ; check length counter for expiration
     BEQ EndTreeL
     BPL MidTreeL
     TYA
-    STA AreaObjectLength,x  ; store lower nybble into buffer flag as length of ledge
-    LDA CurrentPageLoc
-    ORA CurrentColumnPos  ; are we at the start of the level?
+    STA ram_area_object_length,x  ; store lower nybble into buffer flag as length of ledge
+    LDA ram_current_page_loc
+    ORA ram_current_column_pos  ; are we at the start of the level?
     BEQ MidTreeL
     LDA #$16  ; render start of tree ledge
     JMP NoUnder
 MidTreeL:
     LDX $07
     LDA #$17  ; render middle of tree ledge
-    STA MetatileBuffer,x  ; note that this is also used if ledge position is
+    STA ram_metatile_buffer,x  ; note that this is also used if ledge position is
     LDA #$4c  ; at the start of level for continuous effect
     JMP AllUnder  ; now render the part underneath
 EndTreeL:
@@ -129,25 +129,25 @@ MushroomLedge:
     JSR ChkLrgObjLength  ; get shroom dimensions
     STY $06  ; store length here for now
     BCC EndMushL
-    LDA AreaObjectLength,x  ; divide length by 2 and store elsewhere
+    LDA ram_area_object_length,x  ; divide length by 2 and store elsewhere
     LSR
-    STA MushroomLedgeHalfLen,x
+    STA ram_mushroom_ledge_half_len,x
     LDA #$19  ; render start of mushroom
     JMP NoUnder
 EndMushL:
     LDA #$1b  ; if at the end, render end of mushroom
-    LDY AreaObjectLength,x
+    LDY ram_area_object_length,x
     BEQ NoUnder
-    LDA MushroomLedgeHalfLen,x  ; get divided length and store where length
+    LDA ram_mushroom_ledge_half_len,x  ; get divided length and store where length
     STA $06  ; was stored originally
     LDX $07
     LDA #$1a
-    STA MetatileBuffer,x  ; render middle of mushroom
+    STA ram_metatile_buffer,x  ; render middle of mushroom
     CPY $06  ; are we smack dab in the center?
     BNE MushLExit  ; if not, branch to leave
     INX
     LDA #$4f
-    STA MetatileBuffer,x  ; render stem top of mushroom underneath the middle
+    STA ram_metatile_buffer,x  ; render stem top of mushroom underneath the middle
     LDA #$50
 AllUnder:
     INX
@@ -169,12 +169,12 @@ PulleyRopeObject:
     LDY #$00  ; initialize metatile offset
     BCS RenderPul  ; if starting, render left pulley
     INY
-    LDA AreaObjectLength,x  ; if not at the end, render rope
+    LDA ram_area_object_length,x  ; if not at the end, render rope
     BNE RenderPul
     INY  ; otherwise render right pulley
 RenderPul:
     LDA PulleyRopeMetatiles,y
-    STA MetatileBuffer  ; render at the top of the screen
+    STA ram_metatile_buffer  ; render at the top of the screen
 MushLExit:
     RTS  ; and leave
 
@@ -201,13 +201,13 @@ CastleObject:
     JSR ChkLrgObjFixedLength  ; load length of castle if not already loaded
     TXA
     PHA  ; save obj buffer offset to stack
-    LDY AreaObjectLength,x  ; use current length as offset for castle data
+    LDY ram_area_object_length,x  ; use current length as offset for castle data
     LDX $07  ; begin at starting row
     LDA #$0b
     STA $06  ; load upper limit of number of rows to print
 CRendLoop:
     LDA CastleMetatiles,y  ; load current byte using offset
-    STA MetatileBuffer,x
+    STA ram_metatile_buffer,x
     INX  ; store in buffer and increment buffer offset
     LDA $06
     BEQ ChkCFloor  ; have we reached upper limit yet?
@@ -222,9 +222,9 @@ ChkCFloor:
     BNE CRendLoop  ; if not, go back and do another row
     PLA
     TAX  ; get obj buffer offset from before
-    LDA CurrentPageLoc
+    LDA ram_current_page_loc
     BEQ ExitCastle  ; if we're at page 0, we do not need to do anything else
-    LDA AreaObjectLength,x  ; check length
+    LDA ram_area_object_length,x  ; check length
     CMP #$01  ; if length almost about to expire, put brick at floor
     BEQ PlayerStop
     LDY $07  ; check starting row for tall castle ($00)
@@ -238,20 +238,20 @@ NotTall:
     PHA
     JSR FindEmptyEnemySlot  ; find an empty place on the enemy object buffer
     PLA
-    STA Enemy_X_Position,x  ; then write horizontal coordinate for star flag
-    LDA CurrentPageLoc
-    STA Enemy_PageLoc,x  ; set page location for star flag
+    STA ram_enemy_x_position,x  ; then write horizontal coordinate for star flag
+    LDA ram_current_page_loc
+    STA ram_enemy_page_loc,x  ; set page location for star flag
     LDA #$01
-    STA Enemy_Y_HighPos,x  ; set vertical high byte
-    STA Enemy_Flag,x  ; set flag for buffer
+    STA ram_enemy_y_high_pos,x  ; set vertical high byte
+    STA ram_enemy_flag,x  ; set flag for buffer
     LDA #$90
-    STA Enemy_Y_Position,x  ; set vertical coordinate
-    LDA #StarFlagObject  ; set star flag value in buffer itself
-    STA Enemy_ID,x
+    STA ram_enemy_y_position,x  ; set vertical coordinate
+    LDA #con_star_flag_object  ; set star flag value in buffer itself
+    STA ram_enemy_id,x
     RTS
 PlayerStop:
     LDY #$52  ; put brick at floor to stop player at end of level
-    STY MetatileBuffer+10  ; this is only done if we're on the second column
+    STY ram_metatile_buffer+10  ; this is only done if we're on the second column
 ExitCastle:
     RTS
 
@@ -259,12 +259,12 @@ ExitCastle:
 
 WaterPipe:
     JSR GetLrgObjAttrib  ; get row and lower nybble
-    LDY AreaObjectLength,x  ; get length (residual code, water pipe is 1 col thick)
+    LDY ram_area_object_length,x  ; get length (residual code, water pipe is 1 col thick)
     LDX $07  ; get row
     LDA #$6b
-    STA MetatileBuffer,x  ; draw something here and below it
+    STA ram_metatile_buffer,x  ; draw something here and below it
     LDA #$6c
-    STA MetatileBuffer+1,x
+    STA ram_metatile_buffer+1,x
     RTS
 
 ; --------------------------------
@@ -281,11 +281,11 @@ IntroPipe:
     LDX #$06  ; blank everything above the vertical pipe part
 VPipeSectLoop:
     LDA #$00  ; all the way to the top of the screen
-    STA MetatileBuffer,x  ; because otherwise it will look like exit pipe
+    STA ram_metatile_buffer,x  ; because otherwise it will look like exit pipe
     DEX
     BPL VPipeSectLoop
     LDA VerticalPipeData,y  ; draw the end of the vertical pipe part
-    STA MetatileBuffer+7
+    STA ram_metatile_buffer+7
 NoBlankP:
     RTS
 
@@ -308,7 +308,7 @@ RenderSidewaysPipe:
     DEY  ; decrement twice to make room for shaft at bottom
     DEY  ; and store here for now as vertical length
     STY $05
-    LDY AreaObjectLength,x  ; get length left over and store here
+    LDY ram_area_object_length,x  ; get length left over and store here
     STY $06
     LDX $05  ; get vertical length plus one, use as buffer offset
     INX
@@ -322,9 +322,9 @@ RenderSidewaysPipe:
 DrawSidePart:
     LDY $06  ; render side pipe part at the bottom
     LDA SidePipeTopPart,y
-    STA MetatileBuffer,x  ; note that the pipe parts are stored
+    STA ram_metatile_buffer,x  ; note that the pipe parts are stored
     LDA SidePipeBottomPart,y  ; backwards horizontally
-    STA MetatileBuffer+1,x
+    STA ram_metatile_buffer+1,x
     RTS
 
 VerticalPipeData:
@@ -344,34 +344,34 @@ VerticalPipe:
 WarpPipe:
     TYA  ; save value in stack
     PHA
-    LDA AreaNumber
-    ORA WorldNumber  ; if at world 1-1, do not add piranha plant ever
+    LDA ram_area_number
+    ORA ram_world_number  ; if at world 1-1, do not add piranha plant ever
     BEQ DrawPipe
-    LDY AreaObjectLength,x  ; if on second column of pipe, branch
+    LDY ram_area_object_length,x  ; if on second column of pipe, branch
     BEQ DrawPipe  ; (because we only need to do this once)
     JSR FindEmptyEnemySlot  ; check for an empty moving data buffer space
     BCS DrawPipe  ; if not found, too many enemies, thus skip
     JSR GetAreaObjXPosition  ; get horizontal pixel coordinate
     CLC
     ADC #$08  ; add eight to put the piranha plant in the center
-    STA Enemy_X_Position,x  ; store as enemy's horizontal coordinate
-    LDA CurrentPageLoc  ; add carry to current page number
+    STA ram_enemy_x_position,x  ; store as enemy's horizontal coordinate
+    LDA ram_current_page_loc  ; add carry to current page number
     ADC #$00
-    STA Enemy_PageLoc,x  ; store as enemy's page coordinate
+    STA ram_enemy_page_loc,x  ; store as enemy's page coordinate
     LDA #$01
-    STA Enemy_Y_HighPos,x
-    STA Enemy_Flag,x  ; activate enemy flag
+    STA ram_enemy_y_high_pos,x
+    STA ram_enemy_flag,x  ; activate enemy flag
     JSR GetAreaObjYPosition  ; get piranha plant's vertical coordinate and store here
-    STA Enemy_Y_Position,x
-    LDA #PiranhaPlant  ; write piranha plant's value into buffer
-    STA Enemy_ID,x
+    STA ram_enemy_y_position,x
+    LDA #con_piranha_plant  ; write piranha plant's value into buffer
+    STA ram_enemy_id,x
     JSR InitPiranhaPlant
 DrawPipe:
     PLA  ; get value saved earlier and use as Y
     TAY
     LDX $07  ; get buffer offset
     LDA VerticalPipeData,y  ; draw the appropriate pipe with the Y we loaded earlier
-    STA MetatileBuffer,x  ; render the top of the pipe
+    STA ram_metatile_buffer,x  ; render the top of the pipe
     INX
     LDA VerticalPipeData+2,y  ; render the rest of the pipe
     LDY $06  ; subtract one from length and render the part underneath
@@ -385,14 +385,14 @@ GetPipeHeight:
     TYA  ; get saved lower nybble as height
     AND #$07  ; save only the three lower bits as
     STA $06  ; vertical length, then load Y with
-    LDY AreaObjectLength,x  ; length left over
+    LDY ram_area_object_length,x  ; length left over
     RTS
 
 FindEmptyEnemySlot:
     LDX #$00  ; start at first enemy slot
 EmptyChkLoop:
     CLC  ; clear carry flag by default
-    LDA Enemy_Flag,x  ; check enemy buffer for nonzero
+    LDA ram_enemy_flag,x  ; check enemy buffer for nonzero
     BEQ ExitEmptyChk  ; if zero, leave
     INX
     CPX #$05  ; if nonzero, check next value

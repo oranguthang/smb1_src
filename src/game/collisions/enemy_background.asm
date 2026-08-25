@@ -8,30 +8,30 @@ EnemyBGCXSpdData:
     .byte $10, $f0
 
 EnemyToBGCollisionDet:
-    LDA Enemy_State,x  ; check enemy state for d6 set
+    LDA ram_enemy_state,x  ; check enemy state for d6 set
     AND #%00100000
     BNE ExEBG  ; if set, branch to leave
     JSR SubtEnemyYPos  ; otherwise, do a subroutine here
     BCC ExEBG  ; if enemy vertical coord + 62 < 68, branch to leave
-    LDY Enemy_ID,x
-    CPY #Spiny  ; if enemy object is not spiny, branch elsewhere
+    LDY ram_enemy_id,x
+    CPY #con_spiny  ; if enemy object is not spiny, branch elsewhere
     BNE DoIDCheckBGColl
-    LDA Enemy_Y_Position,x
+    LDA ram_enemy_y_position,x
     CMP #$25  ; if enemy vertical coordinate < 36 branch to leave
     BCC ExEBG
 
 DoIDCheckBGColl:
-    CPY #GreenParatroopaJump  ; check for some other enemy object
+    CPY #con_green_paratroopa_jump  ; check for some other enemy object
     BNE HBChk  ; branch if not found
     JMP EnemyJump  ; otherwise jump elsewhere
 HBChk:
-    CPY #HammerBro  ; check for hammer bro
+    CPY #con_hammer_bro  ; check for hammer bro
     BNE CInvu  ; branch if not found
     JMP HammerBroBGColl  ; otherwise jump elsewhere
 CInvu:
-    CPY #Spiny  ; if enemy object is spiny, branch
+    CPY #con_spiny  ; if enemy object is spiny, branch
     BEQ YesIn
-    CPY #PowerUpObject  ; if special power-up object, branch
+    CPY #con_power_up_object  ; if special power-up object, branch
     BEQ YesIn
     CPY #$07  ; if enemy object =>$07, branch to leave
     BCS ExEBGChk
@@ -53,10 +53,10 @@ HandleEToBGCollision:
     LDY $02  ; get vertical coordinate used to find block
     LDA #$00  ; store default blank metatile in that spot so we won't
     STA ($06),y  ; trigger this routine accidentally again
-    LDA Enemy_ID,x
+    LDA ram_enemy_id,x
     CMP #$15  ; if enemy object => $15, branch ahead
     BCS ChkToStunEnemies
-    CMP #Goomba  ; if enemy object not goomba, branch ahead of this routine
+    CMP #con_goomba  ; if enemy object not goomba, branch ahead of this routine
     BNE GiveOEPoints
     JSR KillEnemyAboveBlock  ; if enemy object IS goomba, do this sub
 
@@ -71,43 +71,43 @@ ChkToStunEnemies:
     BCS SetStun  ; $09, $0e, $0f or $10, it will be modified, and not
     CMP #$0a  ; modified if not any of those values, note that piranha plant will
     BCC Demote  ; always fail this test because A will still have vertical
-    CMP #PiranhaPlant  ; coordinate from previous addition, also these comparisons
+    CMP #con_piranha_plant  ; coordinate from previous addition, also these comparisons
     BCC SetStun  ; are only necessary if branching from $d7a1
 Demote:
     AND #%00000001  ; erase all but LSB, essentially turning enemy object
-    STA Enemy_ID,x  ; into green or red koopa troopa to demote them
+    STA ram_enemy_id,x  ; into green or red koopa troopa to demote them
 SetStun:
-    LDA Enemy_State,x  ; load enemy state
+    LDA ram_enemy_state,x  ; load enemy state
     AND #%11110000  ; save high nybble
     ORA #%00000010
-    STA Enemy_State,x  ; set d1 of enemy state
-    DEC Enemy_Y_Position,x
-    DEC Enemy_Y_Position,x  ; subtract two pixels from enemy's vertical position
-    LDA Enemy_ID,x
-    CMP #Bloober  ; check for bloober object
+    STA ram_enemy_state,x  ; set d1 of enemy state
+    DEC ram_enemy_y_position,x
+    DEC ram_enemy_y_position,x  ; subtract two pixels from enemy's vertical position
+    LDA ram_enemy_id,x
+    CMP #con_bloober  ; check for bloober object
     BEQ SetWYSpd
     LDA #$fd  ; set default vertical speed
-    LDY AreaType
+    LDY ram_area_type
     BNE SetNotW  ; if area type not water, set as speed, otherwise
 SetWYSpd:
     LDA #$ff  ; change the vertical speed
 SetNotW:
-    STA Enemy_Y_Speed,x  ; set vertical speed now
+    STA ram_enemy_y_speed,x  ; set vertical speed now
     LDY #$01
     JSR PlayerEnemyDiff  ; get horizontal difference between player and enemy object
     BPL ChkBBill  ; branch if enemy is to the right of player
     INY  ; increment Y if not
 ChkBBill:
-    LDA Enemy_ID,x
-    CMP #BulletBill_CannonVar  ; check for bullet bill (cannon variant)
+    LDA ram_enemy_id,x
+    CMP #con_bullet_bill_cannon_var  ; check for bullet bill (cannon variant)
     BEQ NoCDirF
-    CMP #BulletBill_FrenzyVar  ; check for bullet bill (frenzy variant)
+    CMP #con_bullet_bill_frenzy_var  ; check for bullet bill (frenzy variant)
     BEQ NoCDirF  ; branch if either found, direction does not change
-    STY Enemy_MovingDir,x  ; store as moving direction
+    STY ram_enemy_moving_dir,x  ; store as moving direction
 NoCDirF:
     DEY  ; decrement and use as offset
     LDA EnemyBGCXSpdData,y  ; get proper horizontal speed
-    STA Enemy_X_Speed,x  ; and store, then leave
+    STA ram_enemy_x_speed,x  ; and store, then leave
 ExEBGChk:
     RTS
 
@@ -120,49 +120,49 @@ LandEnemyProperly:
     SBC #$08  ; subtract eight pixels
     CMP #$05  ; used to determine whether enemy landed from falling
     BCS ChkForRedKoopa  ; branch if lower nybble in range of $0d-$0f before subtract
-    LDA Enemy_State,x
+    LDA ram_enemy_state,x
     AND #%01000000  ; branch if d6 in enemy state is set
     BNE LandEnemyInitState
-    LDA Enemy_State,x
+    LDA ram_enemy_state,x
     ASL  ; branch if d7 in enemy state is not set
     BCC ChkLandedEnemyState
 SChkA:
     JMP DoEnemySideCheck  ; if lower nybble < $0d, d7 set but d6 not set, jump here
 
 ChkLandedEnemyState:
-    LDA Enemy_State,x  ; if enemy in normal state, branch back to jump here
+    LDA ram_enemy_state,x  ; if enemy in normal state, branch back to jump here
     BEQ SChkA
     CMP #$05  ; if in state used by spiny's egg
     BEQ ProcEnemyDirection  ; then branch elsewhere
     CMP #$03  ; if already in state used by koopas and buzzy beetles
     BCS ExSteChk  ; or in higher numbered state, branch to leave
-    LDA Enemy_State,x  ; load enemy state again (why?)
+    LDA ram_enemy_state,x  ; load enemy state again (why?)
     CMP #$02  ; if not in $02 state (used by koopas and buzzy beetles)
     BNE ProcEnemyDirection  ; then branch elsewhere
     LDA #$10  ; load default timer here
-    LDY Enemy_ID,x  ; check enemy identifier for spiny
-    CPY #Spiny
+    LDY ram_enemy_id,x  ; check enemy identifier for spiny
+    CPY #con_spiny
     BNE SetForStn  ; branch if not found
     LDA #$00  ; set timer for $00 if spiny
 SetForStn:
-    STA EnemyIntervalTimer,x  ; set timer here
+    STA ram_enemy_interval_timer,x  ; set timer here
     LDA #$03  ; set state here, apparently used to render
-    STA Enemy_State,x  ; upside-down koopas and buzzy beetles
+    STA ram_enemy_state,x  ; upside-down koopas and buzzy beetles
     JSR EnemyLanding  ; then land it properly
 ExSteChk:
     RTS  ; then leave
 
 ProcEnemyDirection:
-    LDA Enemy_ID,x  ; check enemy identifier for goomba
-    CMP #Goomba  ; branch if found
+    LDA ram_enemy_id,x  ; check enemy identifier for goomba
+    CMP #con_goomba  ; branch if found
     BEQ LandEnemyInitState
-    CMP #Spiny  ; check for spiny
+    CMP #con_spiny  ; check for spiny
     BNE InvtD  ; branch if not found
     LDA #$01
-    STA Enemy_MovingDir,x  ; send enemy moving to the right by default
+    STA ram_enemy_moving_dir,x  ; send enemy moving to the right by default
     LDA #$08
-    STA Enemy_X_Speed,x  ; set horizontal speed accordingly
-    LDA FrameCounter
+    STA ram_enemy_x_speed,x  ; set horizontal speed accordingly
+    LDA ram_frame_counter
     AND #%00000111  ; if timed appropriately, spiny will skip over
     BEQ LandEnemyInitState  ; trying to face the player
 InvtD:
@@ -172,52 +172,52 @@ InvtD:
     INY  ; if to the left, increment by one for enemy to face right (inverted)
 CNwCDir:
     TYA
-    CMP Enemy_MovingDir,x  ; compare direction in A with current direction in memory
+    CMP ram_enemy_moving_dir,x  ; compare direction in A with current direction in memory
     BNE LandEnemyInitState
     JSR ChkForBump_HammerBroJ  ; if equal, not facing in correct dir, do sub to turn around
 
 LandEnemyInitState:
     JSR EnemyLanding  ; land enemy properly
-    LDA Enemy_State,x
+    LDA ram_enemy_state,x
     AND #%10000000  ; if d7 of enemy state is set, branch
     BNE NMovShellFallBit
     LDA #$00  ; otherwise initialize enemy state and leave
-    STA Enemy_State,x  ; note this will also turn spiny's egg into spiny
+    STA ram_enemy_state,x  ; note this will also turn spiny's egg into spiny
     RTS
 
 NMovShellFallBit:
-    LDA Enemy_State,x  ; nullify d6 of enemy state, save other bits
+    LDA ram_enemy_state,x  ; nullify d6 of enemy state, save other bits
     AND #%10111111  ; and store, then leave
-    STA Enemy_State,x
+    STA ram_enemy_state,x
     RTS
 
 ; --------------------------------
 
 ChkForRedKoopa:
-    LDA Enemy_ID,x  ; check for red koopa troopa $03
-    CMP #RedKoopa
+    LDA ram_enemy_id,x  ; check for red koopa troopa $03
+    CMP #con_red_koopa
     BNE Chk2MSBSt  ; branch if not found
-    LDA Enemy_State,x
+    LDA ram_enemy_state,x
     BEQ ChkForBump_HammerBroJ  ; if enemy found and in normal state, branch
 Chk2MSBSt:
-    LDA Enemy_State,x  ; save enemy state into Y
+    LDA ram_enemy_state,x  ; save enemy state into Y
     TAY
     ASL  ; check for d7 set
     BCC GetSteFromD  ; branch if not set
-    LDA Enemy_State,x
+    LDA ram_enemy_state,x
     ORA #%01000000  ; set d6
     JMP SetD6Ste  ; jump ahead of this part
 GetSteFromD:
     LDA EnemyBGCStateData,y  ; load new enemy state with old as offset
 SetD6Ste:
-    STA Enemy_State,x  ; set as new state
+    STA ram_enemy_state,x  ; set as new state
 
 ; --------------------------------
 ; $00 - used to store bitmask (not used but initialized here)
 ; $eb - used in DoEnemySideCheck as counter and to compare moving directions
 
 DoEnemySideCheck:
-    LDA Enemy_Y_Position,x  ; if enemy within status bar, branch to leave
+    LDA ram_enemy_y_position,x  ; if enemy within status bar, branch to leave
     CMP #$20  ; because there's nothing there that impedes movement
     BCC ExESdeC
     LDY #$16  ; start by finding block to the left of enemy ($00,$14)
@@ -225,7 +225,7 @@ DoEnemySideCheck:
     STA $eb  ; OAM data offset
 SdeCLoop:
     LDA $eb  ; check value
-    CMP Enemy_MovingDir,x  ; compare value against moving direction
+    CMP ram_enemy_moving_dir,x  ; compare value against moving direction
     BNE NextSdeC  ; branch if different and do not seek block there
     LDA #$01  ; set flag in A for save horizontal coordinate
     JSR BlockBufferChk_Enemy  ; find block to left or right of enemy object
@@ -243,13 +243,13 @@ ExESdeC:
 ChkForBump_HammerBroJ:
     CPX #$05  ; check if we're on the special use slot
     BEQ NoBump  ; and if so, branch ahead and do not play sound
-    LDA Enemy_State,x  ; if enemy state d7 not set, branch
+    LDA ram_enemy_state,x  ; if enemy state d7 not set, branch
     ASL  ; ahead and do not play sound
     BCC NoBump
-    LDA #Sfx_Bump  ; otherwise, play bump sound
-    STA Square1SoundQueue  ; sound will never be played if branching from ChkForRedKoopa
+    LDA #con_sfx_bump  ; otherwise, play bump sound
+    STA ram_square1_sound_queue  ; sound will never be played if branching from ChkForRedKoopa
 NoBump:
-    LDA Enemy_ID,x  ; check for hammer bro
+    LDA ram_enemy_id,x  ; check for hammer bro
     CMP #$05
     BNE InvEnemyDir  ; branch if not found
     LDA #$00
@@ -264,26 +264,26 @@ InvEnemyDir:
 ; $00 - used to hold horizontal difference between player and enemy
 
 PlayerEnemyDiff:
-    LDA Enemy_X_Position,x  ; get distance between enemy object's
+    LDA ram_enemy_x_position,x  ; get distance between enemy object's
     SEC  ; horizontal coordinate and the player's
-    SBC Player_X_Position  ; horizontal coordinate
+    SBC ram_player_x_position  ; horizontal coordinate
     STA $00  ; and store here
-    LDA Enemy_PageLoc,x
-    SBC Player_PageLoc  ; subtract borrow, then leave
+    LDA ram_enemy_page_loc,x
+    SBC ram_player_page_loc  ; subtract borrow, then leave
     RTS
 
 ; --------------------------------
 
 EnemyLanding:
     JSR InitVStf  ; do something here to vertical speed and something else
-    LDA Enemy_Y_Position,x
+    LDA ram_enemy_y_position,x
     AND #%11110000  ; save high nybble of vertical coordinate, and
     ORA #%00001000  ; set d3, then store, probably used to set enemy object
-    STA Enemy_Y_Position,x  ; neatly on whatever it's landing on
+    STA ram_enemy_y_position,x  ; neatly on whatever it's landing on
     RTS
 
 SubtEnemyYPos:
-    LDA Enemy_Y_Position,x  ; add 62 pixels to enemy object's
+    LDA ram_enemy_y_position,x  ; add 62 pixels to enemy object's
     CLC  ; vertical coordinate
     ADC #$3e
     CMP #$44  ; compare against a certain range
@@ -292,7 +292,7 @@ SubtEnemyYPos:
 EnemyJump:
     JSR SubtEnemyYPos  ; do a sub here
     BCC DoSide  ; if enemy vertical coord + 62 < 68, branch to leave
-    LDA Enemy_Y_Speed,x
+    LDA ram_enemy_y_speed,x
     CLC  ; add two to vertical speed
     ADC #$02
     CMP #$03  ; if green paratroopa not falling, branch ahead
@@ -303,7 +303,7 @@ EnemyJump:
     BEQ DoSide  ; branch if found
     JSR EnemyLanding  ; change vertical coordinate and speed
     LDA #$fd
-    STA Enemy_Y_Speed,x  ; make the paratroopa jump again
+    STA ram_enemy_y_speed,x  ; make the paratroopa jump again
 DoSide:
     JMP DoEnemySideCheck  ; check for horizontal blockage, then leave
 
@@ -318,22 +318,22 @@ HammerBroBGColl:
 KillEnemyAboveBlock:
     JSR ShellOrBlockDefeat  ; do this sub to kill enemy
     LDA #$fc  ; alter vertical speed of enemy and leave
-    STA Enemy_Y_Speed,x
+    STA ram_enemy_y_speed,x
     RTS
 
 UnderHammerBro:
-    LDA EnemyFrameTimer,x  ; check timer used by hammer bro
+    LDA ram_enemy_frame_timer,x  ; check timer used by hammer bro
     BNE NoUnderHammerBro  ; branch if not expired
-    LDA Enemy_State,x
+    LDA ram_enemy_state,x
     AND #%10001000  ; save d7 and d3 from enemy state, nullify other bits
-    STA Enemy_State,x  ; and store
+    STA ram_enemy_state,x  ; and store
     JSR EnemyLanding  ; modify vertical coordinate, speed and something else
     JMP DoEnemySideCheck  ; then check for horizontal blockage and leave
 
 NoUnderHammerBro:
-    LDA Enemy_State,x  ; if hammer bro is not standing on anything, set d0
+    LDA ram_enemy_state,x  ; if hammer bro is not standing on anything, set d0
     ORA #$01  ; in the enemy state to indicate jumping or falling, then leave
-    STA Enemy_State,x
+    STA ram_enemy_state,x
     RTS
 
 ChkUnderEnemy:
@@ -357,34 +357,34 @@ NSFnd:
 ; -------------------------------------------------------------------------------------
 
 FireballBGCollision:
-    LDA Fireball_Y_Position,x  ; check fireball's vertical coordinate
+    LDA ram_fireball_y_position,x  ; check fireball's vertical coordinate
     CMP #$18
     BCC ClearBounceFlag  ; if within the status bar area of the screen, branch ahead
     JSR BlockBufferChk_FBall  ; do fireball to background collision detection on bottom of it
     BEQ ClearBounceFlag  ; if nothing underneath fireball, branch
     JSR ChkForNonSolids  ; check for non-solid metatiles
     BEQ ClearBounceFlag  ; branch if any found
-    LDA Fireball_Y_Speed,x  ; if fireball's vertical speed set to move upwards,
+    LDA ram_fireball_y_speed,x  ; if fireball's vertical speed set to move upwards,
     BMI InitFireballExplode  ; branch to set exploding bit in fireball's state
-    LDA FireballBouncingFlag,x  ; if bouncing flag already set,
+    LDA ram_fireball_bouncing_flag,x  ; if bouncing flag already set,
     BNE InitFireballExplode  ; branch to set exploding bit in fireball's state
     LDA #$fd
-    STA Fireball_Y_Speed,x  ; otherwise set vertical speed to move upwards (give it bounce)
+    STA ram_fireball_y_speed,x  ; otherwise set vertical speed to move upwards (give it bounce)
     LDA #$01
-    STA FireballBouncingFlag,x  ; set bouncing flag
-    LDA Fireball_Y_Position,x
+    STA ram_fireball_bouncing_flag,x  ; set bouncing flag
+    LDA ram_fireball_y_position,x
     AND #$f8  ; modify vertical coordinate to land it properly
-    STA Fireball_Y_Position,x  ; store as new vertical coordinate
+    STA ram_fireball_y_position,x  ; store as new vertical coordinate
     RTS  ; leave
 
 ClearBounceFlag:
     LDA #$00
-    STA FireballBouncingFlag,x  ; clear bouncing flag by default
+    STA ram_fireball_bouncing_flag,x  ; clear bouncing flag by default
     RTS  ; leave
 
 InitFireballExplode:
     LDA #$80
-    STA Fireball_State,x  ; set exploding flag in fireball's state
-    LDA #Sfx_Bump
-    STA Square1SoundQueue  ; load bump sound
+    STA ram_fireball_state,x  ; set exploding flag in fireball's state
+    LDA #con_sfx_bump
+    STA ram_square1_sound_queue  ; load bump sound
     RTS  ; leave

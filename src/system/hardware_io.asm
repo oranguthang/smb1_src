@@ -23,7 +23,7 @@ sub_dispatch_inline_handler:
 
 InitializeNameTables:
     LDA PPU_STATUS  ; reset flip-flop
-    LDA Mirror_PPU_CTRL_REG1  ; load mirror of ppu reg $2000
+    LDA ram_mirror_ppu_ctrl_reg1  ; load mirror of ppu reg $2000
     ORA #%00010000  ; set sprites for first 4k and background for second 4k
     AND #%11110000  ; clear rest of lower nybble, leave higher alone
     JSR WritePPUReg1
@@ -45,14 +45,14 @@ InitNTLoop:
     BNE InitNTLoop
     LDY #64  ; now to clear the attribute table (with zero this time)
     TXA
-    STA VRAM_Buffer1_Offset  ; init vram buffer 1 offset
-    STA VRAM_Buffer1  ; init vram buffer 1
+    STA ram_vram_buffer1_offset  ; init vram buffer 1 offset
+    STA ram_vram_buffer1  ; init vram buffer 1
 InitATLoop:
     STA PPU_DATA
     DEY
     BNE InitATLoop
-    STA HorizontalScroll  ; reset scroll variables
-    STA VerticalScroll
+    STA ram_horizontal_scroll  ; reset scroll variables
+    STA ram_vertical_scroll
     JMP InitScroll  ; initialize scroll registers to zero
 
 ; -------------------------------------------------------------------------------------
@@ -79,18 +79,18 @@ PortLoop:
     ROL  ; rotate bit from carry flag
     DEY
     BNE PortLoop  ; count down bits left
-    STA SavedJoypadBits,x  ; save controller status here always
+    STA ram_saved_joypad_bits,x  ; save controller status here always
     PHA
     AND #%00110000  ; check for select or start
-    AND JoypadBitMask,x  ; if neither saved state nor current state
+    AND ram_joypad_bit_mask,x  ; if neither saved state nor current state
     BEQ Save8Bits  ; have any of these two set, branch
     PLA
     AND #%11001111  ; otherwise store without select
-    STA SavedJoypadBits,x  ; or start bits and leave
+    STA ram_saved_joypad_bits,x  ; or start bits and leave
     RTS
 Save8Bits:
     PLA
-    STA JoypadBitMask,x  ; save with all bits in another place and leave
+    STA ram_joypad_bit_mask,x  ; save with all bits in another place and leave
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -106,7 +106,7 @@ WriteBufferToScreen:
     LDA ($00),y  ; load next byte (third)
     ASL  ; shift to left and save in stack
     PHA
-    LDA Mirror_PPU_CTRL_REG1  ; load mirror of $2000,
+    LDA ram_mirror_ppu_ctrl_reg1  ; load mirror of $2000,
     ORA #%00000100  ; set ppu to increment by 32 by default
     BCS SetupWrites  ; if d7 of third byte was clear, ppu will
     AND #%11111011  ; only increment by 1
@@ -156,5 +156,5 @@ InitScroll:
 
 WritePPUReg1:
     STA PPU_CTRL_REG1  ; write contents of A to PPU register 1
-    STA Mirror_PPU_CTRL_REG1  ; and its mirror
+    STA ram_mirror_ppu_ctrl_reg1  ; and its mirror
     RTS

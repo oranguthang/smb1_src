@@ -1,7 +1,7 @@
 ; -------------------------------------------------------------------------------------
 
 ScreenRoutines:
-    LDA ScreenRoutineTask  ; run one of the following subroutines
+    LDA ram_screen_routine_task  ; run one of the following subroutines
     JSR sub_dispatch_inline_handler
 
     .word InitScreen
@@ -25,7 +25,7 @@ ScreenRoutines:
 InitScreen:
     JSR MoveAllSpritesOffscreen  ; initialize all sprites including sprite #0
     JSR InitializeNameTables  ; and erase both name and attribute tables
-    LDA OperMode
+    LDA ram_oper_mode
     BEQ NextSubtask  ; if mode still 0, do not load
     LDX #$03  ; into buffer pointer
     JMP SetVRAMAddr_A
@@ -33,19 +33,19 @@ InitScreen:
 ; -------------------------------------------------------------------------------------
 
 SetupIntermediate:
-    LDA BackgroundColorCtrl  ; save current background color control
+    LDA ram_background_color_ctrl  ; save current background color control
     PHA  ; and player status to stack
-    LDA PlayerStatus
+    LDA ram_player_status
     PHA
     LDA #$00  ; set background color to black
-    STA PlayerStatus  ; and player status to not fiery
+    STA ram_player_status  ; and player status to not fiery
     LDA #$02  ; this is the ONLY time background color control
-    STA BackgroundColorCtrl  ; is set to less than 4
+    STA ram_background_color_ctrl  ; is set to less than 4
     JSR GetPlayerColors
     PLA  ; we only execute this routine for
-    STA PlayerStatus  ; the intermediate lives display
+    STA ram_player_status  ; the intermediate lives display
     PLA  ; and once we're done, we return bg
-    STA BackgroundColorCtrl  ; color ctrl and player status from stack
+    STA ram_background_color_ctrl  ; color ctrl and player status from stack
     JMP IncSubtask  ; then move onto the next task
 
 ; -------------------------------------------------------------------------------------
@@ -54,10 +54,10 @@ AreaPalette:
     .byte $01, $02, $03, $04
 
 GetAreaPalette:
-    LDY AreaType  ; select appropriate palette to load
+    LDY ram_area_type  ; select appropriate palette to load
     LDX AreaPalette,y  ; based on area type
 SetVRAMAddr_A:
-    STX VRAM_Buffer_AddrCtrl  ; store offset into buffer control
+    STX ram_vram_buffer_addr_ctrl  ; store offset into buffer control
 NextSubtask:
     JMP IncSubtask  ; move onto next task
 
@@ -77,21 +77,21 @@ PlayerColors:
     .byte $22, $37, $27, $16  ; fiery (used by both)
 
 GetBackgroundColor:
-    LDY BackgroundColorCtrl  ; check background color control
+    LDY ram_background_color_ctrl  ; check background color control
     BEQ NoBGColor  ; if not set, increment task and fetch palette
     LDA BGColorCtrl_Addr-4,y  ; put appropriate palette into vram
-    STA VRAM_Buffer_AddrCtrl  ; note that if set to 5-7, $0301 will not be read
+    STA ram_vram_buffer_addr_ctrl  ; note that if set to 5-7, $0301 will not be read
 NoBGColor:
-    INC ScreenRoutineTask  ; increment to next subtask and plod on through
+    INC ram_screen_routine_task  ; increment to next subtask and plod on through
 
 GetPlayerColors:
-    LDX VRAM_Buffer1_Offset  ; get current buffer offset
+    LDX ram_vram_buffer1_offset  ; get current buffer offset
     LDY #$00
-    LDA CurrentPlayer  ; check which player is on the screen
+    LDA ram_current_player  ; check which player is on the screen
     BEQ ChkFiery
     LDY #$04  ; load offset for luigi
 ChkFiery:
-    LDA PlayerStatus  ; check player status
+    LDA ram_player_status  ; check player status
     CMP #$02
     BNE StartClrGet  ; if fiery, load alternate offset for fiery player
     LDY #$08
@@ -100,42 +100,42 @@ StartClrGet:
     STA $00
 ClrGetLoop:
     LDA PlayerColors,y  ; fetch player colors and store them
-    STA VRAM_Buffer1+3,x  ; in the buffer
+    STA ram_vram_buffer1+3,x  ; in the buffer
     INY
     INX
     DEC $00
     BPL ClrGetLoop
-    LDX VRAM_Buffer1_Offset  ; load original offset from before
-    LDY BackgroundColorCtrl  ; if this value is four or greater, it will be set
+    LDX ram_vram_buffer1_offset  ; load original offset from before
+    LDY ram_background_color_ctrl  ; if this value is four or greater, it will be set
     BNE SetBGColor  ; therefore use it as offset to background color
-    LDY AreaType  ; otherwise use area type bits from area offset as offset
+    LDY ram_area_type  ; otherwise use area type bits from area offset as offset
 SetBGColor:
     LDA BackgroundColors,y  ; to background color instead
-    STA VRAM_Buffer1+3,x
+    STA ram_vram_buffer1+3,x
     LDA #$3f  ; set for sprite palette address
-    STA VRAM_Buffer1,x  ; save to buffer
+    STA ram_vram_buffer1,x  ; save to buffer
     LDA #$10
-    STA VRAM_Buffer1+1,x
+    STA ram_vram_buffer1+1,x
     LDA #$04  ; write length byte to buffer
-    STA VRAM_Buffer1+2,x
+    STA ram_vram_buffer1+2,x
     LDA #$00  ; now the null terminator
-    STA VRAM_Buffer1+7,x
+    STA ram_vram_buffer1+7,x
     TXA  ; move the buffer pointer ahead 7 bytes
     CLC  ; in case we want to write anything else later
     ADC #$07
 SetVRAMOffset:
-    STA VRAM_Buffer1_Offset  ; store as new vram buffer offset
+    STA ram_vram_buffer1_offset  ; store as new vram buffer offset
     RTS
 
 ; -------------------------------------------------------------------------------------
 
 GetAlternatePalette1:
-    LDA AreaStyle  ; check for mushroom level style
+    LDA ram_area_style  ; check for mushroom level style
     CMP #$01
     BNE NoAltPal
     LDA #$0b  ; if found, load appropriate palette
 SetVRAMAddr_B:
-    STA VRAM_Buffer_AddrCtrl
+    STA ram_vram_buffer_addr_ctrl
 NoAltPal:
     JMP IncSubtask  ; now onto the next task
 
@@ -150,57 +150,57 @@ WriteTopStatusLine:
 
 WriteBottomStatusLine:
     JSR GetSBNybbles  ; write player's score and coin tally to screen
-    LDX VRAM_Buffer1_Offset
+    LDX ram_vram_buffer1_offset
     LDA #$20  ; write address for world-area number on screen
-    STA VRAM_Buffer1,x
+    STA ram_vram_buffer1,x
     LDA #$73
-    STA VRAM_Buffer1+1,x
+    STA ram_vram_buffer1+1,x
     LDA #$03  ; write length for it
-    STA VRAM_Buffer1+2,x
-    LDY WorldNumber  ; first the world number
+    STA ram_vram_buffer1+2,x
+    LDY ram_world_number  ; first the world number
     INY
     TYA
-    STA VRAM_Buffer1+3,x
+    STA ram_vram_buffer1+3,x
     LDA #$28  ; next the dash
-    STA VRAM_Buffer1+4,x
-    LDY LevelNumber  ; next the level number
+    STA ram_vram_buffer1+4,x
+    LDY ram_level_number  ; next the level number
     INY  ; increment for proper number display
     TYA
-    STA VRAM_Buffer1+5,x
+    STA ram_vram_buffer1+5,x
     LDA #$00  ; put null terminator on
-    STA VRAM_Buffer1+6,x
+    STA ram_vram_buffer1+6,x
     TXA  ; move the buffer offset up by 6 bytes
     CLC
     ADC #$06
-    STA VRAM_Buffer1_Offset
+    STA ram_vram_buffer1_offset
     JMP IncSubtask
 
 ; -------------------------------------------------------------------------------------
 
 DisplayTimeUp:
-    LDA GameTimerExpiredFlag  ; if game timer not expired, increment task
+    LDA ram_game_timer_expired_flag  ; if game timer not expired, increment task
     BEQ NoTimeUp  ; control 2 tasks forward, otherwise, stay here
     LDA #$00
-    STA GameTimerExpiredFlag  ; reset timer expiration flag
+    STA ram_game_timer_expired_flag  ; reset timer expiration flag
     LDA #$02  ; output time-up screen to buffer
     JMP OutputInter
 NoTimeUp:
-    INC ScreenRoutineTask  ; increment control task 2 tasks forward
+    INC ram_screen_routine_task  ; increment control task 2 tasks forward
     JMP IncSubtask
 
 ; -------------------------------------------------------------------------------------
 
 DisplayIntermediate:
-    LDA OperMode  ; check primary mode of operation
+    LDA ram_oper_mode  ; check primary mode of operation
     BEQ NoInter  ; if in title screen mode, skip this
-    CMP #GameOverModeValue  ; are we in game over mode?
+    CMP #con_mode_game_over  ; are we in game over mode?
     BEQ GameOverInter  ; if so, proceed to display game over screen
-    LDA AltEntranceControl  ; otherwise check for mode of alternate entry
+    LDA ram_alt_entrance_control  ; otherwise check for mode of alternate entry
     BNE NoInter  ; and branch if found
-    LDY AreaType  ; check if we are on castle level
+    LDY ram_area_type  ; check if we are on castle level
     CPY #$03  ; and if so, branch (possibly residual)
     BEQ PlayerInter
-    LDA DisableIntermediate  ; if this flag is set, skip intermediate lives display
+    LDA ram_disable_intermediate  ; if this flag is set, skip intermediate lives display
     BNE NoInter  ; and jump to specific task, otherwise
 PlayerInter:
     JSR DrawPlayer_Intermediate  ; put player in appropriate place for
@@ -209,33 +209,33 @@ OutputInter:
     JSR WriteGameText
     JSR ResetScreenTimer
     LDA #$00
-    STA DisableScreenFlag  ; reenable screen output
+    STA ram_disable_screen_flag  ; reenable screen output
     RTS
 GameOverInter:
     LDA #$12  ; set screen timer
-    STA ScreenTimer
+    STA ram_screen_timer
     LDA #$03  ; output game over screen to buffer
     JSR WriteGameText
     JMP IncModeTask_B
 NoInter:
     LDA #$08  ; set for specific task and leave
-    STA ScreenRoutineTask
+    STA ram_screen_routine_task
     RTS
 
 ; -------------------------------------------------------------------------------------
 
 AreaParserTaskControl:
-    INC DisableScreenFlag  ; turn off screen
+    INC ram_disable_screen_flag  ; turn off screen
 TaskLoop:
     JSR AreaParserTaskHandler  ; render column set of current area
-    LDA AreaParserTaskNum  ; check number of tasks
+    LDA ram_area_parser_task_num  ; check number of tasks
     BNE TaskLoop  ; if tasks still not all done, do another one
-    DEC ColumnSets  ; do we need to render more column sets?
+    DEC ram_column_sets  ; do we need to render more column sets?
     BPL OutputCol
-    INC ScreenRoutineTask  ; if not, move on to the next task
+    INC ram_screen_routine_task  ; if not, move on to the next task
 OutputCol:
     LDA #$06  ; set vram buffer to output rendered column set
-    STA VRAM_Buffer_AddrCtrl  ; on next NMI
+    STA ram_vram_buffer_addr_ctrl  ; on next NMI
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -244,11 +244,11 @@ OutputCol:
 ; $01 - vram buffer address table high
 
 DrawTitleScreen:
-    LDA OperMode  ; are we in title screen mode?
+    LDA ram_oper_mode  ; are we in title screen mode?
     BNE IncModeTask_B  ; if not, exit
-    LDA #>TitleScreenDataOffset  ; load address $1ec0 into
+    LDA #>con_title_screen_data_offset  ; load address $1ec0 into
     STA PPU_ADDRESS  ; the vram address register
-    LDA #<TitleScreenDataOffset
+    LDA #<con_title_screen_data_offset
     STA PPU_ADDRESS
     LDA #$03  ; put address $0300 into
     STA $01  ; the indirect at $00
@@ -273,17 +273,17 @@ ChkHiByte:
 ; -------------------------------------------------------------------------------------
 
 ClearBuffersDrawIcon:
-    LDA OperMode  ; check game mode
+    LDA ram_oper_mode  ; check game mode
     BNE IncModeTask_B  ; if not title screen mode, leave
     LDX #$00  ; otherwise, clear buffer space
 TScrClear:
-    STA VRAM_Buffer1-1,x
-    STA VRAM_Buffer1-1+$100,x
+    STA ram_vram_buffer1-1,x
+    STA ram_vram_buffer1-1+$100,x
     DEX
     BNE TScrClear
     JSR DrawMushroomIcon  ; draw player select icon
 IncSubtask:
-    INC ScreenRoutineTask  ; move onto next task
+    INC ram_screen_routine_task  ; move onto next task
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -292,7 +292,7 @@ WriteTopScore:
     LDA #$fa  ; run display routine to display top score on title
     JSR UpdateNumber
 IncModeTask_B:
-    INC OperMode_Task  ; move onto next mode
+    INC ram_oper_mode_task  ; move onto next mode
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -365,7 +365,7 @@ WriteGameText:
     BCC Chk2Players  ; branch to check players
     LDY #$08  ; otherwise warp zone, therefore set offset
 Chk2Players:
-    LDA NumberOfPlayers  ; check for number of players
+    LDA ram_number_of_players  ; check for number of players
     BNE LdGameText  ; if there are two, use current offset to also print name
     INY  ; otherwise increment offset by one to not print name
 LdGameText:
@@ -375,45 +375,45 @@ GameTextLoop:
     LDA GameText,x  ; load message data
     CMP #$ff  ; check for terminator
     BEQ EndGameText  ; branch to end text if found
-    STA VRAM_Buffer1,y  ; otherwise write data to buffer
+    STA ram_vram_buffer1,y  ; otherwise write data to buffer
     INX  ; and increment increment
     INY
     BNE GameTextLoop  ; do this for 256 bytes if no terminator found
 EndGameText:
     LDA #$00  ; put null terminator at end
-    STA VRAM_Buffer1,y
+    STA ram_vram_buffer1,y
     PLA  ; pull original text number from stack
     TAX
     CMP #$04  ; are we printing warp zone?
     BCS PrintWarpZoneNumbers
     DEX  ; are we printing the world/lives display?
     BNE CheckPlayerName  ; if not, branch to check player's name
-    LDA NumberofLives  ; otherwise, check number of lives
+    LDA ram_numberof_lives  ; otherwise, check number of lives
     CLC  ; and increment by one for display
     ADC #$01
     CMP #10  ; more than 9 lives?
     BCC PutLives
     SBC #10  ; if so, subtract 10 and put a crown tile
     LDY #$9f  ; next to the difference...strange things happen if
-    STY VRAM_Buffer1+7  ; the number of lives exceeds 19
+    STY ram_vram_buffer1+7  ; the number of lives exceeds 19
 PutLives:
-    STA VRAM_Buffer1+8
-    LDY WorldNumber  ; write world and level numbers (incremented for display)
+    STA ram_vram_buffer1+8
+    LDY ram_world_number  ; write world and level numbers (incremented for display)
     INY  ; to the buffer in the spaces surrounding the dash
-    STY VRAM_Buffer1+19
-    LDY LevelNumber
+    STY ram_vram_buffer1+19
+    LDY ram_level_number
     INY
-    STY VRAM_Buffer1+21  ; we're done here
+    STY ram_vram_buffer1+21  ; we're done here
     RTS
 
 CheckPlayerName:
-    LDA NumberOfPlayers  ; check number of players
+    LDA ram_number_of_players  ; check number of players
     BEQ ExitChkName  ; if only 1 player, leave
-    LDA CurrentPlayer  ; load current player
+    LDA ram_current_player  ; load current player
     DEX  ; check to see if current message number is for time up
     BNE ChkLuigi
-    LDY OperMode  ; check for game over mode
-    CPY #GameOverModeValue
+    LDY ram_oper_mode  ; check for game over mode
+    CPY #con_mode_game_over
     BEQ ChkLuigi
     EOR #%00000001  ; if not, must be time up, invert d0 to do other player
 ChkLuigi:
@@ -422,7 +422,7 @@ ChkLuigi:
     LDY #$04
 NameLoop:
     LDA LuigiName,y  ; otherwise, replace "MARIO" with "LUIGI"
-    STA VRAM_Buffer1+3,y
+    STA ram_vram_buffer1+3,y
     DEY
     BPL NameLoop  ; do this until each letter is replaced
 ExitChkName:
@@ -436,7 +436,7 @@ PrintWarpZoneNumbers:
     LDY #$00
 WarpNumLoop:
     LDA WarpZoneNumbers,x  ; print warp zone numbers into the
-    STA VRAM_Buffer1+27,y  ; placeholders from earlier
+    STA ram_vram_buffer1+27,y  ; placeholders from earlier
     INX
     INY  ; put a number in every fourth space
     INY
@@ -450,13 +450,13 @@ WarpNumLoop:
 ; -------------------------------------------------------------------------------------
 
 ResetSpritesAndScreenTimer:
-    LDA ScreenTimer  ; check if screen timer has expired
+    LDA ram_screen_timer  ; check if screen timer has expired
     BNE NoReset  ; if not, branch to leave
     JSR MoveAllSpritesOffscreen  ; otherwise reset sprites now
 
 ResetScreenTimer:
     LDA #$07  ; reset timer again
-    STA ScreenTimer
-    INC ScreenRoutineTask  ; move onto next task
+    STA ram_screen_timer
+    INC ram_screen_routine_task  ; move onto next task
 NoReset:
     RTS

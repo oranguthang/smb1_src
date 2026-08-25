@@ -9,23 +9,23 @@
 ; $07 - metatile graphics table address high
 
 RenderAreaGraphics:
-    LDA CurrentColumnPos  ; store LSB of where we're at
+    LDA ram_current_column_pos  ; store LSB of where we're at
     AND #$01
     STA $05
-    LDY VRAM_Buffer2_Offset  ; store vram buffer offset
+    LDY ram_vram_buffer2_offset  ; store vram buffer offset
     STY $00
-    LDA CurrentNTAddr_Low  ; get current name table address we're supposed to render
-    STA VRAM_Buffer2+1,y
-    LDA CurrentNTAddr_High
-    STA VRAM_Buffer2,y
+    LDA ram_current_nt_addr_low  ; get current name table address we're supposed to render
+    STA ram_vram_buffer2+1,y
+    LDA ram_current_nt_addr_high
+    STA ram_vram_buffer2,y
     LDA #$9a  ; store length byte of 26 here with d7 set
-    STA VRAM_Buffer2+2,y  ; to increment by 32 (in columns)
+    STA ram_vram_buffer2+2,y  ; to increment by 32 (in columns)
     LDA #$00  ; init attribute row
     STA $04
     TAX
 DrawMTLoop:
     STX $01  ; store init value of 0 or incremented offset for buffer
-    LDA MetatileBuffer,x  ; get first metatile number, and mask out all but 2 MSB
+    LDA ram_metatile_buffer,x  ; get first metatile number, and mask out all but 2 MSB
     AND #%11000000
     STA $03  ; store attribute table bits here
     ASL  ; note that metatile format is:
@@ -36,11 +36,11 @@ DrawMTLoop:
     STA $06
     LDA MetatileGraphics_High,y
     STA $07
-    LDA MetatileBuffer,x  ; get metatile number again
+    LDA ram_metatile_buffer,x  ; get metatile number again
     ASL  ; multiply by 4 and use as tile offset
     ASL
     STA $02
-    LDA AreaParserTaskNum  ; get current task number for level processing and
+    LDA ram_area_parser_task_num  ; get current task number for level processing and
     AND #%00000001  ; mask out all but LSB, then invert LSB, multiply by 2
     EOR #%00000001  ; to get the correct column position in the metatile,
     ASL  ; then add to the tile offset so we can draw either side
@@ -48,10 +48,10 @@ DrawMTLoop:
     TAY
     LDX $00  ; use vram buffer offset from before as X
     LDA ($06),y
-    STA VRAM_Buffer2+3,x  ; get first tile number (top left or top right) and store
+    STA ram_vram_buffer2+3,x  ; get first tile number (top left or top right) and store
     INY
     LDA ($06),y  ; now get the second (bottom left or bottom right) and store
-    STA VRAM_Buffer2+4,x
+    STA ram_vram_buffer2+4,x
     LDY $04  ; get current attribute row
     LDA $05  ; get LSB of current column where we're at, and
     BNE RightCheck  ; branch if set (clear = left attrib, set = right)
@@ -77,9 +77,9 @@ LLeft:
 NextMTRow:
     INC $04  ; move onto next attribute row
 SetAttrib:
-    LDA AttributeBuffer,y  ; get previously saved bits from before
+    LDA ram_attribute_buffer,y  ; get previously saved bits from before
     ORA $03  ; if any, and put new bits, if any, onto
-    STA AttributeBuffer,y  ; the old, and store
+    STA ram_attribute_buffer,y  ; the old, and store
     INC $00  ; increment vram buffer offset by 2
     INC $00
     LDX $01  ; get current gfx buffer row, and check for
@@ -91,17 +91,17 @@ SetAttrib:
     INY
     INY
     LDA #$00
-    STA VRAM_Buffer2,y  ; put null terminator at end of data for name table
-    STY VRAM_Buffer2_Offset  ; store new buffer offset
-    INC CurrentNTAddr_Low  ; increment name table address low
-    LDA CurrentNTAddr_Low  ; check current low byte
+    STA ram_vram_buffer2,y  ; put null terminator at end of data for name table
+    STY ram_vram_buffer2_offset  ; store new buffer offset
+    INC ram_current_nt_addr_low  ; increment name table address low
+    LDA ram_current_nt_addr_low  ; check current low byte
     AND #%00011111  ; if no wraparound, just skip this part
     BNE ExitDrawM
     LDA #$80  ; if wraparound occurs, make sure low byte stays
-    STA CurrentNTAddr_Low  ; just under the status bar
-    LDA CurrentNTAddr_High  ; and then invert d2 of the name table address high
+    STA ram_current_nt_addr_low  ; just under the status bar
+    LDA ram_current_nt_addr_high  ; and then invert d2 of the name table address high
     EOR #%00000100  ; to move onto the next appropriate name table
-    STA CurrentNTAddr_High
+    STA ram_current_nt_addr_high
 ExitDrawM:
     JMP SetVRAMCtrl  ; jump to set buffer to $0341 and leave
 
@@ -110,13 +110,13 @@ ExitDrawM:
 ; $01 - temp attribute table address low
 
 RenderAttributeTables:
-    LDA CurrentNTAddr_Low  ; get low byte of next name table address
+    LDA ram_current_nt_addr_low  ; get low byte of next name table address
     AND #%00011111  ; to be written to, mask out all but 5 LSB,
     SEC  ; subtract four
     SBC #$04
     AND #%00011111  ; mask out bits again and store
     STA $01
-    LDA CurrentNTAddr_High  ; get high byte and branch if borrow not set
+    LDA ram_current_nt_addr_high  ; get high byte and branch if borrow not set
     BCS SetATHigh
     EOR #%00000100  ; otherwise invert d2
 SetATHigh:
@@ -129,21 +129,21 @@ SetATHigh:
     ADC #$c0  ; we should now have the appropriate block of
     STA $01  ; attribute table in our temp address
     LDX #$00
-    LDY VRAM_Buffer2_Offset  ; get buffer offset
+    LDY ram_vram_buffer2_offset  ; get buffer offset
 AttribLoop:
     LDA $00
-    STA VRAM_Buffer2,y  ; store high byte of attribute table address
+    STA ram_vram_buffer2,y  ; store high byte of attribute table address
     LDA $01
     CLC  ; get low byte, add 8 because we want to start
     ADC #$08  ; below the status bar, and store
-    STA VRAM_Buffer2+1,y
+    STA ram_vram_buffer2+1,y
     STA $01  ; also store in temp again
-    LDA AttributeBuffer,x  ; fetch current attribute table byte and store
-    STA VRAM_Buffer2+3,y  ; in the buffer
+    LDA ram_attribute_buffer,x  ; fetch current attribute table byte and store
+    STA ram_vram_buffer2+3,y  ; in the buffer
     LDA #$01
-    STA VRAM_Buffer2+2,y  ; store length of 1 in buffer
+    STA ram_vram_buffer2+2,y  ; store length of 1 in buffer
     LSR
-    STA AttributeBuffer,x  ; clear current byte in attribute buffer
+    STA ram_attribute_buffer,x  ; clear current byte in attribute buffer
     INY  ; increment buffer offset by 4 bytes
     INY
     INY
@@ -151,11 +151,11 @@ AttribLoop:
     INX  ; increment attribute offset and check to see
     CPX #$07  ; if we're at the end yet
     BCC AttribLoop
-    STA VRAM_Buffer2,y  ; put null terminator at the end
-    STY VRAM_Buffer2_Offset  ; store offset in case we want to do any more
+    STA ram_vram_buffer2,y  ; put null terminator at the end
+    STY ram_vram_buffer2_offset  ; store offset in case we want to do any more
 SetVRAMCtrl:
     LDA #$06
-    STA VRAM_Buffer_AddrCtrl  ; set buffer to $0341 and leave
+    STA ram_vram_buffer_addr_ctrl  ; set buffer to $0341 and leave
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -176,48 +176,48 @@ Palette3Data:
     .byte $0f, $07, $17, $00
 
 ColorRotation:
-    LDA FrameCounter  ; get frame counter
+    LDA ram_frame_counter  ; get frame counter
     AND #$07  ; mask out all but three LSB
     BNE ExitColorRot  ; branch if not set to zero to do this every eighth frame
-    LDX VRAM_Buffer1_Offset  ; check vram buffer offset
+    LDX ram_vram_buffer1_offset  ; check vram buffer offset
     CPX #$31
     BCS ExitColorRot  ; if offset over 48 bytes, branch to leave
     TAY  ; otherwise use frame counter's 3 LSB as offset here
 GetBlankPal:
     LDA BlankPalette,y  ; get blank palette for palette 3
-    STA VRAM_Buffer1,x  ; store it in the vram buffer
+    STA ram_vram_buffer1,x  ; store it in the vram buffer
     INX  ; increment offsets
     INY
     CPY #$08
     BCC GetBlankPal  ; do this until all bytes are copied
-    LDX VRAM_Buffer1_Offset  ; get current vram buffer offset
+    LDX ram_vram_buffer1_offset  ; get current vram buffer offset
     LDA #$03
     STA $00  ; set counter here
-    LDA AreaType  ; get area type
+    LDA ram_area_type  ; get area type
     ASL  ; multiply by 4 to get proper offset
     ASL
     TAY  ; save as offset here
 GetAreaPal:
     LDA Palette3Data,y  ; fetch palette to be written based on area type
-    STA VRAM_Buffer1+3,x  ; store it to overwrite blank palette in vram buffer
+    STA ram_vram_buffer1+3,x  ; store it to overwrite blank palette in vram buffer
     INY
     INX
     DEC $00  ; decrement counter
     BPL GetAreaPal  ; do this until the palette is all copied
-    LDX VRAM_Buffer1_Offset  ; get current vram buffer offset
-    LDY ColorRotateOffset  ; get color cycling offset
+    LDX ram_vram_buffer1_offset  ; get current vram buffer offset
+    LDY ram_color_rotate_offset  ; get color cycling offset
     LDA ColorRotatePalette,y
-    STA VRAM_Buffer1+4,x  ; get and store current color in second slot of palette
-    LDA VRAM_Buffer1_Offset
+    STA ram_vram_buffer1+4,x  ; get and store current color in second slot of palette
+    LDA ram_vram_buffer1_offset
     CLC  ; add seven bytes to vram buffer offset
     ADC #$07
-    STA VRAM_Buffer1_Offset
-    INC ColorRotateOffset  ; increment color cycling offset
-    LDA ColorRotateOffset
+    STA ram_vram_buffer1_offset
+    INC ram_color_rotate_offset  ; increment color cycling offset
+    LDA ram_color_rotate_offset
     CMP #$06  ; check to see if it's still in range
     BCC ExitColorRot  ; if so, branch to leave
     LDA #$00
-    STA ColorRotateOffset  ; otherwise, init to keep it in range
+    STA ram_color_rotate_offset  ; otherwise, init to keep it in range
 ExitColorRot:
     RTS  ; leave
 
@@ -239,19 +239,19 @@ BlockGfxData:
 RemoveCoin_Axe:
     LDY #$41  ; set low byte so offset points to $0341
     LDA #$03  ; load offset for default blank metatile
-    LDX AreaType  ; check area type
+    LDX ram_area_type  ; check area type
     BNE WriteBlankMT  ; if not water type, use offset
     LDA #$04  ; otherwise load offset for blank metatile used in water
 WriteBlankMT:
     JSR PutBlockMetatile  ; do a sub to write blank metatile to vram buffer
     LDA #$06
-    STA VRAM_Buffer_AddrCtrl  ; set vram address controller to $0341 and leave
+    STA ram_vram_buffer_addr_ctrl  ; set vram address controller to $0341 and leave
     RTS
 
 ReplaceBlockMetatile:
     JSR WriteBlockMetatile  ; write metatile to vram buffer to replace block object
-    INC Block_ResidualCounter  ; increment unused counter (residual code)
-    DEC Block_RepFlag,x  ; decrement flag (residual code)
+    INC ram_block_residual_counter  ; increment unused counter (residual code)
+    DEC ram_block_rep_flag,x  ; decrement flag (residual code)
     RTS  ; leave
 
 DestroyBlockMetatile:
@@ -274,7 +274,7 @@ WriteBlockMetatile:
     INY  ; if any other metatile, increment offset for empty block
 UseBOffset:
     TYA  ; put Y in A
-    LDY VRAM_Buffer1_Offset  ; get vram buffer offset
+    LDY ram_vram_buffer1_offset  ; get vram buffer offset
     INY  ; move onto next byte
     JSR PutBlockMetatile  ; get appropriate block data and write to vram buffer
 MoveVOffset:
@@ -285,7 +285,7 @@ MoveVOffset:
     JMP SetVRAMOffset  ; branch to store as new vram buffer offset
 
 PutBlockMetatile:
-    STX $00  ; store control bit from SprDataOffset_Ctrl
+    STX $00  ; store control bit from ram_spr_data_offset_ctrl
     STY $01  ; store vram buffer offset for next byte
     ASL
     ASL  ; multiply A by four and use as X
@@ -319,26 +319,26 @@ SaveHAdder:
     LDY $01  ; get vram buffer offset to be used
 RemBridge:
     LDA BlockGfxData,x  ; write top left and top right
-    STA VRAM_Buffer1+2,y  ; tile numbers into first spot
+    STA ram_vram_buffer1+2,y  ; tile numbers into first spot
     LDA BlockGfxData+1,x
-    STA VRAM_Buffer1+3,y
+    STA ram_vram_buffer1+3,y
     LDA BlockGfxData+2,x  ; write bottom left and bottom
-    STA VRAM_Buffer1+7,y  ; right tiles numbers into
+    STA ram_vram_buffer1+7,y  ; right tiles numbers into
     LDA BlockGfxData+3,x  ; second spot
-    STA VRAM_Buffer1+8,y
+    STA ram_vram_buffer1+8,y
     LDA $04
-    STA VRAM_Buffer1,y  ; write low byte of name table
+    STA ram_vram_buffer1,y  ; write low byte of name table
     CLC  ; into first slot as read
     ADC #$20  ; add 32 bytes to value
-    STA VRAM_Buffer1+5,y  ; write low byte of name table
+    STA ram_vram_buffer1+5,y  ; write low byte of name table
     LDA $05  ; plus 32 bytes into second slot
-    STA VRAM_Buffer1-1,y  ; write high byte of name
-    STA VRAM_Buffer1+4,y  ; table address to both slots
+    STA ram_vram_buffer1-1,y  ; write high byte of name
+    STA ram_vram_buffer1+4,y  ; table address to both slots
     LDA #$02
-    STA VRAM_Buffer1+1,y  ; put length of 2 in
-    STA VRAM_Buffer1+6,y  ; both slots
+    STA ram_vram_buffer1+1,y  ; put length of 2 in
+    STA ram_vram_buffer1+6,y  ; both slots
     LDA #$00
-    STA VRAM_Buffer1+9,y  ; put null terminator at end
+    STA ram_vram_buffer1+9,y  ; put null terminator at end
     LDX $00  ; get offset control bit here
     RTS  ; and leave
 

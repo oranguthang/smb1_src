@@ -6,22 +6,22 @@
 sub_move_enemy_horizontally:
     INX  ; increment offset for enemy offset
     JSR sub_move_object_horizontally  ; position object horizontally according to
-    LDX ObjectOffset  ; counters, return with saved value in A,
+    LDX ram_object_offset  ; counters, return with saved value in A,
     RTS  ; put enemy offset back in X and leave
 
 sub_move_player_horizontally:
-    LDA JumpspringAnimCtrl  ; if jumpspring currently animating,
+    LDA ram_jumpspring_anim_ctrl  ; if jumpspring currently animating,
     BNE bra_return_from_movement  ; branch to leave
     TAX  ; otherwise set zero for offset to use player's stuff
 
 sub_move_object_horizontally:
-    LDA SprObject_X_Speed,x  ; get currently saved value (horizontal
+    LDA ram_spr_object_x_speed,x  ; get currently saved value (horizontal
     ASL  ; speed, secondary counter, whatever)
     ASL  ; and move low nybble to high
     ASL
     ASL
     STA $01  ; store result here
-    LDA SprObject_X_Speed,x  ; get saved value again
+    LDA ram_spr_object_x_speed,x  ; get saved value again
     LSR  ; move high nybble to low
     LSR
     LSR
@@ -37,20 +37,20 @@ bra_store_signed_x_speed:
     DEY  ; otherwise decrement Y
 bra_apply_horizontal_position_delta:
     STY $02  ; save Y here
-    LDA SprObject_X_MoveForce,x  ; get whatever number's here
+    LDA ram_spr_object_x_move_force,x  ; get whatever number's here
     CLC
     ADC $01  ; add low nybble moved to high
-    STA SprObject_X_MoveForce,x  ; store result here
+    STA ram_spr_object_x_move_force,x  ; store result here
     LDA #$00  ; init A
     ROL  ; rotate carry into d0
     PHA  ; push onto stack
     ROR  ; rotate d0 back onto carry
-    LDA SprObject_X_Position,x
+    LDA ram_spr_object_x_position,x
     ADC $00  ; add carry plus saved value (high nybble moved to low
-    STA SprObject_X_Position,x  ; plus $f0 if necessary) to object's horizontal position
-    LDA SprObject_PageLoc,x
+    STA ram_spr_object_x_position,x  ; plus $f0 if necessary) to object's horizontal position
+    LDA ram_spr_object_page_loc,x
     ADC $02  ; add carry plus other saved value to the
-    STA SprObject_PageLoc,x  ; object's page location and save
+    STA ram_spr_object_page_loc,x  ; object's page location and save
     PLA
     CLC  ; pull old carry from stack and add
     ADC $00  ; to high nybble moved to low
@@ -64,12 +64,12 @@ bra_return_from_movement:
 
 loc_move_player_vertically:
     LDX #$00  ; set X for player offset
-    LDA TimerControl
+    LDA ram_timer_control
     BNE bra_load_player_vertical_force  ; if master timer control set, branch ahead
-    LDA JumpspringAnimCtrl  ; otherwise check to see if jumpspring is animating
+    LDA ram_jumpspring_anim_ctrl  ; otherwise check to see if jumpspring is animating
     BNE bra_return_from_movement  ; branch to leave if so
 bra_load_player_vertical_force:
-    LDA VerticalForce  ; dump vertical force
+    LDA ram_vertical_force  ; dump vertical force
     STA $00
     LDA #$04  ; set maximum vertical speed here
     JMP sub_apply_sprite_object_gravity  ; then jump to move player vertically
@@ -78,7 +78,7 @@ bra_load_player_vertical_force:
 
 sub_move_enemy_downward_fast:
     LDY #$3d  ; set quick movement amount downwards
-    LDA Enemy_State,x  ; then check enemy state
+    LDA ram_enemy_state,x  ; then check enemy state
     CMP #$05  ; if not set to unique state for spiny's egg, go ahead
     BNE bra_set_fast_vertical_motion  ; and use, otherwise set different movement amount, continue on
 
@@ -129,7 +129,7 @@ sub_apply_enemy_vertical_motion:
     STY $00  ; set movement amount here
     INX  ; increment X for enemy offset
     JSR sub_apply_sprite_object_gravity  ; do a sub to move enemy object downwards
-    LDX ObjectOffset  ; get enemy object buffer offset and leave
+    LDX ram_object_offset  ; get enemy object buffer offset and leave
     RTS
 
 ; --------------------------------
@@ -161,7 +161,7 @@ sub_move_platform_down:
 sub_move_platform_up:
     LDA #$01  ; save value to stack
     PHA
-    LDY Enemy_ID,x  ; get enemy object identifier
+    LDY ram_enemy_id,x  ; get enemy object identifier
     INX  ; increment offset for enemy object
     LDA #$05  ; load default value here
     CPY #$29  ; residual comparison, object #29 never executes
@@ -178,7 +178,7 @@ bra_set_platform_gravity_force:
 
 loc_apply_red_paratroopa_gravity:
     JSR sub_apply_object_gravity  ; do a sub to move object gradually
-    LDX ObjectOffset  ; get enemy object offset and leave
+    LDX ram_object_offset  ; get enemy object offset and leave
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -188,37 +188,37 @@ loc_apply_red_paratroopa_gravity:
 
 sub_apply_object_gravity:
     PHA  ; push value to stack
-    LDA SprObject_YMF_Dummy,x
+    LDA ram_spr_object_ymf_dummy,x
     CLC  ; add value in movement force to contents of dummy variable
-    ADC SprObject_Y_MoveForce,x
-    STA SprObject_YMF_Dummy,x
+    ADC ram_spr_object_y_move_force,x
+    STA ram_spr_object_ymf_dummy,x
     LDY #$00  ; set Y to zero by default
-    LDA SprObject_Y_Speed,x  ; get current vertical speed
+    LDA ram_spr_object_y_speed,x  ; get current vertical speed
     BPL bra_update_object_y_position  ; if currently moving downwards, do not decrement Y
     DEY  ; otherwise decrement Y
 bra_update_object_y_position:
     STY $07  ; store Y here
-    ADC SprObject_Y_Position,x  ; add vertical position to vertical speed plus carry
-    STA SprObject_Y_Position,x  ; store as new vertical position
-    LDA SprObject_Y_HighPos,x
+    ADC ram_spr_object_y_position,x  ; add vertical position to vertical speed plus carry
+    STA ram_spr_object_y_position,x  ; store as new vertical position
+    LDA ram_spr_object_y_high_pos,x
     ADC $07  ; add carry plus contents of $07 to vertical high byte
-    STA SprObject_Y_HighPos,x  ; store as new vertical high byte
-    LDA SprObject_Y_MoveForce,x
+    STA ram_spr_object_y_high_pos,x  ; store as new vertical high byte
+    LDA ram_spr_object_y_move_force,x
     CLC
     ADC $00  ; add downward movement amount to contents of $0433
-    STA SprObject_Y_MoveForce,x
-    LDA SprObject_Y_Speed,x  ; add carry to vertical speed and store
+    STA ram_spr_object_y_move_force,x
+    LDA ram_spr_object_y_speed,x  ; add carry to vertical speed and store
     ADC #$00
-    STA SprObject_Y_Speed,x
+    STA ram_spr_object_y_speed,x
     CMP $02  ; compare to maximum speed
     BMI bra_apply_upward_gravity  ; if less than preset value, skip this part
-    LDA SprObject_Y_MoveForce,x
+    LDA ram_spr_object_y_move_force,x
     CMP #$80  ; if less positively than preset maximum, skip this part
     BCC bra_apply_upward_gravity
     LDA $02
-    STA SprObject_Y_Speed,x  ; keep vertical speed within maximum value
+    STA ram_spr_object_y_speed,x  ; keep vertical speed within maximum value
     LDA #$00
-    STA SprObject_Y_MoveForce,x  ; clear fractional
+    STA ram_spr_object_y_move_force,x  ; clear fractional
 bra_apply_upward_gravity:
     PLA  ; get value from stack
     BEQ bra_return_from_vertical_movement  ; if set to zero, branch to leave
@@ -227,21 +227,21 @@ bra_apply_upward_gravity:
     TAY
     INY
     STY $07  ; store two's compliment here
-    LDA SprObject_Y_MoveForce,x
+    LDA ram_spr_object_y_move_force,x
     SEC  ; subtract upward movement amount from contents
     SBC $01  ; of movement force, note that $01 is twice as large as $00,
-    STA SprObject_Y_MoveForce,x  ; thus it effectively undoes add we did earlier
-    LDA SprObject_Y_Speed,x
+    STA ram_spr_object_y_move_force,x  ; thus it effectively undoes add we did earlier
+    LDA ram_spr_object_y_speed,x
     SBC #$00  ; subtract borrow from vertical speed and store
-    STA SprObject_Y_Speed,x
+    STA ram_spr_object_y_speed,x
     CMP $07  ; compare vertical speed to two's compliment
     BPL bra_return_from_vertical_movement  ; if less negatively than preset maximum, skip this part
-    LDA SprObject_Y_MoveForce,x
+    LDA ram_spr_object_y_move_force,x
     CMP #$80  ; check if fractional part is above certain amount,
     BCS bra_return_from_vertical_movement  ; and if so, branch to leave
     LDA $07
-    STA SprObject_Y_Speed,x  ; keep vertical speed within maximum value
+    STA ram_spr_object_y_speed,x  ; keep vertical speed within maximum value
     LDA #$ff
-    STA SprObject_Y_MoveForce,x  ; clear fractional
+    STA ram_spr_object_y_move_force,x  ; clear fractional
 bra_return_from_vertical_movement:
     RTS  ; leave!

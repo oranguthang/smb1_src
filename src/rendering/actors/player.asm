@@ -44,29 +44,29 @@ SwimKickTileNum:
     .byte $31, $46
 
 PlayerGfxHandler:
-    LDA InjuryTimer  ; if player's injured invincibility timer
+    LDA ram_injury_timer  ; if player's injured invincibility timer
     BEQ CntPl  ; not set, skip checkpoint and continue code
-    LDA FrameCounter
+    LDA ram_frame_counter
     LSR  ; otherwise check frame counter and branch
     BCS ExPGH  ; to leave on every other frame (when d0 is set)
 CntPl:
-    LDA GameEngineSubroutine  ; if executing specific game engine routine,
+    LDA ram_game_engine_subroutine  ; if executing specific game engine routine,
     CMP #$0b  ; branch ahead to some other part
     BEQ PlayerKilled
-    LDA PlayerChangeSizeFlag  ; if grow/shrink flag set
+    LDA ram_player_change_size_flag  ; if grow/shrink flag set
     BNE DoChangeSize  ; then branch to some other code
-    LDY SwimmingFlag  ; if swimming flag set, branch to
+    LDY ram_swimming_flag  ; if swimming flag set, branch to
     BEQ FindPlayerAction  ; different part, do not return
-    LDA Player_State
+    LDA ram_player_state
     CMP #$00  ; if player status normal,
     BEQ FindPlayerAction  ; branch and do not return
     JSR FindPlayerAction  ; otherwise jump and return
-    LDA FrameCounter
+    LDA ram_frame_counter
     AND #%00000100  ; check frame counter for d2 set (8 frames every
     BNE ExPGH  ; eighth frame), and branch if set to leave
     TAX  ; initialize X to zero
-    LDY Player_SprDataOffset  ; get player sprite data offset
-    LDA PlayerFacingDir  ; get player's facing direction
+    LDY ram_player_spr_data_offset  ; get player sprite data offset
+    LDA ram_player_facing_dir  ; get player's facing direction
     LSR
     BCS SwimKT  ; if player facing to the right, use current offset
     INY
@@ -74,15 +74,15 @@ CntPl:
     INY
     INY
 SwimKT:
-    LDA PlayerSize  ; check player's size
+    LDA ram_player_size  ; check player's size
     BEQ BigKTS  ; if big, use first tile
-    LDA Sprite_Tilenumber+24,y  ; check tile number of seventh/eighth sprite
-    CMP SwimTileRepOffset  ; against tile number in player graphics table
+    LDA ram_sprite_tilenumber+24,y  ; check tile number of seventh/eighth sprite
+    CMP con_swim_tile_replacement_offset  ; against tile number in player graphics table
     BEQ ExPGH  ; if spr7/spr8 tile number = value, branch to leave
     INX  ; otherwise increment X for second tile
 BigKTS:
     LDA SwimKickTileNum,x  ; overwrite tile number in sprite 7/8
-    STA Sprite_Tilenumber+24,y  ; to animate player's feet when swimming
+    STA ram_sprite_tilenumber+24,y  ; to animate player's feet when swimming
 ExPGH:
     RTS  ; then leave
 
@@ -99,24 +99,24 @@ PlayerKilled:
     LDA PlayerGfxTblOffsets,y  ; get offset to graphics table
 
 PlayerGfxProcessing:
-    STA PlayerGfxOffset  ; store offset to graphics table here
+    STA ram_player_gfx_offset  ; store offset to graphics table here
     LDA #$04
     JSR RenderPlayerSub  ; draw player based on offset loaded
     JSR ChkForPlayerAttrib  ; set horizontal flip bits as necessary
-    LDA FireballThrowingTimer
+    LDA ram_fireball_throwing_timer
     BEQ PlayerOffscreenChk  ; if fireball throw timer not set, skip to the end
     LDY #$00  ; set value to initialize by default
-    LDA PlayerAnimTimer  ; get animation frame timer
-    CMP FireballThrowingTimer  ; compare to fireball throw timer
-    STY FireballThrowingTimer  ; initialize fireball throw timer
+    LDA ram_player_anim_timer  ; get animation frame timer
+    CMP ram_fireball_throwing_timer  ; compare to fireball throw timer
+    STY ram_fireball_throwing_timer  ; initialize fireball throw timer
     BCS PlayerOffscreenChk  ; if animation frame timer => fireball throw timer skip to end
-    STA FireballThrowingTimer  ; otherwise store animation timer into fireball throw timer
+    STA ram_fireball_throwing_timer  ; otherwise store animation timer into fireball throw timer
     LDY #$07  ; load offset for throwing
     LDA PlayerGfxTblOffsets,y  ; get offset to graphics table
-    STA PlayerGfxOffset  ; store it for use later
+    STA ram_player_gfx_offset  ; store it for use later
     LDY #$04  ; set to update four sprite rows by default
-    LDA Player_X_Speed
-    ORA Left_Right_Buttons  ; check for horizontal speed or left/right button press
+    LDA ram_player_x_speed
+    ORA ram_left_right_buttons  ; check for horizontal speed or left/right button press
     BEQ SUpdR  ; if no speed or button press, branch using set value in Y
     DEY  ; otherwise set to update only three sprite rows
 SUpdR:
@@ -124,14 +124,14 @@ SUpdR:
     JSR RenderPlayerSub  ; in sub, draw player object again
 
 PlayerOffscreenChk:
-    LDA Player_OffscreenBits  ; get player's offscreen bits
+    LDA ram_player_offscreen_bits  ; get player's offscreen bits
     LSR
     LSR  ; move vertical bits to low nybble
     LSR
     LSR
     STA $00  ; store here
     LDX #$03  ; check all four rows of player sprites
-    LDA Player_SprDataOffset  ; get player's sprite data offset
+    LDA ram_player_spr_data_offset  ; get player's sprite data offset
     CLC
     ADC #$18  ; add 24 bytes to start at bottom row
     TAY  ; set as offset here
@@ -164,9 +164,9 @@ PIntLoop:
     LDX #$b8  ; load offset for small standing
     LDY #$04  ; load sprite data offset
     JSR DrawPlayerLoop  ; draw player accordingly
-    LDA Sprite_Attributes+36  ; get empty sprite attributes
+    LDA ram_sprite_attributes+36  ; get empty sprite attributes
     ORA #%01000000  ; set horizontal flip bit for bottom-right sprite
-    STA Sprite_Attributes+32  ; store and leave
+    STA ram_sprite_attributes+32  ; store and leave
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -180,17 +180,17 @@ PIntLoop:
 
 RenderPlayerSub:
     STA $07  ; store number of rows of sprites to draw
-    LDA Player_Rel_XPos
-    STA Player_Pos_ForScroll  ; store player's relative horizontal position
+    LDA ram_player_rel_x_pos
+    STA ram_player_pos_for_scroll  ; store player's relative horizontal position
     STA $05  ; store it here also
-    LDA Player_Rel_YPos
+    LDA ram_player_rel_y_pos
     STA $02  ; store player's vertical position
-    LDA PlayerFacingDir
+    LDA ram_player_facing_dir
     STA $03  ; store player's facing direction
-    LDA Player_SprAttrib
+    LDA ram_player_spr_attrib
     STA $04  ; store player's sprite attributes
-    LDX PlayerGfxOffset  ; load graphics table offset
-    LDY Player_SprDataOffset  ; get player's sprite data offset
+    LDX ram_player_gfx_offset  ; load graphics table offset
+    LDY ram_player_spr_data_offset  ; get player's sprite data offset
 
 DrawPlayerLoop:
     LDA PlayerGraphicsTable,x  ; load player's left side
@@ -202,41 +202,41 @@ DrawPlayerLoop:
     RTS
 
 ProcessPlayerAction:
-    LDA Player_State  ; get player's state
+    LDA ram_player_state  ; get player's state
     CMP #$03
     BEQ ActionClimbing  ; if climbing, branch here
     CMP #$02
     BEQ ActionFalling  ; if falling, branch here
     CMP #$01
     BNE ProcOnGroundActs  ; if not jumping, branch here
-    LDA SwimmingFlag
+    LDA ram_swimming_flag
     BNE ActionSwimming  ; if swimming flag set, branch elsewhere
     LDY #$06  ; load offset for crouching
-    LDA CrouchingFlag  ; get crouching flag
+    LDA ram_crouching_flag  ; get crouching flag
     BNE NonAnimatedActs  ; if set, branch to get offset for graphics table
     LDY #$00  ; otherwise load offset for jumping
     JMP NonAnimatedActs  ; go to get offset to graphics table
 
 ProcOnGroundActs:
     LDY #$06  ; load offset for crouching
-    LDA CrouchingFlag  ; get crouching flag
+    LDA ram_crouching_flag  ; get crouching flag
     BNE NonAnimatedActs  ; if set, branch to get offset for graphics table
     LDY #$02  ; load offset for standing
-    LDA Player_X_Speed  ; check player's horizontal speed
-    ORA Left_Right_Buttons  ; and left/right controller bits
+    LDA ram_player_x_speed  ; check player's horizontal speed
+    ORA ram_left_right_buttons  ; and left/right controller bits
     BEQ NonAnimatedActs  ; if no speed or buttons pressed, use standing offset
-    LDA Player_XSpeedAbsolute  ; load walking/running speed
+    LDA ram_player_x_speed_absolute  ; load walking/running speed
     CMP #$09
     BCC ActionWalkRun  ; if less than a certain amount, branch, too slow to skid
-    LDA Player_MovingDir  ; otherwise check to see if moving direction
-    AND PlayerFacingDir  ; and facing direction are the same
+    LDA ram_player_moving_dir  ; otherwise check to see if moving direction
+    AND ram_player_facing_dir  ; and facing direction are the same
     BNE ActionWalkRun  ; if moving direction = facing direction, branch, don't skid
     INY  ; otherwise increment to skid offset ($03)
 
 NonAnimatedActs:
     JSR GetGfxOffsetAdder  ; do a sub here to get offset adder for graphics table
     LDA #$00
-    STA PlayerAnimCtrl  ; initialize animation frame control
+    STA ram_player_anim_ctrl  ; initialize animation frame control
     LDA PlayerGfxTblOffsets,y  ; load offset to graphics table using size as offset
     RTS
 
@@ -252,7 +252,7 @@ ActionWalkRun:
 
 ActionClimbing:
     LDY #$05  ; load offset for climbing
-    LDA Player_Y_Speed  ; check player's vertical speed
+    LDA ram_player_y_speed  ; check player's vertical speed
     BEQ NonAnimatedActs  ; if no speed, branch, use offset as-is
     JSR GetGfxOffsetAdder  ; otherwise get offset for graphics table
     JMP ThreeFrameExtent  ; then skip ahead to more code
@@ -260,15 +260,15 @@ ActionClimbing:
 ActionSwimming:
     LDY #$01  ; load offset for swimming
     JSR GetGfxOffsetAdder
-    LDA JumpSwimTimer  ; check jump/swim timer
-    ORA PlayerAnimCtrl  ; and animation frame control
+    LDA ram_jump_swim_timer  ; check jump/swim timer
+    ORA ram_player_anim_ctrl  ; and animation frame control
     BNE FourFrameExtent  ; if any one of these set, branch ahead
-    LDA A_B_Buttons
+    LDA ram_a_b_buttons
     ASL  ; check for A button pressed
     BCS FourFrameExtent  ; branch to same place if A button pressed
 
 GetCurrentAnimOffset:
-    LDA PlayerAnimCtrl  ; get animation frame control
+    LDA ram_player_anim_ctrl  ; get animation frame control
     JMP GetOffsetFromAnimCtrl  ; jump to get proper offset to graphics table
 
 FourFrameExtent:
@@ -282,24 +282,24 @@ AnimationControl:
     STA $00  ; store upper extent here
     JSR GetCurrentAnimOffset  ; get proper offset to graphics table
     PHA  ; save offset to stack
-    LDA PlayerAnimTimer  ; load animation frame timer
+    LDA ram_player_anim_timer  ; load animation frame timer
     BNE ExAnimC  ; branch if not expired
-    LDA PlayerAnimTimerSet  ; get animation frame timer amount
-    STA PlayerAnimTimer  ; and set timer accordingly
-    LDA PlayerAnimCtrl
+    LDA ram_player_anim_timer_set  ; get animation frame timer amount
+    STA ram_player_anim_timer  ; and set timer accordingly
+    LDA ram_player_anim_ctrl
     CLC  ; add one to animation frame control
     ADC #$01
     CMP $00  ; compare to upper extent
     BCC SetAnimC  ; if frame control + 1 < upper extent, use as next
     LDA #$00  ; otherwise initialize frame control
 SetAnimC:
-    STA PlayerAnimCtrl  ; store as new animation frame control
+    STA ram_player_anim_ctrl  ; store as new animation frame control
 ExAnimC:
     PLA  ; get offset to graphics table from stack and leave
     RTS
 
 GetGfxOffsetAdder:
-    LDA PlayerSize  ; get player's size
+    LDA ram_player_size  ; get player's size
     BEQ SzOfs  ; if player big, use current offset as-is
     TYA  ; for big player
     CLC  ; otherwise add eight bytes to offset
@@ -313,19 +313,19 @@ ChangeSizeOffsetAdder:
     .byte $02, $00, $02, $00, $02, $00, $02, $00, $02, $00
 
 HandleChangeSize:
-    LDY PlayerAnimCtrl  ; get animation frame control
-    LDA FrameCounter
+    LDY ram_player_anim_ctrl  ; get animation frame control
+    LDA ram_frame_counter
     AND #%00000011  ; get frame counter and execute this code every
     BNE GorSLog  ; fourth frame, otherwise branch ahead
     INY  ; increment frame control
     CPY #$0a  ; check for preset upper extent
     BCC CSzNext  ; if not there yet, skip ahead to use
     LDY #$00  ; otherwise initialize both grow/shrink flag
-    STY PlayerChangeSizeFlag  ; and animation frame control
+    STY ram_player_change_size_flag  ; and animation frame control
 CSzNext:
-    STY PlayerAnimCtrl  ; store proper frame control
+    STY ram_player_anim_ctrl  ; store proper frame control
 GorSLog:
-    LDA PlayerSize  ; get player's size
+    LDA ram_player_size  ; get player's size
     BNE ShrinkPlayer  ; if player small, skip ahead to next part
     LDA ChangeSizeOffsetAdder,y  ; get offset adder based on frame control as offset
     LDY #$0f  ; load offset for player growing
@@ -351,11 +351,11 @@ ShrPlF:
     RTS  ; and leave
 
 ChkForPlayerAttrib:
-    LDY Player_SprDataOffset  ; get sprite data offset
-    LDA GameEngineSubroutine
+    LDY ram_player_spr_data_offset  ; get sprite data offset
+    LDA ram_game_engine_subroutine
     CMP #$0b  ; if executing specific game engine routine,
     BEQ KilledAtt  ; branch to change third and fourth row OAM attributes
-    LDA PlayerGfxOffset  ; get graphics table offset
+    LDA ram_player_gfx_offset  ; get graphics table offset
     CMP #$50
     BEQ C_S_IGAtt  ; if crouch offset, either standing offset,
     CMP #$b8  ; or intermediate growing offset,
@@ -365,20 +365,20 @@ ChkForPlayerAttrib:
     CMP #$c8
     BNE ExPlyrAt  ; if none of these, branch to leave
 KilledAtt:
-    LDA Sprite_Attributes+16,y
+    LDA ram_sprite_attributes+16,y
     AND #%00111111  ; mask out horizontal and vertical flip bits
-    STA Sprite_Attributes+16,y  ; for third row sprites and save
-    LDA Sprite_Attributes+20,y
+    STA ram_sprite_attributes+16,y  ; for third row sprites and save
+    LDA ram_sprite_attributes+20,y
     AND #%00111111
     ORA #%01000000  ; set horizontal flip bit for second
-    STA Sprite_Attributes+20,y  ; sprite in the third row
+    STA ram_sprite_attributes+20,y  ; sprite in the third row
 C_S_IGAtt:
-    LDA Sprite_Attributes+24,y
+    LDA ram_sprite_attributes+24,y
     AND #%00111111  ; mask out horizontal and vertical flip bits
-    STA Sprite_Attributes+24,y  ; for fourth row sprites and save
-    LDA Sprite_Attributes+28,y
+    STA ram_sprite_attributes+24,y  ; for fourth row sprites and save
+    LDA ram_sprite_attributes+28,y
     AND #%00111111
     ORA #%01000000  ; set horizontal flip bit for second
-    STA Sprite_Attributes+28,y  ; sprite in the fourth row
+    STA ram_sprite_attributes+28,y  ; sprite in the fourth row
 ExPlyrAt:
     RTS  ; leave

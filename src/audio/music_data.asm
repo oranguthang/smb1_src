@@ -3,34 +3,34 @@
 ; music header offsets
 
 MusicHeaderData:
-    .byte DeathMusHdr-MHD  ; event music
-    .byte GameOverMusHdr-MHD
-    .byte VictoryMusHdr-MHD
-    .byte WinCastleMusHdr-MHD
-    .byte GameOverMusHdr-MHD
-    .byte EndOfLevelMusHdr-MHD
-    .byte TimeRunningOutHdr-MHD
-    .byte SilenceHdr-MHD
+    .byte DeathMusHdr-con_music_header_data_base  ; event music
+    .byte GameOverMusHdr-con_music_header_data_base
+    .byte VictoryMusHdr-con_music_header_data_base
+    .byte WinCastleMusHdr-con_music_header_data_base
+    .byte GameOverMusHdr-con_music_header_data_base
+    .byte EndOfLevelMusHdr-con_music_header_data_base
+    .byte TimeRunningOutHdr-con_music_header_data_base
+    .byte SilenceHdr-con_music_header_data_base
 
-    .byte GroundLevelPart1Hdr-MHD  ; area music
-    .byte WaterMusHdr-MHD
-    .byte UndergroundMusHdr-MHD
-    .byte CastleMusHdr-MHD
-    .byte Star_CloudHdr-MHD
-    .byte GroundLevelLeadInHdr-MHD
-    .byte Star_CloudHdr-MHD
-    .byte SilenceHdr-MHD
+    .byte GroundLevelPart1Hdr-con_music_header_data_base  ; area music
+    .byte WaterMusHdr-con_music_header_data_base
+    .byte UndergroundMusHdr-con_music_header_data_base
+    .byte CastleMusHdr-con_music_header_data_base
+    .byte Star_CloudHdr-con_music_header_data_base
+    .byte GroundLevelLeadInHdr-con_music_header_data_base
+    .byte Star_CloudHdr-con_music_header_data_base
+    .byte SilenceHdr-con_music_header_data_base
 
-    .byte GroundLevelLeadInHdr-MHD  ; ground level music layout
-    .byte GroundLevelPart1Hdr-MHD, GroundLevelPart1Hdr-MHD
-    .byte GroundLevelPart2AHdr-MHD, GroundLevelPart2BHdr-MHD, GroundLevelPart2AHdr-MHD, GroundLevelPart2CHdr-MHD
-    .byte GroundLevelPart2AHdr-MHD, GroundLevelPart2BHdr-MHD, GroundLevelPart2AHdr-MHD, GroundLevelPart2CHdr-MHD
-    .byte GroundLevelPart3AHdr-MHD, GroundLevelPart3BHdr-MHD, GroundLevelPart3AHdr-MHD, GroundLevelLeadInHdr-MHD
-    .byte GroundLevelPart1Hdr-MHD, GroundLevelPart1Hdr-MHD
-    .byte GroundLevelPart4AHdr-MHD, GroundLevelPart4BHdr-MHD, GroundLevelPart4AHdr-MHD, GroundLevelPart4CHdr-MHD
-    .byte GroundLevelPart4AHdr-MHD, GroundLevelPart4BHdr-MHD, GroundLevelPart4AHdr-MHD, GroundLevelPart4CHdr-MHD
-    .byte GroundLevelPart3AHdr-MHD, GroundLevelPart3BHdr-MHD, GroundLevelPart3AHdr-MHD, GroundLevelLeadInHdr-MHD
-    .byte GroundLevelPart4AHdr-MHD, GroundLevelPart4BHdr-MHD, GroundLevelPart4AHdr-MHD, GroundLevelPart4CHdr-MHD
+    .byte GroundLevelLeadInHdr-con_music_header_data_base  ; ground level music layout
+    .byte GroundLevelPart1Hdr-con_music_header_data_base, GroundLevelPart1Hdr-con_music_header_data_base
+    .byte GroundLevelPart2AHdr-con_music_header_data_base, GroundLevelPart2BHdr-con_music_header_data_base, GroundLevelPart2AHdr-con_music_header_data_base, GroundLevelPart2CHdr-con_music_header_data_base
+    .byte GroundLevelPart2AHdr-con_music_header_data_base, GroundLevelPart2BHdr-con_music_header_data_base, GroundLevelPart2AHdr-con_music_header_data_base, GroundLevelPart2CHdr-con_music_header_data_base
+    .byte GroundLevelPart3AHdr-con_music_header_data_base, GroundLevelPart3BHdr-con_music_header_data_base, GroundLevelPart3AHdr-con_music_header_data_base, GroundLevelLeadInHdr-con_music_header_data_base
+    .byte GroundLevelPart1Hdr-con_music_header_data_base, GroundLevelPart1Hdr-con_music_header_data_base
+    .byte GroundLevelPart4AHdr-con_music_header_data_base, GroundLevelPart4BHdr-con_music_header_data_base, GroundLevelPart4AHdr-con_music_header_data_base, GroundLevelPart4CHdr-con_music_header_data_base
+    .byte GroundLevelPart4AHdr-con_music_header_data_base, GroundLevelPart4BHdr-con_music_header_data_base, GroundLevelPart4AHdr-con_music_header_data_base, GroundLevelPart4CHdr-con_music_header_data_base
+    .byte GroundLevelPart3AHdr-con_music_header_data_base, GroundLevelPart3BHdr-con_music_header_data_base, GroundLevelPart3AHdr-con_music_header_data_base, GroundLevelLeadInHdr-con_music_header_data_base
+    .byte GroundLevelPart4AHdr-con_music_header_data_base, GroundLevelPart4BHdr-con_music_header_data_base, GroundLevelPart4AHdr-con_music_header_data_base, GroundLevelPart4CHdr-con_music_header_data_base
 
 ; music headers
 ; header format is as follows:

@@ -4,36 +4,36 @@
 ; $07 - used to store pseudorandom bit in BubbleCheck
 
 ProcFireball_Bubble:
-    LDA PlayerStatus  ; check player's status
+    LDA ram_player_status  ; check player's status
     CMP #$02
     BCC ProcAirBubbles  ; if not fiery, branch
-    LDA A_B_Buttons
-    AND #B_Button  ; check for b button pressed
+    LDA ram_a_b_buttons
+    AND #con_btn_b  ; check for b button pressed
     BEQ ProcFireballs  ; branch if not pressed
-    AND PreviousA_B_Buttons
+    AND ram_previous_a_b_buttons
     BNE ProcFireballs  ; if button pressed in previous frame, branch
-    LDA FireballCounter  ; load fireball counter
+    LDA ram_fireball_counter  ; load fireball counter
     AND #%00000001  ; get LSB and use as offset for buffer
     TAX
-    LDA Fireball_State,x  ; load fireball state
+    LDA ram_fireball_state,x  ; load fireball state
     BNE ProcFireballs  ; if not inactive, branch
-    LDY Player_Y_HighPos  ; if player too high or too low, branch
+    LDY ram_player_y_high_pos  ; if player too high or too low, branch
     DEY
     BNE ProcFireballs
-    LDA CrouchingFlag  ; if player crouching, branch
+    LDA ram_crouching_flag  ; if player crouching, branch
     BNE ProcFireballs
-    LDA Player_State  ; if player's state = climbing, branch
+    LDA ram_player_state  ; if player's state = climbing, branch
     CMP #$03
     BEQ ProcFireballs
-    LDA #Sfx_Fireball  ; play fireball sound effect
-    STA Square1SoundQueue
+    LDA #con_sfx_fireball  ; play fireball sound effect
+    STA ram_square1_sound_queue
     LDA #$02  ; load state
-    STA Fireball_State,x
-    LDY PlayerAnimTimerSet  ; copy animation frame timer setting
-    STY FireballThrowingTimer  ; into fireball throwing timer
+    STA ram_fireball_state,x
+    LDY ram_player_anim_timer_set  ; copy animation frame timer setting
+    STY ram_fireball_throwing_timer  ; into fireball throwing timer
     DEY
-    STY PlayerAnimTimer  ; decrement and store in player's animation timer
-    INC FireballCounter  ; increment fireball counter
+    STY ram_player_anim_timer  ; decrement and store in player's animation timer
+    INC ram_fireball_counter  ; increment fireball counter
 
 ProcFireballs:
     LDX #$00
@@ -42,11 +42,11 @@ ProcFireballs:
     JSR FireballObjCore  ; process second fireball object, then do air bubbles
 
 ProcAirBubbles:
-    LDA AreaType  ; if not water type level, skip the rest of this
+    LDA ram_area_type  ; if not water type level, skip the rest of this
     BNE BublExit
     LDX #$02  ; otherwise load counter and use as offset
 BublLoop:
-    STX ObjectOffset  ; store offset
+    STX ram_object_offset  ; store offset
     JSR BubbleCheck  ; check timers and coordinates, create air bubble
     JSR RelativeBubblePosition  ; get relative coordinates
     JSR GetBubbleOffscreenBits  ; get offscreen information
@@ -60,33 +60,33 @@ FireballXSpdData:
     .byte $40, $c0
 
 FireballObjCore:
-    STX ObjectOffset  ; store offset as current object
-    LDA Fireball_State,x  ; check for d7 = 1
+    STX ram_object_offset  ; store offset as current object
+    LDA ram_fireball_state,x  ; check for d7 = 1
     ASL
     BCS FireballExplosion  ; if so, branch to get relative coordinates and draw explosion
-    LDY Fireball_State,x  ; if fireball inactive, branch to leave
+    LDY ram_fireball_state,x  ; if fireball inactive, branch to leave
     BEQ NoFBall
     DEY  ; if fireball state set to 1, skip this part and just run it
     BEQ RunFB
-    LDA Player_X_Position  ; get player's horizontal position
+    LDA ram_player_x_position  ; get player's horizontal position
     ADC #$04  ; add four pixels and store as fireball's horizontal position
-    STA Fireball_X_Position,x
-    LDA Player_PageLoc  ; get player's page location
+    STA ram_fireball_x_position,x
+    LDA ram_player_page_loc  ; get player's page location
     ADC #$00  ; add carry and store as fireball's page location
-    STA Fireball_PageLoc,x
-    LDA Player_Y_Position  ; get player's vertical position and store
-    STA Fireball_Y_Position,x
+    STA ram_fireball_page_loc,x
+    LDA ram_player_y_position  ; get player's vertical position and store
+    STA ram_fireball_y_position,x
     LDA #$01  ; set high byte of vertical position
-    STA Fireball_Y_HighPos,x
-    LDY PlayerFacingDir  ; get player's facing direction
+    STA ram_fireball_y_high_pos,x
+    LDY ram_player_facing_dir  ; get player's facing direction
     DEY  ; decrement to use as offset here
     LDA FireballXSpdData,y  ; set horizontal speed of fireball accordingly
-    STA Fireball_X_Speed,x
+    STA ram_fireball_x_speed,x
     LDA #$04  ; set vertical speed of fireball
-    STA Fireball_Y_Speed,x
+    STA ram_fireball_y_speed,x
     LDA #$07
-    STA Fireball_BoundBoxCtrl,x  ; set bounding box size control for fireball
-    DEC Fireball_State,x  ; decrement state to 1 to skip this part from now on
+    STA ram_fireball_bound_box_ctrl,x  ; set bounding box size control for fireball
+    DEC ram_fireball_state,x  ; decrement state to 1 to skip this part from now on
 RunFB:
     TXA  ; add 7 to offset to use
     CLC  ; as fireball offset for next routines
@@ -99,19 +99,19 @@ RunFB:
     LDA #$00
     JSR sub_apply_object_gravity  ; do sub here to impose gravity on fireball and move vertically
     JSR sub_move_object_horizontally  ; do another sub to move it horizontally
-    LDX ObjectOffset  ; return fireball offset to X
+    LDX ram_object_offset  ; return fireball offset to X
     JSR RelativeFireballPosition  ; get relative coordinates
     JSR GetFireballOffscreenBits  ; get offscreen information
     JSR GetFireballBoundBox  ; get bounding box coordinates
     JSR FireballBGCollision  ; do fireball to background collision detection
-    LDA FBall_OffscreenBits  ; get fireball offscreen bits
+    LDA ram_f_ball_offscreen_bits  ; get fireball offscreen bits
     AND #%11001100  ; mask out certain bits
     BNE EraseFB  ; if any bits still set, branch to kill fireball
     JSR FireballEnemyCollision  ; do fireball to enemy collision detection and deal with collisions
     JMP DrawFireball  ; draw fireball appropriately and leave
 EraseFB:
     LDA #$00  ; erase fireball state
-    STA Fireball_State,x
+    STA ram_fireball_state,x
 NoFBall:
     RTS  ; leave
 
@@ -120,50 +120,50 @@ FireballExplosion:
     JMP DrawExplosion_Fireball
 
 BubbleCheck:
-    LDA PseudoRandomBitReg+1,x  ; get part of LSFR
+    LDA ram_pseudo_random_bit_reg+1,x  ; get part of LSFR
     AND #$01
     STA $07  ; store pseudorandom bit here
-    LDA Bubble_Y_Position,x  ; get vertical coordinate for air bubble
+    LDA ram_bubble_y_position,x  ; get vertical coordinate for air bubble
     CMP #$f8  ; if offscreen coordinate not set,
     BNE MoveBubl  ; branch to move air bubble
-    LDA AirBubbleTimer  ; if air bubble timer not expired,
+    LDA ram_air_bubble_timer  ; if air bubble timer not expired,
     BNE ExitBubl  ; branch to leave, otherwise create new air bubble
 
 SetupBubble:
     LDY #$00  ; load default value here
-    LDA PlayerFacingDir  ; get player's facing direction
+    LDA ram_player_facing_dir  ; get player's facing direction
     LSR  ; move d0 to carry
     BCC PosBubl  ; branch to use default value if facing left
     LDY #$08  ; otherwise load alternate value here
 PosBubl:
     TYA  ; use value loaded as adder
-    ADC Player_X_Position  ; add to player's horizontal position
-    STA Bubble_X_Position,x  ; save as horizontal position for airbubble
-    LDA Player_PageLoc
+    ADC ram_player_x_position  ; add to player's horizontal position
+    STA ram_bubble_x_position,x  ; save as horizontal position for airbubble
+    LDA ram_player_page_loc
     ADC #$00  ; add carry to player's page location
-    STA Bubble_PageLoc,x  ; save as page location for airbubble
-    LDA Player_Y_Position
+    STA ram_bubble_page_loc,x  ; save as page location for airbubble
+    LDA ram_player_y_position
     CLC  ; add eight pixels to player's vertical position
     ADC #$08
-    STA Bubble_Y_Position,x  ; save as vertical position for air bubble
+    STA ram_bubble_y_position,x  ; save as vertical position for air bubble
     LDA #$01
-    STA Bubble_Y_HighPos,x  ; set vertical high byte for air bubble
+    STA ram_bubble_y_high_pos,x  ; set vertical high byte for air bubble
     LDY $07  ; get pseudorandom bit, use as offset
     LDA BubbleTimerData,y  ; get data for air bubble timer
-    STA AirBubbleTimer  ; set air bubble timer
+    STA ram_air_bubble_timer  ; set air bubble timer
 MoveBubl:
     LDY $07  ; get pseudorandom bit again, use as offset
-    LDA Bubble_YMF_Dummy,x
+    LDA ram_bubble_ymf_dummy,x
     SEC  ; subtract pseudorandom amount from dummy variable
     SBC Bubble_MForceData,y
-    STA Bubble_YMF_Dummy,x  ; save dummy variable
-    LDA Bubble_Y_Position,x
+    STA ram_bubble_ymf_dummy,x  ; save dummy variable
+    LDA ram_bubble_y_position,x
     SBC #$00  ; subtract borrow from airbubble's vertical coordinate
     CMP #$20  ; if below the status bar,
     BCS Y_Bubl  ; branch to go ahead and use to move air bubble upwards
     LDA #$f8  ; otherwise set offscreen coordinate
 Y_Bubl:
-    STA Bubble_Y_Position,x  ; store as new vertical coordinate for air bubble
+    STA ram_bubble_y_position,x  ; store as new vertical coordinate for air bubble
 ExitBubl:
     RTS  ; leave
 
@@ -176,56 +176,56 @@ BubbleTimerData:
 ; -------------------------------------------------------------------------------------
 
 RunGameTimer:
-    LDA OperMode  ; get primary mode of operation
+    LDA ram_oper_mode  ; get primary mode of operation
     BEQ ExGTimer  ; branch to leave if in title screen mode
-    LDA GameEngineSubroutine
+    LDA ram_game_engine_subroutine
     CMP #$08  ; if routine number less than eight running,
     BCC ExGTimer  ; branch to leave
     CMP #$0b  ; if running death routine,
     BEQ ExGTimer  ; branch to leave
-    LDA Player_Y_HighPos
+    LDA ram_player_y_high_pos
     CMP #$02  ; if player below the screen,
     BCS ExGTimer  ; branch to leave regardless of level type
-    LDA GameTimerCtrlTimer  ; if game timer control not yet expired,
+    LDA ram_game_timer_ctrl_timer  ; if game timer control not yet expired,
     BNE ExGTimer  ; branch to leave
-    LDA GameTimerDisplay
-    ORA GameTimerDisplay+1  ; otherwise check game timer digits
-    ORA GameTimerDisplay+2
+    LDA ram_game_timer_display
+    ORA ram_game_timer_display+1  ; otherwise check game timer digits
+    ORA ram_game_timer_display+2
     BEQ TimeUpOn  ; if game timer digits at 000, branch to time-up code
-    LDY GameTimerDisplay  ; otherwise check first digit
+    LDY ram_game_timer_display  ; otherwise check first digit
     DEY  ; if first digit not on 1,
     BNE ResGTCtrl  ; branch to reset game timer control
-    LDA GameTimerDisplay+1  ; otherwise check second and third digits
-    ORA GameTimerDisplay+2
+    LDA ram_game_timer_display+1  ; otherwise check second and third digits
+    ORA ram_game_timer_display+2
     BNE ResGTCtrl  ; if timer not at 100, branch to reset game timer control
-    LDA #TimeRunningOutMusic
-    STA EventMusicQueue  ; otherwise load time running out music
+    LDA #con_time_running_out_music
+    STA ram_event_music_queue  ; otherwise load time running out music
 ResGTCtrl:
     LDA #$18  ; reset game timer control
-    STA GameTimerCtrlTimer
+    STA ram_game_timer_ctrl_timer
     LDY #$23  ; set offset for last digit
     LDA #$ff  ; set value to decrement game timer digit
-    STA DigitModifier+5
+    STA ram_digit_modifier+5
     JSR DigitsMathRoutine  ; do sub to decrement game timer slowly
     LDA #$a4  ; set status nybbles to update game timer display
     JMP PrintStatusBarNumbers  ; do sub to update the display
 TimeUpOn:
-    STA PlayerStatus  ; init player status (note A will always be zero here)
+    STA ram_player_status  ; init player status (note A will always be zero here)
     JSR ForceInjury  ; do sub to kill the player (note player is small here)
-    INC GameTimerExpiredFlag  ; set game timer expiration flag
+    INC ram_game_timer_expired_flag  ; set game timer expiration flag
 ExGTimer:
     RTS  ; leave
 
 ; -------------------------------------------------------------------------------------
 
 WarpZoneObject:
-    LDA ScrollLock  ; check for scroll lock flag
+    LDA ram_scroll_lock  ; check for scroll lock flag
     BEQ ExGTimer  ; branch if not set to leave
-    LDA Player_Y_Position  ; check to see if player's vertical coordinate has
-    AND Player_Y_HighPos  ; same bits set as in vertical high byte (why?)
+    LDA ram_player_y_position  ; check to see if player's vertical coordinate has
+    AND ram_player_y_high_pos  ; same bits set as in vertical high byte (why?)
     BNE ExGTimer  ; if so, branch to leave
-    STA ScrollLock  ; otherwise nullify scroll lock flag
-    INC WarpZoneControl  ; increment warp zone flag to make warp pipes for warp zone
+    STA ram_scroll_lock  ; otherwise nullify scroll lock flag
+    INC ram_warp_zone_control  ; increment warp zone flag to make warp pipes for warp zone
     JMP EraseEnemyObject  ; kill this object
 
 ; -------------------------------------------------------------------------------------
@@ -237,32 +237,32 @@ WarpZoneObject:
 ; WhirlpoolActivate to store maximum vertical speed
 
 ProcessWhirlpools:
-    LDA AreaType  ; check for water type level
+    LDA ram_area_type  ; check for water type level
     BNE ExitWh  ; branch to leave if not found
-    STA Whirlpool_Flag  ; otherwise initialize whirlpool flag
-    LDA TimerControl  ; if master timer control set,
+    STA ram_whirlpool_flag  ; otherwise initialize whirlpool flag
+    LDA ram_timer_control  ; if master timer control set,
     BNE ExitWh  ; branch to leave
     LDY #$04  ; otherwise start with last whirlpool data
 WhLoop:
-    LDA Whirlpool_LeftExtent,y  ; get left extent of whirlpool
+    LDA ram_whirlpool_left_extent,y  ; get left extent of whirlpool
     CLC
-    ADC Whirlpool_Length,y  ; add length of whirlpool
+    ADC ram_whirlpool_length,y  ; add length of whirlpool
     STA $02  ; store result as right extent here
-    LDA Whirlpool_PageLoc,y  ; get page location
+    LDA ram_whirlpool_page_loc,y  ; get page location
     BEQ NextWh  ; if none or page 0, branch to get next data
     ADC #$00  ; add carry
     STA $01  ; store result as page location of right extent here
-    LDA Player_X_Position  ; get player's horizontal position
+    LDA ram_player_x_position  ; get player's horizontal position
     SEC
-    SBC Whirlpool_LeftExtent,y  ; subtract left extent
-    LDA Player_PageLoc  ; get player's page location
-    SBC Whirlpool_PageLoc,y  ; subtract borrow
+    SBC ram_whirlpool_left_extent,y  ; subtract left extent
+    LDA ram_player_page_loc  ; get player's page location
+    SBC ram_whirlpool_page_loc,y  ; subtract borrow
     BMI NextWh  ; if player too far left, branch to get next data
     LDA $02  ; otherwise get right extent
     SEC
-    SBC Player_X_Position  ; subtract player's horizontal coordinate
+    SBC ram_player_x_position  ; subtract player's horizontal coordinate
     LDA $01  ; get right extent's page location
-    SBC Player_PageLoc  ; subtract borrow
+    SBC ram_player_page_loc  ; subtract borrow
     BPL WhirlpoolActivate  ; if player within right extent, branch to whirlpool code
 NextWh:
     DEY  ; move onto next whirlpool data
@@ -271,49 +271,49 @@ ExitWh:
     RTS  ; leave
 
 WhirlpoolActivate:
-    LDA Whirlpool_Length,y  ; get length of whirlpool
+    LDA ram_whirlpool_length,y  ; get length of whirlpool
     LSR  ; divide by 2
     STA $00  ; save here
-    LDA Whirlpool_LeftExtent,y  ; get left extent of whirlpool
+    LDA ram_whirlpool_left_extent,y  ; get left extent of whirlpool
     CLC
     ADC $00  ; add length divided by 2
     STA $01  ; save as center of whirlpool
-    LDA Whirlpool_PageLoc,y  ; get page location
+    LDA ram_whirlpool_page_loc,y  ; get page location
     ADC #$00  ; add carry
     STA $00  ; save as page location of whirlpool center
-    LDA FrameCounter  ; get frame counter
+    LDA ram_frame_counter  ; get frame counter
     LSR  ; shift d0 into carry (to run on every other frame)
     BCC WhPull  ; if d0 not set, branch to last part of code
     LDA $01  ; get center
     SEC
-    SBC Player_X_Position  ; subtract player's horizontal coordinate
+    SBC ram_player_x_position  ; subtract player's horizontal coordinate
     LDA $00  ; get page location of center
-    SBC Player_PageLoc  ; subtract borrow
+    SBC ram_player_page_loc  ; subtract borrow
     BPL LeftWh  ; if player to the left of center, branch
-    LDA Player_X_Position  ; otherwise slowly pull player left, towards the center
+    LDA ram_player_x_position  ; otherwise slowly pull player left, towards the center
     SEC
     SBC #$01  ; subtract one pixel
-    STA Player_X_Position  ; set player's new horizontal coordinate
-    LDA Player_PageLoc
+    STA ram_player_x_position  ; set player's new horizontal coordinate
+    LDA ram_player_page_loc
     SBC #$00  ; subtract borrow
     JMP SetPWh  ; jump to set player's new page location
 LeftWh:
-    LDA Player_CollisionBits  ; get player's collision bits
+    LDA ram_player_collision_bits  ; get player's collision bits
     LSR  ; shift d0 into carry
     BCC WhPull  ; if d0 not set, branch
-    LDA Player_X_Position  ; otherwise slowly pull player right, towards the center
+    LDA ram_player_x_position  ; otherwise slowly pull player right, towards the center
     CLC
     ADC #$01  ; add one pixel
-    STA Player_X_Position  ; set player's new horizontal coordinate
-    LDA Player_PageLoc
+    STA ram_player_x_position  ; set player's new horizontal coordinate
+    LDA ram_player_page_loc
     ADC #$00  ; add carry
 SetPWh:
-    STA Player_PageLoc  ; set player's new page location
+    STA ram_player_page_loc  ; set player's new page location
 WhPull:
     LDA #$10
     STA $00  ; set vertical movement force
     LDA #$01
-    STA Whirlpool_Flag  ; set whirlpool flag to be used later
+    STA ram_whirlpool_flag  ; set whirlpool flag to be used later
     STA $02  ; also set maximum vertical speed
     LSR
     TAX  ; set X for player offset
@@ -329,45 +329,45 @@ FlagpoleScoreDigits:
 
 FlagpoleRoutine:
     LDX #$05  ; set enemy object offset
-    STX ObjectOffset  ; to special use slot
-    LDA Enemy_ID,x
-    CMP #FlagpoleFlagObject  ; if flagpole flag not found,
+    STX ram_object_offset  ; to special use slot
+    LDA ram_enemy_id,x
+    CMP #con_flagpole_flag_object  ; if flagpole flag not found,
     BNE ExitFlagP  ; branch to leave
-    LDA GameEngineSubroutine
+    LDA ram_game_engine_subroutine
     CMP #$04  ; if flagpole slide routine not running,
     BNE SkipScore  ; branch to near the end of code
-    LDA Player_State
+    LDA ram_player_state
     CMP #$03  ; if player state not climbing,
     BNE SkipScore  ; branch to near the end of code
-    LDA Enemy_Y_Position,x  ; check flagpole flag's vertical coordinate
+    LDA ram_enemy_y_position,x  ; check flagpole flag's vertical coordinate
     CMP #$aa  ; if flagpole flag down to a certain point,
     BCS GiveFPScr  ; branch to end the level
-    LDA Player_Y_Position  ; check player's vertical coordinate
+    LDA ram_player_y_position  ; check player's vertical coordinate
     CMP #$a2  ; if player down to a certain point,
     BCS GiveFPScr  ; branch to end the level
-    LDA Enemy_YMF_Dummy,x
+    LDA ram_enemy_ymf_dummy,x
     ADC #$ff  ; add movement amount to dummy variable
-    STA Enemy_YMF_Dummy,x  ; save dummy variable
-    LDA Enemy_Y_Position,x  ; get flag's vertical coordinate
+    STA ram_enemy_ymf_dummy,x  ; save dummy variable
+    LDA ram_enemy_y_position,x  ; get flag's vertical coordinate
     ADC #$01  ; add 1 plus carry to move flag, and
-    STA Enemy_Y_Position,x  ; store vertical coordinate
-    LDA FlagpoleFNum_YMFDummy
+    STA ram_enemy_y_position,x  ; store vertical coordinate
+    LDA ram_flagpole_f_num_ymf_dummy
     SEC  ; subtract movement amount from dummy variable
     SBC #$ff
-    STA FlagpoleFNum_YMFDummy  ; save dummy variable
-    LDA FlagpoleFNum_Y_Pos
+    STA ram_flagpole_f_num_ymf_dummy  ; save dummy variable
+    LDA ram_flagpole_f_num_y_pos
     SBC #$01  ; subtract one plus borrow to move floatey number,
-    STA FlagpoleFNum_Y_Pos  ; and store vertical coordinate here
+    STA ram_flagpole_f_num_y_pos  ; and store vertical coordinate here
 SkipScore:
     JMP FPGfx  ; jump to skip ahead and draw flag and floatey number
 GiveFPScr:
-    LDY FlagpoleScore  ; get score offset from earlier (when player touched flagpole)
+    LDY ram_flagpole_score  ; get score offset from earlier (when player touched flagpole)
     LDA FlagpoleScoreMods,y  ; get amount to award player points
     LDX FlagpoleScoreDigits,y  ; get digit with which to award points
-    STA DigitModifier,x  ; store in digit modifier
+    STA ram_digit_modifier,x  ; store in digit modifier
     JSR AddToScore  ; do sub to award player points depending on height of collision
     LDA #$05
-    STA GameEngineSubroutine  ; set to run end-of-level subroutine on next frame
+    STA ram_game_engine_subroutine  ; set to run end-of-level subroutine on next frame
 FPGfx:
     JSR GetEnemyOffscreenBits  ; get offscreen information
     JSR RelativeEnemyPosition  ; get relative coordinates
@@ -382,78 +382,78 @@ Jumpspring_Y_PosData:
 
 JumpspringHandler:
     JSR GetEnemyOffscreenBits  ; get offscreen information
-    LDA TimerControl  ; check master timer control
+    LDA ram_timer_control  ; check master timer control
     BNE DrawJSpr  ; branch to last section if set
-    LDA JumpspringAnimCtrl  ; check jumpspring frame control
+    LDA ram_jumpspring_anim_ctrl  ; check jumpspring frame control
     BEQ DrawJSpr  ; branch to last section if not set
     TAY
     DEY  ; subtract one from frame control,
     TYA  ; the only way a poor nmos 6502 can
     AND #%00000010  ; mask out all but d1, original value still in Y
     BNE DownJSpr  ; if set, branch to move player up
-    INC Player_Y_Position
-    INC Player_Y_Position  ; move player's vertical position down two pixels
+    INC ram_player_y_position
+    INC ram_player_y_position  ; move player's vertical position down two pixels
     JMP PosJSpr  ; skip to next part
 DownJSpr:
-    DEC Player_Y_Position  ; move player's vertical position up two pixels
-    DEC Player_Y_Position
+    DEC ram_player_y_position  ; move player's vertical position up two pixels
+    DEC ram_player_y_position
 PosJSpr:
-    LDA Jumpspring_FixedYPos,x  ; get permanent vertical position
+    LDA ram_jumpspring_fixed_y_pos,x  ; get permanent vertical position
     CLC
     ADC Jumpspring_Y_PosData,y  ; add value using frame control as offset
-    STA Enemy_Y_Position,x  ; store as new vertical position
+    STA ram_enemy_y_position,x  ; store as new vertical position
     CPY #$01  ; check frame control offset (second frame is $00)
     BCC BounceJS  ; if offset not yet at third frame ($01), skip to next part
-    LDA A_B_Buttons
-    AND #A_Button  ; check saved controller bits for A button press
+    LDA ram_a_b_buttons
+    AND #con_btn_a  ; check saved controller bits for A button press
     BEQ BounceJS  ; skip to next part if A not pressed
-    AND PreviousA_B_Buttons  ; check for A button pressed in previous frame
+    AND ram_previous_a_b_buttons  ; check for A button pressed in previous frame
     BNE BounceJS  ; skip to next part if so
     LDA #$f4
-    STA JumpspringForce  ; otherwise write new jumpspring force here
+    STA ram_jumpspring_force  ; otherwise write new jumpspring force here
 BounceJS:
     CPY #$03  ; check frame control offset again
     BNE DrawJSpr  ; skip to last part if not yet at fifth frame ($03)
-    LDA JumpspringForce
-    STA Player_Y_Speed  ; store jumpspring force as player's new vertical speed
+    LDA ram_jumpspring_force
+    STA ram_player_y_speed  ; store jumpspring force as player's new vertical speed
     LDA #$00
-    STA JumpspringAnimCtrl  ; initialize jumpspring frame control
+    STA ram_jumpspring_anim_ctrl  ; initialize jumpspring frame control
 DrawJSpr:
     JSR RelativeEnemyPosition  ; get jumpspring's relative coordinates
     JSR EnemyGfxHandler  ; draw jumpspring
     JSR OffscreenBoundsCheck  ; check to see if we need to kill it
-    LDA JumpspringAnimCtrl  ; if frame control at zero, don't bother
+    LDA ram_jumpspring_anim_ctrl  ; if frame control at zero, don't bother
     BEQ ExJSpring  ; trying to animate it, just leave
-    LDA JumpspringTimer
+    LDA ram_jumpspring_timer
     BNE ExJSpring  ; if jumpspring timer not expired yet, leave
     LDA #$04
-    STA JumpspringTimer  ; otherwise initialize jumpspring timer
-    INC JumpspringAnimCtrl  ; increment frame control to animate jumpspring
+    STA ram_jumpspring_timer  ; otherwise initialize jumpspring timer
+    INC ram_jumpspring_anim_ctrl  ; increment frame control to animate jumpspring
 ExJSpring:
     RTS  ; leave
 
 ; -------------------------------------------------------------------------------------
 
 Setup_Vine:
-    LDA #VineObject  ; load identifier for vine object
-    STA Enemy_ID,x  ; store in buffer
+    LDA #con_vine_object  ; load identifier for vine object
+    STA ram_enemy_id,x  ; store in buffer
     LDA #$01
-    STA Enemy_Flag,x  ; set flag for enemy object buffer
-    LDA Block_PageLoc,y
-    STA Enemy_PageLoc,x  ; copy page location from previous object
-    LDA Block_X_Position,y
-    STA Enemy_X_Position,x  ; copy horizontal coordinate from previous object
-    LDA Block_Y_Position,y
-    STA Enemy_Y_Position,x  ; copy vertical coordinate from previous object
-    LDY VineFlagOffset  ; load vine flag/offset to next available vine slot
+    STA ram_enemy_flag,x  ; set flag for enemy object buffer
+    LDA ram_block_page_loc,y
+    STA ram_enemy_page_loc,x  ; copy page location from previous object
+    LDA ram_block_x_position,y
+    STA ram_enemy_x_position,x  ; copy horizontal coordinate from previous object
+    LDA ram_block_y_position,y
+    STA ram_enemy_y_position,x  ; copy vertical coordinate from previous object
+    LDY ram_vine_flag_offset  ; load vine flag/offset to next available vine slot
     BNE NextVO  ; if set at all, don't bother to store vertical
-    STA VineStart_Y_Position  ; otherwise store vertical coordinate here
+    STA ram_vine_start_y_position  ; otherwise store vertical coordinate here
 NextVO:
     TXA  ; store object offset to next available vine slot
-    STA VineObjOffset,y  ; using vine flag as offset
-    INC VineFlagOffset  ; increment vine flag offset
-    LDA #Sfx_GrowVine
-    STA Square2SoundQueue  ; load vine grow sound
+    STA ram_vine_obj_offset,y  ; using vine flag as offset
+    INC ram_vine_flag_offset  ; increment vine flag offset
+    LDA #con_sfx_grow_vine
+    STA ram_square2_sound_queue  ; load vine grow sound
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -466,21 +466,21 @@ VineHeightData:
 VineObjectHandler:
     CPX #$05  ; check enemy offset for special use slot
     BNE ExitVH  ; if not in last slot, branch to leave
-    LDY VineFlagOffset
+    LDY ram_vine_flag_offset
     DEY  ; decrement vine flag in Y, use as offset
-    LDA VineHeight
+    LDA ram_vine_height
     CMP VineHeightData,y  ; if vine has reached certain height,
     BEQ RunVSubs  ; branch ahead to skip this part
-    LDA FrameCounter  ; get frame counter
+    LDA ram_frame_counter  ; get frame counter
     LSR  ; shift d1 into carry
     LSR
     BCC RunVSubs  ; if d1 not set (2 frames every 4) skip this part
-    LDA Enemy_Y_Position+5
+    LDA ram_enemy_y_position+5
     SBC #$01  ; subtract vertical position of vine
-    STA Enemy_Y_Position+5  ; one pixel every frame it's time
-    INC VineHeight  ; increment vine height
+    STA ram_enemy_y_position+5  ; one pixel every frame it's time
+    INC ram_vine_height  ; increment vine height
 RunVSubs:
-    LDA VineHeight  ; if vine still very small,
+    LDA ram_vine_height  ; if vine still very small,
     CMP #$08  ; branch to leave
     BCC ExitVH
     JSR RelativeEnemyPosition  ; get relative coordinates of vine,
@@ -489,21 +489,21 @@ RunVSubs:
 VDrawLoop:
     JSR DrawVine  ; draw vine
     INY  ; increment offset
-    CPY VineFlagOffset  ; if offset in Y and offset here
+    CPY ram_vine_flag_offset  ; if offset in Y and offset here
     BNE VDrawLoop  ; do not yet match, loop back to draw more vine
-    LDA Enemy_OffscreenBits
+    LDA ram_enemy_offscreen_bits
     AND #%00001100  ; mask offscreen bits
     BEQ WrCMTile  ; if none of the saved offscreen bits set, skip ahead
     DEY  ; otherwise decrement Y to get proper offset again
 KillVine:
-    LDX VineObjOffset,y  ; get enemy object offset for this vine object
+    LDX ram_vine_obj_offset,y  ; get enemy object offset for this vine object
     JSR EraseEnemyObject  ; kill this vine object
     DEY  ; decrement Y
     BPL KillVine  ; if any vine objects left, loop back to kill it
-    STA VineFlagOffset  ; initialize vine flag/offset
-    STA VineHeight  ; initialize vine height
+    STA ram_vine_flag_offset  ; initialize vine flag/offset
+    STA ram_vine_height  ; initialize vine height
 WrCMTile:
-    LDA VineHeight  ; check vine height
+    LDA ram_vine_height  ; check vine height
     CMP #$20  ; if vine small (less than 32 pixels tall)
     BCC ExitVH  ; then branch ahead to leave
     LDX #$06  ; set offset in X to last enemy slot
@@ -518,5 +518,5 @@ WrCMTile:
     LDA #$26
     STA ($06),y  ; otherwise, write climbing metatile to block buffer
 ExitVH:
-    LDX ObjectOffset  ; get enemy object offset and leave
+    LDX ram_object_offset  ; get enemy object offset and leave
     RTS

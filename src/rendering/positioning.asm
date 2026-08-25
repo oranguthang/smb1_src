@@ -18,7 +18,7 @@ RelativeFireballPosition:
     LDY #$02
 RelWOfs:
     JSR GetObjRelativePosition  ; get the coordinates
-    LDX ObjectOffset  ; return original offset
+    LDX ram_object_offset  ; return original offset
     RTS  ; leave
 
 RelativeMiscPosition:
@@ -47,16 +47,16 @@ VariableObjOfsRelPos:
     ADC $00  ; add A to value stored
     TAX  ; use as enemy offset
     JSR GetObjRelativePosition
-    LDX ObjectOffset  ; reload old object offset and leave
+    LDX ram_object_offset  ; reload old object offset and leave
     RTS
 
 GetObjRelativePosition:
-    LDA SprObject_Y_Position,x  ; load vertical coordinate low
-    STA SprObject_Rel_YPos,y  ; store here
-    LDA SprObject_X_Position,x  ; load horizontal coordinate
+    LDA ram_spr_object_y_position,x  ; load vertical coordinate low
+    STA ram_spr_object_rel_y_pos,y  ; store here
+    LDA ram_spr_object_x_position,x  ; load horizontal coordinate
     SEC  ; subtract left edge coordinate
-    SBC ScreenLeft_X_Pos
-    STA SprObject_Rel_XPos,y  ; store result here
+    SBC ram_screen_left_x_pos
+    STA ram_spr_object_rel_x_pos,y  ; store result here
     RTS
 
 ; -------------------------------------------------------------------------------------
@@ -97,12 +97,12 @@ GetProperObjOffset:
 
 GetEnemyOffscreenBits:
     LDA #$01  ; set A to add 1 byte in order to get enemy offset
-    LDY #$01  ; set Y to put offscreen bits in Enemy_OffscreenBits
+    LDY #$01  ; set Y to put offscreen bits in ram_enemy_offscreen_bits
     JMP SetOffscrBitsOffset
 
 GetBlockOffscreenBits:
     LDA #$09  ; set A to add 9 bytes in order to get block obj offset
-    LDY #$04  ; set Y to put offscreen bits in Block_OffscreenBits
+    LDY #$04  ; set Y to put offscreen bits in ram_block_offscreen_bits
 
 SetOffscrBitsOffset:
     STX $00
@@ -123,8 +123,8 @@ GetOffScreenBitsSet:
     PLA  ; get offscreen bits offset from stack
     TAY
     LDA $00  ; get value here and store elsewhere
-    STA SprObject_OffscrBits,y
-    LDX ObjectOffset
+    STA ram_spr_object_offscr_bits,y
+    LDX ram_object_offset
     RTS
 
 RunOffscrBitsSubs:
@@ -154,12 +154,12 @@ GetXOffscreenBits:
     STX $04  ; save position in buffer to here
     LDY #$01  ; start with right side of screen
 XOfsLoop:
-    LDA ScreenEdge_X_Pos,y  ; get pixel coordinate of edge
+    LDA ram_screen_edge_x_pos,y  ; get pixel coordinate of edge
     SEC  ; get difference between pixel coordinate of edge
-    SBC SprObject_X_Position,x  ; and pixel coordinate of object position
+    SBC ram_spr_object_x_position,x  ; and pixel coordinate of object position
     STA $07  ; store here
-    LDA ScreenEdge_PageLoc,y  ; get page location of edge
-    SBC SprObject_PageLoc,x  ; subtract from page location of object position
+    LDA ram_screen_edge_page_loc,y  ; get page location of edge
+    SBC ram_spr_object_page_loc,x  ; subtract from page location of object position
     LDX DefaultXOnscreenOfs,y  ; load offset value here
     CMP #$00
     BMI XLdBData  ; if beyond right edge or in front of left edge, branch
@@ -199,10 +199,10 @@ GetYOffscreenBits:
 YOfsLoop:
     LDA HighPosUnitData,y  ; load coordinate for edge of vertical unit
     SEC
-    SBC SprObject_Y_Position,x  ; subtract from vertical coordinate of object
+    SBC ram_spr_object_y_position,x  ; subtract from vertical coordinate of object
     STA $07  ; store here
     LDA #$01  ; subtract one from vertical high byte of object
-    SBC SprObject_Y_HighPos,x
+    SBC ram_spr_object_y_high_pos,x
     LDX DefaultYOnscreenOfs,y  ; load offset value here
     CMP #$00
     BMI YLdBData  ; if under top of the screen or beyond bottom, branch
@@ -255,28 +255,28 @@ DrawSpriteObject:
     LSR  ; move d1 into carry
     LDA $00
     BCC NoHFlip  ; if d1 not set, branch
-    STA Sprite_Tilenumber+4,y  ; store first tile into second sprite
+    STA ram_sprite_tilenumber+4,y  ; store first tile into second sprite
     LDA $01  ; and second into first sprite
-    STA Sprite_Tilenumber,y
+    STA ram_sprite_tilenumber,y
     LDA #$40  ; activate horizontal flip OAM attribute
     BNE SetHFAt  ; and unconditionally branch
 NoHFlip:
-    STA Sprite_Tilenumber,y  ; store first tile into first sprite
+    STA ram_sprite_tilenumber,y  ; store first tile into first sprite
     LDA $01  ; and second into second sprite
-    STA Sprite_Tilenumber+4,y
+    STA ram_sprite_tilenumber+4,y
     LDA #$00  ; clear bit for horizontal flip
 SetHFAt:
     ORA $04  ; add other OAM attributes if necessary
-    STA Sprite_Attributes,y  ; store sprite attributes
-    STA Sprite_Attributes+4,y
+    STA ram_sprite_attributes,y  ; store sprite attributes
+    STA ram_sprite_attributes+4,y
     LDA $02  ; now the y coordinates
-    STA Sprite_Y_Position,y  ; note because they are
-    STA Sprite_Y_Position+4,y  ; side by side, they are the same
+    STA ram_sprite_y_position,y  ; note because they are
+    STA ram_sprite_y_position+4,y  ; side by side, they are the same
     LDA $05
-    STA Sprite_X_Position,y  ; store x coordinate, then
+    STA ram_sprite_x_position,y  ; store x coordinate, then
     CLC  ; add 8 pixels and store another to
     ADC #$08  ; put them side by side
-    STA Sprite_X_Position+4,y
+    STA ram_sprite_x_position+4,y
     LDA $02  ; add eight pixels to the next y
     CLC  ; coordinate
     ADC #$08

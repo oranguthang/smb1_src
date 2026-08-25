@@ -33,17 +33,17 @@ OutputNumbers:
     PHA  ; save incremented value to stack for now and
     ASL  ; shift to left and use as offset
     TAY
-    LDX VRAM_Buffer1_Offset  ; get current buffer pointer
+    LDX ram_vram_buffer1_offset  ; get current buffer pointer
     LDA #$20  ; put at top of screen by default
     CPY #$00  ; are we writing top score on title screen?
     BNE SetupNums
     LDA #$22  ; if so, put further down on the screen
 SetupNums:
-    STA VRAM_Buffer1,x
+    STA ram_vram_buffer1,x
     LDA StatusBarData,y  ; write low vram address and length of thing
-    STA VRAM_Buffer1+1,x  ; we're printing to the buffer
+    STA ram_vram_buffer1+1,x  ; we're printing to the buffer
     LDA StatusBarData+1,y
-    STA VRAM_Buffer1+2,x
+    STA ram_vram_buffer1+2,x
     STA $03  ; save length byte in counter
     STX $02  ; and buffer pointer elsewhere for now
     PLA  ; pull original incremented value from stack
@@ -54,37 +54,37 @@ SetupNums:
     TAY  ; use value as offset to display digits
     LDX $02
 DigitPLoop:
-    LDA DisplayDigits,y  ; write digits to the buffer
-    STA VRAM_Buffer1+3,x
+    LDA ram_display_digits,y  ; write digits to the buffer
+    STA ram_vram_buffer1+3,x
     INX
     INY
     DEC $03  ; do this until all the digits are written
     BNE DigitPLoop
     LDA #$00  ; put null terminator at end
-    STA VRAM_Buffer1+3,x
+    STA ram_vram_buffer1+3,x
     INX  ; increment buffer pointer by 3
     INX
     INX
-    STX VRAM_Buffer1_Offset  ; store it in case we want to use it again
+    STX ram_vram_buffer1_offset  ; store it in case we want to use it again
 ExitOutputN:
     RTS
 
 ; -------------------------------------------------------------------------------------
 
 DigitsMathRoutine:
-    LDA OperMode  ; check mode of operation
-    CMP #TitleScreenModeValue
+    LDA ram_oper_mode  ; check mode of operation
+    CMP #con_mode_title_screen
     BEQ EraseDMods  ; if in title screen mode, branch to lock score
     LDX #$05
 AddModLoop:
-    LDA DigitModifier,x  ; load digit amount to increment
+    LDA ram_digit_modifier,x  ; load digit amount to increment
     CLC
-    ADC DisplayDigits,y  ; add to current digit
+    ADC ram_display_digits,y  ; add to current digit
     BMI BorrowOne  ; if result is a negative number, branch to subtract
     CMP #10
     BCS CarryOne  ; if digit greater than $09, branch to add
 StoreNewD:
-    STA DisplayDigits,y  ; store as new score or game timer digit
+    STA ram_display_digits,y  ; store as new score or game timer digit
     DEY  ; move onto next digits in score or game timer
     DEX  ; and digit amounts to increment
     BPL AddModLoop  ; loop back if we're not done yet
@@ -92,18 +92,18 @@ EraseDMods:
     LDA #$00  ; store zero here
     LDX #$06  ; start with the last digit
 EraseMLoop:
-    STA DigitModifier-1,x  ; initialize the digit amounts to increment
+    STA ram_digit_modifier-1,x  ; initialize the digit amounts to increment
     DEX
     BPL EraseMLoop  ; do this until they're all reset, then leave
     RTS
 BorrowOne:
-    DEC DigitModifier-1,x  ; decrement the previous digit, then put $09 in
+    DEC ram_digit_modifier-1,x  ; decrement the previous digit, then put $09 in
     LDA #$09  ; the game timer digit we're currently on to "borrow
     BNE StoreNewD  ; the one", then do an unconditional branch back
 CarryOne:
     SEC  ; subtract ten from our digit to make it a
     SBC #10  ; proper BCD number, then increment the digit
-    INC DigitModifier-1,x  ; preceding current digit to "carry the one" properly
+    INC ram_digit_modifier-1,x  ; preceding current digit to "carry the one" properly
     JMP StoreNewD  ; go back to just after we branched here
 
 ; -------------------------------------------------------------------------------------
@@ -117,8 +117,8 @@ TopScoreCheck:
     LDY #$05  ; start with the lowest digit
     SEC
 GetScoreDiff:
-    LDA PlayerScoreDisplay,x  ; subtract each player digit from each high score digit
-    SBC TopScoreDisplay,y  ; from lowest to highest, if any top score digit exceeds
+    LDA ram_player_score_display,x  ; subtract each player digit from each high score digit
+    SBC ram_top_score_display,y  ; from lowest to highest, if any top score digit exceeds
     DEX  ; any player digit, borrow will be set until a subsequent
     DEY  ; subtraction clears it (player digit is higher than top)
     BPL GetScoreDiff
@@ -126,8 +126,8 @@ GetScoreDiff:
     INX  ; increment X and Y once to the start of the score
     INY
 CopyScore:
-    LDA PlayerScoreDisplay,x  ; store player's score digits into high score memory area
-    STA TopScoreDisplay,y
+    LDA ram_player_score_display,x  ; store player's score digits into high score memory area
+    STA ram_top_score_display,y
     INX
     INY
     CPY #$06  ; do this until we have stored them all

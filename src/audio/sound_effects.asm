@@ -1,7 +1,7 @@
 ; -------------------------------------------------------------------------------------
 
 SoundEngine:
-    LDA OperMode  ; are we in title screen mode?
+    LDA ram_oper_mode  ; are we in title screen mode?
     BNE SndOn
     STA SND_MASTERCTRL_REG  ; if so, disable sound and leave
     RTS
@@ -10,32 +10,32 @@ SndOn:
     STA JOYPAD_PORT2  ; disable irqs and set frame counter mode???
     LDA #$0f
     STA SND_MASTERCTRL_REG  ; enable first four channels
-    LDA PauseModeFlag  ; is sound already in pause mode?
+    LDA ram_pause_mode_flag  ; is sound already in pause mode?
     BNE InPause
-    LDA PauseSoundQueue  ; if not, check pause sfx queue
+    LDA ram_pause_sound_queue  ; if not, check pause sfx queue
     CMP #$01
     BNE RunSoundSubroutines  ; if queue is empty, skip pause mode routine
 InPause:
-    LDA PauseSoundBuffer  ; check pause sfx buffer
+    LDA ram_pause_sound_buffer  ; check pause sfx buffer
     BNE ContPau
-    LDA PauseSoundQueue  ; check pause queue
+    LDA ram_pause_sound_queue  ; check pause queue
     BEQ SkipSoundSubroutines
-    STA PauseSoundBuffer  ; if queue full, store in buffer and activate
-    STA PauseModeFlag  ; pause mode to interrupt game sounds
+    STA ram_pause_sound_buffer  ; if queue full, store in buffer and activate
+    STA ram_pause_mode_flag  ; pause mode to interrupt game sounds
     LDA #$00  ; disable sound and clear sfx buffers
     STA SND_MASTERCTRL_REG
-    STA Square1SoundBuffer
-    STA Square2SoundBuffer
-    STA NoiseSoundBuffer
+    STA ram_square1_sound_buffer
+    STA ram_square2_sound_buffer
+    STA ram_noise_sound_buffer
     LDA #$0f
     STA SND_MASTERCTRL_REG  ; enable sound again
     LDA #$2a  ; store length of sound in pause counter
-    STA Squ1_SfxLenCounter
+    STA ram_squ1_sfx_len_counter
 PTone1F:
     LDA #$44  ; play first tone
     BNE PTRegC  ; unconditional branch
 ContPau:
-    LDA Squ1_SfxLenCounter  ; check pause length left
+    LDA ram_squ1_sfx_len_counter  ; check pause length left
     CMP #$24  ; time to play second?
     BEQ PTone2F
     CMP #$1e  ; time to play first again?
@@ -49,18 +49,18 @@ PTRegC:
     LDY #$7f
     JSR PlaySqu1Sfx
 DecPauC:
-    DEC Squ1_SfxLenCounter  ; decrement pause sfx counter
+    DEC ram_squ1_sfx_len_counter  ; decrement pause sfx counter
     BNE SkipSoundSubroutines
     LDA #$00  ; disable sound if in pause mode and
     STA SND_MASTERCTRL_REG  ; not currently playing the pause sfx
-    LDA PauseSoundBuffer  ; if no longer playing pause sfx, check to see
+    LDA ram_pause_sound_buffer  ; if no longer playing pause sfx, check to see
     CMP #$02  ; if we need to be playing sound again
     BNE SkipPIn
     LDA #$00  ; clear pause mode to allow game sounds again
-    STA PauseModeFlag
+    STA ram_pause_mode_flag
 SkipPIn:
     LDA #$00  ; clear pause sfx buffer
-    STA PauseSoundBuffer
+    STA ram_pause_sound_buffer
     BEQ SkipSoundSubroutines
 
 RunSoundSubroutines:
@@ -69,26 +69,26 @@ RunSoundSubroutines:
     JSR NoiseSfxHandler  ; ''  ''  '' noise channel
     JSR MusicHandler  ; play music on all channels
     LDA #$00  ; clear the music queues
-    STA AreaMusicQueue
-    STA EventMusicQueue
+    STA ram_area_music_queue
+    STA ram_event_music_queue
 
 SkipSoundSubroutines:
     LDA #$00  ; clear the sound effects queues
-    STA Square1SoundQueue
-    STA Square2SoundQueue
-    STA NoiseSoundQueue
-    STA PauseSoundQueue
-    LDY DAC_Counter  ; load some sort of counter
-    LDA AreaMusicBuffer
+    STA ram_square1_sound_queue
+    STA ram_square2_sound_queue
+    STA ram_noise_sound_queue
+    STA ram_pause_sound_queue
+    LDY ram_dac_counter  ; load some sort of counter
+    LDA ram_area_music_buffer
     AND #%00000011  ; check for specific music
     BEQ NoIncDAC
-    INC DAC_Counter  ; increment and check counter
+    INC ram_dac_counter  ; increment and check counter
     CPY #$30
     BCC StrWave  ; if not there yet, just store it
 NoIncDAC:
     TYA
     BEQ StrWave  ; if we are at zero, do not decrement
-    DEC DAC_Counter  ; decrement counter
+    DEC ram_dac_counter  ; decrement counter
 StrWave:
     STY SND_DELTA_REG+1  ; store into DMC load register (??)
     RTS  ; we are done here
@@ -141,7 +141,7 @@ SwimStompEnvelopeData:
 
 PlayFlagpoleSlide:
     LDA #$40  ; store length of flagpole sound
-    STA Squ1_SfxLenCounter
+    STA ram_squ1_sfx_len_counter
     LDA #$62  ; load part of reg contents for flagpole sound
     JSR SetFreq_Squ1
     LDX #$99  ; now load the rest
@@ -159,10 +159,10 @@ JumpRegContents:
     LDY #$a7  ; anyway, this loads the first part of mario's jumping sound
     JSR PlaySqu1Sfx
     LDA #$28  ; store length of sfx for both jumping sounds
-    STA Squ1_SfxLenCounter  ; then continue on here
+    STA ram_squ1_sfx_len_counter  ; then continue on here
 
 ContinueSndJump:
-    LDA Squ1_SfxLenCounter  ; jumping sounds seem to be composed of three parts
+    LDA ram_squ1_sfx_len_counter  ; jumping sounds seem to be composed of three parts
     CMP #$25  ; check for time to play second part yet
     BNE N2Prt
     LDX #$5f  ; load second part
@@ -188,12 +188,12 @@ PlayBump:
     LDY #$93
 Fthrow:
     LDX #$9e  ; the fireball sound shares reg contents with the bump sound
-    STA Squ1_SfxLenCounter
+    STA ram_squ1_sfx_len_counter
     LDA #$0c  ; load offset for bump sound
     JSR PlaySqu1Sfx
 
 ContinueBumpThrow:
-    LDA Squ1_SfxLenCounter  ; check for second part of bump sound
+    LDA ram_squ1_sfx_len_counter  ; check for second part of bump sound
     CMP #$06
     BNE DecJpFPS
     LDA #$bb  ; load second part directly
@@ -202,27 +202,27 @@ DecJpFPS:
     BNE BranchToDecLength1  ; unconditional branch
 
 Square1SfxHandler:
-    LDY Square1SoundQueue  ; check for sfx in queue
+    LDY ram_square1_sound_queue  ; check for sfx in queue
     BEQ CheckSfx1Buffer
-    STY Square1SoundBuffer  ; if found, put in buffer
+    STY ram_square1_sound_buffer  ; if found, put in buffer
     BMI PlaySmallJump  ; small jump
-    LSR Square1SoundQueue
+    LSR ram_square1_sound_queue
     BCS PlayBigJump  ; big jump
-    LSR Square1SoundQueue
+    LSR ram_square1_sound_queue
     BCS PlayBump  ; bump
-    LSR Square1SoundQueue
+    LSR ram_square1_sound_queue
     BCS PlaySwimStomp  ; swim/stomp
-    LSR Square1SoundQueue
+    LSR ram_square1_sound_queue
     BCS PlaySmackEnemy  ; smack enemy
-    LSR Square1SoundQueue
+    LSR ram_square1_sound_queue
     BCS PlayPipeDownInj  ; pipedown/injury
-    LSR Square1SoundQueue
+    LSR ram_square1_sound_queue
     BCS PlayFireballThrow  ; fireball throw
-    LSR Square1SoundQueue
+    LSR ram_square1_sound_queue
     BCS PlayFlagpoleSlide  ; slide flagpole
 
 CheckSfx1Buffer:
-    LDA Square1SoundBuffer  ; check for sfx in buffer
+    LDA ram_square1_sound_buffer  ; check for sfx in buffer
     BEQ ExS1H  ; if not found, exit sub
     BMI ContinueSndJump  ; small mario jump
     LSR
@@ -244,14 +244,14 @@ ExS1H:
 
 PlaySwimStomp:
     LDA #$0e  ; store length of swim/stomp sound
-    STA Squ1_SfxLenCounter
+    STA ram_squ1_sfx_len_counter
     LDY #$9c  ; store reg contents for swim/stomp sound
     LDX #$9e
     LDA #$26
     JSR PlaySqu1Sfx
 
 ContinueSwimStomp:
-    LDY Squ1_SfxLenCounter  ; look up reg contents in data section based on
+    LDY ram_squ1_sfx_len_counter  ; look up reg contents in data section based on
     LDA SwimStompEnvelopeData-1,y  ; length of sound left, used to control sound's
     STA SND_SQUARE1_REG  ; envelope
     CPY #$06
@@ -266,13 +266,13 @@ PlaySmackEnemy:
     LDA #$0e  ; store length of smack enemy sound
     LDY #$cb
     LDX #$9f
-    STA Squ1_SfxLenCounter
+    STA ram_squ1_sfx_len_counter
     LDA #$28  ; store reg contents for smack enemy sound
     JSR PlaySqu1Sfx
     BNE DecrementSfx1Length  ; unconditional branch
 
 ContinueSmackEnemy:
-    LDY Squ1_SfxLenCounter  ; check about halfway through
+    LDY ram_squ1_sfx_len_counter  ; check about halfway through
     CPY #$08
     BNE SmSpc
     LDA #$a0  ; if we're at the about-halfway point, make the second tone
@@ -285,7 +285,7 @@ SmTick:
     STA SND_SQUARE1_REG
 
 DecrementSfx1Length:
-    DEC Squ1_SfxLenCounter  ; decrement length of sfx
+    DEC ram_squ1_sfx_len_counter  ; decrement length of sfx
     BNE ExSfx1
 
 StopSquare1Sfx:
@@ -300,10 +300,10 @@ ExSfx1:
 
 PlayPipeDownInj:
     LDA #$2f  ; load length of pipedown sound
-    STA Squ1_SfxLenCounter
+    STA ram_squ1_sfx_len_counter
 
 ContinuePipeDownInj:
-    LDA Squ1_SfxLenCounter  ; some bitwise logic, forces the regs
+    LDA ram_squ1_sfx_len_counter  ; some bitwise logic, forces the regs
     LSR  ; to be written to only during six specific times
     BCS NoPDwnL  ; during which d3 must be set and d1-0 must be clear
     LSR
@@ -346,13 +346,13 @@ PlayTimerTick:
     LDX #$98  ; and part of reg contents
 
 CGrab_TTickRegL:
-    STA Squ2_SfxLenCounter
+    STA ram_squ2_sfx_len_counter
     LDY #$7f  ; load the rest of reg contents
     LDA #$42  ; of coin grab and timer tick sound
     JSR PlaySqu2Sfx
 
 ContinueCGrabTTick:
-    LDA Squ2_SfxLenCounter  ; check for time to play second tone yet
+    LDA ram_squ2_sfx_len_counter  ; check for time to play second tone yet
     CMP #$30  ; timer tick sound also executes this, not sure why
     BNE N2Tone
     LDA #$54  ; if so, load the tone directly into the reg
@@ -362,13 +362,13 @@ N2Tone:
 
 PlayBlast:
     LDA #$20  ; load length of fireworks/gunfire sound
-    STA Squ2_SfxLenCounter
+    STA ram_squ2_sfx_len_counter
     LDY #$94  ; load reg contents of fireworks/gunfire sound
     LDA #$5e
     BNE SBlasJ
 
 ContinueBlast:
-    LDA Squ2_SfxLenCounter  ; check for time to play second part
+    LDA ram_squ2_sfx_len_counter  ; check for time to play second part
     CMP #$18
     BNE DecrementSfx2Length
     LDY #$93  ; load second part reg contents then
@@ -378,10 +378,10 @@ SBlasJ:
 
 PlayPowerUpGrab:
     LDA #$36  ; load length of power-up grab sound
-    STA Squ2_SfxLenCounter
+    STA ram_squ2_sfx_len_counter
 
 ContinuePowerUpGrab:
-    LDA Squ2_SfxLenCounter  ; load frequency reg based on length left over
+    LDA ram_squ2_sfx_len_counter  ; load frequency reg based on length left over
     LSR  ; divide by 2
     BCS DecrementSfx2Length  ; alter frequency every other frame
     TAY
@@ -393,12 +393,12 @@ LoadSqu2Regs:
     JSR PlaySqu2Sfx
 
 DecrementSfx2Length:
-    DEC Squ2_SfxLenCounter  ; decrement length of sfx
+    DEC ram_squ2_sfx_len_counter  ; decrement length of sfx
     BNE ExSfx2
 
 EmptySfx2Buffer:
     LDX #$00  ; initialize square 2's sound effects buffer
-    STX Square2SoundBuffer
+    STX ram_square2_sound_buffer
 
 StopSquare2Sfx:
     LDX #$0d  ; stop playing the sfx
@@ -409,30 +409,30 @@ ExSfx2:
     RTS
 
 Square2SfxHandler:
-    LDA Square2SoundBuffer  ; special handling for the 1-up sound to keep it
-    AND #Sfx_ExtraLife  ; from being interrupted by other sounds on square 2
+    LDA ram_square2_sound_buffer  ; special handling for the 1-up sound to keep it
+    AND #con_sfx_extra_life  ; from being interrupted by other sounds on square 2
     BNE ContinueExtraLife
-    LDY Square2SoundQueue  ; check for sfx in queue
+    LDY ram_square2_sound_queue  ; check for sfx in queue
     BEQ CheckSfx2Buffer
-    STY Square2SoundBuffer  ; if found, put in buffer and check for the following
+    STY ram_square2_sound_buffer  ; if found, put in buffer and check for the following
     BMI PlayBowserFall  ; bowser fall
-    LSR Square2SoundQueue
+    LSR ram_square2_sound_queue
     BCS PlayCoinGrab  ; coin grab
-    LSR Square2SoundQueue
+    LSR ram_square2_sound_queue
     BCS PlayGrowPowerUp  ; power-up reveal
-    LSR Square2SoundQueue
+    LSR ram_square2_sound_queue
     BCS PlayGrowVine  ; vine grow
-    LSR Square2SoundQueue
+    LSR ram_square2_sound_queue
     BCS PlayBlast  ; fireworks/gunfire
-    LSR Square2SoundQueue
+    LSR ram_square2_sound_queue
     BCS PlayTimerTick  ; timer tick
-    LSR Square2SoundQueue
+    LSR ram_square2_sound_queue
     BCS PlayPowerUpGrab  ; power-up grab
-    LSR Square2SoundQueue
+    LSR ram_square2_sound_queue
     BCS PlayExtraLife  ; 1-up
 
 CheckSfx2Buffer:
-    LDA Square2SoundBuffer  ; check for sfx in buffer
+    LDA ram_square2_sound_buffer  ; check for sfx in buffer
     BEQ ExS2H  ; if not found, exit sub
     BMI ContinueBowserFall  ; bowser fall
     LSR
@@ -460,14 +460,14 @@ JumpToDecLength2:
 
 PlayBowserFall:
     LDA #$38  ; load length of bowser defeat sound
-    STA Squ2_SfxLenCounter
+    STA ram_squ2_sfx_len_counter
     LDY #$c4  ; load contents of reg for bowser defeat sound
     LDA #$18
 BlstSJp:
     BNE PBFRegs
 
 ContinueBowserFall:
-    LDA Squ2_SfxLenCounter  ; check for almost near the end
+    LDA ram_squ2_sfx_len_counter  ; check for almost near the end
     CMP #$08
     BNE DecrementSfx2Length
     LDY #$a4  ; if so, load the rest of reg contents for bowser defeat sound
@@ -479,10 +479,10 @@ EL_LRegs:
 
 PlayExtraLife:
     LDA #$30  ; load length of 1-up sound
-    STA Squ2_SfxLenCounter
+    STA ram_squ2_sfx_len_counter
 
 ContinueExtraLife:
-    LDA Squ2_SfxLenCounter
+    LDA ram_squ2_sfx_len_counter
     LDX #$03  ; load new tones only every eight frames
 DivLLoop:
     LSR
@@ -503,18 +503,18 @@ PlayGrowVine:
     LDA #$20  ; load length of vine grow sound
 
 GrowItemRegs:
-    STA Squ2_SfxLenCounter
+    STA ram_squ2_sfx_len_counter
     LDA #$7f  ; load contents of reg for both sounds directly
     STA SND_SQUARE2_REG+1
     LDA #$00  ; start secondary counter for both sounds
-    STA Sfx_SecondaryCounter
+    STA ram_sfx_secondary_counter
 
 ContinueGrowItems:
-    INC Sfx_SecondaryCounter  ; increment secondary counter for both sounds
-    LDA Sfx_SecondaryCounter  ; this sound doesn't decrement the usual counter
+    INC ram_sfx_secondary_counter  ; increment secondary counter for both sounds
+    LDA ram_sfx_secondary_counter  ; this sound doesn't decrement the usual counter
     LSR  ; divide by 2 to get the offset
     TAY
-    CPY Squ2_SfxLenCounter  ; have we reached the end yet?
+    CPY ram_squ2_sfx_len_counter  ; have we reached the end yet?
     BEQ StopGrowItems  ; if so, branch to jump, and stop playing sounds
     LDA #$9d  ; load contents of other reg directly
     STA SND_SQUARE2_REG
@@ -533,10 +533,10 @@ BrickShatterFreqData:
 
 PlayBrickShatter:
     LDA #$20  ; load length of brick shatter sound
-    STA Noise_SfxLenCounter
+    STA ram_noise_sfx_len_counter
 
 ContinueBrickShatter:
-    LDA Noise_SfxLenCounter
+    LDA ram_noise_sfx_len_counter
     LSR  ; divide by 2 and check for bit set to use offset
     BCC DecrementSfx3Length
     TAY
@@ -550,26 +550,26 @@ PlayNoiseSfx:
     STA SND_NOISE_REG+3
 
 DecrementSfx3Length:
-    DEC Noise_SfxLenCounter  ; decrement length of sfx
+    DEC ram_noise_sfx_len_counter  ; decrement length of sfx
     BNE ExSfx3
     LDA #$f0  ; if done, stop playing the sfx
     STA SND_NOISE_REG
     LDA #$00
-    STA NoiseSoundBuffer
+    STA ram_noise_sound_buffer
 ExSfx3:
     RTS
 
 NoiseSfxHandler:
-    LDY NoiseSoundQueue  ; check for sfx in queue
+    LDY ram_noise_sound_queue  ; check for sfx in queue
     BEQ CheckNoiseBuffer
-    STY NoiseSoundBuffer  ; if found, put in buffer
-    LSR NoiseSoundQueue
+    STY ram_noise_sound_buffer  ; if found, put in buffer
+    LSR ram_noise_sound_queue
     BCS PlayBrickShatter  ; brick shatter
-    LSR NoiseSoundQueue
+    LSR ram_noise_sound_queue
     BCS PlayBowserFlame  ; bowser flame
 
 CheckNoiseBuffer:
-    LDA NoiseSoundBuffer  ; check for sfx in buffer
+    LDA ram_noise_sound_buffer  ; check for sfx in buffer
     BEQ ExNH  ; if not found, exit sub
     LSR
     BCS ContinueBrickShatter  ; brick shatter
@@ -580,10 +580,10 @@ ExNH:
 
 PlayBowserFlame:
     LDA #$40  ; load length of bowser flame sound
-    STA Noise_SfxLenCounter
+    STA ram_noise_sfx_len_counter
 
 ContinueBowserFlame:
-    LDA Noise_SfxLenCounter
+    LDA ram_noise_sfx_len_counter
     LSR
     TAY
     LDX #$0f  ; load reg contents of bowser flame sound
