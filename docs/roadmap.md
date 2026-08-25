@@ -404,7 +404,7 @@ normal builds never rewrite source or editable documents. Format contracts,
 boundaries, and extension rules are recorded in `docs/data_formats.md`, with
 focused semantic codec tests in the ordinary unit-test layer.
 
-### 9. Preservation Source 1.0 - Planned
+### 9. Preservation Source 1.0 - Complete
 
 Declare the first stable reconstruction release when:
 
@@ -417,6 +417,17 @@ Declare the first stable reconstruction release when:
   complete 32 KiB PRG.
 
 Tag this state before normalizing behavior-changing work.
+
+The stable contract is recorded in `docs/preservation_source_1_0.md` and the
+machine-readable `config/preservation_source_1_0.json`. `CONTRIBUTING.md` gives
+a subsystem-oriented change workflow that preserves the asset boundary,
+evidence vocabulary, source layout, and validation layers. `make release-check`
+runs lint, 33 focused tests, all ten data round trips, complete-ROM byte
+verification, the live debugger/runtime layer, and a final manifest audit. The
+audit cross-checks hashes, tool versions, scenario/codec counts, required docs,
+milestone status, Make targets, and the tracked-payload prohibition. The local
+annotated `preservation-source-1.0` tag marks the accepted commit before later
+behavior-changing roadmap work.
 
 ### 10. Isolated Fixed-Layout ROM-Hack Variants - Planned
 

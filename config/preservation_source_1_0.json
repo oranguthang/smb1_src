@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "release": "Preservation Source 1.0",
+  "local_tag": "preservation-source-1.0",
+  "reference": {
+    "rom_sha1": "ea343f4e445a9050d4b4fbac2c77d0693b1d0922",
+    "prg_sha1": "fefa1097449a3a11ebf8c6199e905996c5dc8fbd",
+    "chr_sha1": "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5",
+    "mapper": 0,
+    "mirroring": "vertical"
+  },
+  "toolchain": {
+    "ca65": "V2.19 - Git 0fca835",
+    "ld65": "V2.19 - Git 0fca835"
+  },
+  "evidence": {
+    "runtime_scenarios": 12,
+    "data_format_artifacts": 10,
+    "movie_sha1": "fbbb675af9b85146015713b8ca5c488d6c0053ab"
+  },
+  "required_documents": [
+    "README.md",
+    "CONTRIBUTING.md",
+    "docs/roadmap.md",
+    "docs/source_layout.md",
+    "docs/naming.md",
+    "docs/assembly_style.md",
+    "docs/player_movement.md",
+    "docs/ram_fields.md",
+    "docs/subsystems.md",
+    "docs/unknowns.md",
+    "docs/debugger_workflow.md",
+    "docs/runtime_evidence.md",
+    "docs/data_formats.md",
+    "docs/preservation_source_1_0.md"
+  ],
+  "release_commands": [
+    "lint",
+    "test",
+    "roundtrip-formats",
+    "verify",
+    "trace",
+    "release-audit"
+  ],
+  "prohibited_tracked_extensions": [".nes", ".chr", ".hdr", ".prg", ".o"]
+}

@@ -30,10 +30,11 @@ RUNTIME_TRACE_LUA ?= $(PROJECT_DIR)scripts/workflow/capture_runtime_scenario.lua
 RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/runtime
 DATA_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/data_formats.json
 DATA_FORMAT_SUMMARY ?= $(PROJECT_DIR)build/data_formats.json
+RELEASE_MANIFEST ?= $(PROJECT_DIR)config/preservation_source_1_0.json
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -135,6 +136,19 @@ roundtrip-formats: build-prg
 		--prg "$(NATIVE_PRG)" \
 		--project-root "$(PROJECT_DIR)" \
 		--summary "$(DATA_FORMAT_SUMMARY)"
+
+release-audit:
+	$(PYTHON) "$(PROJECT_DIR)scripts/release_audit.py" \
+		--project-root "$(PROJECT_DIR)" \
+		--manifest "$(RELEASE_MANIFEST)"
+
+release-check:
+	$(MAKE) lint
+	$(MAKE) test
+	$(MAKE) roundtrip-formats
+	$(MAKE) verify
+	$(MAKE) trace
+	$(MAKE) release-audit
 
 split:
 	$(PYTHON) "$(PROJECT_DIR)scripts/split_assets.py" \

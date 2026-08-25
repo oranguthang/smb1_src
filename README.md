@@ -2,6 +2,11 @@
 
 A comprehensive disassembly of Super Mario Bros for the Nintendo Entertainment System (NES).
 
+The current stable reconstruction is **Preservation Source 1.0**. It rebuilds
+the selected reference ROM byte-for-byte and provides semantic source
+navigation, runtime evidence, and typed data round trips without tracking the
+original ROM or CHR payload.
+
 ## Overview
 
 This repository contains:
@@ -20,6 +25,8 @@ This repository contains:
 - **docs/debugger_workflow.md** - Mesen/FCEUX symbols and source navigation
 - **docs/runtime_evidence.md** - Deterministic gameplay transaction scenarios
 - **docs/data_formats.md** - Typed authored-data codecs and byte round trips
+- **docs/preservation_source_1_0.md** - Stable release scope and evidence boundary
+- **CONTRIBUTING.md** - Safe source, data, evidence, and verification workflow
 
 ## Project Structure
 
@@ -113,6 +120,9 @@ make trace
 # Decode, re-encode, and compare representative authored data
 make roundtrip-formats
 
+# Run every Preservation Source 1.0 acceptance gate
+make release-check
+
 # Validate local assets and build build/native/smb.nes
 make build
 
@@ -136,6 +146,9 @@ interactive source navigation and [`docs/runtime_evidence.md`](docs/runtime_evid
 for reproducible emulator evidence.
 The reversible data contracts are documented in
 [`docs/data_formats.md`](docs/data_formats.md).
+Contribution rules and the stable-release boundary are documented in
+[`CONTRIBUTING.md`](CONTRIBUTING.md) and
+[`docs/preservation_source_1_0.md`](docs/preservation_source_1_0.md).
 
 ## Modding Notes
 
