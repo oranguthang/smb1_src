@@ -1,7 +1,7 @@
 ; AREA OBJECT DATA
 
 ; level 1-4/6-4
-L_CastleArea1:
+off_castle_area_1_objects:
     .byte $9b, $07
     .byte $05, $32, $06, $33, $07, $34, $ce, $03, $dc, $51
     .byte $ee, $07, $73, $e0, $74, $0a, $7e, $06, $9e, $0a
@@ -16,7 +16,7 @@ L_CastleArea1:
     .byte $fd
 
 ; level 4-4
-L_CastleArea2:
+off_castle_area_2_objects:
     .byte $5b, $07
     .byte $05, $32, $06, $33, $07, $34, $5e, $0a, $68, $64
     .byte $98, $64, $a8, $64, $ce, $06, $fe, $02, $0d, $01
@@ -34,7 +34,7 @@ L_CastleArea2:
     .byte $fd
 
 ; level 2-4/5-4
-L_CastleArea3:
+off_castle_area_3_objects:
     .byte $9b, $07
     .byte $05, $32, $06, $33, $07, $34, $fe, $00, $27, $b1
     .byte $65, $32, $75, $0a, $71, $00, $b7, $31, $08, $e4
@@ -51,7 +51,7 @@ L_CastleArea3:
     .byte $fd
 
 ; level 3-4
-L_CastleArea4:
+off_castle_area_4_objects:
     .byte $9b, $07
     .byte $05, $32, $06, $33, $07, $34, $fe, $06, $0c, $81
     .byte $39, $0a, $5c, $01, $89, $0a, $ac, $01, $d9, $0a
@@ -67,7 +67,7 @@ L_CastleArea4:
     .byte $fd
 
 ; level 7-4
-L_CastleArea5:
+off_castle_area_5_objects:
     .byte $5b, $07
     .byte $05, $32, $06, $33, $07, $34, $fe, $0a, $ae, $86
     .byte $be, $07, $fe, $02, $0d, $02, $27, $32, $46, $61
@@ -86,7 +86,7 @@ L_CastleArea5:
     .byte $fd
 
 ; level 8-4
-L_CastleArea6:
+off_castle_area_6_objects:
     .byte $5b, $06
     .byte $05, $32, $06, $33, $07, $34, $5e, $0a, $ae, $02
     .byte $0d, $01, $39, $73, $0d, $03, $39, $7b, $4d, $4b
@@ -102,7 +102,7 @@ L_CastleArea6:
     .byte $fd
 
 ; level 3-3
-L_GroundArea1:
+off_ground_area_1_objects:
     .byte $94, $11
     .byte $0f, $26, $fe, $10, $28, $94, $65, $15, $eb, $12
     .byte $fa, $41, $4a, $96, $54, $40, $a4, $42, $b7, $13
@@ -117,7 +117,7 @@ L_GroundArea1:
     .byte $fd
 
 ; level 8-3
-L_GroundArea2:
+off_ground_area_2_objects:
     .byte $90, $b1
     .byte $0f, $26, $29, $91, $7e, $42, $fe, $40, $28, $92
     .byte $4e, $42, $2e, $c0, $57, $73, $c3, $25, $c7, $27
@@ -133,7 +133,7 @@ L_GroundArea2:
     .byte $fd
 
 ; level 4-1
-L_GroundArea3:
+off_ground_area_3_objects:
     .byte $52, $21
     .byte $0f, $20, $6e, $40, $58, $f2, $93, $01, $97, $00
     .byte $0c, $81, $97, $40, $a6, $41, $c7, $40, $0d, $04
@@ -146,7 +146,7 @@ L_GroundArea3:
     .byte $fd
 
 ; level 6-2
-L_GroundArea4:
+off_ground_area_4_objects:
     .byte $54, $21
     .byte $0f, $26, $a7, $22, $37, $fb, $73, $20, $83, $07
     .byte $87, $02, $93, $20, $c7, $73, $04, $f1, $06, $31
@@ -165,7 +165,7 @@ L_GroundArea4:
     .byte $fd
 
 ; level 3-1
-L_GroundArea5:
+off_ground_area_5_objects:
     .byte $52, $31
     .byte $0f, $20, $6e, $66, $07, $81, $36, $01, $66, $00
     .byte $a7, $22, $08, $f2, $67, $7b, $dc, $02, $98, $f2
@@ -182,7 +182,7 @@ L_GroundArea5:
     .byte $fd
 
 ; level 1-1
-L_GroundArea6:
+off_ground_area_6_objects:
     .byte $50, $21
     .byte $07, $81, $47, $24, $57, $00, $63, $01, $77, $01
     .byte $c9, $71, $68, $f2, $e7, $73, $97, $fb, $06, $83
@@ -197,7 +197,7 @@ L_GroundArea6:
     .byte $fd
 
 ; level 1-3/5-3
-L_GroundArea7:
+off_ground_area_7_objects:
     .byte $90, $11
     .byte $0f, $26, $fe, $10, $2a, $93, $87, $17, $a3, $14
     .byte $b2, $42, $0a, $92, $19, $40, $36, $14, $50, $41
@@ -211,7 +211,7 @@ L_GroundArea7:
     .byte $fd
 
 ; level 2-3/7-3
-L_GroundArea8:
+off_ground_area_8_objects:
     .byte $90, $11
     .byte $0f, $26, $6e, $10, $8b, $17, $af, $32, $d8, $62
     .byte $e8, $62, $fc, $3f, $ad, $c8, $f8, $64, $0c, $be
@@ -229,7 +229,7 @@ L_GroundArea8:
     .byte $fd
 
 ; level 2-1
-L_GroundArea9:
+off_ground_area_9_objects:
     .byte $52, $31
     .byte $0f, $20, $6e, $40, $f7, $20, $07, $84, $17, $20
     .byte $4f, $34, $c3, $03, $c7, $02, $d3, $22, $27, $e3
@@ -244,13 +244,13 @@ L_GroundArea9:
     .byte $fd
 
 ; pipe intro area
-L_GroundArea10:
+off_ground_area_10_objects:
     .byte $38, $11
     .byte $0f, $26, $ad, $40, $3d, $c7
     .byte $fd
 
 ; level 5-1
-L_GroundArea11:
+off_ground_area_11_objects:
     .byte $95, $b1
     .byte $0f, $26, $0d, $02, $c8, $72, $1c, $81, $38, $72
     .byte $0d, $05, $97, $34, $98, $62, $a3, $20, $b3, $06
@@ -261,14 +261,14 @@ L_GroundArea11:
     .byte $fd
 
 ; cloud level used in levels 2-1 and 5-2
-L_GroundArea12:
+off_ground_area_12_objects:
     .byte $00, $c1
     .byte $4c, $00, $f4, $4f, $0d, $02, $02, $42, $43, $4f
     .byte $52, $c2, $de, $00, $5a, $c2, $4d, $c7
     .byte $fd
 
 ; level 4-3
-L_GroundArea13:
+off_ground_area_13_objects:
     .byte $90, $51
     .byte $0f, $26, $ee, $10, $0b, $94, $33, $14, $42, $42
     .byte $77, $16, $86, $44, $02, $92, $4a, $16, $69, $42
@@ -283,7 +283,7 @@ L_GroundArea13:
     .byte $fd
 
 ; level 6-3
-L_GroundArea14:
+off_ground_area_14_objects:
     .byte $97, $11
     .byte $0f, $26, $fe, $10, $2b, $92, $57, $12, $8b, $12
     .byte $c0, $41, $f7, $13, $5b, $92, $69, $0b, $bb, $12
@@ -298,7 +298,7 @@ L_GroundArea14:
     .byte $fd
 
 ; level 6-1
-L_GroundArea15:
+off_ground_area_15_objects:
     .byte $52, $21
     .byte $0f, $20, $6e, $44, $0c, $f1, $4c, $01, $aa, $35
     .byte $d9, $34, $ee, $20, $08, $b3, $37, $32, $43, $04
@@ -315,7 +315,7 @@ L_GroundArea15:
     .byte $fd
 
 ; warp zone area used in level 4-2
-L_GroundArea16:
+off_ground_area_16_objects:
     .byte $10, $51
     .byte $4c, $00, $c7, $12, $c6, $42, $03, $92, $02, $42
     .byte $29, $12, $63, $12, $62, $42, $69, $14, $a5, $12
@@ -325,7 +325,7 @@ L_GroundArea16:
     .byte $fd
 
 ; level 8-1
-L_GroundArea17:
+off_ground_area_17_objects:
     .byte $92, $31
     .byte $0f, $20, $6e, $40, $0d, $02, $37, $73, $ec, $00
     .byte $0c, $80, $3c, $00, $6c, $00, $9c, $00, $06, $c0
@@ -345,7 +345,7 @@ L_GroundArea17:
     .byte $fd
 
 ; level 5-2
-L_GroundArea18:
+off_ground_area_18_objects:
     .byte $55, $b1
     .byte $0f, $26, $cf, $33, $07, $b2, $15, $11, $52, $42
     .byte $99, $0b, $ac, $02, $d3, $24, $d6, $42, $d7, $25
@@ -362,7 +362,7 @@ L_GroundArea18:
     .byte $fd
 
 ; level 8-2
-L_GroundArea19:
+off_ground_area_19_objects:
     .byte $50, $b1
     .byte $0f, $26, $fc, $00, $1f, $b3, $5c, $00, $65, $65
     .byte $74, $66, $83, $67, $93, $67, $dc, $73, $4c, $80
@@ -379,7 +379,7 @@ L_GroundArea19:
     .byte $fd
 
 ; level 7-1
-L_GroundArea20:
+off_ground_area_20_objects:
     .byte $52, $b1
     .byte $0f, $20, $6e, $45, $39, $91, $b3, $04, $c3, $21
     .byte $c8, $11, $ca, $10, $49, $91, $7c, $73, $e8, $12
@@ -393,7 +393,7 @@ L_GroundArea20:
     .byte $fd
 
 ; cloud level used in levels 3-1 and 6-2
-L_GroundArea21:
+off_ground_area_21_objects:
     .byte $06, $c1
     .byte $4c, $00, $f4, $4f, $0d, $02, $06, $20, $24, $4f
     .byte $35, $a0, $36, $20, $53, $46, $d5, $20, $d6, $20
@@ -402,7 +402,7 @@ L_GroundArea21:
     .byte $fd
 
 ; level 3-2
-L_GroundArea22:
+off_ground_area_22_objects:
     .byte $96, $31
     .byte $0f, $26, $0d, $03, $1a, $60, $77, $42, $c4, $00
     .byte $c8, $62, $b9, $e1, $d3, $06, $d7, $07, $f9, $61
@@ -412,7 +412,7 @@ L_GroundArea22:
     .byte $fd
 
 ; level 1-2
-L_UndergroundArea1:
+off_underground_area_1_objects:
     .byte $48, $0f
     .byte $0e, $01, $5e, $02, $a7, $00, $bc, $73, $1a, $e0
     .byte $39, $61, $58, $62, $77, $63, $97, $63, $b8, $62
@@ -433,7 +433,7 @@ L_UndergroundArea1:
     .byte $fd
 
 ; level 4-2
-L_UndergroundArea2:
+off_underground_area_2_objects:
     .byte $48, $0f
     .byte $0e, $01, $5e, $02, $bc, $01, $fc, $01, $2c, $82
     .byte $41, $52, $4e, $04, $67, $25, $68, $24, $69, $24
@@ -454,7 +454,7 @@ L_UndergroundArea2:
     .byte $fd
 
 ; underground bonus rooms area used in many levels
-L_UndergroundArea3:
+off_underground_area_3_objects:
     .byte $48, $01
     .byte $0e, $01, $00, $5a, $3e, $06, $45, $46, $47, $46
     .byte $53, $44, $ae, $01, $df, $4a, $4d, $c7, $0e, $81
@@ -473,7 +473,7 @@ L_UndergroundArea3:
     .byte $fd
 
 ; water area used in levels 5-2 and 6-2
-L_WaterArea1:
+off_water_area_1_objects:
     .byte $41, $01
     .byte $b4, $34, $c8, $52, $f2, $51, $47, $d3, $6c, $03
     .byte $65, $49, $9e, $07, $be, $01, $cc, $03, $fe, $07
@@ -484,7 +484,7 @@ L_WaterArea1:
     .byte $fd
 
 ; level 2-2/7-2
-L_WaterArea2:
+off_water_area_2_objects:
     .byte $41, $01
     .byte $b8, $52, $ea, $41, $27, $b2, $b3, $42, $16, $d4
     .byte $4a, $42, $a5, $51, $a7, $31, $27, $d3, $08, $e2
@@ -501,7 +501,7 @@ L_WaterArea2:
     .byte $fd
 
 ; water area used in level 8-4
-L_WaterArea3:
+off_water_area_3_objects:
     .byte $49, $0f
     .byte $1e, $01, $39, $73, $5e, $07, $ae, $0b, $1e, $82
     .byte $6e, $88, $9e, $02, $0d, $04, $2e, $0b, $45, $09

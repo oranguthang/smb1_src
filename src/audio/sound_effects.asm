@@ -118,10 +118,10 @@ sub_set_freq_squ1:
 
 Dump_Freq_Regs:
     TAY
-    LDA FreqRegLookupTbl+1,y  ; use previous contents of A for sound reg offset
+    LDA tbl_music_note_periods+1,y  ; use previous contents of A for sound reg offset
     BEQ NoTone  ; if zero, then do not load
     STA SND_REGISTER+2,x  ; first byte goes into LSB of frequency divider
-    LDA FreqRegLookupTbl,y  ; second byte goes into 3 MSB plus extra bit for
+    LDA tbl_music_note_periods,y  ; second byte goes into 3 MSB plus extra bit for
     ORA #%00001000  ; length counter
     STA SND_REGISTER+3,x
 NoTone:
@@ -551,7 +551,7 @@ ContinueBrickShatter:
     BCC DecrementSfx3Length
     TAY
     LDX BrickShatterFreqData,y  ; load reg contents of brick shatter sound
-    LDA BrickShatterEnvData,y
+    LDA tbl_brick_shatter_volume_envelope,y
 
 PlayNoiseSfx:
     STA SND_NOISE_REG  ; play the sfx
@@ -597,5 +597,5 @@ ContinueBowserFlame:
     LSR
     TAY
     LDX #$0f  ; load reg contents of bowser flame sound
-    LDA BowserFlameEnvData-1,y
+    LDA tbl_bowser_flame_volume_envelope-1,y
     BNE PlayNoiseSfx  ; unconditional branch here

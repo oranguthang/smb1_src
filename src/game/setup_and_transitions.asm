@@ -57,7 +57,7 @@ SetInitNTHigh:
     DEC ram_area_object_length+2
     LDA #$0b  ; set value for renderer to update 12 column sets
     STA ram_column_sets  ; 12 column sets = 24 metatile columns = 1 1/2 screens
-    JSR sub_get_area_data_addrs  ; get enemy and level addresses and load header
+    JSR sub_get_area_data_addresses  ; get enemy and level addresses and load header
     LDA ram_primary_hard_mode  ; check to see if primary hard mode has been activated
     BNE SetSecHard  ; if so, activate the secondary no matter where we're at
     LDA ram_world_number  ; otherwise check world number

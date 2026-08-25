@@ -449,8 +449,8 @@ GetWNum:
     LDY WarpZoneNumbers,x  ; get warp zone numbers
     DEY  ; decrement for use as world number
     STY ram_world_number  ; store as world number and offset
-    LDX WorldAddrOffsets,y  ; get offset to where this world's area offsets are
-    LDA AreaAddrOffsets,x  ; get area offset based on world offset
+    LDX tbl_world_area_pointer_offsets,y  ; get offset to where this world's area offsets are
+    LDA tbl_area_pointers,x  ; get area offset based on world offset
     STA ram_area_pointer  ; store area offset here to be used to change areas
     LDA #con_silence
     STA ram_event_music_queue  ; silence music

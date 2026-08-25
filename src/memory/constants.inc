@@ -93,8 +93,8 @@ con_warm_boot_offset        = <$07d6
 con_cold_boot_offset        = <$07fe
 con_title_screen_data_offset = $1ec0
 con_swim_tile_replacement_offset     = PlayerGraphicsTable + $9e
-con_music_header_offset_table_base = MusicHeaderData - 1
-con_music_header_data_base                   = MusicHeaderData
+con_music_header_offset_table_base = tbl_music_header_offsets - 1
+con_music_header_data_base                   = tbl_music_header_offsets
 
 con_btn_a              = %10000000
 con_btn_b              = %01000000

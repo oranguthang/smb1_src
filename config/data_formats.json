@@ -5,8 +5,8 @@
       "id": "world_area_pointers",
       "family": "world, area, and entrance pointers",
       "source": "src/data/levels/index_and_enemies.asm",
-      "start": "World1Areas",
-      "end": "EnemyAddrHOffsets",
+      "start": "off_world_1_area_pointers",
+      "end": "tbl_enemy_data_offsets_by_area_type",
       "codec": "area_pointer_table",
       "world_lengths": [5, 5, 4, 5, 4, 4, 5, 4]
     },
@@ -14,16 +14,16 @@
       "id": "ground_area_3_3_objects",
       "family": "area-object streams",
       "source": "src/data/levels/areas.asm",
-      "start": "L_GroundArea1",
-      "end": "L_GroundArea2",
+      "start": "off_ground_area_1_objects",
+      "end": "off_ground_area_2_objects",
       "codec": "area_object_stream"
     },
     {
       "id": "world_1_1_enemies",
       "family": "enemy-object and entrance streams",
       "source": "src/data/levels/index_and_enemies.asm",
-      "start": "E_GroundArea6",
-      "end": "E_GroundArea7",
+      "start": "off_ground_area_6_enemies",
+      "end": "off_ground_area_7_enemies",
       "codec": "enemy_object_stream"
     },
     {
@@ -59,16 +59,16 @@
       "id": "star_cloud_music_header",
       "family": "music headers",
       "source": "src/audio/music_data.asm",
-      "start": "Star_CloudHdr",
-      "end": "EndOfLevelMusHdr",
+      "start": "off_music_header_star_cloud",
+      "end": "off_music_header_end_of_level",
       "codec": "music_header"
     },
     {
       "id": "star_cloud_music_channels",
       "family": "music note streams",
       "source": "src/audio/music_data.asm",
-      "start": "Star_CloudMData",
-      "end": "GroundM_P1Data",
+      "start": "off_music_stream_star_cloud",
+      "end": "off_music_stream_ground_part_1",
       "codec": "music_channels",
       "channels": [
         {"name": "square2", "format": "square2", "length": 26},

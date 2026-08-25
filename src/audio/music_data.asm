@@ -2,35 +2,35 @@
 
 ; music header offsets
 
-MusicHeaderData:
-    .byte DeathMusHdr-con_music_header_data_base  ; event music
-    .byte GameOverMusHdr-con_music_header_data_base
-    .byte VictoryMusHdr-con_music_header_data_base
-    .byte WinCastleMusHdr-con_music_header_data_base
-    .byte GameOverMusHdr-con_music_header_data_base
-    .byte EndOfLevelMusHdr-con_music_header_data_base
-    .byte TimeRunningOutHdr-con_music_header_data_base
-    .byte SilenceHdr-con_music_header_data_base
+tbl_music_header_offsets:
+    .byte off_music_header_death-con_music_header_data_base  ; event music
+    .byte off_music_header_game_over-con_music_header_data_base
+    .byte off_music_header_victory-con_music_header_data_base
+    .byte off_music_header_castle_clear-con_music_header_data_base
+    .byte off_music_header_game_over-con_music_header_data_base
+    .byte off_music_header_end_of_level-con_music_header_data_base
+    .byte off_music_header_time_running_out-con_music_header_data_base
+    .byte off_music_header_silence-con_music_header_data_base
 
-    .byte GroundLevelPart1Hdr-con_music_header_data_base  ; area music
-    .byte WaterMusHdr-con_music_header_data_base
-    .byte UndergroundMusHdr-con_music_header_data_base
-    .byte CastleMusHdr-con_music_header_data_base
-    .byte Star_CloudHdr-con_music_header_data_base
-    .byte GroundLevelLeadInHdr-con_music_header_data_base
-    .byte Star_CloudHdr-con_music_header_data_base
-    .byte SilenceHdr-con_music_header_data_base
+    .byte off_music_header_ground_part_1-con_music_header_data_base  ; area music
+    .byte off_music_header_water-con_music_header_data_base
+    .byte off_music_header_underground-con_music_header_data_base
+    .byte off_music_header_castle-con_music_header_data_base
+    .byte off_music_header_star_cloud-con_music_header_data_base
+    .byte off_music_header_ground_lead_in-con_music_header_data_base
+    .byte off_music_header_star_cloud-con_music_header_data_base
+    .byte off_music_header_silence-con_music_header_data_base
 
-    .byte GroundLevelLeadInHdr-con_music_header_data_base  ; ground level music layout
-    .byte GroundLevelPart1Hdr-con_music_header_data_base, GroundLevelPart1Hdr-con_music_header_data_base
-    .byte GroundLevelPart2AHdr-con_music_header_data_base, GroundLevelPart2BHdr-con_music_header_data_base, GroundLevelPart2AHdr-con_music_header_data_base, GroundLevelPart2CHdr-con_music_header_data_base
-    .byte GroundLevelPart2AHdr-con_music_header_data_base, GroundLevelPart2BHdr-con_music_header_data_base, GroundLevelPart2AHdr-con_music_header_data_base, GroundLevelPart2CHdr-con_music_header_data_base
-    .byte GroundLevelPart3AHdr-con_music_header_data_base, GroundLevelPart3BHdr-con_music_header_data_base, GroundLevelPart3AHdr-con_music_header_data_base, GroundLevelLeadInHdr-con_music_header_data_base
-    .byte GroundLevelPart1Hdr-con_music_header_data_base, GroundLevelPart1Hdr-con_music_header_data_base
-    .byte GroundLevelPart4AHdr-con_music_header_data_base, GroundLevelPart4BHdr-con_music_header_data_base, GroundLevelPart4AHdr-con_music_header_data_base, GroundLevelPart4CHdr-con_music_header_data_base
-    .byte GroundLevelPart4AHdr-con_music_header_data_base, GroundLevelPart4BHdr-con_music_header_data_base, GroundLevelPart4AHdr-con_music_header_data_base, GroundLevelPart4CHdr-con_music_header_data_base
-    .byte GroundLevelPart3AHdr-con_music_header_data_base, GroundLevelPart3BHdr-con_music_header_data_base, GroundLevelPart3AHdr-con_music_header_data_base, GroundLevelLeadInHdr-con_music_header_data_base
-    .byte GroundLevelPart4AHdr-con_music_header_data_base, GroundLevelPart4BHdr-con_music_header_data_base, GroundLevelPart4AHdr-con_music_header_data_base, GroundLevelPart4CHdr-con_music_header_data_base
+    .byte off_music_header_ground_lead_in-con_music_header_data_base  ; ground level music layout
+    .byte off_music_header_ground_part_1-con_music_header_data_base, off_music_header_ground_part_1-con_music_header_data_base
+    .byte off_music_header_ground_part_2_a-con_music_header_data_base, off_music_header_ground_part_2_b-con_music_header_data_base, off_music_header_ground_part_2_a-con_music_header_data_base, off_music_header_ground_part_2_c-con_music_header_data_base
+    .byte off_music_header_ground_part_2_a-con_music_header_data_base, off_music_header_ground_part_2_b-con_music_header_data_base, off_music_header_ground_part_2_a-con_music_header_data_base, off_music_header_ground_part_2_c-con_music_header_data_base
+    .byte off_music_header_ground_part_3_a-con_music_header_data_base, off_music_header_ground_part_3_b-con_music_header_data_base, off_music_header_ground_part_3_a-con_music_header_data_base, off_music_header_ground_lead_in-con_music_header_data_base
+    .byte off_music_header_ground_part_1-con_music_header_data_base, off_music_header_ground_part_1-con_music_header_data_base
+    .byte off_music_header_ground_part_4_a-con_music_header_data_base, off_music_header_ground_part_4_b-con_music_header_data_base, off_music_header_ground_part_4_a-con_music_header_data_base, off_music_header_ground_part_4_c-con_music_header_data_base
+    .byte off_music_header_ground_part_4_a-con_music_header_data_base, off_music_header_ground_part_4_b-con_music_header_data_base, off_music_header_ground_part_4_a-con_music_header_data_base, off_music_header_ground_part_4_c-con_music_header_data_base
+    .byte off_music_header_ground_part_3_a-con_music_header_data_base, off_music_header_ground_part_3_b-con_music_header_data_base, off_music_header_ground_part_3_a-con_music_header_data_base, off_music_header_ground_lead_in-con_music_header_data_base
+    .byte off_music_header_ground_part_4_a-con_music_header_data_base, off_music_header_ground_part_4_b-con_music_header_data_base, off_music_header_ground_part_4_a-con_music_header_data_base, off_music_header_ground_part_4_c-con_music_header_data_base
 
 ; music headers
 ; header format is as follows:
@@ -40,50 +40,50 @@ MusicHeaderData:
 ; 1 byte - square 1 data offset
 ; 1 byte - noise data offset (not used by secondary music)
 
-TimeRunningOutHdr:
-    .byte $08, <TimeRunOutMusData, >TimeRunOutMusData, $27, $18
-Star_CloudHdr:
-    .byte $20, <Star_CloudMData, >Star_CloudMData, $2e, $1a, $40
-EndOfLevelMusHdr:
-    .byte $20, <WinLevelMusData, >WinLevelMusData, $3d, $21
-ResidualHeaderData:
+off_music_header_time_running_out:
+    .byte $08, <off_music_stream_time_running_out, >off_music_stream_time_running_out, $27, $18
+off_music_header_star_cloud:
+    .byte $20, <off_music_stream_star_cloud, >off_music_stream_star_cloud, $2e, $1a, $40
+off_music_header_end_of_level:
+    .byte $20, <off_music_stream_end_of_level, >off_music_stream_end_of_level, $3d, $21
+unused_music_header_residual:
     .byte $20, $c4, $fc, $3f, $1d
-UndergroundMusHdr:
-    .byte $18, <UndergroundMusData, >UndergroundMusData, $00, $00
-SilenceHdr:
-    .byte $08, <SilenceData, >SilenceData, $00
-CastleMusHdr:
-    .byte $00, <CastleMusData, >CastleMusData, $93, $62
-VictoryMusHdr:
-    .byte $10, <VictoryMusData, >VictoryMusData, $24, $14
-GameOverMusHdr:
-    .byte $18, <GameOverMusData, >GameOverMusData, $1e, $14
-WaterMusHdr:
-    .byte $08, <WaterMusData, >WaterMusData, $a0, $70, $68
-WinCastleMusHdr:
-    .byte $08, <EndOfCastleMusData, >EndOfCastleMusData, $4c, $24
-GroundLevelPart1Hdr:
-    .byte $18, <GroundM_P1Data, >GroundM_P1Data, $2d, $1c, $b8
-GroundLevelPart2AHdr:
-    .byte $18, <GroundM_P2AData, >GroundM_P2AData, $20, $12, $70
-GroundLevelPart2BHdr:
-    .byte $18, <GroundM_P2BData, >GroundM_P2BData, $1b, $10, $44
-GroundLevelPart2CHdr:
-    .byte $18, <GroundM_P2CData, >GroundM_P2CData, $11, $0a, $1c
-GroundLevelPart3AHdr:
-    .byte $18, <GroundM_P3AData, >GroundM_P3AData, $2d, $10, $58
-GroundLevelPart3BHdr:
-    .byte $18, <GroundM_P3BData, >GroundM_P3BData, $14, $0d, $3f
-GroundLevelLeadInHdr:
-    .byte $18, <GroundMLdInData, >GroundMLdInData, $15, $0d, $21
-GroundLevelPart4AHdr:
-    .byte $18, <GroundM_P4AData, >GroundM_P4AData, $18, $10, $7a
-GroundLevelPart4BHdr:
-    .byte $18, <GroundM_P4BData, >GroundM_P4BData, $19, $0f, $54
-GroundLevelPart4CHdr:
-    .byte $18, <GroundM_P4CData, >GroundM_P4CData, $1e, $12, $2b
-DeathMusHdr:
-    .byte $18, <DeathMusData, >DeathMusData, $1e, $0f, $2d
+off_music_header_underground:
+    .byte $18, <off_music_stream_underground, >off_music_stream_underground, $00, $00
+off_music_header_silence:
+    .byte $08, <off_music_stream_silence, >off_music_stream_silence, $00
+off_music_header_castle:
+    .byte $00, <off_music_stream_castle, >off_music_stream_castle, $93, $62
+off_music_header_victory:
+    .byte $10, <off_music_stream_victory, >off_music_stream_victory, $24, $14
+off_music_header_game_over:
+    .byte $18, <off_music_stream_game_over, >off_music_stream_game_over, $1e, $14
+off_music_header_water:
+    .byte $08, <off_music_stream_water, >off_music_stream_water, $a0, $70, $68
+off_music_header_castle_clear:
+    .byte $08, <off_music_stream_castle_clear, >off_music_stream_castle_clear, $4c, $24
+off_music_header_ground_part_1:
+    .byte $18, <off_music_stream_ground_part_1, >off_music_stream_ground_part_1, $2d, $1c, $b8
+off_music_header_ground_part_2_a:
+    .byte $18, <off_music_stream_ground_part_2_a, >off_music_stream_ground_part_2_a, $20, $12, $70
+off_music_header_ground_part_2_b:
+    .byte $18, <off_music_stream_ground_part_2_b, >off_music_stream_ground_part_2_b, $1b, $10, $44
+off_music_header_ground_part_2_c:
+    .byte $18, <off_music_stream_ground_part_2_c, >off_music_stream_ground_part_2_c, $11, $0a, $1c
+off_music_header_ground_part_3_a:
+    .byte $18, <off_music_stream_ground_part_3_a, >off_music_stream_ground_part_3_a, $2d, $10, $58
+off_music_header_ground_part_3_b:
+    .byte $18, <off_music_stream_ground_part_3_b, >off_music_stream_ground_part_3_b, $14, $0d, $3f
+off_music_header_ground_lead_in:
+    .byte $18, <off_music_stream_ground_lead_in, >off_music_stream_ground_lead_in, $15, $0d, $21
+off_music_header_ground_part_4_a:
+    .byte $18, <off_music_stream_ground_part_4_a, >off_music_stream_ground_part_4_a, $18, $10, $7a
+off_music_header_ground_part_4_b:
+    .byte $18, <off_music_stream_ground_part_4_b, >off_music_stream_ground_part_4_b, $19, $0f, $54
+off_music_header_ground_part_4_c:
+    .byte $18, <off_music_stream_ground_part_4_c, >off_music_stream_ground_part_4_c, $1e, $12, $2b
+off_music_header_death:
+    .byte $18, <off_music_stream_death, >off_music_stream_death, $1e, $0f, $2d
 
 ; --------------------------------
 
@@ -112,7 +112,7 @@ DeathMusHdr:
 ; all music data is organized into sections (unless otherwise stated):
 ; square 2, square 1, triangle, noise
 
-Star_CloudMData:
+off_music_stream_star_cloud:
     .byte $84, $2c, $2c, $2c, $82, $04, $2c, $04, $85, $2c, $84, $2c, $2c
     .byte $2a, $2a, $2a, $82, $04, $2a, $04, $85, $2a, $84, $2a, $2a, $00
 
@@ -124,12 +124,12 @@ Star_CloudMData:
 
     .byte $21, $d0, $c4, $d0, $31, $d0, $c4, $d0, $00
 
-GroundM_P1Data:
+off_music_stream_ground_part_1:
     .byte $85, $2c, $22, $1c, $84, $26, $2a, $82, $28, $26, $04
     .byte $87, $22, $34, $3a, $82, $40, $04, $36, $84, $3a, $34
     .byte $82, $2c, $30, $85, $2a
 
-SilenceData:
+off_music_stream_silence:
     .byte $00
 
     .byte $5d, $55, $4d, $15, $19, $96, $15, $d5, $e3, $eb
@@ -139,7 +139,7 @@ SilenceData:
     .byte $1c, $2c, $34, $82, $36, $04, $30, $34, $04, $2c, $04, $26
     .byte $2a, $85, $22
 
-GroundM_P2AData:
+off_music_stream_ground_part_2_a:
     .byte $84, $04, $82, $3a, $38, $36, $32, $04, $34
     .byte $04, $24, $26, $2c, $04, $26, $2c, $30, $00
 
@@ -149,7 +149,7 @@ GroundM_P2AData:
     .byte $85, $14, $22, $84, $2c, $85, $1e
     .byte $82, $2c, $84, $2c, $1e
 
-GroundM_P2BData:
+off_music_stream_ground_part_2_b:
     .byte $84, $04, $82, $3a, $38, $36, $32, $04, $34
     .byte $04, $64, $04, $64, $86, $64, $00
 
@@ -159,7 +159,7 @@ GroundM_P2BData:
     .byte $85, $14, $1c, $82, $22, $84, $2c
     .byte $4e, $82, $4e, $84, $4e, $22
 
-GroundM_P2CData:
+off_music_stream_ground_part_2_c:
     .byte $84, $04, $85, $32, $85, $30, $86, $2c, $04, $00
 
     .byte $05, $a4, $05, $9e, $05, $9d, $85
@@ -169,13 +169,13 @@ GroundM_P2CData:
 
     .byte $21, $d0, $c4, $d0, $31, $d0, $c4, $d0, $00
 
-GroundM_P3AData:
+off_music_stream_ground_part_3_a:
     .byte $82, $2c, $84, $2c, $2c, $82, $2c, $30
     .byte $04, $34, $2c, $04, $26, $86, $22, $00
 
     .byte $a4, $25, $25, $a4, $29, $a2, $1d, $9c, $95
 
-GroundM_P3BData:
+off_music_stream_ground_part_3_b:
     .byte $82, $2c, $2c, $04, $2c, $04, $2c, $30, $85, $34, $04, $04, $00
 
     .byte $a4, $25, $25, $a4, $a8, $63, $04
@@ -183,7 +183,7 @@ GroundM_P3BData:
 ; triangle data used by both sections of third part
     .byte $85, $0e, $1a, $84, $24, $85, $22, $14, $84, $0c
 
-GroundMLdInData:
+off_music_stream_ground_lead_in:
     .byte $82, $34, $84, $34, $34, $82, $2c, $84, $34, $86, $3a, $04, $00
 
     .byte $a0, $21, $21, $a0, $21, $2b, $05, $a3
@@ -193,7 +193,7 @@ GroundMLdInData:
 ; noise data used by lead-in and third part sections
     .byte $31, $90, $31, $90, $31, $71, $31, $90, $90, $90, $00
 
-GroundM_P4AData:
+off_music_stream_ground_part_4_a:
     .byte $82, $34, $84, $2c, $85, $22, $84, $24
     .byte $82, $26, $36, $04, $36, $86, $26, $00
 
@@ -202,7 +202,7 @@ GroundM_P4AData:
     .byte $85, $14, $82, $20, $84, $22, $2c
     .byte $1e, $1e, $82, $2c, $2c, $1e, $04
 
-GroundM_P4BData:
+off_music_stream_ground_part_4_b:
     .byte $87, $2a, $40, $40, $40, $3a, $36
     .byte $82, $34, $2c, $04, $26, $86, $22, $00
 
@@ -211,10 +211,10 @@ GroundM_P4BData:
     .byte $85, $18, $82, $1e, $84, $22, $2a
     .byte $22, $22, $82, $2c, $2c, $22, $04
 
-DeathMusData:
+off_music_stream_death:
     .byte $86, $04  ; death music share data with fourth part c of ground level music
 
-GroundM_P4CData:
+off_music_stream_ground_part_4_c:
     .byte $82, $2a, $36, $04, $36, $87, $36, $34, $30, $86, $2c, $04, $00
 
     .byte $00, $68, $6a, $6c, $45  ; death music only
@@ -228,7 +228,7 @@ GroundM_P4CData:
 ; noise data used by fourth part sections
     .byte $51, $90, $31, $11, $00
 
-CastleMusData:
+off_music_stream_castle:
     .byte $80, $22, $28, $22, $26, $22, $24, $22, $26
     .byte $22, $28, $22, $2a, $22, $28, $22, $26
     .byte $22, $28, $22, $26, $22, $24, $22, $26
@@ -252,7 +252,7 @@ CastleMusData:
     .byte $84, $1a, $83, $18, $20, $84, $1e, $83, $1c, $28
     .byte $26, $1c, $1a, $1c
 
-GameOverMusData:
+off_music_stream_game_over:
     .byte $82, $2c, $04, $04, $22, $04, $04, $84, $1c, $87
     .byte $26, $2a, $26, $84, $24, $28, $24, $80, $22, $00
 
@@ -261,7 +261,7 @@ GameOverMusData:
     .byte $82, $22, $04, $04, $1c, $04, $04, $84, $14
     .byte $86, $1e, $80, $16, $80, $14
 
-TimeRunOutMusData:
+off_music_stream_time_running_out:
     .byte $81, $1c, $30, $04, $30, $30, $04, $1e, $32, $04, $32, $32
     .byte $04, $20, $34, $04, $34, $34, $04, $36, $04, $84, $36, $00
 
@@ -271,7 +271,7 @@ TimeRunOutMusData:
     .byte $81, $2a, $42, $04, $42, $42, $04, $2c, $64, $04, $64, $64
     .byte $04, $2e, $46, $04, $46, $46, $04, $22, $04, $84, $22
 
-WinLevelMusData:
+off_music_stream_end_of_level:
     .byte $87, $04, $06, $0c, $14, $1c, $22, $86, $2c, $22
     .byte $87, $04, $60, $0e, $14, $1a, $24, $86, $2c, $24
     .byte $87, $04, $08, $10, $18, $1e, $28, $86, $30, $30
@@ -288,7 +288,7 @@ WinLevelMusData:
     .byte $87, $30, $30, $30, $80, $2c
 
 ; square 2 and triangle use the same data, square 1 is unused
-UndergroundMusData:
+off_music_stream_underground:
     .byte $82, $14, $2c, $62, $26, $10, $28, $80, $04
     .byte $82, $14, $2c, $62, $26, $10, $28, $80, $04
     .byte $82, $08, $1e, $5e, $18, $60, $1a, $80, $04
@@ -299,7 +299,7 @@ UndergroundMusData:
     .byte $00
 
 ; noise data directly follows square 2 here unlike in other songs
-WaterMusData:
+off_music_stream_water:
     .byte $82, $18, $1c, $20, $22, $26, $28
     .byte $81, $2a, $2a, $2a, $04, $2a, $04, $83, $2a, $82, $22
     .byte $86, $34, $32, $34, $81, $04, $22, $26, $2a, $2c, $30
@@ -330,7 +330,7 @@ WaterMusData:
     .byte $5c, $22, $34, $0c, $22, $22, $81, $1e, $1e, $85, $1e
     .byte $81, $12, $86, $14
 
-EndOfCastleMusData:
+off_music_stream_castle_clear:
     .byte $81, $2c, $22, $1c, $2c, $22, $1c, $85, $2c, $04
     .byte $81, $2e, $24, $1e, $2e, $24, $1e, $85, $2e, $04
     .byte $81, $32, $28, $22, $32, $28, $22, $85, $32
@@ -348,7 +348,7 @@ EndOfCastleMusData:
     .byte $81, $28, $22, $1a, $28, $22, $1a, $28, $80, $28, $28
     .byte $81, $28, $87, $2c, $2c, $2c, $84, $30
 
-VictoryMusData:
+off_music_stream_victory:
     .byte $83, $04, $84, $0c, $83, $62, $10, $84, $12
     .byte $83, $1c, $22, $1e, $22, $26, $18, $1e, $04, $1c, $00
 
@@ -361,7 +361,7 @@ VictoryMusData:
 ; unused space
     .byte $ff, $ff, $ff
 
-FreqRegLookupTbl:
+tbl_music_note_periods:
     .byte $00, $88, $00, $2f, $00, $00
     .byte $02, $a6, $02, $80, $02, $5c, $02, $3a
     .byte $02, $1a, $01, $df, $01, $c4, $01, $ab
@@ -376,7 +376,7 @@ FreqRegLookupTbl:
     .byte $00, $2a, $00, $23, $04, $75, $03, $57
     .byte $02, $f9, $02, $cf, $01, $fc, $00, $6a
 
-MusicLengthLookupTbl:
+tbl_music_note_lengths:
     .byte $05, $0a, $14, $28, $50, $1e, $3c, $02
     .byte $04, $08, $10, $20, $40, $18, $30, $0c
     .byte $03, $06, $0c, $18, $30, $12, $24, $08
@@ -384,25 +384,25 @@ MusicLengthLookupTbl:
     .byte $24, $02, $06, $04, $0c, $12, $18, $08
     .byte $12, $01, $03, $02, $06, $09, $0c, $04
 
-EndOfCastleMusicEnvData:
+tbl_castle_clear_music_envelope:
     .byte $98, $99, $9a, $9b
 
-AreaMusicEnvData:
+tbl_area_music_envelope_values:
     .byte $90, $94, $94, $95, $95, $96, $97, $98
 
-WaterEventMusEnvData:
+tbl_water_and_event_music_envelope_values:
     .byte $90, $91, $92, $92, $93, $93, $93, $94
     .byte $94, $94, $94, $94, $94, $95, $95, $95
     .byte $95, $95, $95, $96, $96, $96, $96, $96
     .byte $96, $96, $96, $96, $96, $96, $96, $96
     .byte $96, $96, $96, $96, $95, $95, $94, $93
 
-BowserFlameEnvData:
+tbl_bowser_flame_volume_envelope:
     .byte $15, $16, $16, $17, $17, $18, $19, $19
     .byte $1a, $1a, $1c, $1d, $1d, $1e, $1e, $1f
     .byte $1f, $1f, $1f, $1e, $1d, $1c, $1e, $1f
     .byte $1f, $1e, $1d, $1c, $1a, $18, $16, $14
 
-BrickShatterEnvData:
+tbl_brick_shatter_volume_envelope:
     .byte $15, $16, $16, $17, $17, $18, $19, $19
     .byte $1a, $1a, $1c, $1d, $1d, $1e, $1e, $1f

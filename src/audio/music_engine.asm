@@ -65,17 +65,17 @@ FindEventMusicHeader:
 LoadHeader:
     LDA con_music_header_offset_table_base,y  ; load offset for header
     TAY
-    LDA MusicHeaderData,y  ; now load the header
+    LDA tbl_music_header_offsets,y  ; now load the header
     STA ram_note_len_lookup_tbl_ofs
-    LDA MusicHeaderData+1,y
+    LDA tbl_music_header_offsets+1,y
     STA ram_music_data_low
-    LDA MusicHeaderData+2,y
+    LDA tbl_music_header_offsets+2,y
     STA ram_music_data_high
-    LDA MusicHeaderData+3,y
+    LDA tbl_music_header_offsets+3,y
     STA ram_music_offset_triangle
-    LDA MusicHeaderData+4,y
+    LDA tbl_music_header_offsets+4,y
     STA ram_music_offset_square1
-    LDA MusicHeaderData+5,y
+    LDA tbl_music_header_offsets+5,y
     STA ram_music_offset_noise
     STA ram_noise_data_loopback_ofs
     LDA #$01  ; initialize music note counters
@@ -330,7 +330,7 @@ sub_process_length_data:
     ADC $f0  ; add offset loaded from first header byte
     ADC ram_note_length_tbl_adder  ; add extra if time running out music
     TAY
-    LDA MusicLengthLookupTbl,y  ; load length
+    LDA tbl_music_note_lengths,y  ; load length
     RTS
 
 sub_load_control_regs:
@@ -356,16 +356,16 @@ sub_load_envelope_data:
     LDA ram_event_music_buffer  ; check secondary buffer for win castle music
     AND #con_end_of_castle_music
     BEQ LoadUsualEnvData
-    LDA EndOfCastleMusicEnvData,y  ; load data from offset for win castle music
+    LDA tbl_castle_clear_music_envelope,y  ; load data from offset for win castle music
     RTS
 
 LoadUsualEnvData:
     LDA ram_area_music_buffer  ; check primary buffer for water music
     AND #%01111101
     BEQ LoadWaterEventMusEnvData
-    LDA AreaMusicEnvData,y  ; load default data from offset for all other music
+    LDA tbl_area_music_envelope_values,y  ; load default data from offset for all other music
     RTS
 
 LoadWaterEventMusEnvData:
-    LDA WaterEventMusEnvData,y  ; load data from offset for water music and all other event music
+    LDA tbl_water_and_event_music_envelope_values,y  ; load data from offset for water music and all other event music
     RTS
