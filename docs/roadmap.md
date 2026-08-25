@@ -28,16 +28,18 @@ Once established, the repository will record:
 - the exact ca65/ld65 build command and tool versions;
 - the first differing file and CPU address on verification failure.
 
-`make verify` will become the authoritative preservation gate. Annotation,
+`make verify` is the authoritative preservation gate. Annotation,
 renaming, module splitting, macros, and documentation work must never alter the
 produced bytes.
 
 ## Current Baseline
 
 - The original `src/smbdis.asm` contained one address-ordered source file of
-  16,351 lines. Its remaining unsplit body now lives in `src/main.asm`.
-- Hardware definitions, RAM aliases, constants, and the first system module
-  have been extracted without renaming symbols or changing emitted bytes.
+  16,351 lines. `src/main.asm` is now a 72-line address-ordered module index.
+- The PRG is split across 38 cohesive ASM modules. Excluding the entrypoint and
+  fixed six-line vector block, module sizes range from 125 to 660 lines.
+- Hardware definitions, RAM aliases, constants, code, and data were separated
+  without renaming symbols or changing emitted bytes.
 - The PRG is linked as one 32 KiB region at CPU `$8000..$FFFF`.
 - `make verify-prg` builds the native source under `build/native/`, emits labels,
   a linker map, and debug data, and validates PRG SHA-1
@@ -65,8 +67,8 @@ The canonical asset flow will be:
 5. `make verify` compares the complete generated ROM with the reference.
 
 The 8 KiB CHR-ROM bitmap payload belongs in `assets/generated/chr/` and is
-consumed through `.incbin`. The repository may contain its expected size,
-address range, and cryptographic digest, but not its bytes.
+validated and appended by the native build script. The repository may contain
+its expected size, address range, and cryptographic digest, but not its bytes.
 
 Graphics-related PRG data is not the same thing as CHR pattern data. Palette
 tables, metatile composition, sprite tile indexes, animation mappings, PPU
@@ -100,14 +102,12 @@ src/
   macros/
   system/
   game/
-    title/
     player/
     enemies/
     collisions/
     level/
     objects/
   rendering/
-    background/
     actors/
     hud/
   audio/
@@ -119,10 +119,10 @@ a natural boundary exists and treat 700 lines as a soft upper limit. Do not spli
 a procedure or separate a small table from the code that owns it merely to meet
 a line-count target.
 
-## Initial Address-Ordered Module Groups
+## Address-Ordered Module Groups
 
-The first split will preserve every existing symbol and byte. The broad source
-groups are:
+The modular split preserved every existing symbol and byte. Its broad source
+groups were:
 
 | Current source range | Initial responsibility |
 | --- | --- |
@@ -141,9 +141,9 @@ groups are:
 | `SoundEngine` through music data | Audio engine and streams |
 | Interrupt vectors | Fixed vectors |
 
-These are starting points, not permanent module names. Final boundaries will be
-chosen at complete procedure and owned-data boundaries after linker addresses
-are available.
+These groups guided the final boundaries recorded in `docs/source_layout.md`.
+Every boundary falls between complete procedures or owned data blocks and is
+backed by linker addresses and full-ROM byte verification.
 
 ## Naming and Evidence Rules
 
@@ -228,7 +228,7 @@ reference identity.
 
 Exit criterion: `make verify` reproduces the selected reference ROM exactly.
 
-### 2. Reproducible Modular Baseline - In Progress
+### 2. Reproducible Modular Baseline - Complete
 
 - Introduce `src/main.asm` as an address-ordered include index.
 - Move definitions into `src/memory/` without renaming them.

@@ -28,10 +28,14 @@ smb1_src/
 |   `-- modding_examples.md
 |-- scripts/            # Cross-platform build, split, and validation logic
 |-- src/                # Assembly source and linker config
+|   |-- audio/          # Sound effects, music engine, and music data
+|   |-- data/           # Level streams and fixed interrupt vectors
+|   |-- game/           # Modes, physics, objects, enemies, and collisions
 |   |-- ldconfig.txt
 |   |-- main.asm
 |   |-- memory/         # Hardware, RAM, and assembly-time definitions
-|   `-- system/         # Reset and per-frame control flow
+|   |-- rendering/      # Screens, backgrounds, HUD, and actor composition
+|   `-- system/         # Reset, frame control, input, and PPU I/O
 |-- Makefile            # Main build entrypoint
 |-- README.md
 `-- .gitignore
@@ -47,8 +51,6 @@ SHA-1 ea343f4e445a9050d4b4fbac2c77d0693b1d0922
 ```
 
 Place a legally obtained matching ROM in the project root, then run:
-
-Then run:
 
 ```bash
 make split
