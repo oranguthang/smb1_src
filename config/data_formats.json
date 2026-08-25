@@ -1,0 +1,108 @@
+{
+  "format": 1,
+  "artifacts": [
+    {
+      "id": "world_area_pointers",
+      "family": "world, area, and entrance pointers",
+      "source": "src/data/levels/index_and_enemies.asm",
+      "start": "World1Areas",
+      "end": "EnemyAddrHOffsets",
+      "codec": "area_pointer_table",
+      "world_lengths": [5, 5, 4, 5, 4, 4, 5, 4]
+    },
+    {
+      "id": "ground_area_3_3_objects",
+      "family": "area-object streams",
+      "source": "src/data/levels/areas.asm",
+      "start": "L_GroundArea1",
+      "end": "L_GroundArea2",
+      "codec": "area_object_stream"
+    },
+    {
+      "id": "world_1_1_enemies",
+      "family": "enemy-object and entrance streams",
+      "source": "src/data/levels/index_and_enemies.asm",
+      "start": "E_GroundArea6",
+      "end": "E_GroundArea7",
+      "codec": "enemy_object_stream"
+    },
+    {
+      "id": "palette_3_metatiles",
+      "family": "metatile mappings",
+      "source": "src/rendering/background.asm",
+      "start": "Palette3_MTiles",
+      "end": "WaterPaletteData",
+      "codec": "fixed_records",
+      "record_size": 4,
+      "record_name": "metatile"
+    },
+    {
+      "id": "top_status_bar_ppu_packets",
+      "family": "PPU update packets and status blocks",
+      "source": "src/rendering/screens.asm",
+      "start": "TopStatusBarLine",
+      "end": "WorldLivesDisplay",
+      "codec": "ppu_packets",
+      "terminator": 255
+    },
+    {
+      "id": "player_animation_tiles",
+      "family": "player sprite mappings and animation tables",
+      "source": "src/rendering/actors/player.asm",
+      "start": "PlayerGraphicsTable",
+      "end": "SwimKickTileNum",
+      "codec": "fixed_records",
+      "record_size": 8,
+      "record_name": "frame"
+    },
+    {
+      "id": "star_cloud_music_header",
+      "family": "music headers",
+      "source": "src/audio/music_data.asm",
+      "start": "Star_CloudHdr",
+      "end": "EndOfLevelMusHdr",
+      "codec": "music_header"
+    },
+    {
+      "id": "star_cloud_music_channels",
+      "family": "music note streams",
+      "source": "src/audio/music_data.asm",
+      "start": "Star_CloudMData",
+      "end": "GroundM_P1Data",
+      "codec": "music_channels",
+      "channels": [
+        {"name": "square2", "format": "square2", "length": 26},
+        {"name": "square1", "format": "square1", "length": 20},
+        {"name": "triangle", "format": "triangle", "length": 18},
+        {"name": "noise", "format": "noise", "length": 9}
+      ]
+    },
+    {
+      "id": "swim_stomp_envelope",
+      "family": "sound-effect envelopes",
+      "source": "src/audio/sound_effects.asm",
+      "start": "SwimStompEnvelopeData",
+      "end": "PlayFlagpoleSlide",
+      "codec": "apu_envelope"
+    },
+    {
+      "id": "player_physics_profiles",
+      "family": "physics and gameplay tuning tables",
+      "source": "src/game/player/physics.asm",
+      "start": "tbl_jump_gravity",
+      "end": "sub_update_player_physics",
+      "codec": "named_byte_tables",
+      "tables": [
+        {"name": "jump_gravity", "length": 7, "signed": false},
+        {"name": "fall_gravity", "length": 7, "signed": false},
+        {"name": "initial_y_speed", "length": 7, "signed": true},
+        {"name": "initial_y_fraction", "length": 7, "signed": false},
+        {"name": "maximum_left_speed", "length": 3, "signed": true},
+        {"name": "maximum_right_speed", "length": 4, "signed": true},
+        {"name": "horizontal_friction", "length": 3, "signed": false},
+        {"name": "climb_y_speed", "length": 3, "signed": true},
+        {"name": "climb_y_fraction", "length": 3, "signed": false}
+      ]
+    }
+  ]
+}

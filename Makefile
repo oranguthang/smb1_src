@@ -28,10 +28,12 @@ RUNTIME_MOVIE ?= $(PROJECT_DIR)movies/smb1_any_percent.fm2
 RUNTIME_SCENARIOS ?= $(PROJECT_DIR)scenarios/runtime_scenarios.json
 RUNTIME_TRACE_LUA ?= $(PROJECT_DIR)scripts/workflow/capture_runtime_scenario.lua
 RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/runtime
+DATA_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/data_formats.json
+DATA_FORMAT_SUMMARY ?= $(PROJECT_DIR)build/data_formats.json
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg symbols validate-symbols trace trace-runtime validate-runtime split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -125,6 +127,14 @@ validate-runtime:
 		--trace-dir "$(RUNTIME_TRACE_DIR)"
 
 trace: validate-symbols trace-runtime
+
+roundtrip-formats: build-prg
+	$(PYTHON) "$(PROJECT_DIR)scripts/data_formats.py" \
+		--manifest "$(DATA_FORMAT_MANIFEST)" \
+		--labels "$(NATIVE_LABELS)" \
+		--prg "$(NATIVE_PRG)" \
+		--project-root "$(PROJECT_DIR)" \
+		--summary "$(DATA_FORMAT_SUMMARY)"
 
 split:
 	$(PYTHON) "$(PROJECT_DIR)scripts/split_assets.py" \

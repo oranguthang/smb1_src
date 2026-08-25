@@ -19,6 +19,7 @@ This repository contains:
 - **docs/unknowns.md** - Stable uncertainty and evidence registry
 - **docs/debugger_workflow.md** - Mesen/FCEUX symbols and source navigation
 - **docs/runtime_evidence.md** - Deterministic gameplay transaction scenarios
+- **docs/data_formats.md** - Typed authored-data codecs and byte round trips
 
 ## Project Structure
 
@@ -109,6 +110,9 @@ make trace-runtime
 # Run the complete live debugger and emulator evidence layer
 make trace
 
+# Decode, re-encode, and compare representative authored data
+make roundtrip-formats
+
 # Validate local assets and build build/native/smb.nes
 make build
 
@@ -130,6 +134,8 @@ source conventions and [`docs/naming.md`](docs/naming.md) for the semantic symbo
 vocabulary. See [`docs/debugger_workflow.md`](docs/debugger_workflow.md) for
 interactive source navigation and [`docs/runtime_evidence.md`](docs/runtime_evidence.md)
 for reproducible emulator evidence.
+The reversible data contracts are documented in
+[`docs/data_formats.md`](docs/data_formats.md).
 
 ## Modding Notes
 

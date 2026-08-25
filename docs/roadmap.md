@@ -373,7 +373,7 @@ cases. `make trace` composes the live FCEUX symbol smoke test with all focused
 and long-movie runtime scenarios; `make verify` remains the independent and
 authoritative byte-identity gate.
 
-### 8. Decode and Round-Trip Data Formats - Planned
+### 8. Decode and Round-Trip Data Formats - Complete
 
 Specify and test reversible decoders/encoders for useful authored formats:
 
@@ -393,6 +393,16 @@ binary -> decoded representation -> encoded binary
 
 reproduces the original bytes. Normal preservation builds must never regenerate
 or overwrite editable local documents implicitly.
+
+`make roundtrip-formats` now resolves ten source-owned PRG ranges through linker
+labels, decodes them into typed structures, encodes those structures, and
+requires exact original bytes. The manifest covers world/area pointers, area
+and enemy/entrance streams, metatiles, PPU packets, player animation frames,
+music headers and four channel grammars, an APU envelope, and signed/unsigned
+player physics profiles. Generated JSON is inspection-only under `build/`;
+normal builds never rewrite source or editable documents. Format contracts,
+boundaries, and extension rules are recorded in `docs/data_formats.md`, with
+focused semantic codec tests in the ordinary unit-test layer.
 
 ### 9. Preservation Source 1.0 - Planned
 
