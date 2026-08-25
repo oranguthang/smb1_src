@@ -186,7 +186,7 @@ ExPHC:
 
 ; -------------------------------------------------------------------------------------
 
-HandlePowerUpCollision:
+loc_handle_power_up_collision:
     JSR sub_erase_enemy_object  ; erase the power-up object
     LDA #$06
     JSR sub_setup_floatey_number  ; award 1000 points to player by default

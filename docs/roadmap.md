@@ -311,7 +311,7 @@ and enemy parsing, background composition, bounding boxes, player rendering,
 and audio arbitration. `docs/unknowns.md` provides stable evidence IDs for
 unresolved or proven-residual behavior; emulator experiments remain milestone 6.
 
-### 6. Debugger Symbols and Runtime Evidence - Planned
+### 6. Debugger Symbols and Runtime Evidence - In Progress
 
 - Convert ld65 labels/debug data into Mesen and FCEUX-friendly artifacts.
 - Provide named breakpoint groups and standard RAM watch lists.
@@ -324,6 +324,13 @@ unresolved or proven-residual behavior; emulator experiments remain milestone 6.
 
 Exit criterion: a contributor can stop on a named routine, inspect meaningful
 state, and reproduce the main gameplay transactions.
+
+The bundled cc65 tools are now version 2.19 (Git `0fca835`), whose ld65 debug
+records retain source files, exact definition lines, spans, and output offsets.
+`make symbols` normalizes the bare-PRG offsets for the 16-byte iNES header,
+exports Mesen `.dbg` and FCEUX `.nl` artifacts, resolves tracked breakpoint and
+watch groups, and rejects stale representative source mappings. A live FCEUX
+smoke test resolves eight semantic ROM/RAM symbols and stops on the NMI handler.
 
 ### 7. Automated Source and Documentation Validation - In Progress
 

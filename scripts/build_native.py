@@ -13,6 +13,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from debug_symbols import normalize_dbg_for_ines
+
 
 def fail(message: str) -> None:
     print(f"[ERROR] {message}", file=sys.stderr)
@@ -150,6 +152,7 @@ def main() -> int:
 
     for path in (object_path, prg_path, labels_path, map_path, debug_path):
         path.parent.mkdir(parents=True, exist_ok=True)
+    raw_debug_path = debug_path.with_name(f"{debug_path.stem}.ld65.dbg")
     ca65 = resolve_tool("ca65", project_root)
     ld65 = resolve_tool("ld65", project_root)
     run_tool(
@@ -176,11 +179,14 @@ def main() -> int:
             str(labels_path),
             "--mapfile",
             str(map_path),
+            "-vm",
             "--dbgfile",
-            str(debug_path),
+            str(raw_debug_path),
         ],
         prg_path.parent,
     )
+    normalize_dbg_for_ines(raw_debug_path, debug_path, prg_path, output_rom)
+    raw_debug_path.unlink()
 
     prg = require_file(prg_path, "linked PRG")
     prg_hash = sha1(prg)

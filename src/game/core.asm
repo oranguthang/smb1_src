@@ -205,21 +205,21 @@ sub_game_routines:
 
     .word Entrance_GameTimerSetup
     .word Vine_AutoClimb
-    .word SideExitPipeEntry
-    .word VerticalPipeEntry
-    .word FlagpoleSlide
+    .word handler_side_exit_pipe_entry
+    .word handler_vertical_pipe_entry
+    .word handler_flagpole_slide
     .word PlayerEndLevel
-    .word PlayerLoseLife
-    .word PlayerEntrance
+    .word handler_player_lose_life
+    .word handler_player_entrance
     .word handler_player_control
     .word PlayerChangeSize
     .word PlayerInjuryBlink
-    .word PlayerDeath
+    .word handler_player_death
     .word PlayerFireFlower
 
 ; -------------------------------------------------------------------------------------
 
-PlayerEntrance:
+handler_player_entrance:
     LDA ram_alt_entrance_control  ; check for mode of alternate entry
     CMP #$02
     BEQ EntrMode2  ; if found, branch to enter from pipe or with vine
@@ -439,7 +439,7 @@ sub_set_entr:
 
 ; -------------------------------------------------------------------------------------
 
-VerticalPipeEntry:
+handler_vertical_pipe_entry:
     LDA #$01  ; set 1 as movement amount
     JSR sub_move_player_y_axis  ; do sub to move player downwards
     JSR sub_scroll_handler  ; do sub to scroll screen with saved force if necessary
@@ -461,7 +461,7 @@ sub_move_player_y_axis:
 
 ; -------------------------------------------------------------------------------------
 
-SideExitPipeEntry:
+handler_side_exit_pipe_entry:
     JSR sub_enter_side_pipe  ; execute sub to move player to the right
     LDY #$02
 ChgAreaPipe:
@@ -530,7 +530,7 @@ ExitBoth:
 ; -------------------------------------------------------------------------------------
 ; $00 - used in sub_cycle_player_palette to store current palette to cycle
 
-PlayerDeath:
+handler_player_death:
     LDA ram_timer_control  ; check master timer control
     CMP #$f0  ; for specific moment in time
     BCS ExitDeath  ; branch to leave if before that point
@@ -574,7 +574,7 @@ ExitDeath:
 
 ; -------------------------------------------------------------------------------------
 
-FlagpoleSlide:
+handler_flagpole_slide:
     LDA ram_enemy_id+5  ; check special use enemy slot
     CMP #con_flagpole_flag_object  ; for flagpole flag object
     BNE NoFPObj  ; if not found, branch to something residual

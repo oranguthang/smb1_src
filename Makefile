@@ -17,10 +17,17 @@ NATIVE_LABELS ?= $(NATIVE_BUILD_DIR)/smb.lbl
 NATIVE_MAP ?= $(NATIVE_BUILD_DIR)/smb.map
 NATIVE_DEBUG ?= $(NATIVE_BUILD_DIR)/smb.dbg
 NATIVE_ROM ?= $(NATIVE_BUILD_DIR)/smb.nes
+DEBUG_BREAKPOINTS ?= $(PROJECT_DIR)config/debugger_breakpoints.json
+DEBUG_WATCHES ?= $(PROJECT_DIR)config/debugger_watches.json
+DEBUG_SUMMARY ?= $(NATIVE_BUILD_DIR)/debug_symbols.json
+FCEUX_SYMBOL_DIR ?= $(NATIVE_BUILD_DIR)
+FCEUX_EXE ?= $(PROJECT_DIR)../fceux_automation/vc/x64/Release/fceux64.exe
+DEBUG_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_debug_symbols.lua
+DEBUG_RUNTIME_RESULT ?= $(NATIVE_BUILD_DIR)/debug_symbols_runtime.txt
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg symbols validate-symbols split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -78,6 +85,25 @@ verify-prg:
 		--debug-info "$(NATIVE_DEBUG)" \
 		--output-rom "$(NATIVE_ROM)" \
 		--prg-only --verify
+
+symbols: build
+	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \
+		--debug "$(NATIVE_DEBUG)" \
+		--map "$(NATIVE_MAP)" \
+		--labels "$(NATIVE_LABELS)" \
+		--rom "$(NATIVE_ROM)" \
+		--fceux-output-dir "$(FCEUX_SYMBOL_DIR)" \
+		--breakpoints "$(DEBUG_BREAKPOINTS)" \
+		--watches "$(DEBUG_WATCHES)" \
+		--summary "$(DEBUG_SUMMARY)"
+
+validate-symbols: symbols
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_debug_runtime.py" \
+		--fceux "$(FCEUX_EXE)" \
+		--rom "$(NATIVE_ROM)" \
+		--summary "$(DEBUG_SUMMARY)" \
+		--lua "$(DEBUG_RUNTIME_LUA)" \
+		--result "$(DEBUG_RUNTIME_RESULT)"
 
 split:
 	$(PYTHON) "$(PROJECT_DIR)scripts/split_assets.py" \

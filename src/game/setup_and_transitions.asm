@@ -288,7 +288,7 @@ HalfwayPageNybbles:
     .byte $65, $70
     .byte $00, $00
 
-PlayerLoseLife:
+handler_player_lose_life:
     INC ram_disable_screen_flag  ; disable screen and sprite 0 check
     LDA #$00
     STA ram_sprite0_hit_detect_flag

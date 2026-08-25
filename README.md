@@ -17,6 +17,7 @@ This repository contains:
 - **docs/ram_fields.md** - Verified semantic RAM-field registry
 - **docs/subsystems.md** - Address-ordered system architecture and ownership
 - **docs/unknowns.md** - Stable uncertainty and evidence registry
+- **docs/debugger_workflow.md** - Mesen/FCEUX symbols and source navigation
 
 ## Project Structure
 
@@ -97,6 +98,10 @@ make format
 # Run focused Python tooling tests
 make test
 
+# Generate Mesen/FCEUX symbols and validate them in live FCEUX
+make symbols
+make validate-symbols
+
 # Validate local assets and build build/native/smb.nes
 make build
 
@@ -115,7 +120,8 @@ parsing, safe extraction, assembly, linking, concatenation, checksum validation,
 and cleanup are implemented in platform-independent Python scripts under
 `scripts/`. See [`docs/assembly_style.md`](docs/assembly_style.md) for the checked
 source conventions and [`docs/naming.md`](docs/naming.md) for the semantic symbol
-vocabulary.
+vocabulary. See [`docs/debugger_workflow.md`](docs/debugger_workflow.md) for
+interactive source navigation.
 
 ## Modding Notes
 

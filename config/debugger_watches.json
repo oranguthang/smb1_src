@@ -1,0 +1,37 @@
+{
+  "mode_and_frame": [
+    {"symbol": "ram_oper_mode", "size": 1, "format": "hex", "description": "Top-level operating mode"},
+    {"symbol": "ram_oper_mode_task", "size": 1, "format": "hex", "description": "Current mode task"},
+    {"symbol": "ram_screen_routine_task", "size": 1, "format": "hex", "description": "Screen setup task"},
+    {"symbol": "ram_timer_control", "size": 1, "format": "hex", "description": "Global timer freeze/control"}
+  ],
+  "player_input_and_motion": [
+    {"symbol": "ram_saved_joypad1_bits", "size": 1, "format": "hex", "description": "Sampled controller-one buttons"},
+    {"symbol": "ram_player_state", "size": 1, "format": "hex", "description": "Player movement state"},
+    {"symbol": "ram_player_status", "size": 1, "format": "unsigned", "description": "Small, big, or fiery status"},
+    {"symbol": "ram_player_page_loc", "size": 1, "format": "hex", "description": "Player horizontal page"},
+    {"symbol": "ram_player_x_position", "size": 1, "format": "hex", "description": "Player horizontal pixel"},
+    {"symbol": "ram_player_y_position", "size": 1, "format": "hex", "description": "Player vertical pixel"},
+    {"symbol": "ram_player_x_speed", "size": 1, "format": "signed", "description": "Player horizontal speed"},
+    {"symbol": "ram_player_y_speed", "size": 1, "format": "signed", "description": "Player vertical speed"}
+  ],
+  "progress_and_transactions": [
+    {"symbol": "ram_world_number", "size": 1, "format": "unsigned", "description": "Current zero-based world"},
+    {"symbol": "ram_area_number", "size": 1, "format": "unsigned", "description": "Current internal area"},
+    {"symbol": "ram_numberof_lives", "size": 1, "format": "unsigned", "description": "Current player lives minus one"},
+    {"symbol": "ram_coin_tally", "size": 1, "format": "unsigned", "description": "Current player coin tally"},
+    {"symbol": "ram_player_score_display", "size": 6, "format": "hex", "description": "Displayed score digits"},
+    {"symbol": "ram_star_flag_task_control", "size": 1, "format": "hex", "description": "Flagpole sequence task"}
+  ],
+  "objects_and_rendering": [
+    {"symbol": "ram_enemy_flag", "size": 6, "format": "hex", "description": "Enemy-slot active flags"},
+    {"symbol": "ram_enemy_id", "size": 6, "format": "hex", "description": "Enemy-slot object identifiers"},
+    {"symbol": "ram_enemy_state", "size": 6, "format": "hex", "description": "Enemy-slot runtime states"},
+    {"symbol": "ram_disable_screen_flag", "size": 1, "format": "hex", "description": "Rendering-disable state"}
+  ],
+  "audio": [
+    {"symbol": "ram_area_music_queue", "size": 1, "format": "hex", "description": "Pending music request"},
+    {"symbol": "ram_area_music_buffer", "size": 1, "format": "hex", "description": "Active music selection"},
+    {"symbol": "ram_flagpole_sound_queue", "size": 1, "format": "hex", "description": "Pending flagpole sound"}
+  ]
+}

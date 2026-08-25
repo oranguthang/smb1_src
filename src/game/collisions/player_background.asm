@@ -73,7 +73,7 @@ HeadChk:
     JSR sub_block_buffer_colli_head  ; do player-to-bg collision detection on top of
     BEQ DoFootCheck  ; player, and branch if nothing above player's head
     JSR sub_check_for_coin_m_tiles  ; check to see if player touched coin with their head
-    BCS AwardTouchedCoin  ; if so, branch to some other part of code
+    BCS loc_award_touched_coin  ; if so, branch to some other part of code
     LDY ram_player_y_speed  ; check player's vertical speed
     BPL DoFootCheck  ; if player not moving upwards, branch elsewhere
     LDY $04  ; check lower nybble of vertical coordinate returned
@@ -104,7 +104,7 @@ DoFootCheck:
     BCS DoPlayerSideCheck  ; if player is too far down on screen, skip all of this
     JSR sub_block_buffer_colli_feet  ; do player-to-bg collision detection on bottom left of player
     JSR sub_check_for_coin_m_tiles  ; check to see if player touched coin with their left foot
-    BCS AwardTouchedCoin  ; if so, branch to some other part of code
+    BCS loc_award_touched_coin  ; if so, branch to some other part of code
     PHA  ; save bottom left metatile to stack
     JSR sub_block_buffer_colli_feet  ; do player-to-bg collision detection on bottom right of player
     STA $00  ; save bottom right metatile here
@@ -116,7 +116,7 @@ DoFootCheck:
     JSR sub_check_for_coin_m_tiles  ; check to see if player touched coin with their right foot
     BCC ChkFootMTile  ; if not, skip unconditional jump and continue code
 
-AwardTouchedCoin:
+loc_award_touched_coin:
     JMP HandleCoinMetatile  ; follow the code to erase coin and award to player 1 coin
 
 ChkFootMTile:

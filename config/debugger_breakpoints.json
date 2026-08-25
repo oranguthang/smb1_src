@@ -1,0 +1,30 @@
+{
+  "frame_and_modes": [
+    {"symbol": "vec_nmi_handler", "description": "NMI frame boundary"},
+    {"symbol": "sub_oper_mode_execution_tree", "description": "Top-level operating-mode dispatch"},
+    {"symbol": "sub_game_core_routine", "description": "Live gameplay frame entry"}
+  ],
+  "player": [
+    {"symbol": "sub_update_player_movement", "description": "Player movement state dispatch"},
+    {"symbol": "sub_update_player_physics", "description": "Player acceleration and jump physics"},
+    {"symbol": "sub_player_bg_collision", "description": "Player/background collision entry"},
+    {"symbol": "sub_injure_player", "description": "Player injury transaction"}
+  ],
+  "transactions": [
+    {"symbol": "sub_bump_block", "description": "Block impact transaction"},
+    {"symbol": "sub_give_one_coin", "description": "Coin award transaction"},
+    {"symbol": "loc_handle_power_up_collision", "description": "Power-up collection transaction"},
+    {"symbol": "loc_enemy_stomped", "description": "Enemy stomp transaction"},
+    {"symbol": "handler_vertical_pipe_entry", "description": "Vertical pipe transition"},
+    {"symbol": "handler_side_exit_pipe_entry", "description": "Side-pipe transition"},
+    {"symbol": "handler_flagpole_slide", "description": "Flagpole slide state"},
+    {"symbol": "handler_player_death", "description": "Player death animation state"},
+    {"symbol": "handler_player_lose_life", "description": "Life decrement and respawn decision"},
+    {"symbol": "handler_player_entrance", "description": "Area entrance and respawn state"}
+  ],
+  "objects_and_audio": [
+    {"symbol": "sub_enemies_and_loops_core", "description": "Enemy stream parser"},
+    {"symbol": "sub_player_enemy_collision", "description": "Player/enemy collision transaction"},
+    {"symbol": "sub_sound_engine", "description": "Per-frame audio arbitration"}
+  ]
+}

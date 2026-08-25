@@ -37,7 +37,7 @@ CheckForPUpCollision:
     LDY ram_enemy_id,x
     CPY #con_power_up_object  ; check for power-up object
     BNE EColl  ; if not found, branch to next part
-    JMP HandlePowerUpCollision  ; otherwise, unconditional jump backwards
+    JMP loc_handle_power_up_collision  ; otherwise, unconditional jump backwards
 EColl:
     LDA ram_star_invincible_timer  ; if star mario invincibility timer expired,
     BEQ HandlePECollisions  ; perform task here, otherwise kill enemy like
@@ -99,7 +99,7 @@ ExPEC:
 ChkForPlayerInjury:
     LDA ram_player_y_speed  ; check player's vertical speed
     BMI ChkInj  ; perform procedure below if player moving upwards
-    BNE EnemyStomped  ; or not at all, and branch elsewhere if moving downwards
+    BNE loc_enemy_stomped  ; or not at all, and branch elsewhere if moving downwards
 ChkInj:
     LDA ram_enemy_id,x  ; branch if enemy object < $07
     CMP #con_bloober
@@ -108,10 +108,10 @@ ChkInj:
     CLC
     ADC #$0c
     CMP ram_enemy_y_position,x  ; compare modified player's position to enemy's position
-    BCC EnemyStomped  ; branch if this player's position above (less than) enemy's
+    BCC loc_enemy_stomped  ; branch if this player's position above (less than) enemy's
 ChkETmrs:
     LDA ram_stomp_timer  ; check stomp timer
-    BNE EnemyStomped  ; branch if set
+    BNE loc_enemy_stomped  ; branch if set
     LDA ram_injury_timer  ; check to see if injured invincibility timer still
     BNE ExInjColRoutines  ; counting down, and branch elsewhere to leave if so
     LDA ram_player_rel_x_pos
@@ -164,7 +164,7 @@ KillPlayer:
 StompedEnemyPtsData:
     .byte $02, $06, $05, $06
 
-EnemyStomped:
+loc_enemy_stomped:
     LDA ram_enemy_id,x  ; check for spiny, branch to hurt player
     CMP #con_spiny  ; if found
     BEQ sub_injure_player
