@@ -20,7 +20,7 @@ NATIVE_ROM ?= $(NATIVE_BUILD_DIR)/smb.nes
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg split check-assets clean _require-assets
+.PHONY: build verify build-prg verify-prg split check-assets lint format test clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -89,6 +89,15 @@ check-assets:
 	$(PYTHON) "$(PROJECT_DIR)scripts/check_assets.py" \
 		--manifest "$(ASSET_MANIFEST)" \
 		--asset-dir "$(GENERATED_ASSET_DIR)"
+
+lint:
+	$(PYTHON) "$(PROJECT_DIR)scripts/asm_style.py" "$(PROJECT_DIR)src"
+
+format:
+	$(PYTHON) "$(PROJECT_DIR)scripts/asm_style.py" --fix "$(PROJECT_DIR)src"
+
+test:
+	$(PYTHON) -m unittest discover -s "$(PROJECT_DIR)tests" -p "test_*.py"
 
 _require-assets:
 	$(PYTHON) "$(PROJECT_DIR)scripts/check_assets.py" \

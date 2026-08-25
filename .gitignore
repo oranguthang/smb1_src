@@ -16,5 +16,9 @@ assets/generated/
 .vscode/
 .idea/
 
+# Python caches
+__pycache__/
+*.py[cod]
+
 # Local research repositories
 references/

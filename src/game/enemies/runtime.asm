@@ -1,659 +1,694 @@
-;-------------------------------------------------------------------------------------
+; -------------------------------------------------------------------------------------
 
 RunEnemyObjectsCore:
-       ldx ObjectOffset  ;get offset for enemy object buffer
-       lda #$00          ;load value 0 for jump engine by default
-       ldy Enemy_ID,x
-       cpy #$15          ;if enemy object < $15, use default value
-       bcc JmpEO
-       tya               ;otherwise subtract $14 from the value and use
-       sbc #$14          ;as value for jump engine
-JmpEO: jsr JumpEngine
+    LDX ObjectOffset  ; get offset for enemy object buffer
+    LDA #$00  ; load value 0 for jump engine by default
+    LDY Enemy_ID,x
+    CPY #$15  ; if enemy object < $15, use default value
+    BCC JmpEO
+    TYA  ; otherwise subtract $14 from the value and use
+    SBC #$14  ; as value for jump engine
+JmpEO:
+    JSR JumpEngine
 
-      .word RunNormalEnemies  ;for objects $00-$14
+    .word RunNormalEnemies  ; for objects $00-$14
 
-      .word RunBowserFlame    ;for objects $15-$1f
-      .word RunFireworks
-      .word NoRunCode
-      .word NoRunCode
-      .word NoRunCode
-      .word NoRunCode
-      .word RunFirebarObj
-      .word RunFirebarObj
-      .word RunFirebarObj
-      .word RunFirebarObj
-      .word RunFirebarObj
+    .word RunBowserFlame  ; for objects $15-$1f
+    .word RunFireworks
+    .word NoRunCode
+    .word NoRunCode
+    .word NoRunCode
+    .word NoRunCode
+    .word RunFirebarObj
+    .word RunFirebarObj
+    .word RunFirebarObj
+    .word RunFirebarObj
+    .word RunFirebarObj
 
-      .word RunFirebarObj     ;for objects $20-$2f
-      .word RunFirebarObj
-      .word RunFirebarObj
-      .word NoRunCode
-      .word RunLargePlatform
-      .word RunLargePlatform
-      .word RunLargePlatform
-      .word RunLargePlatform
-      .word RunLargePlatform
-      .word RunLargePlatform
-      .word RunLargePlatform
-      .word RunSmallPlatform
-      .word RunSmallPlatform
-      .word RunBowser
-      .word PowerUpObjHandler
-      .word VineObjectHandler
+    .word RunFirebarObj  ; for objects $20-$2f
+    .word RunFirebarObj
+    .word RunFirebarObj
+    .word NoRunCode
+    .word RunLargePlatform
+    .word RunLargePlatform
+    .word RunLargePlatform
+    .word RunLargePlatform
+    .word RunLargePlatform
+    .word RunLargePlatform
+    .word RunLargePlatform
+    .word RunSmallPlatform
+    .word RunSmallPlatform
+    .word RunBowser
+    .word PowerUpObjHandler
+    .word VineObjectHandler
 
-      .word NoRunCode         ;for objects $30-$35
-      .word RunStarFlagObj
-      .word JumpspringHandler
-      .word NoRunCode
-      .word WarpZoneObject
-      .word RunRetainerObj
+    .word NoRunCode  ; for objects $30-$35
+    .word RunStarFlagObj
+    .word JumpspringHandler
+    .word NoRunCode
+    .word WarpZoneObject
+    .word RunRetainerObj
 
-;--------------------------------
+; --------------------------------
 
 NoRunCode:
-      rts
+    RTS
 
-;--------------------------------
+; --------------------------------
 
 RunRetainerObj:
-      jsr GetEnemyOffscreenBits
-      jsr RelativeEnemyPosition
-      jmp EnemyGfxHandler
+    JSR GetEnemyOffscreenBits
+    JSR RelativeEnemyPosition
+    JMP EnemyGfxHandler
 
-;--------------------------------
+; --------------------------------
 
 RunNormalEnemies:
-          lda #$00                  ;init sprite attributes
-          sta Enemy_SprAttrib,x
-          jsr GetEnemyOffscreenBits
-          jsr RelativeEnemyPosition
-          jsr EnemyGfxHandler
-          jsr GetEnemyBoundBox
-          jsr EnemyToBGCollisionDet
-          jsr EnemiesCollision
-          jsr PlayerEnemyCollision
-          ldy TimerControl          ;if master timer control set, skip to last routine
-          bne SkipMove
-          jsr EnemyMovementSubs
-SkipMove: jmp OffscreenBoundsCheck
+    LDA #$00  ; init sprite attributes
+    STA Enemy_SprAttrib,x
+    JSR GetEnemyOffscreenBits
+    JSR RelativeEnemyPosition
+    JSR EnemyGfxHandler
+    JSR GetEnemyBoundBox
+    JSR EnemyToBGCollisionDet
+    JSR EnemiesCollision
+    JSR PlayerEnemyCollision
+    LDY TimerControl  ; if master timer control set, skip to last routine
+    BNE SkipMove
+    JSR EnemyMovementSubs
+SkipMove:
+    JMP OffscreenBoundsCheck
 
 EnemyMovementSubs:
-      lda Enemy_ID,x
-      jsr JumpEngine
+    LDA Enemy_ID,x
+    JSR JumpEngine
 
-      .word MoveNormalEnemy      ;only objects $00-$14 use this table
-      .word MoveNormalEnemy
-      .word MoveNormalEnemy
-      .word MoveNormalEnemy
-      .word MoveNormalEnemy
-      .word ProcHammerBro
-      .word MoveNormalEnemy
-      .word MoveBloober
-      .word MoveBulletBill
-      .word NoMoveCode
-      .word MoveSwimmingCheepCheep
-      .word MoveSwimmingCheepCheep
-      .word MovePodoboo
-      .word MovePiranhaPlant
-      .word MoveJumpingEnemy
-      .word ProcMoveRedPTroopa
-      .word MoveFlyGreenPTroopa
-      .word MoveLakitu
-      .word MoveNormalEnemy
-      .word NoMoveCode   ;dummy
-      .word MoveFlyingCheepCheep
+    .word MoveNormalEnemy  ; only objects $00-$14 use this table
+    .word MoveNormalEnemy
+    .word MoveNormalEnemy
+    .word MoveNormalEnemy
+    .word MoveNormalEnemy
+    .word ProcHammerBro
+    .word MoveNormalEnemy
+    .word MoveBloober
+    .word MoveBulletBill
+    .word NoMoveCode
+    .word MoveSwimmingCheepCheep
+    .word MoveSwimmingCheepCheep
+    .word MovePodoboo
+    .word MovePiranhaPlant
+    .word MoveJumpingEnemy
+    .word ProcMoveRedPTroopa
+    .word MoveFlyGreenPTroopa
+    .word MoveLakitu
+    .word MoveNormalEnemy
+    .word NoMoveCode  ; dummy
+    .word MoveFlyingCheepCheep
 
-;--------------------------------
+; --------------------------------
 
 NoMoveCode:
-      rts
+    RTS
 
-;--------------------------------
+; --------------------------------
 
 RunBowserFlame:
-      jsr ProcBowserFlame
-      jsr GetEnemyOffscreenBits
-      jsr RelativeEnemyPosition
-      jsr GetEnemyBoundBox
-      jsr PlayerEnemyCollision
-      jmp OffscreenBoundsCheck
+    JSR ProcBowserFlame
+    JSR GetEnemyOffscreenBits
+    JSR RelativeEnemyPosition
+    JSR GetEnemyBoundBox
+    JSR PlayerEnemyCollision
+    JMP OffscreenBoundsCheck
 
-;--------------------------------
+; --------------------------------
 
 RunFirebarObj:
-      jsr ProcFirebar
-      jmp OffscreenBoundsCheck
+    JSR ProcFirebar
+    JMP OffscreenBoundsCheck
 
-;--------------------------------
+; --------------------------------
 
 RunSmallPlatform:
-      jsr GetEnemyOffscreenBits
-      jsr RelativeEnemyPosition
-      jsr SmallPlatformBoundBox
-      jsr SmallPlatformCollision
-      jsr RelativeEnemyPosition
-      jsr DrawSmallPlatform
-      jsr MoveSmallPlatform
-      jmp OffscreenBoundsCheck
+    JSR GetEnemyOffscreenBits
+    JSR RelativeEnemyPosition
+    JSR SmallPlatformBoundBox
+    JSR SmallPlatformCollision
+    JSR RelativeEnemyPosition
+    JSR DrawSmallPlatform
+    JSR MoveSmallPlatform
+    JMP OffscreenBoundsCheck
 
-;--------------------------------
+; --------------------------------
 
 RunLargePlatform:
-        jsr GetEnemyOffscreenBits
-        jsr RelativeEnemyPosition
-        jsr LargePlatformBoundBox
-        jsr LargePlatformCollision
-        lda TimerControl             ;if master timer control set,
-        bne SkipPT                   ;skip subroutine tree
-        jsr LargePlatformSubroutines
-SkipPT: jsr RelativeEnemyPosition
-        jsr DrawLargePlatform
-        jmp OffscreenBoundsCheck
+    JSR GetEnemyOffscreenBits
+    JSR RelativeEnemyPosition
+    JSR LargePlatformBoundBox
+    JSR LargePlatformCollision
+    LDA TimerControl  ; if master timer control set,
+    BNE SkipPT  ; skip subroutine tree
+    JSR LargePlatformSubroutines
+SkipPT:
+    JSR RelativeEnemyPosition
+    JSR DrawLargePlatform
+    JMP OffscreenBoundsCheck
 
-;--------------------------------
+; --------------------------------
 
 LargePlatformSubroutines:
-      lda Enemy_ID,x  ;subtract $24 to get proper offset for jump table
-      sec
-      sbc #$24
-      jsr JumpEngine
+    LDA Enemy_ID,x  ; subtract $24 to get proper offset for jump table
+    SEC
+    SBC #$24
+    JSR JumpEngine
 
-      .word BalancePlatform   ;table used by objects $24-$2a
-      .word YMovingPlatform
-      .word MoveLargeLiftPlat
-      .word MoveLargeLiftPlat
-      .word XMovingPlatform
-      .word DropPlatform
-      .word RightPlatform
+    .word BalancePlatform  ; table used by objects $24-$2a
+    .word YMovingPlatform
+    .word MoveLargeLiftPlat
+    .word MoveLargeLiftPlat
+    .word XMovingPlatform
+    .word DropPlatform
+    .word RightPlatform
 
-;-------------------------------------------------------------------------------------
+; -------------------------------------------------------------------------------------
 
 EraseEnemyObject:
-      lda #$00                 ;clear all enemy object variables
-      sta Enemy_Flag,x
-      sta Enemy_ID,x
-      sta Enemy_State,x
-      sta FloateyNum_Control,x
-      sta EnemyIntervalTimer,x
-      sta ShellChainCounter,x
-      sta Enemy_SprAttrib,x
-      sta EnemyFrameTimer,x
-      rts
+    LDA #$00  ; clear all enemy object variables
+    STA Enemy_Flag,x
+    STA Enemy_ID,x
+    STA Enemy_State,x
+    STA FloateyNum_Control,x
+    STA EnemyIntervalTimer,x
+    STA ShellChainCounter,x
+    STA Enemy_SprAttrib,x
+    STA EnemyFrameTimer,x
+    RTS
 
-;-------------------------------------------------------------------------------------
+; -------------------------------------------------------------------------------------
 
 MovePodoboo:
-      lda EnemyIntervalTimer,x   ;check enemy timer
-      bne PdbM                   ;branch to move enemy if not expired
-      jsr InitPodoboo            ;otherwise set up podoboo again
-      lda PseudoRandomBitReg+1,x ;get part of LSFR
-      ora #%10000000             ;set d7
-      sta Enemy_Y_MoveForce,x    ;store as movement force
-      and #%00001111             ;mask out high nybble
-      ora #$06                   ;set for at least six intervals
-      sta EnemyIntervalTimer,x   ;store as new enemy timer
-      lda #$f9
-      sta Enemy_Y_Speed,x        ;set vertical speed to move podoboo upwards
-PdbM: jmp MoveJ_EnemyVertically  ;branch to impose gravity on podoboo
+    LDA EnemyIntervalTimer,x  ; check enemy timer
+    BNE PdbM  ; branch to move enemy if not expired
+    JSR InitPodoboo  ; otherwise set up podoboo again
+    LDA PseudoRandomBitReg+1,x  ; get part of LSFR
+    ORA #%10000000  ; set d7
+    STA Enemy_Y_MoveForce,x  ; store as movement force
+    AND #%00001111  ; mask out high nybble
+    ORA #$06  ; set for at least six intervals
+    STA EnemyIntervalTimer,x  ; store as new enemy timer
+    LDA #$f9
+    STA Enemy_Y_Speed,x  ; set vertical speed to move podoboo upwards
+PdbM:
+    JMP MoveJ_EnemyVertically  ; branch to impose gravity on podoboo
 
-;--------------------------------
-;$00 - used in HammerBroJumpCode as bitmask
+; --------------------------------
+; $00 - used in HammerBroJumpCode as bitmask
 
 HammerThrowTmrData:
-      .byte $30, $1c
+    .byte $30, $1c
 
 XSpeedAdderData:
-      .byte $00, $e8, $00, $18
+    .byte $00, $e8, $00, $18
 
 RevivedXSpeed:
-      .byte $08, $f8, $0c, $f4
+    .byte $08, $f8, $0c, $f4
 
 ProcHammerBro:
-       lda Enemy_State,x          ;check hammer bro's enemy state for d5 set
-       and #%00100000
-       beq ChkJH                  ;if not set, go ahead with code
-       jmp MoveDefeatedEnemy      ;otherwise jump to something else
-ChkJH: lda HammerBroJumpTimer,x   ;check jump timer
-       beq HammerBroJumpCode      ;if expired, branch to jump
-       dec HammerBroJumpTimer,x   ;otherwise decrement jump timer
-       lda Enemy_OffscreenBits
-       and #%00001100             ;check offscreen bits
-       bne MoveHammerBroXDir      ;if hammer bro a little offscreen, skip to movement code
-       lda HammerThrowingTimer,x  ;check hammer throwing timer
-       bne DecHT                  ;if not expired, skip ahead, do not throw hammer
-       ldy SecondaryHardMode      ;otherwise get secondary hard mode flag
-       lda HammerThrowTmrData,y   ;get timer data using flag as offset
-       sta HammerThrowingTimer,x  ;set as new timer
-       jsr SpawnHammerObj         ;do a sub here to spawn hammer object
-       bcc DecHT                  ;if carry clear, hammer not spawned, skip to decrement timer
-       lda Enemy_State,x
-       ora #%00001000             ;set d3 in enemy state for hammer throw
-       sta Enemy_State,x
-       jmp MoveHammerBroXDir      ;jump to move hammer bro
-DecHT: dec HammerThrowingTimer,x  ;decrement timer
-       jmp MoveHammerBroXDir      ;jump to move hammer bro
+    LDA Enemy_State,x  ; check hammer bro's enemy state for d5 set
+    AND #%00100000
+    BEQ ChkJH  ; if not set, go ahead with code
+    JMP MoveDefeatedEnemy  ; otherwise jump to something else
+ChkJH:
+    LDA HammerBroJumpTimer,x  ; check jump timer
+    BEQ HammerBroJumpCode  ; if expired, branch to jump
+    DEC HammerBroJumpTimer,x  ; otherwise decrement jump timer
+    LDA Enemy_OffscreenBits
+    AND #%00001100  ; check offscreen bits
+    BNE MoveHammerBroXDir  ; if hammer bro a little offscreen, skip to movement code
+    LDA HammerThrowingTimer,x  ; check hammer throwing timer
+    BNE DecHT  ; if not expired, skip ahead, do not throw hammer
+    LDY SecondaryHardMode  ; otherwise get secondary hard mode flag
+    LDA HammerThrowTmrData,y  ; get timer data using flag as offset
+    STA HammerThrowingTimer,x  ; set as new timer
+    JSR SpawnHammerObj  ; do a sub here to spawn hammer object
+    BCC DecHT  ; if carry clear, hammer not spawned, skip to decrement timer
+    LDA Enemy_State,x
+    ORA #%00001000  ; set d3 in enemy state for hammer throw
+    STA Enemy_State,x
+    JMP MoveHammerBroXDir  ; jump to move hammer bro
+DecHT:
+    DEC HammerThrowingTimer,x  ; decrement timer
+    JMP MoveHammerBroXDir  ; jump to move hammer bro
 
 HammerBroJumpLData:
-      .byte $20, $37
+    .byte $20, $37
 
 HammerBroJumpCode:
-       lda Enemy_State,x           ;get hammer bro's enemy state
-       and #%00000111              ;mask out all but 3 LSB
-       cmp #$01                    ;check for d0 set (for jumping)
-       beq MoveHammerBroXDir       ;if set, branch ahead to moving code
-       lda #$00                    ;load default value here
-       sta $00                     ;save into temp variable for now
-       ldy #$fa                    ;set default vertical speed
-       lda Enemy_Y_Position,x      ;check hammer bro's vertical coordinate
-       bmi SetHJ                   ;if on the bottom half of the screen, use current speed
-       ldy #$fd                    ;otherwise set alternate vertical speed
-       cmp #$70                    ;check to see if hammer bro is above the middle of screen
-       inc $00                     ;increment preset value to $01
-       bcc SetHJ                   ;if above the middle of the screen, use current speed and $01
-       dec $00                     ;otherwise return value to $00
-       lda PseudoRandomBitReg+1,x  ;get part of LSFR, mask out all but LSB
-       and #$01
-       bne SetHJ                   ;if d0 of LSFR set, branch and use current speed and $00
-       ldy #$fa                    ;otherwise reset to default vertical speed
-SetHJ: sty Enemy_Y_Speed,x         ;set vertical speed for jumping
-       lda Enemy_State,x           ;set d0 in enemy state for jumping
-       ora #$01
-       sta Enemy_State,x
-       lda $00                     ;load preset value here to use as bitmask
-       and PseudoRandomBitReg+2,x  ;and do bit-wise comparison with part of LSFR
-       tay                         ;then use as offset
-       lda SecondaryHardMode       ;check secondary hard mode flag
-       bne HJump
-       tay                         ;if secondary hard mode flag clear, set offset to 0
-HJump: lda HammerBroJumpLData,y    ;get jump length timer data using offset from before
-       sta EnemyFrameTimer,x       ;save in enemy timer
-       lda PseudoRandomBitReg+1,x
-       ora #%11000000              ;get contents of part of LSFR, set d7 and d6, then
-       sta HammerBroJumpTimer,x    ;store in jump timer
+    LDA Enemy_State,x  ; get hammer bro's enemy state
+    AND #%00000111  ; mask out all but 3 LSB
+    CMP #$01  ; check for d0 set (for jumping)
+    BEQ MoveHammerBroXDir  ; if set, branch ahead to moving code
+    LDA #$00  ; load default value here
+    STA $00  ; save into temp variable for now
+    LDY #$fa  ; set default vertical speed
+    LDA Enemy_Y_Position,x  ; check hammer bro's vertical coordinate
+    BMI SetHJ  ; if on the bottom half of the screen, use current speed
+    LDY #$fd  ; otherwise set alternate vertical speed
+    CMP #$70  ; check to see if hammer bro is above the middle of screen
+    INC $00  ; increment preset value to $01
+    BCC SetHJ  ; if above the middle of the screen, use current speed and $01
+    DEC $00  ; otherwise return value to $00
+    LDA PseudoRandomBitReg+1,x  ; get part of LSFR, mask out all but LSB
+    AND #$01
+    BNE SetHJ  ; if d0 of LSFR set, branch and use current speed and $00
+    LDY #$fa  ; otherwise reset to default vertical speed
+SetHJ:
+    STY Enemy_Y_Speed,x  ; set vertical speed for jumping
+    LDA Enemy_State,x  ; set d0 in enemy state for jumping
+    ORA #$01
+    STA Enemy_State,x
+    LDA $00  ; load preset value here to use as bitmask
+    AND PseudoRandomBitReg+2,x  ; and do bit-wise comparison with part of LSFR
+    TAY  ; then use as offset
+    LDA SecondaryHardMode  ; check secondary hard mode flag
+    BNE HJump
+    TAY  ; if secondary hard mode flag clear, set offset to 0
+HJump:
+    LDA HammerBroJumpLData,y  ; get jump length timer data using offset from before
+    STA EnemyFrameTimer,x  ; save in enemy timer
+    LDA PseudoRandomBitReg+1,x
+    ORA #%11000000  ; get contents of part of LSFR, set d7 and d6, then
+    STA HammerBroJumpTimer,x  ; store in jump timer
 
 MoveHammerBroXDir:
-         ldy #$fc                  ;move hammer bro a little to the left
-         lda FrameCounter
-         and #%01000000            ;change hammer bro's direction every 64 frames
-         bne Shimmy
-         ldy #$04                  ;if d6 set in counter, move him a little to the right
-Shimmy:  sty Enemy_X_Speed,x       ;store horizontal speed
-         ldy #$01                  ;set to face right by default
-         jsr PlayerEnemyDiff       ;get horizontal difference between player and hammer bro
-         bmi SetShim               ;if enemy to the left of player, skip this part
-         iny                       ;set to face left
-         lda EnemyIntervalTimer,x  ;check walking timer
-         bne SetShim               ;if not yet expired, skip to set moving direction
-         lda #$f8
-         sta Enemy_X_Speed,x       ;otherwise, make the hammer bro walk left towards player
-SetShim: sty Enemy_MovingDir,x     ;set moving direction
+    LDY #$fc  ; move hammer bro a little to the left
+    LDA FrameCounter
+    AND #%01000000  ; change hammer bro's direction every 64 frames
+    BNE Shimmy
+    LDY #$04  ; if d6 set in counter, move him a little to the right
+Shimmy:
+    STY Enemy_X_Speed,x  ; store horizontal speed
+    LDY #$01  ; set to face right by default
+    JSR PlayerEnemyDiff  ; get horizontal difference between player and hammer bro
+    BMI SetShim  ; if enemy to the left of player, skip this part
+    INY  ; set to face left
+    LDA EnemyIntervalTimer,x  ; check walking timer
+    BNE SetShim  ; if not yet expired, skip to set moving direction
+    LDA #$f8
+    STA Enemy_X_Speed,x  ; otherwise, make the hammer bro walk left towards player
+SetShim:
+    STY Enemy_MovingDir,x  ; set moving direction
 
 MoveNormalEnemy:
-       ldy #$00                   ;init Y to leave horizontal movement as-is
-       lda Enemy_State,x
-       and #%01000000             ;check enemy state for d6 set, if set skip
-       bne FallE                  ;to move enemy vertically, then horizontally if necessary
-       lda Enemy_State,x
-       asl                        ;check enemy state for d7 set
-       bcs SteadM                 ;if set, branch to move enemy horizontally
-       lda Enemy_State,x
-       and #%00100000             ;check enemy state for d5 set
-       bne MoveDefeatedEnemy      ;if set, branch to move defeated enemy object
-       lda Enemy_State,x
-       and #%00000111             ;check d2-d0 of enemy state for any set bits
-       beq SteadM                 ;if enemy in normal state, branch to move enemy horizontally
-       cmp #$05
-       beq FallE                  ;if enemy in state used by spiny's egg, go ahead here
-       cmp #$03
-       bcs ReviveStunned          ;if enemy in states $03 or $04, skip ahead to yet another part
-FallE: jsr MoveD_EnemyVertically  ;do a sub here to move enemy downwards
-       ldy #$00
-       lda Enemy_State,x          ;check for enemy state $02
-       cmp #$02
-       beq MEHor                  ;if found, branch to move enemy horizontally
-       and #%01000000             ;check for d6 set
-       beq SteadM                 ;if not set, branch to something else
-       lda Enemy_ID,x
-       cmp #PowerUpObject         ;check for power-up object
-       beq SteadM
-       bne SlowM                  ;if any other object where d6 set, jump to set Y
-MEHor: jmp MoveEnemyHorizontally  ;jump here to move enemy horizontally for <> $2e and d6 set
+    LDY #$00  ; init Y to leave horizontal movement as-is
+    LDA Enemy_State,x
+    AND #%01000000  ; check enemy state for d6 set, if set skip
+    BNE FallE  ; to move enemy vertically, then horizontally if necessary
+    LDA Enemy_State,x
+    ASL  ; check enemy state for d7 set
+    BCS SteadM  ; if set, branch to move enemy horizontally
+    LDA Enemy_State,x
+    AND #%00100000  ; check enemy state for d5 set
+    BNE MoveDefeatedEnemy  ; if set, branch to move defeated enemy object
+    LDA Enemy_State,x
+    AND #%00000111  ; check d2-d0 of enemy state for any set bits
+    BEQ SteadM  ; if enemy in normal state, branch to move enemy horizontally
+    CMP #$05
+    BEQ FallE  ; if enemy in state used by spiny's egg, go ahead here
+    CMP #$03
+    BCS ReviveStunned  ; if enemy in states $03 or $04, skip ahead to yet another part
+FallE:
+    JSR MoveD_EnemyVertically  ; do a sub here to move enemy downwards
+    LDY #$00
+    LDA Enemy_State,x  ; check for enemy state $02
+    CMP #$02
+    BEQ MEHor  ; if found, branch to move enemy horizontally
+    AND #%01000000  ; check for d6 set
+    BEQ SteadM  ; if not set, branch to something else
+    LDA Enemy_ID,x
+    CMP #PowerUpObject  ; check for power-up object
+    BEQ SteadM
+    BNE SlowM  ; if any other object where d6 set, jump to set Y
+MEHor:
+    JMP MoveEnemyHorizontally  ; jump here to move enemy horizontally for <> $2e and d6 set
 
-SlowM:  ldy #$01                  ;if branched here, increment Y to slow horizontal movement
-SteadM: lda Enemy_X_Speed,x       ;get current horizontal speed
-        pha                       ;save to stack
-        bpl AddHS                 ;if not moving or moving right, skip, leave Y alone
-        iny
-        iny                       ;otherwise increment Y to next data
-AddHS:  clc
-        adc XSpeedAdderData,y     ;add value here to slow enemy down if necessary
-        sta Enemy_X_Speed,x       ;save as horizontal speed temporarily
-        jsr MoveEnemyHorizontally ;then do a sub to move horizontally
-        pla
-        sta Enemy_X_Speed,x       ;get old horizontal speed from stack and return to
-        rts                       ;original memory location, then leave
+SlowM:
+    LDY #$01  ; if branched here, increment Y to slow horizontal movement
+SteadM:
+    LDA Enemy_X_Speed,x  ; get current horizontal speed
+    PHA  ; save to stack
+    BPL AddHS  ; if not moving or moving right, skip, leave Y alone
+    INY
+    INY  ; otherwise increment Y to next data
+AddHS:
+    CLC
+    ADC XSpeedAdderData,y  ; add value here to slow enemy down if necessary
+    STA Enemy_X_Speed,x  ; save as horizontal speed temporarily
+    JSR MoveEnemyHorizontally  ; then do a sub to move horizontally
+    PLA
+    STA Enemy_X_Speed,x  ; get old horizontal speed from stack and return to
+    RTS  ; original memory location, then leave
 
 ReviveStunned:
-         lda EnemyIntervalTimer,x  ;if enemy timer not expired yet,
-         bne ChkKillGoomba         ;skip ahead to something else
-         sta Enemy_State,x         ;otherwise initialize enemy state to normal
-         lda FrameCounter
-         and #$01                  ;get d0 of frame counter
-         tay                       ;use as Y and increment for movement direction
-         iny
-         sty Enemy_MovingDir,x     ;store as pseudorandom movement direction
-         dey                       ;decrement for use as pointer
-         lda PrimaryHardMode       ;check primary hard mode flag
-         beq SetRSpd               ;if not set, use pointer as-is
-         iny
-         iny                       ;otherwise increment 2 bytes to next data
-SetRSpd: lda RevivedXSpeed,y       ;load and store new horizontal speed
-         sta Enemy_X_Speed,x       ;and leave
-         rts
+    LDA EnemyIntervalTimer,x  ; if enemy timer not expired yet,
+    BNE ChkKillGoomba  ; skip ahead to something else
+    STA Enemy_State,x  ; otherwise initialize enemy state to normal
+    LDA FrameCounter
+    AND #$01  ; get d0 of frame counter
+    TAY  ; use as Y and increment for movement direction
+    INY
+    STY Enemy_MovingDir,x  ; store as pseudorandom movement direction
+    DEY  ; decrement for use as pointer
+    LDA PrimaryHardMode  ; check primary hard mode flag
+    BEQ SetRSpd  ; if not set, use pointer as-is
+    INY
+    INY  ; otherwise increment 2 bytes to next data
+SetRSpd:
+    LDA RevivedXSpeed,y  ; load and store new horizontal speed
+    STA Enemy_X_Speed,x  ; and leave
+    RTS
 
 MoveDefeatedEnemy:
-      jsr MoveD_EnemyVertically      ;execute sub to move defeated enemy downwards
-      jmp MoveEnemyHorizontally      ;now move defeated enemy horizontally
+    JSR MoveD_EnemyVertically  ; execute sub to move defeated enemy downwards
+    JMP MoveEnemyHorizontally  ; now move defeated enemy horizontally
 
 ChkKillGoomba:
-        cmp #$0e              ;check to see if enemy timer has reached
-        bne NKGmba            ;a certain point, and branch to leave if not
-        lda Enemy_ID,x
-        cmp #Goomba           ;check for goomba object
-        bne NKGmba            ;branch if not found
-        jsr EraseEnemyObject  ;otherwise, kill this goomba object
-NKGmba: rts                   ;leave!
+    CMP #$0e  ; check to see if enemy timer has reached
+    BNE NKGmba  ; a certain point, and branch to leave if not
+    LDA Enemy_ID,x
+    CMP #Goomba  ; check for goomba object
+    BNE NKGmba  ; branch if not found
+    JSR EraseEnemyObject  ; otherwise, kill this goomba object
+NKGmba:
+    RTS  ; leave!
 
-;--------------------------------
+; --------------------------------
 
 MoveJumpingEnemy:
-      jsr MoveJ_EnemyVertically  ;do a sub to impose gravity on green paratroopa
-      jmp MoveEnemyHorizontally  ;jump to move enemy horizontally
+    JSR MoveJ_EnemyVertically  ; do a sub to impose gravity on green paratroopa
+    JMP MoveEnemyHorizontally  ; jump to move enemy horizontally
 
-;--------------------------------
+; --------------------------------
 
 ProcMoveRedPTroopa:
-          lda Enemy_Y_Speed,x
-          ora Enemy_Y_MoveForce,x     ;check for any vertical force or speed
-          bne MoveRedPTUpOrDown       ;branch if any found
-          sta Enemy_YMF_Dummy,x       ;initialize something here
-          lda Enemy_Y_Position,x      ;check current vs. original vertical coordinate
-          cmp RedPTroopaOrigXPos,x
-          bcs MoveRedPTUpOrDown       ;if current => original, skip ahead to more code
-          lda FrameCounter            ;get frame counter
-          and #%00000111              ;mask out all but 3 LSB
-          bne NoIncPT                 ;if any bits set, branch to leave
-          inc Enemy_Y_Position,x      ;otherwise increment red paratroopa's vertical position
-NoIncPT:  rts                         ;leave
+    LDA Enemy_Y_Speed,x
+    ORA Enemy_Y_MoveForce,x  ; check for any vertical force or speed
+    BNE MoveRedPTUpOrDown  ; branch if any found
+    STA Enemy_YMF_Dummy,x  ; initialize something here
+    LDA Enemy_Y_Position,x  ; check current vs. original vertical coordinate
+    CMP RedPTroopaOrigXPos,x
+    BCS MoveRedPTUpOrDown  ; if current => original, skip ahead to more code
+    LDA FrameCounter  ; get frame counter
+    AND #%00000111  ; mask out all but 3 LSB
+    BNE NoIncPT  ; if any bits set, branch to leave
+    INC Enemy_Y_Position,x  ; otherwise increment red paratroopa's vertical position
+NoIncPT:
+    RTS  ; leave
 
 MoveRedPTUpOrDown:
-          lda Enemy_Y_Position,x      ;check current vs. central vertical coordinate
-          cmp RedPTroopaCenterYPos,x
-          bcc MovPTDwn                ;if current < central, jump to move downwards
-          jmp MoveRedPTroopaUp        ;otherwise jump to move upwards
-MovPTDwn: jmp MoveRedPTroopaDown      ;move downwards
+    LDA Enemy_Y_Position,x  ; check current vs. central vertical coordinate
+    CMP RedPTroopaCenterYPos,x
+    BCC MovPTDwn  ; if current < central, jump to move downwards
+    JMP MoveRedPTroopaUp  ; otherwise jump to move upwards
+MovPTDwn:
+    JMP MoveRedPTroopaDown  ; move downwards
 
-;--------------------------------
-;$00 - used to store adder for movement, also used as adder for platform
-;$01 - used to store maximum value for secondary counter
+; --------------------------------
+; $00 - used to store adder for movement, also used as adder for platform
+; $01 - used to store maximum value for secondary counter
 
 MoveFlyGreenPTroopa:
-        jsr XMoveCntr_GreenPTroopa ;do sub to increment primary and secondary counters
-        jsr MoveWithXMCntrs        ;do sub to move green paratroopa accordingly, and horizontally
-        ldy #$01                   ;set Y to move green paratroopa down
-        lda FrameCounter
-        and #%00000011             ;check frame counter 2 LSB for any bits set
-        bne NoMGPT                 ;branch to leave if set to move up/down every fourth frame
-        lda FrameCounter
-        and #%01000000             ;check frame counter for d6 set
-        bne YSway                  ;branch to move green paratroopa down if set
-        ldy #$ff                   ;otherwise set Y to move green paratroopa up
-YSway:  sty $00                    ;store adder here
-        lda Enemy_Y_Position,x
-        clc                        ;add or subtract from vertical position
-        adc $00                    ;to give green paratroopa a wavy flight
-        sta Enemy_Y_Position,x
-NoMGPT: rts                        ;leave!
+    JSR XMoveCntr_GreenPTroopa  ; do sub to increment primary and secondary counters
+    JSR MoveWithXMCntrs  ; do sub to move green paratroopa accordingly, and horizontally
+    LDY #$01  ; set Y to move green paratroopa down
+    LDA FrameCounter
+    AND #%00000011  ; check frame counter 2 LSB for any bits set
+    BNE NoMGPT  ; branch to leave if set to move up/down every fourth frame
+    LDA FrameCounter
+    AND #%01000000  ; check frame counter for d6 set
+    BNE YSway  ; branch to move green paratroopa down if set
+    LDY #$ff  ; otherwise set Y to move green paratroopa up
+YSway:
+    STY $00  ; store adder here
+    LDA Enemy_Y_Position,x
+    CLC  ; add or subtract from vertical position
+    ADC $00  ; to give green paratroopa a wavy flight
+    STA Enemy_Y_Position,x
+NoMGPT:
+    RTS  ; leave!
 
 XMoveCntr_GreenPTroopa:
-         lda #$13                    ;load preset maximum value for secondary counter
+    LDA #$13  ; load preset maximum value for secondary counter
 
 XMoveCntr_Platform:
-         sta $01                     ;store value here
-         lda FrameCounter
-         and #%00000011              ;branch to leave if not on
-         bne NoIncXM                 ;every fourth frame
-         ldy XMoveSecondaryCounter,x ;get secondary counter
-         lda XMovePrimaryCounter,x   ;get primary counter
-         lsr
-         bcs DecSeXM                 ;if d0 of primary counter set, branch elsewhere
-         cpy $01                     ;compare secondary counter to preset maximum value
-         beq IncPXM                  ;if equal, branch ahead of this part
-         inc XMoveSecondaryCounter,x ;increment secondary counter and leave
-NoIncXM: rts
-IncPXM:  inc XMovePrimaryCounter,x   ;increment primary counter and leave
-         rts
-DecSeXM: tya                         ;put secondary counter in A
-         beq IncPXM                  ;if secondary counter at zero, branch back
-         dec XMoveSecondaryCounter,x ;otherwise decrement secondary counter and leave
-         rts
+    STA $01  ; store value here
+    LDA FrameCounter
+    AND #%00000011  ; branch to leave if not on
+    BNE NoIncXM  ; every fourth frame
+    LDY XMoveSecondaryCounter,x  ; get secondary counter
+    LDA XMovePrimaryCounter,x  ; get primary counter
+    LSR
+    BCS DecSeXM  ; if d0 of primary counter set, branch elsewhere
+    CPY $01  ; compare secondary counter to preset maximum value
+    BEQ IncPXM  ; if equal, branch ahead of this part
+    INC XMoveSecondaryCounter,x  ; increment secondary counter and leave
+NoIncXM:
+    RTS
+IncPXM:
+    INC XMovePrimaryCounter,x  ; increment primary counter and leave
+    RTS
+DecSeXM:
+    TYA  ; put secondary counter in A
+    BEQ IncPXM  ; if secondary counter at zero, branch back
+    DEC XMoveSecondaryCounter,x  ; otherwise decrement secondary counter and leave
+    RTS
 
 MoveWithXMCntrs:
-         lda XMoveSecondaryCounter,x  ;save secondary counter to stack
-         pha
-         ldy #$01                     ;set value here by default
-         lda XMovePrimaryCounter,x
-         and #%00000010               ;if d1 of primary counter is
-         bne XMRight                  ;set, branch ahead of this part here
-         lda XMoveSecondaryCounter,x
-         eor #$ff                     ;otherwise change secondary
-         clc                          ;counter to two's compliment
-         adc #$01
-         sta XMoveSecondaryCounter,x
-         ldy #$02                     ;load alternate value here
-XMRight: sty Enemy_MovingDir,x        ;store as moving direction
-         jsr MoveEnemyHorizontally
-         sta $00                      ;save value obtained from sub here
-         pla                          ;get secondary counter from stack
-         sta XMoveSecondaryCounter,x  ;and return to original place
-         rts
+    LDA XMoveSecondaryCounter,x  ; save secondary counter to stack
+    PHA
+    LDY #$01  ; set value here by default
+    LDA XMovePrimaryCounter,x
+    AND #%00000010  ; if d1 of primary counter is
+    BNE XMRight  ; set, branch ahead of this part here
+    LDA XMoveSecondaryCounter,x
+    EOR #$ff  ; otherwise change secondary
+    CLC  ; counter to two's compliment
+    ADC #$01
+    STA XMoveSecondaryCounter,x
+    LDY #$02  ; load alternate value here
+XMRight:
+    STY Enemy_MovingDir,x  ; store as moving direction
+    JSR MoveEnemyHorizontally
+    STA $00  ; save value obtained from sub here
+    PLA  ; get secondary counter from stack
+    STA XMoveSecondaryCounter,x  ; and return to original place
+    RTS
 
-;--------------------------------
+; --------------------------------
 
 BlooberBitmasks:
-      .byte %00111111, %00000011
+    .byte %00111111, %00000011
 
 MoveBloober:
-        lda Enemy_State,x
-        and #%00100000             ;check enemy state for d5 set
-        bne MoveDefeatedBloober    ;branch if set to move defeated bloober
-        ldy SecondaryHardMode      ;use secondary hard mode flag as offset
-        lda PseudoRandomBitReg+1,x ;get LSFR
-        and BlooberBitmasks,y      ;mask out bits in LSFR using bitmask loaded with offset
-        bne BlooberSwim            ;if any bits set, skip ahead to make swim
-        txa
-        lsr                        ;check to see if on second or fourth slot (1 or 3)
-        bcc FBLeft                 ;if not, branch to figure out moving direction
-        ldy Player_MovingDir       ;otherwise, load player's moving direction and
-        bcs SBMDir                 ;do an unconditional branch to set
-FBLeft: ldy #$02                   ;set left moving direction by default
-        jsr PlayerEnemyDiff        ;get horizontal difference between player and bloober
-        bpl SBMDir                 ;if enemy to the right of player, keep left
-        dey                        ;otherwise decrement to set right moving direction
-SBMDir: sty Enemy_MovingDir,x      ;set moving direction of bloober, then continue on here
+    LDA Enemy_State,x
+    AND #%00100000  ; check enemy state for d5 set
+    BNE MoveDefeatedBloober  ; branch if set to move defeated bloober
+    LDY SecondaryHardMode  ; use secondary hard mode flag as offset
+    LDA PseudoRandomBitReg+1,x  ; get LSFR
+    AND BlooberBitmasks,y  ; mask out bits in LSFR using bitmask loaded with offset
+    BNE BlooberSwim  ; if any bits set, skip ahead to make swim
+    TXA
+    LSR  ; check to see if on second or fourth slot (1 or 3)
+    BCC FBLeft  ; if not, branch to figure out moving direction
+    LDY Player_MovingDir  ; otherwise, load player's moving direction and
+    BCS SBMDir  ; do an unconditional branch to set
+FBLeft:
+    LDY #$02  ; set left moving direction by default
+    JSR PlayerEnemyDiff  ; get horizontal difference between player and bloober
+    BPL SBMDir  ; if enemy to the right of player, keep left
+    DEY  ; otherwise decrement to set right moving direction
+SBMDir:
+    STY Enemy_MovingDir,x  ; set moving direction of bloober, then continue on here
 
 BlooberSwim:
-       jsr ProcSwimmingB        ;execute sub to make bloober swim characteristically
-       lda Enemy_Y_Position,x   ;get vertical coordinate
-       sec
-       sbc Enemy_Y_MoveForce,x  ;subtract movement force
-       cmp #$20                 ;check to see if position is above edge of status bar
-       bcc SwimX                ;if so, don't do it
-       sta Enemy_Y_Position,x   ;otherwise, set new vertical position, make bloober swim
-SwimX: ldy Enemy_MovingDir,x    ;check moving direction
-       dey
-       bne LeftSwim             ;if moving to the left, branch to second part
-       lda Enemy_X_Position,x
-       clc                      ;add movement speed to horizontal coordinate
-       adc BlooperMoveSpeed,x
-       sta Enemy_X_Position,x   ;store result as new horizontal coordinate
-       lda Enemy_PageLoc,x
-       adc #$00                 ;add carry to page location
-       sta Enemy_PageLoc,x      ;store as new page location and leave
-       rts
+    JSR ProcSwimmingB  ; execute sub to make bloober swim characteristically
+    LDA Enemy_Y_Position,x  ; get vertical coordinate
+    SEC
+    SBC Enemy_Y_MoveForce,x  ; subtract movement force
+    CMP #$20  ; check to see if position is above edge of status bar
+    BCC SwimX  ; if so, don't do it
+    STA Enemy_Y_Position,x  ; otherwise, set new vertical position, make bloober swim
+SwimX:
+    LDY Enemy_MovingDir,x  ; check moving direction
+    DEY
+    BNE LeftSwim  ; if moving to the left, branch to second part
+    LDA Enemy_X_Position,x
+    CLC  ; add movement speed to horizontal coordinate
+    ADC BlooperMoveSpeed,x
+    STA Enemy_X_Position,x  ; store result as new horizontal coordinate
+    LDA Enemy_PageLoc,x
+    ADC #$00  ; add carry to page location
+    STA Enemy_PageLoc,x  ; store as new page location and leave
+    RTS
 
 LeftSwim:
-      lda Enemy_X_Position,x
-      sec                      ;subtract movement speed from horizontal coordinate
-      sbc BlooperMoveSpeed,x
-      sta Enemy_X_Position,x   ;store result as new horizontal coordinate
-      lda Enemy_PageLoc,x
-      sbc #$00                 ;subtract borrow from page location
-      sta Enemy_PageLoc,x      ;store as new page location and leave
-      rts
+    LDA Enemy_X_Position,x
+    SEC  ; subtract movement speed from horizontal coordinate
+    SBC BlooperMoveSpeed,x
+    STA Enemy_X_Position,x  ; store result as new horizontal coordinate
+    LDA Enemy_PageLoc,x
+    SBC #$00  ; subtract borrow from page location
+    STA Enemy_PageLoc,x  ; store as new page location and leave
+    RTS
 
 MoveDefeatedBloober:
-      jmp MoveEnemySlowVert    ;jump to move defeated bloober downwards
+    JMP MoveEnemySlowVert  ; jump to move defeated bloober downwards
 
 ProcSwimmingB:
-        lda BlooperMoveCounter,x  ;get enemy's movement counter
-        and #%00000010            ;check for d1 set
-        bne ChkForFloatdown       ;branch if set
-        lda FrameCounter
-        and #%00000111            ;get 3 LSB of frame counter
-        pha                       ;and save it to the stack
-        lda BlooperMoveCounter,x  ;get enemy's movement counter
-        lsr                       ;check for d0 set
-        bcs SlowSwim              ;branch if set
-        pla                       ;pull 3 LSB of frame counter from the stack
-        bne BSwimE                ;branch to leave, execute code only every eighth frame
-        lda Enemy_Y_MoveForce,x
-        clc                       ;add to movement force to speed up swim
-        adc #$01
-        sta Enemy_Y_MoveForce,x   ;set movement force
-        sta BlooperMoveSpeed,x    ;set as movement speed
-        cmp #$02
-        bne BSwimE                ;if certain horizontal speed, branch to leave
-        inc BlooperMoveCounter,x  ;otherwise increment movement counter
-BSwimE: rts
+    LDA BlooperMoveCounter,x  ; get enemy's movement counter
+    AND #%00000010  ; check for d1 set
+    BNE ChkForFloatdown  ; branch if set
+    LDA FrameCounter
+    AND #%00000111  ; get 3 LSB of frame counter
+    PHA  ; and save it to the stack
+    LDA BlooperMoveCounter,x  ; get enemy's movement counter
+    LSR  ; check for d0 set
+    BCS SlowSwim  ; branch if set
+    PLA  ; pull 3 LSB of frame counter from the stack
+    BNE BSwimE  ; branch to leave, execute code only every eighth frame
+    LDA Enemy_Y_MoveForce,x
+    CLC  ; add to movement force to speed up swim
+    ADC #$01
+    STA Enemy_Y_MoveForce,x  ; set movement force
+    STA BlooperMoveSpeed,x  ; set as movement speed
+    CMP #$02
+    BNE BSwimE  ; if certain horizontal speed, branch to leave
+    INC BlooperMoveCounter,x  ; otherwise increment movement counter
+BSwimE:
+    RTS
 
 SlowSwim:
-       pla                      ;pull 3 LSB of frame counter from the stack
-       bne NoSSw                ;branch to leave, execute code only every eighth frame
-       lda Enemy_Y_MoveForce,x
-       sec                      ;subtract from movement force to slow swim
-       sbc #$01
-       sta Enemy_Y_MoveForce,x  ;set movement force
-       sta BlooperMoveSpeed,x   ;set as movement speed
-       bne NoSSw                ;if any speed, branch to leave
-       inc BlooperMoveCounter,x ;otherwise increment movement counter
-       lda #$02
-       sta EnemyIntervalTimer,x ;set enemy's timer
-NoSSw: rts                      ;leave
+    PLA  ; pull 3 LSB of frame counter from the stack
+    BNE NoSSw  ; branch to leave, execute code only every eighth frame
+    LDA Enemy_Y_MoveForce,x
+    SEC  ; subtract from movement force to slow swim
+    SBC #$01
+    STA Enemy_Y_MoveForce,x  ; set movement force
+    STA BlooperMoveSpeed,x  ; set as movement speed
+    BNE NoSSw  ; if any speed, branch to leave
+    INC BlooperMoveCounter,x  ; otherwise increment movement counter
+    LDA #$02
+    STA EnemyIntervalTimer,x  ; set enemy's timer
+NoSSw:
+    RTS  ; leave
 
 ChkForFloatdown:
-      lda EnemyIntervalTimer,x ;get enemy timer
-      beq ChkNearPlayer        ;branch if expired
+    LDA EnemyIntervalTimer,x  ; get enemy timer
+    BEQ ChkNearPlayer  ; branch if expired
 
 Floatdown:
-      lda FrameCounter        ;get frame counter
-      lsr                     ;check for d0 set
-      bcs NoFD                ;branch to leave on every other frame
-      inc Enemy_Y_Position,x  ;otherwise increment vertical coordinate
-NoFD: rts                     ;leave
+    LDA FrameCounter  ; get frame counter
+    LSR  ; check for d0 set
+    BCS NoFD  ; branch to leave on every other frame
+    INC Enemy_Y_Position,x  ; otherwise increment vertical coordinate
+NoFD:
+    RTS  ; leave
 
 ChkNearPlayer:
-      lda Enemy_Y_Position,x    ;get vertical coordinate
-      adc #$10                  ;add sixteen pixels
-      cmp Player_Y_Position     ;compare result with player's vertical coordinate
-      bcc Floatdown             ;if modified vertical less than player's, branch
-      lda #$00
-      sta BlooperMoveCounter,x  ;otherwise nullify movement counter
-      rts
+    LDA Enemy_Y_Position,x  ; get vertical coordinate
+    ADC #$10  ; add sixteen pixels
+    CMP Player_Y_Position  ; compare result with player's vertical coordinate
+    BCC Floatdown  ; if modified vertical less than player's, branch
+    LDA #$00
+    STA BlooperMoveCounter,x  ; otherwise nullify movement counter
+    RTS
 
-;--------------------------------
+; --------------------------------
 
 MoveBulletBill:
-         lda Enemy_State,x          ;check bullet bill's enemy object state for d5 set
-         and #%00100000
-         beq NotDefB                ;if not set, continue with movement code
-         jmp MoveJ_EnemyVertically  ;otherwise jump to move defeated bullet bill downwards
-NotDefB: lda #$e8                   ;set bullet bill's horizontal speed
-         sta Enemy_X_Speed,x        ;and move it accordingly (note: this bullet bill
-         jmp MoveEnemyHorizontally  ;object occurs in frenzy object $17, not from cannons)
+    LDA Enemy_State,x  ; check bullet bill's enemy object state for d5 set
+    AND #%00100000
+    BEQ NotDefB  ; if not set, continue with movement code
+    JMP MoveJ_EnemyVertically  ; otherwise jump to move defeated bullet bill downwards
+NotDefB:
+    LDA #$e8  ; set bullet bill's horizontal speed
+    STA Enemy_X_Speed,x  ; and move it accordingly (note: this bullet bill
+    JMP MoveEnemyHorizontally  ; object occurs in frenzy object $17, not from cannons)
 
-;--------------------------------
-;$02 - used to hold preset values
-;$03 - used to hold enemy state
+; --------------------------------
+; $02 - used to hold preset values
+; $03 - used to hold enemy state
 
 SwimCCXMoveData:
-      .byte $40, $80
-      .byte $04, $04 ;residual data, not used
+    .byte $40, $80
+    .byte $04, $04  ; residual data, not used
 
 MoveSwimmingCheepCheep:
-        lda Enemy_State,x         ;check cheep-cheep's enemy object state
-        and #%00100000            ;for d5 set
-        beq CCSwim                ;if not set, continue with movement code
-        jmp MoveEnemySlowVert     ;otherwise jump to move defeated cheep-cheep downwards
-CCSwim: sta $03                   ;save enemy state in $03
-        lda Enemy_ID,x            ;get enemy identifier
-        sec
-        sbc #$0a                  ;subtract ten for cheep-cheep identifiers
-        tay                       ;use as offset
-        lda SwimCCXMoveData,y     ;load value here
-        sta $02
-        lda Enemy_X_MoveForce,x   ;load horizontal force
-        sec
-        sbc $02                   ;subtract preset value from horizontal force
-        sta Enemy_X_MoveForce,x   ;store as new horizontal force
-        lda Enemy_X_Position,x    ;get horizontal coordinate
-        sbc #$00                  ;subtract borrow (thus moving it slowly)
-        sta Enemy_X_Position,x    ;and save as new horizontal coordinate
-        lda Enemy_PageLoc,x
-        sbc #$00                  ;subtract borrow again, this time from the
-        sta Enemy_PageLoc,x       ;page location, then save
-        lda #$20
-        sta $02                   ;save new value here
-        cpx #$02                  ;check enemy object offset
-        bcc ExSwCC                ;if in first or second slot, branch to leave
-        lda CheepCheepMoveMFlag,x ;check movement flag
-        cmp #$10                  ;if movement speed set to $00,
-        bcc CCSwimUpwards         ;branch to move upwards
-        lda Enemy_YMF_Dummy,x
-        clc
-        adc $02                   ;add preset value to dummy variable to get carry
-        sta Enemy_YMF_Dummy,x     ;and save dummy
-        lda Enemy_Y_Position,x    ;get vertical coordinate
-        adc $03                   ;add carry to it plus enemy state to slowly move it downwards
-        sta Enemy_Y_Position,x    ;save as new vertical coordinate
-        lda Enemy_Y_HighPos,x
-        adc #$00                  ;add carry to page location and
-        jmp ChkSwimYPos           ;jump to end of movement code
+    LDA Enemy_State,x  ; check cheep-cheep's enemy object state
+    AND #%00100000  ; for d5 set
+    BEQ CCSwim  ; if not set, continue with movement code
+    JMP MoveEnemySlowVert  ; otherwise jump to move defeated cheep-cheep downwards
+CCSwim:
+    STA $03  ; save enemy state in $03
+    LDA Enemy_ID,x  ; get enemy identifier
+    SEC
+    SBC #$0a  ; subtract ten for cheep-cheep identifiers
+    TAY  ; use as offset
+    LDA SwimCCXMoveData,y  ; load value here
+    STA $02
+    LDA Enemy_X_MoveForce,x  ; load horizontal force
+    SEC
+    SBC $02  ; subtract preset value from horizontal force
+    STA Enemy_X_MoveForce,x  ; store as new horizontal force
+    LDA Enemy_X_Position,x  ; get horizontal coordinate
+    SBC #$00  ; subtract borrow (thus moving it slowly)
+    STA Enemy_X_Position,x  ; and save as new horizontal coordinate
+    LDA Enemy_PageLoc,x
+    SBC #$00  ; subtract borrow again, this time from the
+    STA Enemy_PageLoc,x  ; page location, then save
+    LDA #$20
+    STA $02  ; save new value here
+    CPX #$02  ; check enemy object offset
+    BCC ExSwCC  ; if in first or second slot, branch to leave
+    LDA CheepCheepMoveMFlag,x  ; check movement flag
+    CMP #$10  ; if movement speed set to $00,
+    BCC CCSwimUpwards  ; branch to move upwards
+    LDA Enemy_YMF_Dummy,x
+    CLC
+    ADC $02  ; add preset value to dummy variable to get carry
+    STA Enemy_YMF_Dummy,x  ; and save dummy
+    LDA Enemy_Y_Position,x  ; get vertical coordinate
+    ADC $03  ; add carry to it plus enemy state to slowly move it downwards
+    STA Enemy_Y_Position,x  ; save as new vertical coordinate
+    LDA Enemy_Y_HighPos,x
+    ADC #$00  ; add carry to page location and
+    JMP ChkSwimYPos  ; jump to end of movement code
 
 CCSwimUpwards:
-        lda Enemy_YMF_Dummy,x
-        sec
-        sbc $02                   ;subtract preset value to dummy variable to get borrow
-        sta Enemy_YMF_Dummy,x     ;and save dummy
-        lda Enemy_Y_Position,x    ;get vertical coordinate
-        sbc $03                   ;subtract borrow to it plus enemy state to slowly move it upwards
-        sta Enemy_Y_Position,x    ;save as new vertical coordinate
-        lda Enemy_Y_HighPos,x
-        sbc #$00                  ;subtract borrow from page location
+    LDA Enemy_YMF_Dummy,x
+    SEC
+    SBC $02  ; subtract preset value to dummy variable to get borrow
+    STA Enemy_YMF_Dummy,x  ; and save dummy
+    LDA Enemy_Y_Position,x  ; get vertical coordinate
+    SBC $03  ; subtract borrow to it plus enemy state to slowly move it upwards
+    STA Enemy_Y_Position,x  ; save as new vertical coordinate
+    LDA Enemy_Y_HighPos,x
+    SBC #$00  ; subtract borrow from page location
 
 ChkSwimYPos:
-        sta Enemy_Y_HighPos,x     ;save new page location here
-        ldy #$00                  ;load movement speed to upwards by default
-        lda Enemy_Y_Position,x    ;get vertical coordinate
-        sec
-        sbc CheepCheepOrigYPos,x  ;subtract original coordinate from current
-        bpl YPDiff                ;if result positive, skip to next part
-        ldy #$10                  ;otherwise load movement speed to downwards
-        eor #$ff
-        clc                       ;get two's compliment of result
-        adc #$01                  ;to obtain total difference of original vs. current
-YPDiff: cmp #$0f                  ;if difference between original vs. current vertical
-        bcc ExSwCC                ;coordinates < 15 pixels, leave movement speed alone
-        tya
-        sta CheepCheepMoveMFlag,x ;otherwise change movement speed
-ExSwCC: rts                       ;leave
+    STA Enemy_Y_HighPos,x  ; save new page location here
+    LDY #$00  ; load movement speed to upwards by default
+    LDA Enemy_Y_Position,x  ; get vertical coordinate
+    SEC
+    SBC CheepCheepOrigYPos,x  ; subtract original coordinate from current
+    BPL YPDiff  ; if result positive, skip to next part
+    LDY #$10  ; otherwise load movement speed to downwards
+    EOR #$ff
+    CLC  ; get two's compliment of result
+    ADC #$01  ; to obtain total difference of original vs. current
+YPDiff:
+    CMP #$0f  ; if difference between original vs. current vertical
+    BCC ExSwCC  ; coordinates < 15 pixels, leave movement speed alone
+    TYA
+    STA CheepCheepMoveMFlag,x  ; otherwise change movement speed
+ExSwCC:
+    RTS  ; leave

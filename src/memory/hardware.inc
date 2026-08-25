@@ -1,4 +1,4 @@
-;NES specific hardware defines
+; NES specific hardware defines
 
 PPU_CTRL_REG1         = $2000
 PPU_CTRL_REG2         = $2001

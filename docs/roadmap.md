@@ -37,7 +37,8 @@ produced bytes.
 - The original `src/smbdis.asm` contained one address-ordered source file of
   16,351 lines. `src/main.asm` is now a 72-line address-ordered module index.
 - The PRG is split across 38 cohesive ASM modules. Excluding the entrypoint and
-  fixed six-line vector block, module sizes range from 125 to 660 lines.
+  fixed six-line vector block, module sizes range from 136 to 694 lines after
+  label-per-line formatting.
 - Hardware definitions, RAM aliases, constants, code, and data were separated
   without renaming symbols or changing emitted bytes.
 - The PRG is linked as one 32 KiB region at CPU `$8000..$FFFF`.
@@ -48,7 +49,9 @@ produced bytes.
   validated as mapper 0 with vertical mirroring, 32 KiB PRG, and 8 KiB CHR.
 - `make verify` reproduces its complete ROM SHA-1
   `ea343f4e445a9050d4b4fbac2c77d0693b1d0922` byte-for-byte.
-- There is not yet a source lint, unit-test suite, or runtime scenario set.
+- `make lint` enforces the documented ca65 whitespace, layout, comment-spacing,
+  mnemonic-case, and directive-case rules. The checker has focused unit tests;
+  broader tooling tests and runtime scenarios are not yet present.
 - No original `.nes`, `.chr`, or `.hdr` file is tracked in the current Git
   history.
 - Repository text normalization is enforced by `.gitattributes`.
@@ -297,7 +300,7 @@ registry, and the relevant runtime evidence without changing the reference ROM.
 Exit criterion: a contributor can stop on a named routine, inspect meaningful
 state, and reproduce the main gameplay transactions.
 
-### 7. Automated Source and Documentation Validation - Planned
+### 7. Automated Source and Documentation Validation - In Progress
 
 Add layered checks:
 
@@ -312,6 +315,14 @@ Lint rules should be introduced only when precise enough to avoid false
 positives. They may cover line endings, trailing whitespace, module size,
 symbol vocabulary, direct `JSR` targets, raw hardware operands, evidence tags,
 documentation links, and Python syntax.
+
+The initial assembly-style gate now covers printable-ASCII source text, line
+endings, final newlines, tabs, trailing whitespace, blank-line runs, label
+layout, nested indentation, mnemonic/directive case, operand spacing, and
+comment spacing. It also rejects leading blank lines, terminal comment periods,
+and non-ASCII comment text with a manual English-rewrite diagnostic. Distinguishing
+English from another language written entirely in unaccented Latin characters
+remains a review requirement rather than a probabilistic heuristic.
 
 ### 8. Decode and Round-Trip Data Formats - Planned
 

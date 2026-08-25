@@ -1,4 +1,4 @@
-;sound related defines
+; sound related defines
 Squ2_NoteLenBuffer    = $07b3
 Squ2_NoteLenCounter   = $07b4
 Squ2_EnvelopeDataCtrl = $07b5
@@ -43,10 +43,10 @@ PauseModeFlag         = $07c6
 GroundMusicHeaderOfs  = $07c7
 AltRegContentFlag     = $07ca
 
-;-------------------------------------------------------------------------------------
-;CONSTANTS
+; -------------------------------------------------------------------------------------
+; CONSTANTS
 
-;sound effects constants
+; sound effects constants
 Sfx_SmallJump         = %10000000
 Sfx_Flagpole          = %01000000
 Sfx_Fireball          = %00100000
@@ -68,7 +68,7 @@ Sfx_CoinGrab          = %00000001
 Sfx_BowserFlame       = %00000010
 Sfx_BrickShatter      = %00000001
 
-;music constants
+; music constants
 Silence               = %10000000
 
 StarPowerMusic        = %01000000
@@ -87,7 +87,7 @@ VictoryMusic          = %00000100
 GameOverMusic         = %00000010
 DeathMusic            = %00000001
 
-;enemy object constants
+; enemy object constants
 GreenKoopa            = $00
 BuzzyBeetle           = $02
 RedKoopa              = $03
@@ -120,7 +120,7 @@ BulletBill_CannonVar  = $33
 RetainerObject        = $35
 TallEnemy             = $09
 
-;other constants
+; other constants
 World1 = 0
 World2 = 1
 World3 = 2

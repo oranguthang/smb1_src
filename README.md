@@ -83,6 +83,15 @@ byte-identical to the recorded baseline in `assets/manifest.json`.
 ### Using Makefile
 
 ```bash
+# Check assembly formatting without modifying source files
+make lint
+
+# Normalize assembly formatting and run the same checks
+make format
+
+# Run focused Python tooling tests
+make test
+
 # Validate local assets and build build/native/smb.nes
 make build
 
@@ -96,9 +105,11 @@ make check-assets
 make clean
 ```
 
-The Makefile contains only thin entrypoints. ROM parsing, safe extraction,
-assembly, linking, concatenation, checksum validation, and cleanup are
-implemented in platform-independent Python scripts under `scripts/`.
+The Makefile contains only thin entrypoints. Assembly-style validation, ROM
+parsing, safe extraction, assembly, linking, concatenation, checksum validation,
+and cleanup are implemented in platform-independent Python scripts under
+`scripts/`. See [`docs/assembly_style.md`](docs/assembly_style.md) for the checked
+source conventions.
 
 ## Modding Notes
 
