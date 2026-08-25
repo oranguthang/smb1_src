@@ -35,13 +35,14 @@ produced bytes.
 ## Current Baseline
 
 - The original `src/smbdis.asm` contained one address-ordered source file of
-  16,351 lines. `src/main.asm` is now a 72-line address-ordered module index.
+  16,351 lines. `src/main.asm` is now a 73-line address-ordered module index.
 - The PRG is split across 38 cohesive ASM modules. Excluding the entrypoint and
-  fixed six-line vector block, module sizes range from 136 to 694 lines after
+  fixed eight-line vector block, module sizes range from 136 to 694 lines after
   label-per-line formatting.
 - Hardware definitions, RAM aliases, constants, code, and data were separated
   without renaming symbols or changing emitted bytes.
-- The PRG is linked as one 32 KiB region at CPU `$8000..$FFFF`.
+- The linker fixes the `PRG` segment at `$8000..$FFF9` and the six-byte
+  `VECTORS` segment at `$FFFA..$FFFF`; together they form the 32 KiB PRG image.
 - `make verify-prg` builds the native source under `build/native/`, emits labels,
   a linker map, and debug data, and validates PRG SHA-1
   `fefa1097449a3a11ebf8c6199e905996c5dc8fbd`.
@@ -242,12 +243,15 @@ Exit criterion: `make verify` reproduces the selected reference ROM exactly.
 Exit criterion: the modular tree builds the exact same ROM and no ordinary ASM
 module exceeds the agreed size budget.
 
-### 3. Mechanical Cleanup and Semantic Naming - Planned
+### 3. Mechanical Cleanup and Semantic Naming - In Progress
 
 - Separate hardware registers, RAM fields, constants, and ROM data symbols.
+  The physical files exist and sound-engine RAM aliases have been moved out of
+  `constants.inc`; semantic prefixing remains incremental work.
 - Adopt the control-flow and data-prefix vocabulary incrementally.
 - Remove address-derived active symbol names where they exist.
 - Normalize whitespace and source formatting with mechanically checkable rules.
+  The initial assembly formatter and lint gate are complete.
 - Introduce only small domain macros that preserve instruction order,
   addressing mode, flags, cycles, and emitted bytes.
 
