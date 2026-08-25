@@ -27,14 +27,14 @@ limit, not a mandate to fragment cohesive code.
 | `src/memory/ram.inc` | no emitted bytes | 504 | Zero-page and RAM aliases |
 | `src/memory/constants.inc` | no emitted bytes | 111 | Sound, music, object, input, and mode constants |
 | `src/main.asm` | no independent range | 73 | Canonical address-ordered include index |
-| `src/system/boot_and_frame.asm` | `$8000-$8230` | 311 | Reset, NMI frame driver, timers, pause, sprite shuffling, and mode dispatch |
+| `src/system/boot_and_frame.asm` | `$8000-$8230` | 328 | Reset, NMI frame driver, timers, pause, sprite shuffling, and mode dispatch |
 | `src/game/modes.asm` | `$8231-$8566` | 444 | Title, demo, victory, and floating-score flow |
 | `src/rendering/screens.asm` | `$8567-$88AD` | 462 | Screen tasks, palettes, text, and title-screen transfer |
-| `src/rendering/background.asm` | `$88AE-$8E03` | 590 | Area rendering, attributes, metatiles, palettes, and messages |
+| `src/rendering/background.asm` | `$88AE-$8E03` | 597 | Area rendering, attributes, metatiles, palettes, and messages |
 | `src/system/hardware_io.asm` | `$8E04-$8EF3` | 160 | Jump dispatch, controller input, PPU buffers, and nametable initialization |
 | `src/rendering/hud/status.asm` | `$8EF4-$8FBB` | 136 | Status digits, score arithmetic, and top-score updates |
 | `src/game/setup_and_transitions.asm` | `$8FBC-$92AF` | 423 | Game/area setup, entrances, life loss, and game over |
-| `src/game/level/parser.asm` | `$92B0-$96C4` | 544 | Column parser, scenery, terrain, and area-object dispatch |
+| `src/game/level/parser.asm` | `$92B0-$96C4` | 551 | Column parser, scenery, terrain, and area-object dispatch |
 | `src/game/level/special_objects.asm` | `$96C5-$9956` | 401 | Area attributes, ledges, castles, pipes, and scroll locks |
 | `src/game/level/terrain_objects.asm` | `$9957-$9BF7` | 459 | Holes, bridges, blocks, cannons, stairs, springs, and buffer helpers |
 | `src/data/levels/index_and_enemies.asm` | `$9BF8-$A1AE` | 431 | Area lookup tables and enemy object streams |
@@ -44,8 +44,8 @@ limit, not a mandate to fragment cohesive code.
 | `src/game/objects/projectiles_and_interactions.asm` | `$B624-$B9B9` | 522 | Fireballs, bubbles, timer, warp zones, flagpole, spring, and vine |
 | `src/game/objects/dynamic.asm` | `$B9BA-$BCEA` | 479 | Cannons, bullets, hammers, coins, scoring, and power-ups |
 | `src/game/objects/blocks.asm` | `$BCEB-$BF01` | 334 | Player/block interaction, brick chunks, and block runtime |
-| `src/game/physics/movement.asm` | `$BF02-$C046` | 280 | Shared horizontal, vertical, and gravity movement primitives |
-| `src/game/enemies/stream_and_initialization.asm` | `$C047-$C44E` | 637 | Enemy stream parsing, loop commands, and common initialization |
+| `src/game/physics/movement.asm` | `$BF02-$C046` | 281 | Shared horizontal, vertical, and gravity movement primitives |
+| `src/game/enemies/stream_and_initialization.asm` | `$C047-$C44E` | 647 | Enemy stream parsing, loop commands, and common initialization |
 | `src/game/enemies/special_initialization.asm` | `$C44F-$C881` | 671 | Firebars, flying enemies, Bowser, groups, and platforms |
 | `src/game/enemies/runtime.asm` | `$C882-$CCC6` | 694 | Enemy dispatcher and common movement behaviors |
 | `src/game/enemies/special_behaviors.asm` | `$CCC7-$CFDC` | 440 | Firebars, flying Cheep-Cheeps, and Lakitu/Spiny behavior |
@@ -55,16 +55,16 @@ limit, not a mandate to fragment cohesive code.
 | `src/game/collisions/actors.asm` | `$D853-$DC61` | 633 | Player/enemy, enemy/enemy, and platform collisions |
 | `src/game/collisions/player_background.asm` | `$DC62-$DFB8` | 545 | Player metatile collision, climbing, pipes, coins, and movement blocking |
 | `src/game/collisions/enemy_background.asm` | `$DFB9-$E1FC` | 390 | Enemy and fireball interactions with background metatiles |
-| `src/game/collisions/bounding_boxes.asm` | `$E1FD-$E432` | 347 | Bounding-box construction and generic overlap/block-buffer tests |
+| `src/game/collisions/bounding_boxes.asm` | `$E1FD-$E432` | 358 | Bounding-box construction and generic overlap/block-buffer tests |
 | `src/rendering/actors/misc.asm` | `$E433-$E73D` | 460 | Vines, hammers, flags, platforms, coins, and power-ups |
 | `src/rendering/actors/enemies.asm` | `$E73E-$EBCC` | 563 | Enemy graphics selection, animation, mirroring, and OAM rows |
 | `src/rendering/actors/objects.asm` | `$EBCD-$EE06` | 319 | Blocks, brick chunks, fireballs, explosions, platforms, and bubbles |
-| `src/rendering/actors/player.asm` | `$EE07-$F129` | 384 | Player graphics, animation, sizing, attributes, and OAM output |
+| `src/rendering/actors/player.asm` | `$EE07-$F129` | 394 | Player graphics, animation, sizing, attributes, and OAM output |
 | `src/rendering/positioning.asm` | `$F12A-$F2CF` | 295 | Relative coordinates, offscreen bits, and generic sprite composition |
-| `src/audio/sound_effects.asm` | `$F2D0-$F690` | 591 | Audio dispatcher and square/noise sound effects |
+| `src/audio/sound_effects.asm` | `$F2D0-$F690` | 601 | Audio dispatcher and square/noise sound effects |
 | `src/audio/music_engine.asm` | `$F691-$F90C` | 371 | Music headers, channel sequencing, lengths, and envelopes |
 | `src/audio/music_data.asm` | `$F90D-$FFF9` | 408 | Music headers, note streams, frequency tables, and envelopes |
-| `src/data/vectors.asm` | `$FFFA-$FFFF` | 8 | NMI, reset, and IRQ vectors |
+| `src/data/vectors.asm` | `$FFFA-$FFFF` | 10 | NMI, reset, and IRQ vectors |
 
 ## Verification Baseline
 
@@ -80,5 +80,5 @@ limit, not a mandate to fragment cohesive code.
 
 The native PRG now consists of 38 cohesive ASM modules plus a 73-line include
 index and three definition includes. Ordinary modules range from 136 to 694
-lines; the fixed vector block is intentionally eight lines. Tables stay beside
+lines; the fixed vector block is intentionally ten lines. Tables stay beside
 their owning code unless they form a substantial address-ordered data set.

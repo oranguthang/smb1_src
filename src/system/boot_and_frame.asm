@@ -1,6 +1,14 @@
 ; -------------------------------------------------------------------------------------
 
-Start:
+; Initialize CPU, PPU, APU, RAM, OAM, nametables, and NMI scheduling
+
+; Outputs:
+; The selected warm/cold RAM range is cleared and the machine enters the
+; permanent foreground loop with NMI enabled
+
+; Clobbers:
+; A, X, Y
+vec_reset_handler:
     SEI  ; pretty standard 6502 type init here
     CLD
     LDA #%00010000  ; init PPU control register 1
@@ -70,7 +78,16 @@ VRAM_AddrTable_High:
 VRAM_Buffer_Offset:
     .byte <ram_vram_buffer1_offset, <ram_vram_buffer2_offset
 
-NonMaskableInterrupt:
+; Run the complete vblank and per-frame scheduler
+
+; Outputs:
+; OAM DMA and buffered PPU writes are submitted; sound, input, timers,
+; pseudorandom state, sprite preparation, scrolling, and the active operating
+; mode are advanced
+
+; Clobbers:
+; A, X, Y
+vec_nmi_handler:
     LDA ram_mirror_ppu_ctrl_reg1  ; disable NMIs in mirror reg
     AND #%01111111  ; save all other bits
     STA ram_mirror_ppu_ctrl_reg1

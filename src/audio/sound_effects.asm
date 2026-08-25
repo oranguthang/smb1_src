@@ -1,5 +1,15 @@
 ; -------------------------------------------------------------------------------------
 
+; Arbitrate sound requests and advance SFX and music channels for one frame
+
+; Inputs:
+; Sound/music request queues, active channel buffers, and pause state
+
+; Outputs:
+; APU registers and channel sequencing state are updated
+
+; Clobbers:
+; A, X, Y
 sub_sound_engine:
     LDA ram_oper_mode  ; are we in title screen mode?
     BNE SndOn
@@ -353,7 +363,7 @@ CGrab_TTickRegL:
 
 ContinueCGrabTTick:
     LDA ram_squ2_sfx_len_counter  ; check for time to play second tone yet
-    CMP #$30  ; timer tick sound also executes this, not sure why
+    CMP #$30  ; !(WHY?) SND-001 - timer tick shares this path
     BNE N2Tone
     LDA #$54  ; if so, load the tone directly into the reg
     STA SND_SQUARE2_REG+2

@@ -55,7 +55,7 @@ HandleAreaMusicLoopB:
 
 FindAreaMusicHeader:
     LDY #$08  ; load Y for offset of area music
-    STY ram_music_offset_square2  ; residual instruction here
+    STY ram_music_offset_square2  ; !(WHY?) SND-002 - possibly observable residual store
 
 FindEventMusicHeader:
     INY  ; increment Y pointer based on previously loaded queue contents

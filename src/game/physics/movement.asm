@@ -155,6 +155,7 @@ sub_apply_enemy_vertical_motion:
 tbl_block_maximum_y_speed:
     .byte $06, $08
 
+; !(UNUSED) CODE-001 - statically unreachable residual gravity entry
 unused_gravity_block_entry:
     LDY #$00  ; this part appears to be residual,
     .byte $2c  ; no code branches or jumps to it

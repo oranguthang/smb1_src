@@ -320,7 +320,7 @@ AddCCF:
     TAY
 BPGet:
     LDA FlyCCBPriority,y  ; load bg priority data and store (this is very likely
-    STA ram_enemy_spr_attrib,x  ; broken or residual code, value is overwritten before
+    STA ram_enemy_spr_attrib,x  ; !(UNUSED) CODE-004 - overwritten before rendering
     RTS  ; drawing it next frame), then leave
 
 ; --------------------------------

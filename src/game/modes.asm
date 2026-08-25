@@ -412,7 +412,7 @@ ChkTallEnemy:
     CMP #$02  ; if enemy state defeated or otherwise
     BCS FloateyPart  ; $02 or greater, branch beyond this part
 GetAltOffset:
-    LDX ram_spr_data_offset_ctrl  ; load some kind of control bit
+    LDX ram_spr_data_offset_ctrl  ; !(UNKNOWN) RAM-001 - exact allocation role
     LDY ram_alt_spr_data_offset,x  ; get alternate OAM data offset
     LDX ram_object_offset  ; get enemy object offset again
 FloateyPart:

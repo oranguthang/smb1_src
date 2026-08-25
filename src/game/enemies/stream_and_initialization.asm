@@ -1,5 +1,15 @@
 ; -------------------------------------------------------------------------------------
 
+; Decode enemy-stream commands and initialize eligible enemy slots
+
+; Inputs:
+; Enemy stream pointer/offset and current screen position
+
+; Outputs:
+; Enemy slots, loop state, and stream offset may be updated
+
+; Clobbers:
+; A, X, Y
 sub_enemies_and_loops_core:
     LDA ram_enemy_flag,x  ; check data here for MSB set
     PHA  ; save in stack
@@ -147,8 +157,8 @@ CheckEndofBuffer:
     BCC CheckRightBounds  ; if not at end of buffer, branch
     INY
     LDA (ram_enemy_data),y  ; check for specific value here
-    AND #%00111111  ; not sure what this was intended for, exactly
-    CMP #$2e  ; this part is quite possibly residual code
+    AND #%00111111  ; !(WHY?) CODE-002 - residual object-range check
+    CMP #$2e
     BEQ CheckRightBounds  ; but it has the effect of keeping enemies out of
     RTS  ; the sixth slot
 

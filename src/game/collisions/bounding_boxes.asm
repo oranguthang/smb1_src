@@ -94,6 +94,16 @@ MoveBoundBoxOffscreen:
     STA ram_enemy_bounding_box_coord+3,y
     RTS
 
+; Build an actor bounding box from relative position and size-control tables
+
+; Inputs:
+; X - actor slot and associated relative-position fields
+
+; Outputs:
+; Bounding-box coordinates for the selected actor are written to RAM
+
+; Clobbers:
+; A, X, Y
 sub_bounding_box_core:
     STX $00  ; save offset here
     LDA ram_spr_object_rel_y_pos,y  ; store object coordinates relative to screen
@@ -252,6 +262,7 @@ sub_block_buffer_chk_enemy:
     PLA  ; pull A from stack and jump elsewhere
     JMP BBChk_E
 
+; !(UNKNOWN) CODE-003 - intended caller and background-collision role
 ResidualMiscObjectCode:
     TXA
     CLC  ; supposedly used once to set offset for

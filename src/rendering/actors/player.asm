@@ -43,6 +43,16 @@ PlayerGraphicsTable:
 SwimKickTileNum:
     .byte $31, $46
 
+; Select player action graphics and compose the player into OAM staging data
+
+; Inputs:
+; Player state, size, animation, relative position, and offscreen bits
+
+; Outputs:
+; Player OAM entries and animation control state may be updated
+
+; Clobbers:
+; A, X, Y
 sub_player_gfx_handler:
     LDA ram_injury_timer  ; if player's injured invincibility timer
     BEQ CntPl  ; not set, skip checkpoint and continue code

@@ -1,5 +1,12 @@
 ; -------------------------------------------------------------------------------------
 
+; Advance the column-oriented area parser and rendering task state
+
+; Outputs:
+; Metatile, attribute, block-buffer, and parser task state may be updated
+
+; Clobbers:
+; A, X, Y
 sub_area_parser_task_handler:
     LDY ram_area_parser_task_num  ; check number of tasks here
     BNE DoAPTasks  ; if already set, go ahead

@@ -37,7 +37,7 @@ produced bytes.
 - The original `src/smbdis.asm` contained one address-ordered source file of
   16,351 lines. `src/main.asm` is now a 73-line address-ordered module index.
 - The PRG is split across 38 cohesive ASM modules. Excluding the entrypoint and
-  fixed eight-line vector block, module sizes range from 136 to 694 lines after
+  fixed ten-line vector block, module sizes range from 136 to 694 lines after
   label-per-line formatting.
 - Hardware definitions, RAM aliases, constants, code, and data were separated
   without renaming symbols or changing emitted bytes.
@@ -135,7 +135,7 @@ groups were:
 | Current source range | Initial responsibility |
 | --- | --- |
 | Definitions through `DIRECTIVES` | Hardware, RAM, and constants |
-| `Start` through `sub_sprite_shuffler` | Reset, NMI, frame processing, pause |
+| `vec_reset_handler` through `sub_sprite_shuffler` | Reset, NMI, frame processing, pause |
 | `sub_oper_mode_execution_tree` through screen text | Modes, title, victory, HUD |
 | `RenderAreaGraphics` through score output | Background, VRAM, PPU helpers |
 | `InitializeGame` through game-over flow | Game and area initialization |
@@ -287,7 +287,7 @@ The reference pass is recorded in `docs/player_movement.md` and
 tested deterministic 6502 fixed-point jump trace. Emulator-backed comparison is
 owned by milestone 6 rather than being implied by the static model.
 
-### 5. Systematic Subsystem Documentation - Planned
+### 5. Systematic Subsystem Documentation - Complete
 
 Apply the same evidence standard in this order:
 
@@ -304,6 +304,12 @@ Apply the same evidence standard in this order:
 
 Each pass updates source contracts, subsystem documentation, the unknowns
 registry, and the relevant runtime evidence without changing the reference ROM.
+
+`docs/subsystems.md` records the address-ordered ownership and principal
+contracts for all ten groups. Source contracts cover the frame scheduler, area
+and enemy parsing, background composition, bounding boxes, player rendering,
+and audio arbitration. `docs/unknowns.md` provides stable evidence IDs for
+unresolved or proven-residual behavior; emulator experiments remain milestone 6.
 
 ### 6. Debugger Symbols and Runtime Evidence - Planned
 

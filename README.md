@@ -15,6 +15,8 @@ This repository contains:
 - **docs/naming.md** - Semantic symbol vocabulary and evidence rules
 - **docs/player_movement.md** - Player input, physics, collision, and traces
 - **docs/ram_fields.md** - Verified semantic RAM-field registry
+- **docs/subsystems.md** - Address-ordered system architecture and ownership
+- **docs/unknowns.md** - Stable uncertainty and evidence registry
 
 ## Project Structure
 

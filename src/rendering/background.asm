@@ -8,6 +8,13 @@
 ; $06 - metatile graphics table address low
 ; $07 - metatile graphics table address high
 
+; Convert the current metatile column into buffered PPU tile and attribute data
+
+; Outputs:
+; VRAM update buffers and attribute accumulation state are updated
+
+; Clobbers:
+; A, X, Y
 RenderAreaGraphics:
     LDA ram_current_column_pos  ; store LSB of where we're at
     AND #$01
