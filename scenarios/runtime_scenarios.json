@@ -1,0 +1,124 @@
+{
+  "format": 1,
+  "rom_sha1": "ea343f4e445a9050d4b4fbac2c77d0693b1d0922",
+  "movie": "movies/smb1_any_percent.fm2",
+  "movie_sha1": "fbbb675af9b85146015713b8ca5c488d6c0053ab",
+  "movie_source": "https://tasvideos.org/UserFiles/Info/68410246126700593",
+  "movie_author": "DJ Incendration",
+  "scenarios": [
+    {
+      "id": "title-boot",
+      "method": "natural power-on FM2 playback",
+      "max_frames": 10,
+      "patches": [],
+      "expected_events": {"title_boot": 6}
+    },
+    {
+      "id": "world-1-1-start",
+      "method": "natural power-on FM2 playback",
+      "max_frames": 200,
+      "patches": [],
+      "expected_events": {"world_1_1_start": 195, "area_entrance": 196}
+    },
+    {
+      "id": "walking",
+      "method": "natural World 1-1 input",
+      "max_frames": 205,
+      "patches": [],
+      "expected_events": {"walking": 202}
+    },
+    {
+      "id": "jumping",
+      "method": "natural World 1-1 input",
+      "max_frames": 235,
+      "patches": [],
+      "expected_events": {"jump": 228}
+    },
+    {
+      "id": "block-impact",
+      "method": "natural World 1-1 question-block impact",
+      "max_frames": 310,
+      "patches": [],
+      "expected_events": {"block_impact": 304}
+    },
+    {
+      "id": "coin-collection",
+      "method": "natural World 1-1 question-block coin",
+      "max_frames": 310,
+      "patches": [],
+      "expected_events": {"coin_collection": 304}
+    },
+    {
+      "id": "power-up-collection",
+      "method": "controlled overlapping power-up object",
+      "max_frames": 400,
+      "patches": [
+        {"address": "$0014", "symbol": "ram_enemy_flag", "index": 5, "reason": "activate_power_up_slot"},
+        {"address": "$001B", "symbol": "ram_enemy_id", "index": 5, "reason": "select_power_up_object"},
+        {"address": "$0023", "symbol": "ram_enemy_state", "index": 5, "reason": "select_active_power_up_state"},
+        {"address": "$049F", "symbol": "ram_enemy_bound_box_ctrl", "index": 5, "reason": "select_power_up_bounds"},
+        {"address": "$0073", "symbol": "ram_enemy_page_loc", "index": 5, "reason": "overlap_player_page"},
+        {"address": "$008C", "symbol": "ram_enemy_x_position", "index": 5, "reason": "overlap_player_x"},
+        {"address": "$00BB", "symbol": "ram_enemy_y_high_pos", "index": 5, "reason": "overlap_player_y_page"},
+        {"address": "$00D4", "symbol": "ram_enemy_y_position", "index": 5, "reason": "overlap_player_y"},
+        {"address": "$03DD", "symbol": "ram_enemy_offscr_bits_masked", "index": 5, "reason": "mark_power_up_onscreen"},
+        {"address": "$0039", "symbol": "ram_power_up_type", "index": 0, "reason": "select_super_mushroom"}
+      ],
+      "expected_events": {"power_up_collection": 252},
+      "expected_final": {"player_status": "01"}
+    },
+    {
+      "id": "enemy-stomp",
+      "method": "natural World 1-1 enemy collision",
+      "max_frames": 1135,
+      "patches": [],
+      "expected_events": {"enemy_stomp": 1127}
+    },
+    {
+      "id": "pipe-entry",
+      "method": "natural World 1-1 bonus-room pipe route",
+      "max_frames": 780,
+      "patches": [],
+      "expected_events": {"pipe_entry": 570, "pipe_exit": 774}
+    },
+    {
+      "id": "death-respawn",
+      "method": "controlled death-boundary state",
+      "max_frames": 450,
+      "patches": [
+        {"address": "$000E", "symbol": "ram_game_engine_subroutine", "index": 0, "reason": "enter_death_handler"},
+        {"address": "$0747", "symbol": "ram_timer_control", "index": 0, "reason": "allow_death_motion"},
+        {"address": "$00B5", "symbol": "ram_player_y_high_pos", "index": 0, "reason": "cross_death_boundary"},
+        {"address": "$07B1", "symbol": "ram_event_music_buffer", "index": 0, "reason": "complete_death_music_gate"}
+      ],
+      "expected_events": {"death": 251, "life_lost": 252, "respawn": 407},
+      "expected_final": {"lives": "01"}
+    },
+    {
+      "id": "flagpole-completion",
+      "method": "natural World 1-1 flagpole transaction",
+      "max_frames": 1310,
+      "patches": [],
+      "expected_events": {"flagpole": 1304}
+    },
+    {
+      "id": "natural-longplay",
+      "method": "natural power-on any-percent FM2 playback",
+      "max_frames": 17862,
+      "patches": [],
+      "expected_events": {
+        "title_boot": 6,
+        "world_1_1_start": 195,
+        "walking": 202,
+        "jump": 228,
+        "block_impact": 304,
+        "coin_collection": 304,
+        "pipe_entry": 570,
+        "pipe_exit": 774,
+        "enemy_stomp": 1127,
+        "flagpole": 1304
+      },
+      "expected_final": {"mode": "01", "task": "03", "world": "07", "area": "03"}
+    }
+  ]
+}

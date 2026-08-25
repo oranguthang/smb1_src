@@ -152,7 +152,8 @@ frames. Selected reference rows are:
 The model has unit tests for source-table decoding, exact profile thresholds,
 water selection, button-release gravity, fixed-point carry, and signed-speed
 handling. It is a deterministic static reference, not yet an emulator trace;
-milestone 6 will compare it with captured runtime RAM values.
+the milestone-6 jump scenario now anchors the modeled subsystem to the live
+`handler_player_jumping_or_swimming` entry and captured player RAM state.
 
 ## Source Map
 

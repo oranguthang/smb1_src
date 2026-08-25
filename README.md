@@ -18,6 +18,7 @@ This repository contains:
 - **docs/subsystems.md** - Address-ordered system architecture and ownership
 - **docs/unknowns.md** - Stable uncertainty and evidence registry
 - **docs/debugger_workflow.md** - Mesen/FCEUX symbols and source navigation
+- **docs/runtime_evidence.md** - Deterministic gameplay transaction scenarios
 
 ## Project Structure
 
@@ -102,6 +103,9 @@ make test
 make symbols
 make validate-symbols
 
+# Replay and validate focused gameplay transactions
+make trace-runtime
+
 # Validate local assets and build build/native/smb.nes
 make build
 
@@ -121,7 +125,8 @@ and cleanup are implemented in platform-independent Python scripts under
 `scripts/`. See [`docs/assembly_style.md`](docs/assembly_style.md) for the checked
 source conventions and [`docs/naming.md`](docs/naming.md) for the semantic symbol
 vocabulary. See [`docs/debugger_workflow.md`](docs/debugger_workflow.md) for
-interactive source navigation.
+interactive source navigation and [`docs/runtime_evidence.md`](docs/runtime_evidence.md)
+for reproducible emulator evidence.
 
 ## Modding Notes
 
@@ -133,6 +138,9 @@ For a few practical modification examples, see [docs/modding_examples.md](docs/m
 - **Original source** - https://gist.github.com/1wErt3r/4048722
 - **ca65-adapted source and build instructions** - https://xynosan.neocities.org/smb/
 - **cc65 toolchain** - http://www.cc65.org/
+- **Runtime input movie** - DJ Incendration,
+  [fixture provenance](movies/README.md),
+  [TASVideos user file 68410246126700593](https://tasvideos.org/UserFiles/Info/68410246126700593)
 - **Original game** - Nintendo
 
 ## License

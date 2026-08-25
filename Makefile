@@ -24,10 +24,14 @@ FCEUX_SYMBOL_DIR ?= $(NATIVE_BUILD_DIR)
 FCEUX_EXE ?= $(PROJECT_DIR)../fceux_automation/vc/x64/Release/fceux64.exe
 DEBUG_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_debug_symbols.lua
 DEBUG_RUNTIME_RESULT ?= $(NATIVE_BUILD_DIR)/debug_symbols_runtime.txt
+RUNTIME_MOVIE ?= $(PROJECT_DIR)movies/smb1_any_percent.fm2
+RUNTIME_SCENARIOS ?= $(PROJECT_DIR)scenarios/runtime_scenarios.json
+RUNTIME_TRACE_LUA ?= $(PROJECT_DIR)scripts/workflow/capture_runtime_scenario.lua
+RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/runtime
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg symbols validate-symbols split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg symbols validate-symbols trace-runtime validate-runtime split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -104,6 +108,21 @@ validate-symbols: symbols
 		--summary "$(DEBUG_SUMMARY)" \
 		--lua "$(DEBUG_RUNTIME_LUA)" \
 		--result "$(DEBUG_RUNTIME_RESULT)"
+
+trace-runtime: symbols
+	$(PYTHON) "$(PROJECT_DIR)scripts/run_runtime_scenarios.py" \
+		--fceux "$(FCEUX_EXE)" \
+		--rom "$(NATIVE_ROM)" \
+		--movie "$(RUNTIME_MOVIE)" \
+		--lua "$(RUNTIME_TRACE_LUA)" \
+		--scenarios "$(RUNTIME_SCENARIOS)" \
+		--output-dir "$(RUNTIME_TRACE_DIR)"
+	$(MAKE) validate-runtime
+
+validate-runtime:
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_runtime_scenarios.py" \
+		--scenarios "$(RUNTIME_SCENARIOS)" \
+		--trace-dir "$(RUNTIME_TRACE_DIR)"
 
 split:
 	$(PYTHON) "$(PROJECT_DIR)scripts/split_assets.py" \

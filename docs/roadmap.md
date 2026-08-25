@@ -52,8 +52,8 @@ produced bytes.
   `ea343f4e445a9050d4b4fbac2c77d0693b1d0922` byte-for-byte.
 - `make lint` enforces the documented ca65 whitespace, layout, comment-spacing,
   mnemonic-case, directive-case, semantic-prefix, module-size, and direct
-  `JSR`/`sub_` consistency rules. The checkers have focused unit tests; runtime
-  scenarios are not yet present.
+  `JSR`/`sub_` consistency rules. The checkers have focused unit tests, and
+  `make trace-runtime` validates twelve deterministic emulator scenarios.
 - All 516 RAM and assembly-time constant definitions use explicit `ram_` and
   `con_` prefixes. All 295 callable labels use `sub_`, have a direct `JSR`
   caller, and are protected by the semantic lint gate.
@@ -311,7 +311,7 @@ and enemy parsing, background composition, bounding boxes, player rendering,
 and audio arbitration. `docs/unknowns.md` provides stable evidence IDs for
 unresolved or proven-residual behavior; emulator experiments remain milestone 6.
 
-### 6. Debugger Symbols and Runtime Evidence - In Progress
+### 6. Debugger Symbols and Runtime Evidence - Complete
 
 - Convert ld65 labels/debug data into Mesen and FCEUX-friendly artifacts.
 - Provide named breakpoint groups and standard RAM watch lists.
@@ -331,6 +331,14 @@ records retain source files, exact definition lines, spans, and output offsets.
 exports Mesen `.dbg` and FCEUX `.nl` artifacts, resolves tracked breakpoint and
 watch groups, and rejects stale representative source mappings. A live FCEUX
 smoke test resolves eight semantic ROM/RAM symbols and stops on the NMI handler.
+
+`make trace-runtime` replays a pinned public power-on FM2 and validates focused
+boot, World 1-1 start, walking, jumping, block, coin, power-up, stomp, pipe,
+death/respawn, and flagpole transactions. Ten transactions are natural input
+evidence; power-up and death/respawn use manifest-declared RAM patches that are
+recorded address by address and explicitly bounded in
+`docs/runtime_evidence.md`. The complete 17,862-frame movie supplies the broad
+deterministic regression.
 
 ### 7. Automated Source and Documentation Validation - In Progress
 
