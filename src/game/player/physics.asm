@@ -1,6 +1,6 @@
 ; -------------------------------------------------------------------------------------
 
-PlayerMovementSubs:
+sub_update_player_movement:
     LDA #$00  ; set A to init crouch flag by default
     LDY PlayerSize  ; is player small?
     BNE SetCrouch  ; if so, branch
@@ -11,49 +11,50 @@ PlayerMovementSubs:
 SetCrouch:
     STA CrouchingFlag  ; store value in crouch flag
 ProcMove:
-    JSR PlayerPhysicsSub  ; run sub related to jumping and swimming
+    JSR sub_update_player_physics  ; run sub related to jumping and swimming
     LDA PlayerChangeSizeFlag  ; if growing/shrinking flag set,
     BNE NoMoveSub  ; branch to leave
     LDA Player_State
     CMP #$03  ; get player state
-    BEQ MoveSubs  ; if climbing, branch ahead, leave timer unset
+    BEQ bra_dispatch_player_state_movement  ; if climbing, branch ahead, leave timer unset
     LDY #$18
     STY ClimbSideTimer  ; otherwise reset timer now
-MoveSubs:
+bra_dispatch_player_state_movement:
     JSR JumpEngine
 
-    .word OnGroundStateSub
-    .word JumpSwimSub
-    .word FallingSub
-    .word ClimbingSub
+tbl_player_state_movement_handlers:
+    .word handler_player_on_ground
+    .word handler_player_jumping_or_swimming
+    .word handler_player_falling
+    .word handler_player_climbing
 
 NoMoveSub:
     RTS
 
 ; -------------------------------------------------------------------------------------
-; $00 - used by ClimbingSub to store high vertical adder
+; $00 - used by handler_player_climbing to store high vertical adder
 
-OnGroundStateSub:
-    JSR GetPlayerAnimSpeed  ; do a sub to set animation frame timing
+handler_player_on_ground:
+    JSR sub_update_player_animation_speed  ; do a sub to set animation frame timing
     LDA Left_Right_Buttons
     BEQ GndMove  ; if left/right controller bits not set, skip instruction
     STA PlayerFacingDir  ; otherwise set new facing direction
 GndMove:
-    JSR ImposeFriction  ; do a sub to impose friction on player's walk/run
+    JSR sub_apply_player_horizontal_friction  ; do a sub to impose friction on player's walk/run
     JSR MovePlayerHorizontally  ; do another sub to move player horizontally
     STA Player_X_Scroll  ; set returned value as player's movement speed for scroll
     RTS
 
 ; --------------------------------
 
-FallingSub:
+handler_player_falling:
     LDA VerticalForceDown
     STA VerticalForce  ; dump vertical movement force for falling into main one
     JMP LRAir  ; movement force, then skip ahead to process left/right movement
 
 ; --------------------------------
 
-JumpSwimSub:
+handler_player_jumping_or_swimming:
     LDY Player_Y_Speed  ; if player's vertical speed zero
     BPL DumpFall  ; or moving downwards, branch to falling
     LDA A_B_Buttons
@@ -71,7 +72,7 @@ DumpFall:
 ProcSwim:
     LDA SwimmingFlag  ; if swimming flag not set,
     BEQ LRAir  ; branch ahead to last part
-    JSR GetPlayerAnimSpeed  ; do a sub to get animation frame timing
+    JSR sub_update_player_animation_speed  ; do a sub to get animation frame timing
     LDA Player_Y_Position
     CMP #$14  ; check vertical position against preset value
     BCS LRWater  ; if not yet reached a certain position, branch ahead
@@ -84,7 +85,7 @@ LRWater:
 LRAir:
     LDA Left_Right_Buttons  ; check left/right controller bits (check for jumping/falling)
     BEQ JSMove  ; if not pressing any, skip
-    JSR ImposeFriction  ; otherwise process horizontal movement
+    JSR sub_apply_player_horizontal_friction  ; otherwise process horizontal movement
 JSMove:
     JSR MovePlayerHorizontally  ; do a sub to move player horizontally
     STA Player_X_Scroll  ; set player's speed here, to be used for scroll later
@@ -98,12 +99,12 @@ ExitMov1:
 
 ; --------------------------------
 
-ClimbAdderLow:
+tbl_climb_side_x_delta_low:
     .byte $0e, $04, $fc, $f2
-ClimbAdderHigh:
+tbl_climb_side_x_delta_high:
     .byte $00, $00, $ff, $ff
 
-ClimbingSub:
+handler_player_climbing:
     LDA Player_YMF_Dummy
     CLC  ; add movement force to dummy variable
     ADC Player_Y_MoveForce  ; save with carry
@@ -139,10 +140,10 @@ ClimbFD:
 CSetFDir:
     LDA Player_X_Position
     CLC  ; add or subtract from player's horizontal position
-    ADC ClimbAdderLow,x  ; using value here as adder and X as offset
+    ADC tbl_climb_side_x_delta_low,x  ; using value here as adder and X as offset
     STA Player_X_Position
     LDA Player_PageLoc  ; add or subtract carry or borrow using value here
-    ADC ClimbAdderHigh,x  ; from the player's page location
+    ADC tbl_climb_side_x_delta_high,x  ; from the player's page location
     STA Player_PageLoc
     LDA Left_Right_Buttons  ; get left/right controller bits again
     EOR #%00000011  ; invert them and store them while player
@@ -156,35 +157,35 @@ InitCSTimer:
 ; -------------------------------------------------------------------------------------
 ; $00 - used to store offset to friction data
 
-JumpMForceData:
+tbl_jump_vertical_force:
     .byte $20, $20, $1e, $28, $28, $0d, $04
 
-FallMForceData:
+tbl_fall_vertical_force:
     .byte $70, $70, $60, $90, $90, $0a, $09
 
-PlayerYSpdData:
+tbl_initial_player_y_speed:
     .byte $fc, $fc, $fc, $fb, $fb, $fe, $ff
 
-InitMForceData:
+tbl_initial_player_y_move_force:
     .byte $00, $00, $00, $00, $00, $80, $00
 
-MaxLeftXSpdData:
+tbl_maximum_left_speed:
     .byte $d8, $e8, $f0
 
-MaxRightXSpdData:
+tbl_maximum_right_speed:
     .byte $28, $18, $10
     .byte $0c  ; used for pipe intros
 
-FrictionData:
+tbl_horizontal_friction:
     .byte $e4, $98, $d0
 
-Climb_Y_SpeedData:
+tbl_climb_y_speed:
     .byte $00, $ff, $01
 
-Climb_Y_MForceData:
+tbl_climb_y_move_force:
     .byte $00, $20, $ff
 
-PlayerPhysicsSub:
+sub_update_player_physics:
     LDA Player_State  ; check player state
     CMP #$03
     BNE CheckForJumping  ; if not climbing, branch
@@ -197,10 +198,10 @@ PlayerPhysicsSub:
     BNE ProcClimb
     INY
 ProcClimb:
-    LDX Climb_Y_MForceData,y  ; load value here
+    LDX tbl_climb_y_move_force,y  ; load value here
     STX Player_Y_MoveForce  ; store as vertical movement force
     LDA #$08  ; load default animation timing
-    LDX Climb_Y_SpeedData,y  ; load some other value here
+    LDX tbl_climb_y_speed,y  ; load some other value here
     STX Player_Y_Speed  ; store as vertical speed
     BMI SetCAnim  ; if climbing down, use default animation timing value
     LSR  ; otherwise divide timer setting by 2
@@ -264,13 +265,13 @@ ChkWtr:
     BEQ GetYPhy
     INY  ; otherwise increment to 6
 GetYPhy:
-    LDA JumpMForceData,y  ; store appropriate jump/swim
+    LDA tbl_jump_vertical_force,y  ; store appropriate jump/swim
     STA VerticalForce  ; data here
-    LDA FallMForceData,y
+    LDA tbl_fall_vertical_force,y
     STA VerticalForceDown
-    LDA InitMForceData,y
+    LDA tbl_initial_player_y_move_force,y
     STA Player_Y_MoveForce
-    LDA PlayerYSpdData,y
+    LDA tbl_initial_player_y_speed,y
     STA Player_Y_Speed
     LDA SwimmingFlag  ; if swimming flag disabled, branch
     BEQ PJumpSnd
@@ -326,17 +327,17 @@ SetRTmr:
     LDA #$0a  ; if b button pressed, set running timer
     STA RunningTimer
 GetXPhy:
-    LDA MaxLeftXSpdData,y  ; get maximum speed to the left
+    LDA tbl_maximum_left_speed,y  ; get maximum speed to the left
     STA MaximumLeftSpeed
     LDA GameEngineSubroutine  ; check for specific routine running
     CMP #$07  ; (player entrance)
     BNE GetXPhy2  ; if not running, skip and use old value of Y
     LDY #$03  ; otherwise set Y to 3
 GetXPhy2:
-    LDA MaxRightXSpdData,y  ; get maximum speed to the right
+    LDA tbl_maximum_right_speed,y  ; get maximum speed to the right
     STA MaximumRightSpeed
     LDY $00  ; get other value in memory
-    LDA FrictionData,y  ; get value using value in memory as offset
+    LDA tbl_horizontal_friction,y  ; get value using value in memory as offset
     STA FrictionAdderLow
     LDA #$00
     STA FrictionAdderHigh  ; init something here
@@ -350,10 +351,10 @@ ExitPhy:
 
 ; -------------------------------------------------------------------------------------
 
-PlayerAnimTmrData:
+tbl_player_animation_timer:
     .byte $02, $04, $07
 
-GetPlayerAnimSpeed:
+sub_update_player_animation_speed:
     LDY #$00  ; initialize offset in Y
     LDA Player_XSpeedAbsolute  ; check player's walking/running speed
     CMP #$1c  ; against preset amount
@@ -383,13 +384,13 @@ ProcSkid:
     STA Player_X_Speed  ; nullify player's horizontal speed
     STA Player_X_MoveForce  ; and dummy variable for player
 SetAnimSpd:
-    LDA PlayerAnimTmrData,y  ; get animation timer setting using Y as offset
+    LDA tbl_player_animation_timer,y  ; get animation timer setting using Y as offset
     STA PlayerAnimTimerSet
     RTS
 
 ; -------------------------------------------------------------------------------------
 
-ImposeFriction:
+sub_apply_player_horizontal_friction:
     AND Player_CollisionBits  ; perform AND between left/right controller bits and collision flag
     CMP #$00  ; then compare to zero (this instruction is redundant)
     BNE JoypFrict  ; if any bits set, branch to next part

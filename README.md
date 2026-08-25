@@ -12,6 +12,7 @@ This repository contains:
 - **bin/ld65.exe** - 6502 linker from [cc65](http://www.cc65.org/)
 - **docs/6502jsm.txt** - Summary of 6502 CPU instructions
 - **docs/modding_examples.md** - Example gameplay edits and patch ideas
+- **docs/naming.md** - Semantic symbol vocabulary and evidence rules
 
 ## Project Structure
 
@@ -109,7 +110,8 @@ The Makefile contains only thin entrypoints. Assembly-style validation, ROM
 parsing, safe extraction, assembly, linking, concatenation, checksum validation,
 and cleanup are implemented in platform-independent Python scripts under
 `scripts/`. See [`docs/assembly_style.md`](docs/assembly_style.md) for the checked
-source conventions.
+source conventions and [`docs/naming.md`](docs/naming.md) for the semantic symbol
+vocabulary.
 
 ## Modding Notes
 

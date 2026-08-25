@@ -325,7 +325,7 @@ SaveJoyp:
     STA Left_Right_Buttons  ; if pressing down while on the ground,
     STA Up_Down_Buttons  ; nullify directional bits
 SizeChk:
-    JSR PlayerMovementSubs  ; run movement subroutines
+    JSR sub_update_player_movement  ; run movement subroutines
     LDY #$01  ; is player small?
     LDA PlayerSize
     BNE ChkMoveDir

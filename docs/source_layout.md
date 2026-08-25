@@ -40,7 +40,7 @@ limit, not a mandate to fragment cohesive code.
 | `src/data/levels/index_and_enemies.asm` | `$9BF8-$A1AE` | 431 | Area lookup tables and enemy object streams |
 | `src/data/levels/areas.asm` | `$A1AF-$AEDB` | 514 | Encoded area-object streams |
 | `src/game/core.asm` | `$AEDC-$B328` | 633 | Game mode, scrolling, player control states, and area transitions |
-| `src/game/player/physics.asm` | `$B329-$B623` | 436 | Walking, running, jumping, swimming, climbing, and friction |
+| `src/game/player/physics.asm` | `$B329-$B623` | 437 | Walking, running, jumping, swimming, climbing, and friction |
 | `src/game/objects/projectiles_and_interactions.asm` | `$B624-$B9B9` | 522 | Fireballs, bubbles, timer, warp zones, flagpole, spring, and vine |
 | `src/game/objects/dynamic.asm` | `$B9BA-$BCEA` | 479 | Cannons, bullets, hammers, coins, scoring, and power-ups |
 | `src/game/objects/blocks.asm` | `$BCEB-$BF01` | 334 | Player/block interaction, brick chunks, and block runtime |
