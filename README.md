@@ -7,7 +7,7 @@ A comprehensive disassembly of Super Mario Bros for the Nintendo Entertainment S
 This repository contains:
 
 - **src/main.asm** - Address-ordered entrypoint for the modular disassembly
-- **src/ldconfig.txt** - Linker configuration for the ROM build
+- **src/nrom256_prg_only.cfg** - Linker configuration for the 32 KiB PRG image
 - **bin/ca65.exe** - 6502 assembly compiler from [cc65](http://www.cc65.org/)
 - **bin/ld65.exe** - 6502 linker from [cc65](http://www.cc65.org/)
 - **docs/6502jsm.txt** - Summary of 6502 CPU instructions
@@ -31,7 +31,7 @@ smb1_src/
 |   |-- audio/          # Sound effects, music engine, and music data
 |   |-- data/           # Level streams and fixed interrupt vectors
 |   |-- game/           # Modes, physics, objects, enemies, and collisions
-|   |-- ldconfig.txt
+|   |-- nrom256_prg_only.cfg
 |   |-- main.asm
 |   |-- memory/         # Hardware, RAM, and assembly-time definitions
 |   |-- rendering/      # Screens, backgrounds, HUD, and actor composition

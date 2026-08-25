@@ -9,7 +9,7 @@ GENERATED_HEADER ?= $(GENERATED_ASSET_DIR)/header/smb.hdr
 GENERATED_CHR ?= $(GENERATED_ASSET_DIR)/chr/smb.chr
 
 NATIVE_SOURCE ?= $(PROJECT_DIR)src/main.asm
-NATIVE_CFG ?= $(PROJECT_DIR)src/ldconfig.txt
+NATIVE_CFG ?= $(PROJECT_DIR)src/nrom256_prg_only.cfg
 NATIVE_BUILD_DIR ?= $(PROJECT_DIR)build/native
 NATIVE_OBJ ?= $(NATIVE_BUILD_DIR)/smbdis.o
 NATIVE_PRG ?= $(NATIVE_BUILD_DIR)/smb.prg

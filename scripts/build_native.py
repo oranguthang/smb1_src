@@ -96,7 +96,7 @@ def require_file(path: Path, description: str) -> bytes:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", default="src/main.asm")
-    parser.add_argument("--config", default="src/ldconfig.txt")
+    parser.add_argument("--config", default="src/nrom256_prg_only.cfg")
     parser.add_argument("--manifest", default="assets/manifest.json")
     parser.add_argument("--original-rom")
     parser.add_argument("--header")
@@ -170,6 +170,8 @@ def main() -> int:
             "-C",
             str(config),
             str(object_path),
+            "-o",
+            str(prg_path),
             "-Ln",
             str(labels_path),
             "--mapfile",

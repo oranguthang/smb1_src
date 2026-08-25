@@ -29,6 +29,7 @@
 
 .p02
 
+.segment "PRG"
 .org $8000
 
 .include "system/boot_and_frame.asm"

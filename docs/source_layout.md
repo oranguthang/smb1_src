@@ -1,5 +1,9 @@
 # Source Layout
 
+The linker contract in `src/nrom256_prg_only.cfg` fixes the `PRG` segment at
+`$8000..$FFF9` and the six-byte `VECTORS` segment at `$FFFA..$FFFF`. The output
+is a bare 32 KiB PRG image; header and CHR handling remain outside ld65.
+
 This document records the address-ordered modularization of the native SMB1
 PRG. Module boundaries preserve the original byte order and are accepted only
 after `make verify` succeeds.
