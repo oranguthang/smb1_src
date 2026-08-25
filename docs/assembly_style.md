@@ -23,7 +23,7 @@ remaining explicit about the few rules that editors cannot enforce.
 
 ```asm
 .if ENABLE_DEMO
-DemoEntry:
+handler_demo_entry:
     LDA #$01  ; Select demo mode
     .repeat 2
         NOP
@@ -35,7 +35,9 @@ DemoEntry:
 
 - Write 6502 mnemonics in uppercase: `LDA`, `JSR`, `RTS`.
 - Write ca65 directives in lowercase: `.byte`, `.word`, `.include`, `.segment`.
-- Preserve the declared case of labels, constants, and operands.
+- Write every colon label with its semantic role prefix in lowercase snake_case;
+  see `naming.md` for the accepted prefixes.
+- Preserve the declared case of constants and operands.
 
 ## Comments
 

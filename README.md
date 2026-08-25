@@ -25,6 +25,7 @@ This repository contains:
 - **docs/debugger_workflow.md** - Mesen/FCEUX symbols and source navigation
 - **docs/runtime_evidence.md** - Deterministic gameplay transaction scenarios
 - **docs/data_formats.md** - Typed authored-data codecs and byte round trips
+- **docs/provenance/label_renames.json** - Original-to-current symbol map
 - **docs/preservation_source_1_0.md** - Stable release scope and evidence boundary
 - **CONTRIBUTING.md** - Safe source, data, evidence, and verification workflow
 

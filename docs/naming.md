@@ -22,6 +22,12 @@ must use the `sub_` prefix. `make lint` enforces both directions. A label reache
 both by fall-through and a conditional branch remains a `bra_`; a shared entry
 reached with `JMP` uses `loc_`.
 
+Every colon label must begin with one of the code or data prefixes above and use
+lowercase snake_case. Empty components, doubled underscores, leading or trailing
+underscores, uppercase letters, and unprefixed legacy names are rejected. This
+rule applies to labels only; uppercase hardware and assembly-time constants keep
+their declared convention.
+
 ## Data Symbols
 
 | Prefix | Meaning |
@@ -42,12 +48,13 @@ unknown until static or runtime evidence supports a semantic name.
 1. Prefer a role such as `sub_update_player_movement` over a ROM address.
 2. Include subsystem context when a short local description would collide.
 3. Keep state or opcode values only when they are part of a decoded format.
-4. Preserve useful original names or addresses in review history and generated
-   maps rather than embedding them in active identifiers.
+4. Preserve original doppelganger names in the direct provenance map at
+   `docs/provenance/label_renames.json`, and keep addresses in generated maps
+   rather than embedding either in active identifiers.
 5. Treat a plausible interpretation as insufficient evidence for a rename.
 6. Run `make verify` after every rename batch; symbol cleanup must not alter a
    single emitted byte.
 
-The vocabulary is being adopted incrementally. Existing descriptive symbols
-remain valid until their replacements are supported by control-flow, data-flow,
-or runtime evidence.
+The vocabulary is mandatory for all active colon labels. Rename a symbol only
+when control flow, data flow, encoded structure, or runtime evidence supports the
+new role, then run both `make lint` and `make verify`.

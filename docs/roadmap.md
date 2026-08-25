@@ -51,12 +51,13 @@ produced bytes.
 - `make verify` reproduces its complete ROM SHA-1
   `ea343f4e445a9050d4b4fbac2c77d0693b1d0922` byte-for-byte.
 - `make lint` enforces the documented ca65 whitespace, layout, comment-spacing,
-  mnemonic-case, directive-case, semantic-prefix, module-size, and direct
+  mnemonic-case, directive-case, role-prefixed snake_case labels, module-size, and direct
   `JSR`/`sub_` consistency rules. The checkers have focused unit tests, and
   `make trace-runtime` validates twelve deterministic emulator scenarios.
 - All 516 RAM and assembly-time constant definitions use explicit `ram_` and
   `con_` prefixes. All 295 callable labels use `sub_`, have a direct `JSR`
-  caller, and are protected by the semantic lint gate.
+  caller, and are protected by the semantic lint gate. All 1,993 colon labels
+  use the documented role prefix and lowercase snake_case.
 - No original `.nes`, `.chr`, or `.hdr` file is tracked in the current Git
   history.
 - Repository text normalization is enforced by `.gitattributes`.
@@ -252,10 +253,12 @@ module exceeds the agreed size budget.
 - Separate hardware registers, RAM fields, constants, and ROM data symbols.
   The physical files exist, sound-engine RAM aliases have been moved out of
   `constants.inc`, and RAM/constants use explicit semantic prefixes.
-- Adopt the control-flow and data-prefix vocabulary incrementally.
-  Callable routines, player movement control flow, shared movement entries, and
-  their indexed tables now use the documented vocabulary. Existing descriptive
-  local labels remain valid until their subsystem evidence supports refinement.
+- Adopt the control-flow and data-prefix vocabulary across the complete source.
+  All colon labels now use strict role-prefixed snake_case, including callable
+  routines, branch and jump entries, handlers, data blocks, and lookup tables.
+  The direct doppelganger-to-current mapping is retained in
+  `docs/provenance/label_renames.json`; project-internal intermediate names are
+  intentionally omitted.
 - Remove address-derived active symbol names where they exist.
   Semantic lint rejects new lowercase address-derived identifiers.
 - Normalize whitespace and source formatting with mechanically checkable rules.

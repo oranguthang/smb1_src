@@ -55,6 +55,24 @@ class LintSourceTests(unittest.TestCase):
             messages,
         )
 
+    def test_rejects_legacy_label_case(self) -> None:
+        messages = self.messages("LegacyLabel:\n    RTS\n")
+        self.assertIn(
+            "label must use a role prefix and lowercase snake_case: LegacyLabel",
+            messages,
+        )
+
+    def test_rejects_malformed_snake_case_label(self) -> None:
+        messages = self.messages("loc_update__player:\n    RTS\n")
+        self.assertIn(
+            "label must use a role prefix and lowercase snake_case: "
+            "loc_update__player",
+            messages,
+        )
+
+    def test_allows_constant_case_outside_colon_labels(self) -> None:
+        self.assertEqual(self.messages("HARDWARE_MASK = $01\n"), [])
+
     def test_rejects_address_derived_name(self) -> None:
         messages = self.messages("loc_C123:\n    RTS\n")
         self.assertIn(

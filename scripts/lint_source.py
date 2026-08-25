@@ -23,8 +23,12 @@ APPROVED_SYMBOL_PREFIXES = {
     "vec",
     "zp",
 }
+LABEL_PREFIXES = {"bra", "handler", "loc", "off", "sub", "tbl", "unused", "vec"}
 
 DEFINITION_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*)\s*(?::|=)")
+STRICT_LABEL_RE = re.compile(
+    rf"^(?:{'|'.join(sorted(LABEL_PREFIXES))})_[a-z0-9]+(?:_[a-z0-9]+)*$"
+)
 ADDRESS_NAME_RE = re.compile(
     r"(?:^|_)(?=[0-9A-Fa-f]{4,6}(?:_|$))"
     r"(?=[0-9A-Fa-f]*[0-9])[0-9A-Fa-f]{4,6}(?=_|$)"
@@ -101,6 +105,16 @@ def lint_project(project_root: Path) -> list[Diagnostic]:
                         )
                     else:
                         all_labels[symbol] = (relative_path, line_number)
+
+                    if STRICT_LABEL_RE.fullmatch(symbol) is None:
+                        diagnostics.append(
+                            Diagnostic(
+                                relative_path,
+                                line_number,
+                                "label must use a role prefix and lowercase "
+                                f"snake_case: {symbol}",
+                            )
+                        )
 
                 if symbol[0].islower():
                     prefix = symbol.split("_", 1)[0]
