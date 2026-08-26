@@ -11,8 +11,9 @@ The developing release adds four isolated capability groups:
    runtime observation.
 2. A conservative CNROM profile with an unchanged 32 KiB PRG, two validated CHR
    banks, an architecture decision record, and Mapper 3 runtime startup.
-3. Five codec-backed content studios covering all ten stable authored-data
-   artifacts through ignored atomic JSON workspaces.
+3. Four purpose-built Tkinter content studios covering ten 2.0 authored-data
+   artifacts, editable CHR, and ignored atomic workspaces while retaining the
+   original ten-artifact 1.0 evidence manifest unchanged.
 4. Exact revision and platform profiles for the selected SMB1 engine family.
 
 The profile family is not complete yet. Japan/USA and PlayChoice-10 are exact.
@@ -21,12 +22,19 @@ historical alternate European candidate, Vs. Super Mario Bros., the Famicom
 Disk System SMB1 reissue, and All Night Nippon Super Mario Bros. The Japanese
 SMB2 / The Lost Levels release is outside the 2.0 scope.
 
+The alternate European candidate remains an evaluated provenance record rather
+than a required supported release unless independent evidence establishes its
+identity. Source Reconstruction 3.0 is reserved for later semantic
+consolidation, variant-wide authoring, deeper behavioral evidence, and possible
+evaluation of the Japanese SMB2 engine.
+
 The eventual `make source-2-check` command is the aggregate acceptance gate. It
 first runs the complete make release-check gate for 1.0. It then validates the
 fixed-layout variant, expanded image, and supported profiles statically and in
 their target emulators before cross-checking every 2.0 manifest, document,
 target, roadmap milestone, and the immutable source-reconstruction-1.0 tag
-target.
+target. The 2.0 layer also runs `make check-studios` so every ignored GUI
+workspace remains encodable without requiring a display server.
 
 The tracked `config/source_reconstruction_2_0.json` manifest remains in
 development and is not tag-ready. The release tag will remain an explicit

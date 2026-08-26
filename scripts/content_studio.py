@@ -38,11 +38,43 @@ def atomic_write_json(path: Path, value: object) -> None:
         temporary.unlink(missing_ok=True)
 
 
+def atomic_write_bytes(path: Path, value: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
+    )
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(value)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def load_format_manifest(path: Path) -> dict[str, Any]:
+    document = json.loads(path.read_text(encoding="utf-8"))
+    if document.get("format") != 1:
+        raise ValueError("unsupported content format manifest schema")
+    if "base_manifest" not in document:
+        return document
+    base_path = path.parent / document["base_manifest"]
+    base = json.loads(base_path.read_text(encoding="utf-8"))
+    if base.get("format") != 1:
+        raise ValueError("unsupported base data format manifest schema")
+    excluded = set(document.get("excluded_artifacts", []))
+    artifacts = [entry for entry in base["artifacts"] if entry["id"] not in excluded]
+    artifacts.extend(document.get("artifacts", []))
+    return {"format": 1, "artifacts": artifacts}
+
+
 def load_configuration(
     format_path: Path,
     studio_path: Path,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
-    formats = json.loads(format_path.read_text(encoding="utf-8"))
+    formats = load_format_manifest(format_path)
     studios = json.loads(studio_path.read_text(encoding="utf-8"))
     if formats.get("format") != 1 or studios.get("schema_version") != 1:
         raise ValueError("unsupported content manifest schema")
@@ -95,6 +127,23 @@ def artifact_range(
     return start, end
 
 
+def resolve_entry(entry: dict[str, Any], labels: dict[str, int]) -> dict[str, Any]:
+    if entry["codec"] != "stream_collection":
+        return entry
+    resolved = dict(entry)
+    boundaries = list(entry["stream_boundaries"])
+    streams = []
+    for name, start_name, end_name in zip(
+        entry["stream_names"], boundaries, boundaries[1:]
+    ):
+        capacity = labels[end_name] - labels[start_name]
+        if capacity <= 0:
+            raise ValueError(f"invalid stream boundary order: {start_name}, {end_name}")
+        streams.append({"name": name, "capacity": capacity})
+    resolved["streams"] = streams
+    return resolved
+
+
 def encode_workspace_document(
     document: dict[str, Any],
     entry: dict[str, Any],
@@ -134,6 +183,7 @@ def process_workspace(
 ) -> list[dict[str, Any]]:
     report: list[dict[str, Any]] = []
     for studio_id, entry in selection:
+        entry = resolve_entry(entry, labels)
         start, end = artifact_range(entry, labels, len(baseline))
         path = workspace / studio_id / f"{entry['id']}.json"
         if not path.is_file():
@@ -168,9 +218,71 @@ def process_workspace(
     return report
 
 
+def write_workspace_documents(
+    workspace: Path,
+    selection: list[tuple[str, dict[str, Any]]],
+    labels: dict[str, int],
+    baseline: bytes,
+    overwrite: bool,
+) -> None:
+    for studio_id, entry in selection:
+        entry = resolve_entry(entry, labels)
+        start, end = artifact_range(entry, labels, len(baseline))
+        path = workspace / studio_id / f"{entry['id']}.json"
+        if path.exists() and not overwrite:
+            print(f"[OK] Kept existing {path}")
+            continue
+        decode = CODECS[entry["codec"]][0]
+        document = {
+            "schema_version": 1,
+            "studio": studio_id,
+            "artifact_id": entry["id"],
+            "codec": entry["codec"],
+            "source": entry["source"],
+            "cpu_range": [f"0x{0x8000 + start:04x}", f"0x{0x8000 + end - 1:04x}"],
+            "capacity_bytes": end - start,
+            "original_sha1": sha1(baseline[start:end]),
+            "data": decode(baseline[start:end], entry),
+        }
+        atomic_write_json(path, document)
+        print(f"[OK] {'Exported' if overwrite else 'Initialized'} {path}")
+
+
+def initialize_chr_workspace(
+    workspace: Path,
+    source: Path | None,
+    selection: list[tuple[str, dict[str, Any]]],
+    overwrite: bool,
+) -> None:
+    if source is None or not any(studio_id == "graphics" for studio_id, _ in selection):
+        return
+    data = source.read_bytes()
+    if len(data) != 8192:
+        raise ValueError(f"CHR source must be exactly 8192 bytes, got {len(data)}")
+    destination = workspace / "graphics" / "smb.chr"
+    if destination.exists() and not overwrite:
+        print(f"[OK] Kept existing {destination}")
+        return
+    atomic_write_bytes(destination, data)
+    print(f"[OK] {'Exported' if overwrite else 'Initialized'} {destination}")
+
+
+def load_workspace_chr(workspace: Path, source: Path) -> tuple[bytes, int]:
+    baseline = source.read_bytes()
+    if len(baseline) != 8192:
+        raise ValueError(f"CHR source must be exactly 8192 bytes, got {len(baseline)}")
+    path = workspace / "graphics" / "smb.chr"
+    candidate = path.read_bytes() if path.exists() else baseline
+    if len(candidate) != len(baseline):
+        raise ValueError(f"Workspace CHR must be exactly {len(baseline)} bytes")
+    changed = sum(left != right for left, right in zip(baseline, candidate))
+    print(f"[OK] graphics/smb.chr: {len(candidate)} bytes, {changed} changed")
+    return candidate, changed
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("export", "validate", "build"))
+    parser.add_argument("command", choices=("init", "export", "validate", "build"))
     parser.add_argument("--formats", required=True, type=Path)
     parser.add_argument("--studios", required=True, type=Path)
     parser.add_argument("--labels", required=True, type=Path)
@@ -188,25 +300,18 @@ def main() -> int:
         selection = selected_entries(entries, profiles, args.selected)
         labels = load_labels(args.labels)
         baseline = args.prg.read_bytes()
-        if args.command == "export":
-            for studio_id, entry in selection:
-                start, end = artifact_range(entry, labels, len(baseline))
-                decode = CODECS[entry["codec"]][0]
-                document = {
-                    "schema_version": 1,
-                    "studio": studio_id,
-                    "artifact_id": entry["id"],
-                    "codec": entry["codec"],
-                    "source": entry["source"],
-                    "cpu_range": [f"0x{0x8000 + start:04x}", f"0x{0x8000 + end - 1:04x}"],
-                    "capacity_bytes": end - start,
-                    "original_sha1": sha1(baseline[start:end]),
-                    "data": decode(baseline[start:end], entry),
-                }
-                path = args.workspace / studio_id / f"{entry['id']}.json"
-                atomic_write_json(path, document)
-                print(f"[OK] Exported {path}")
+        if args.command in {"init", "export"}:
+            overwrite = args.command == "export"
+            write_workspace_documents(
+                args.workspace, selection, labels, baseline, overwrite
+            )
+            initialize_chr_workspace(
+                args.workspace, args.chr, selection, overwrite
+            )
             return 0
+        workspace_chr = None
+        if args.chr:
+            workspace_chr, _ = load_workspace_chr(args.workspace, args.chr)
         candidate = bytearray(baseline) if args.command == "build" else None
         report = process_workspace(
             args.workspace, selection, labels, baseline, candidate
@@ -219,7 +324,7 @@ def main() -> int:
             raise ValueError("build requires header, CHR, PRG output, and ROM output")
         output_prg = bytes(candidate)
         header = args.header.read_bytes()
-        chr_data = args.chr.read_bytes()
+        chr_data = workspace_chr
         args.output_prg.parent.mkdir(parents=True, exist_ok=True)
         args.output_rom.parent.mkdir(parents=True, exist_ok=True)
         args.output_prg.write_bytes(output_prg)

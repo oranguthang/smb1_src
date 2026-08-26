@@ -7,9 +7,9 @@ the selected reference ROM byte-for-byte and provides semantic source
 navigation, runtime evidence, and typed data round trips without tracking the
 original ROM or CHR payload.
 
-The `roadmap/source-reconstruction-2.0` development line is a tag-ready 2.0
-candidate adding isolated fixed-layout, CNROM, content-authoring, and official
-profile workflows while retaining the complete 1.0 gate as its first contract.
+The `roadmap/source-reconstruction-2.0` development line is building isolated
+fixed-layout, CNROM, graphical content-authoring, and official profile workflows
+while retaining the complete 1.0 gate as its first contract.
 
 ## Overview
 
@@ -139,9 +139,22 @@ make validate-hack
 make validate-expanded
 
 # Export, validate, and build ignored codec-backed content workspaces
+make init-content
 make export-content
 make validate-content
 make build-content
+
+# Open the four local Tkinter authoring programs
+make world-studio
+make level-studio
+make graphics-studio
+make sound-studio
+
+# Build and run the ignored edited-content ROM
+make run-content
+
+# Validate every studio input without opening a window
+make check-studios
 
 # Verify and run both supported official profiles
 make verify-revisions

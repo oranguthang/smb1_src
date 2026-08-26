@@ -3,35 +3,33 @@
   "workspace": "content/workspace",
   "studios": [
     {
-      "id": "world_area",
-      "name": "World/Area Studio",
+      "id": "world",
+      "name": "World Studio",
       "artifacts": [
         "world_area_pointers",
-        "ground_area_3_3_objects",
-        "world_1_1_enemies"
+        "player_physics_profiles"
       ]
     },
     {
-      "id": "physics",
-      "name": "Physics Studio",
-      "artifacts": ["player_physics_profiles"]
+      "id": "level",
+      "name": "Level Studio",
+      "artifacts": ["area_object_streams", "enemy_object_streams"]
     },
     {
       "id": "graphics",
       "name": "Graphics Studio",
-      "artifacts": ["palette_3_metatiles", "player_animation_tiles"]
-    },
-    {
-      "id": "screen",
-      "name": "Screen Studio",
-      "artifacts": ["top_status_bar_ppu_packets"]
+      "artifacts": [
+        "all_metatiles",
+        "player_animation_tiles",
+        "area_palette_packets",
+        "game_text_packets"
+      ]
     },
     {
       "id": "sound",
       "name": "Sound Studio",
       "artifacts": [
-        "star_cloud_music_header",
-        "star_cloud_music_channels",
+        "music_bank",
         "swim_stomp_envelope"
       ]
     }

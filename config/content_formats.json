@@ -1,0 +1,135 @@
+{
+  "format": 1,
+  "base_manifest": "data_formats.json",
+  "excluded_artifacts": [
+    "ground_area_3_3_objects",
+    "world_1_1_enemies",
+    "palette_3_metatiles",
+    "top_status_bar_ppu_packets",
+    "star_cloud_music_header",
+    "star_cloud_music_channels"
+  ],
+  "artifacts": [
+    {
+      "id": "area_object_streams",
+      "family": "all area headers and object streams",
+      "source": "src/data/levels/areas.asm",
+      "start": "off_castle_area_1_objects",
+      "end": "handler_run_game_mode",
+      "codec": "stream_collection",
+      "stream_codec": "area_object_stream",
+      "stream_terminator": 253,
+      "stream_names": [
+        "castle_1", "castle_2", "castle_3", "castle_4", "castle_5", "castle_6",
+        "ground_1", "ground_2", "ground_3", "ground_4", "ground_5", "ground_6",
+        "ground_7", "ground_8", "ground_9", "ground_10", "ground_11", "ground_12",
+        "ground_13", "ground_14", "ground_15", "ground_16", "ground_17", "ground_18",
+        "ground_19", "ground_20", "ground_21", "ground_22",
+        "underground_1", "underground_2", "underground_3",
+        "water_1", "water_2", "water_3"
+      ],
+      "stream_boundaries": [
+        "off_castle_area_1_objects", "off_castle_area_2_objects", "off_castle_area_3_objects",
+        "off_castle_area_4_objects", "off_castle_area_5_objects", "off_castle_area_6_objects",
+        "off_ground_area_1_objects", "off_ground_area_2_objects", "off_ground_area_3_objects",
+        "off_ground_area_4_objects", "off_ground_area_5_objects", "off_ground_area_6_objects",
+        "off_ground_area_7_objects", "off_ground_area_8_objects", "off_ground_area_9_objects",
+        "off_ground_area_10_objects", "off_ground_area_11_objects", "off_ground_area_12_objects",
+        "off_ground_area_13_objects", "off_ground_area_14_objects", "off_ground_area_15_objects",
+        "off_ground_area_16_objects", "off_ground_area_17_objects", "off_ground_area_18_objects",
+        "off_ground_area_19_objects", "off_ground_area_20_objects", "off_ground_area_21_objects",
+        "off_ground_area_22_objects", "off_underground_area_1_objects",
+        "off_underground_area_2_objects", "off_underground_area_3_objects",
+        "off_water_area_1_objects", "off_water_area_2_objects", "off_water_area_3_objects",
+        "handler_run_game_mode"
+      ]
+    },
+    {
+      "id": "enemy_object_streams",
+      "family": "all enemy, entrance, and page-control streams",
+      "source": "src/data/levels/index_and_enemies.asm",
+      "start": "off_castle_area_1_enemies",
+      "end": "off_castle_area_1_objects",
+      "codec": "stream_collection",
+      "stream_codec": "enemy_object_stream",
+      "stream_terminator": 255,
+      "stream_names": [
+        "castle_1", "castle_2", "castle_3", "castle_4", "castle_5", "castle_6",
+        "ground_1", "ground_2", "ground_3", "ground_4", "ground_5", "ground_6",
+        "ground_7", "ground_8", "ground_9", "ground_10", "ground_11", "ground_12",
+        "ground_13", "ground_14", "ground_15", "ground_16", "ground_17", "ground_18",
+        "ground_19", "ground_20", "ground_21", "ground_22",
+        "underground_1", "underground_2", "underground_3",
+        "water_1", "water_2", "water_3"
+      ],
+      "stream_boundaries": [
+        "off_castle_area_1_enemies", "off_castle_area_2_enemies", "off_castle_area_3_enemies",
+        "off_castle_area_4_enemies", "off_castle_area_5_enemies", "off_castle_area_6_enemies",
+        "off_ground_area_1_enemies", "off_ground_area_2_enemies", "off_ground_area_3_enemies",
+        "off_ground_area_4_enemies", "off_ground_area_5_enemies", "off_ground_area_6_enemies",
+        "off_ground_area_7_enemies", "off_ground_area_8_enemies", "off_ground_area_9_enemies",
+        "off_ground_area_10_enemies", "off_ground_area_11_enemies", "off_ground_area_12_enemies",
+        "off_ground_area_13_enemies", "off_ground_area_14_enemies", "off_ground_area_15_enemies",
+        "off_ground_area_16_enemies", "off_ground_area_17_enemies", "off_ground_area_18_enemies",
+        "off_ground_area_19_enemies", "off_ground_area_20_enemies", "off_ground_area_21_enemies",
+        "off_ground_area_22_enemies", "off_underground_area_1_enemies",
+        "off_underground_area_2_enemies", "off_underground_area_3_enemies",
+        "off_water_area_1_enemies", "off_water_area_2_enemies", "off_water_area_3_enemies",
+        "off_castle_area_1_objects"
+      ]
+    },
+    {
+      "id": "all_metatiles",
+      "family": "all background metatile mappings",
+      "source": "src/rendering/background.asm",
+      "start": "off_palette_0_metatiles",
+      "end": "off_water_area_palette_packet",
+      "codec": "fixed_records",
+      "record_size": 4,
+      "record_name": "metatile"
+    },
+    {
+      "id": "music_bank",
+      "family": "all music headers, pointers, and channel streams",
+      "source": "src/audio/music_data.asm",
+      "start": "tbl_music_header_offsets",
+      "end": "tbl_music_note_periods",
+      "codec": "raw_bytes"
+    },
+    {
+      "id": "game_text_packets",
+      "family": "PPU update packets and game text",
+      "source": "src/rendering/screens.asm",
+      "start": "tbl_game_text_packets",
+      "end": "tbl_luigi_name_tiles",
+      "codec": "ppu_packet_blocks",
+      "terminator": 255,
+      "block_names": [
+        "top_status_bar",
+        "world_lives",
+        "time_up",
+        "game_over",
+        "warp_zone"
+      ]
+    },
+    {
+      "id": "area_palette_packets",
+      "family": "background and sprite palettes",
+      "source": "src/rendering/background.asm",
+      "start": "off_water_area_palette_packet",
+      "end": "off_mario_thanks_message",
+      "codec": "ppu_packet_blocks",
+      "terminator": 0,
+      "block_names": [
+        "water",
+        "ground",
+        "underground",
+        "castle",
+        "day_snow",
+        "night_snow",
+        "mushroom",
+        "bowser"
+      ]
+    }
+  ]
+}

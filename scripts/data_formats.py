@@ -210,6 +210,59 @@ def encode_ppu_packets(value: dict[str, Any], entry: dict[str, Any]) -> bytes:
     return bytes(output)
 
 
+def decode_ppu_packet_blocks(data: bytes, entry: dict[str, Any]) -> dict[str, Any]:
+    terminator = int(entry["terminator"])
+    blocks = []
+    offset = 0
+    for name in entry["block_names"]:
+        packets = []
+        while offset < len(data) and data[offset] != terminator:
+            if offset + 3 > len(data):
+                raise ValueError(f"Truncated PPU packet header in {name}")
+            address = (data[offset] << 8) | data[offset + 1]
+            control = data[offset + 2]
+            length = control & 0x3F
+            repeat = bool(control & 0x40)
+            payload_length = 1 if repeat else length
+            payload = data[offset + 3:offset + 3 + payload_length]
+            if len(payload) != payload_length:
+                raise ValueError(f"Truncated PPU packet payload in {name}")
+            packets.append({
+                "address": address,
+                "vertical": bool(control & 0x80),
+                "repeat": repeat,
+                "length": length,
+                "values": list(payload),
+            })
+            offset += 3 + payload_length
+        if offset >= len(data):
+            raise ValueError(f"PPU packet block {name} has no terminator")
+        offset += 1
+        blocks.append({"name": name, "packets": packets})
+    if offset != len(data):
+        raise ValueError("PPU packet collection has trailing data")
+    return {"blocks": blocks}
+
+
+def encode_ppu_packet_blocks(value: dict[str, Any], entry: dict[str, Any]) -> bytes:
+    names = list(entry["block_names"])
+    blocks = value["blocks"]
+    if [block["name"] for block in blocks] != names:
+        raise ValueError("PPU packet block names or order differ from the manifest")
+    output = bytearray()
+    for block in blocks:
+        for packet in block["packets"]:
+            address = int(packet["address"])
+            control = (
+                (0x80 if packet["vertical"] else 0)
+                | (0x40 if packet["repeat"] else 0)
+                | int(packet["length"])
+            )
+            output.extend([address >> 8, address & 0xFF, control, *packet["values"]])
+        output.append(int(entry["terminator"]))
+    return bytes(output)
+
+
 def decode_music_header(data: bytes, entry: dict[str, Any]) -> dict[str, Any]:
     if len(data) not in {5, 6}:
         raise ValueError("Music header must contain five or six bytes")
@@ -305,16 +358,88 @@ def encode_named_byte_tables(value: dict[str, Any], entry: dict[str, Any]) -> by
     return bytes(int(item) & 0xFF for table in value["tables"] for item in table["values"])
 
 
+def decode_raw_bytes(data: bytes, entry: dict[str, Any]) -> dict[str, Any]:
+    return {"values": list(data)}
+
+
+def encode_raw_bytes(value: dict[str, Any], entry: dict[str, Any]) -> bytes:
+    return bytes(int(item) for item in value["values"])
+
+
+def decode_stream_collection(data: bytes, entry: dict[str, Any]) -> dict[str, Any]:
+    stream_codec = entry["stream_codec"]
+    decode = CODECS[stream_codec][0]
+    terminator = int(entry["stream_terminator"])
+    streams = []
+    offset = 0
+    for specification in entry["streams"]:
+        capacity = int(specification["capacity"])
+        chunk = data[offset:offset + capacity]
+        implicit_terminator = terminator not in chunk
+        used = len(chunk) if implicit_terminator else chunk.index(terminator) + 1
+        encoded_stream = chunk[:used] + (bytes([terminator]) if implicit_terminator else b"")
+        stream_entry = {"id": specification["name"], "codec": stream_codec}
+        streams.append({
+            "name": specification["name"],
+            "capacity_bytes": capacity,
+            "implicit_terminator": implicit_terminator,
+            "padding": [] if implicit_terminator else list(chunk[used:]),
+            "data": decode(encoded_stream, stream_entry),
+        })
+        offset += capacity
+    if offset != len(data):
+        raise ValueError("Stream capacities do not consume the collection")
+    return {"streams": streams}
+
+
+def encode_stream_collection(value: dict[str, Any], entry: dict[str, Any]) -> bytes:
+    stream_codec = entry["stream_codec"]
+    encode = CODECS[stream_codec][1]
+    output = bytearray()
+    specifications = entry["streams"]
+    streams = value["streams"]
+    if [item["name"] for item in streams] != [item["name"] for item in specifications]:
+        raise ValueError("Stream names or order differ from the manifest")
+    for stream, specification in zip(streams, specifications):
+        capacity = int(specification["capacity"])
+        if int(stream["capacity_bytes"]) != capacity:
+            raise ValueError(f"{stream['name']}: protected capacity changed")
+        stream_entry = {"id": stream["name"], "codec": stream_codec}
+        encoded = encode(stream["data"], stream_entry)
+        implicit_terminator = bool(stream.get("implicit_terminator"))
+        if implicit_terminator:
+            if len(encoded) != capacity + 1 or encoded[-1] != int(entry["stream_terminator"]):
+                raise ValueError(
+                    f"{stream['name']}: a shared terminator requires exactly {capacity} data bytes"
+                )
+            output.extend(encoded[:-1])
+            continue
+        if len(encoded) > capacity:
+            raise ValueError(
+                f"{stream['name']}: encoded size {len(encoded)} exceeds {capacity}-byte capacity"
+            )
+        padding = bytes(int(item) for item in stream.get("padding", []))
+        if len(encoded) + len(padding) > capacity:
+            padding = padding[-(capacity - len(encoded)):] if len(encoded) < capacity else b""
+        output.extend(encoded)
+        output.extend(bytes(capacity - len(encoded) - len(padding)))
+        output.extend(padding)
+    return bytes(output)
+
+
 CODECS: dict[str, tuple[Callable[[bytes, dict[str, Any]], dict[str, Any]], Callable[[dict[str, Any], dict[str, Any]], bytes]]] = {
     "area_pointer_table": (decode_area_pointer_table, encode_area_pointer_table),
     "area_object_stream": (decode_area_object_stream, encode_area_object_stream),
     "enemy_object_stream": (decode_enemy_object_stream, encode_enemy_object_stream),
     "fixed_records": (decode_fixed_records, encode_fixed_records),
     "ppu_packets": (decode_ppu_packets, encode_ppu_packets),
+    "ppu_packet_blocks": (decode_ppu_packet_blocks, encode_ppu_packet_blocks),
     "music_header": (decode_music_header, encode_music_header),
     "music_channels": (decode_music_channels, encode_music_channels),
     "apu_envelope": (decode_apu_envelope, encode_apu_envelope),
     "named_byte_tables": (decode_named_byte_tables, encode_named_byte_tables),
+    "raw_bytes": (decode_raw_bytes, encode_raw_bytes),
+    "stream_collection": (decode_stream_collection, encode_stream_collection),
 }
 
 

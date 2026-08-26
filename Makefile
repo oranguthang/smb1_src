@@ -30,6 +30,7 @@ RUNTIME_TRACE_LUA ?= $(PROJECT_DIR)scripts/workflow/capture_runtime_scenario.lua
 RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/runtime
 DATA_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/data_formats.json
 DATA_FORMAT_SUMMARY ?= $(PROJECT_DIR)build/data_formats.json
+CONTENT_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/content_formats.json
 RELEASE_MANIFEST ?= $(PROJECT_DIR)config/preservation_source_1_0.json
 SOURCE_2_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_2_0.json
 FIXED_VARIANT ?= five_lives
@@ -63,6 +64,12 @@ CONTENT_PRG ?= $(CONTENT_BUILD_DIR)/smb.prg
 CONTENT_ROM ?= $(CONTENT_BUILD_DIR)/smb.nes
 CONTENT_REPORT ?= $(CONTENT_BUILD_DIR)/diff_report.json
 CONTENT_STUDIO_ARG := $(if $(STUDIO),--studio "$(STUDIO)",)
+STUDIO_COMMON_ARGS = \
+	--formats "$(CONTENT_FORMAT_MANIFEST)" \
+	--studios "$(CONTENT_STUDIO_MANIFEST)" \
+	--workspace "$(CONTENT_WORKSPACE)" \
+	--labels "$(NATIVE_LABELS)" \
+	--project-root "$(PROJECT_DIR)"
 PROFILE ?= pc10
 REVISION_MANIFEST ?= $(PROJECT_DIR)config/revision_profiles.json
 REVISION_SOURCE ?= $(PROJECT_DIR)src/revisions/$(PROFILE).asm
@@ -85,7 +92,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded export-content validate-content build-content split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -213,28 +220,40 @@ validate-expanded: verify-expanded
 		--lua "$(EXPANDED_RUNTIME_LUA)" \
 		--result "$(EXPANDED_RUNTIME_RESULT)"
 
-export-content: build-prg
-	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" export \
-		--formats "$(DATA_FORMAT_MANIFEST)" \
+init-content: build-prg
+	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" init \
+		--formats "$(CONTENT_FORMAT_MANIFEST)" \
 		--studios "$(CONTENT_STUDIO_MANIFEST)" \
 		--labels "$(NATIVE_LABELS)" \
 		--prg "$(NATIVE_PRG)" \
 		--workspace "$(CONTENT_WORKSPACE)" \
+		--chr "$(GENERATED_CHR)" \
+		$(CONTENT_STUDIO_ARG)
+
+export-content: build-prg
+	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" export \
+		--formats "$(CONTENT_FORMAT_MANIFEST)" \
+		--studios "$(CONTENT_STUDIO_MANIFEST)" \
+		--labels "$(NATIVE_LABELS)" \
+		--prg "$(NATIVE_PRG)" \
+		--workspace "$(CONTENT_WORKSPACE)" \
+		--chr "$(GENERATED_CHR)" \
 		$(CONTENT_STUDIO_ARG)
 
 validate-content: build-prg
 	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" validate \
-		--formats "$(DATA_FORMAT_MANIFEST)" \
+		--formats "$(CONTENT_FORMAT_MANIFEST)" \
 		--studios "$(CONTENT_STUDIO_MANIFEST)" \
 		--labels "$(NATIVE_LABELS)" \
 		--prg "$(NATIVE_PRG)" \
 		--workspace "$(CONTENT_WORKSPACE)" \
+		--chr "$(GENERATED_CHR)" \
 		--report "$(CONTENT_REPORT)" \
 		$(CONTENT_STUDIO_ARG)
 
 build-content: build
 	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" build \
-		--formats "$(DATA_FORMAT_MANIFEST)" \
+		--formats "$(CONTENT_FORMAT_MANIFEST)" \
 		--studios "$(CONTENT_STUDIO_MANIFEST)" \
 		--labels "$(NATIVE_LABELS)" \
 		--prg "$(NATIVE_PRG)" \
@@ -245,6 +264,36 @@ build-content: build
 		--output-rom "$(CONTENT_ROM)" \
 		--report "$(CONTENT_REPORT)" \
 		$(CONTENT_STUDIO_ARG)
+
+check-studios: init-content
+	$(PYTHON) "$(PROJECT_DIR)scripts/world_studio.py" $(STUDIO_COMMON_ARGS) --check
+	$(PYTHON) "$(PROJECT_DIR)scripts/level_studio.py" $(STUDIO_COMMON_ARGS) --check
+	$(PYTHON) "$(PROJECT_DIR)scripts/graphics_studio.py" $(STUDIO_COMMON_ARGS) --check
+	$(PYTHON) "$(PROJECT_DIR)scripts/sound_studio.py" $(STUDIO_COMMON_ARGS) --prg "$(NATIVE_PRG)" --check
+
+run-content: build-content
+	"$(FCEUX_EXE)" "$(CONTENT_ROM)"
+
+world-studio:
+	$(MAKE) init-content STUDIO=world
+	$(PYTHON) "$(PROJECT_DIR)scripts/world_studio.py" $(STUDIO_COMMON_ARGS)
+
+level-studio:
+	$(MAKE) init-content STUDIO=level
+	$(PYTHON) "$(PROJECT_DIR)scripts/level_studio.py" $(STUDIO_COMMON_ARGS)
+
+graphics-studio:
+	$(MAKE) init-content STUDIO=graphics
+	$(PYTHON) "$(PROJECT_DIR)scripts/graphics_studio.py" $(STUDIO_COMMON_ARGS)
+
+sound-studio:
+	$(MAKE) init-content STUDIO=sound
+	$(PYTHON) "$(PROJECT_DIR)scripts/sound_studio.py" $(STUDIO_COMMON_ARGS) --prg "$(NATIVE_PRG)"
+
+world-editor: world-studio
+level-editor: level-studio
+graphics-editor: graphics-studio
+sound-editor: sound-studio
 
 split-revision-assets:
 	$(PYTHON) "$(PROJECT_DIR)scripts/revision_profiles.py" split \
@@ -375,6 +424,7 @@ source-2-check:
 	$(MAKE) release-check
 	$(MAKE) validate-hack
 	$(MAKE) validate-expanded
+	$(MAKE) check-studios
 	$(MAKE) validate-revisions
 	$(MAKE) source-2-release-audit
 

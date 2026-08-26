@@ -11,11 +11,15 @@ from data_formats import (  # noqa: E402
     decode_area_object_stream,
     decode_enemy_object_stream,
     decode_music_channels,
+    decode_ppu_packet_blocks,
     decode_ppu_packets,
+    decode_stream_collection,
     encode_area_object_stream,
     encode_enemy_object_stream,
     encode_music_channels,
+    encode_ppu_packet_blocks,
     encode_ppu_packets,
+    encode_stream_collection,
 )
 
 
@@ -48,6 +52,23 @@ class DataFormatTests(unittest.TestCase):
         self.assertEqual(packet["values"], [0xAA])
         self.assertEqual(encode_ppu_packets(decoded, entry), data)
 
+    def test_ppu_packet_collection_preserves_named_blocks(self) -> None:
+        entry = {"terminator": 0x00, "block_names": ["full", "short"]}
+        data = bytes([
+            0x3F, 0x00, 0x04, 0x0F, 0x16, 0x27, 0x18, 0x00,
+            0x3F, 0x14, 0x44, 0x22, 0x00,
+        ])
+        decoded = decode_ppu_packet_blocks(data, entry)
+        self.assertEqual([block["name"] for block in decoded["blocks"]], ["full", "short"])
+        self.assertEqual(decoded["blocks"][1]["packets"][0]["values"], [0x22])
+        self.assertEqual(encode_ppu_packet_blocks(decoded, entry), data)
+
+    def test_ppu_packet_collection_rejects_manifest_reordering(self) -> None:
+        entry = {"terminator": 0x00, "block_names": ["first"]}
+        value = {"blocks": [{"name": "other", "packets": []}]}
+        with self.assertRaisesRegex(ValueError, "names or order"):
+            encode_ppu_packet_blocks(value, entry)
+
     def test_music_event_fields_reconstruct_every_bit(self) -> None:
         entry = {
             "channels": [
@@ -60,6 +81,28 @@ class DataFormatTests(unittest.TestCase):
         self.assertEqual(decoded["channels"][0]["events"][0]["kind"], "length")
         self.assertEqual(decoded["channels"][0]["events"][1], {"kind": "note", "offset": 0x2C})
         self.assertEqual(encode_music_channels(decoded, entry), data)
+
+    def test_stream_collection_preserves_capacity_padding(self) -> None:
+        entry = {
+            "stream_codec": "area_object_stream",
+            "stream_terminator": 0xFD,
+            "streams": [{"name": "ground_1", "capacity": 7}],
+        }
+        data = bytes([0x51, 0x21, 0x10, 0x01, 0xFD, 0x00, 0x00])
+        decoded = decode_stream_collection(data, entry)
+        self.assertEqual(decoded["streams"][0]["capacity_bytes"], 7)
+        self.assertEqual(encode_stream_collection(decoded, entry), data)
+
+    def test_stream_collection_supports_shared_terminator(self) -> None:
+        entry = {
+            "stream_codec": "enemy_object_stream",
+            "stream_terminator": 0xFF,
+            "streams": [{"name": "ground_9", "capacity": 2}],
+        }
+        data = bytes([0x85, 0x06])
+        decoded = decode_stream_collection(data, entry)
+        self.assertTrue(decoded["streams"][0]["implicit_terminator"])
+        self.assertEqual(encode_stream_collection(decoded, entry), data)
 
 
 if __name__ == "__main__":

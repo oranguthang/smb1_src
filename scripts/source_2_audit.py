@@ -100,7 +100,17 @@ def validate_source_2(
         errors.append("2.0 CNROM fixed CPU range must permit no changes")
 
     studios = load_json(project_root / contracts["content_studio_manifest"])
-    formats = load_json(project_root / "config" / "data_formats.json")
+    content_format_path = project_root / contracts["content_format_manifest"]
+    format_contract = load_json(content_format_path)
+    formats = load_json(content_format_path.parent / format_contract["base_manifest"])
+    excluded = set(format_contract.get("excluded_artifacts", []))
+    format_artifacts = {
+        artifact["id"] for artifact in formats["artifacts"]
+        if artifact["id"] not in excluded
+    }
+    format_artifacts.update(
+        artifact["id"] for artifact in format_contract.get("artifacts", [])
+    )
     if len(studios["studios"]) != contracts["content_studios"]:
         errors.append("content studio count differs from the 2.0 manifest")
     studio_artifacts = {
@@ -108,7 +118,6 @@ def validate_source_2(
         for studio in studios["studios"]
         for artifact in studio["artifacts"]
     }
-    format_artifacts = {artifact["id"] for artifact in formats["artifacts"]}
     if studio_artifacts != format_artifacts:
         errors.append("content studios do not cover exactly the stable codec artifacts")
     if len(format_artifacts) != contracts["content_artifacts"]:

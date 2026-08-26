@@ -482,23 +482,25 @@ See docs/adr/0001-expanded-rom-architecture.md and docs/expanded_rom.md.
 
 ### 12. Content Authoring Tools - Complete
 
-Build editors only on top of stable tested codecs. Candidate focused tools are:
+Build editors only on top of stable tested codecs. The four focused tools are:
 
-- World/Area Studio for object and enemy streams;
-- Physics Studio for player and object tuning tables;
-- Graphics Studio for local CHR, metatiles, palettes, and sprite mappings;
-- Screen Studio for title, text, HUD, and PPU packets;
-- Sound Studio for music and SFX streams.
+- World Studio for course routing and player-physics tuning;
+- Level Studio for all area headers, terrain objects, enemies, and entrances;
+- Graphics Studio for CHR, metatiles, palettes, player mappings, and UI text;
+- Sound Studio for the complete vanilla music bank and SFX envelopes.
 
 Editors save ignored local assets atomically, expose capacity/format limits,
 compare original and edited content, invoke the shared build pipeline, and never
 invent a second encoding implementation.
 
-The five studio profiles now export all ten stable artifacts to an ignored,
-atomically written JSON workspace. Validation imports the existing codec
-registry, enforces exact fixed-layout capacity and canonical values, reports
-byte differences, and builds an isolated ROM without touching source or
-preservation outputs. See docs/content_authoring.md.
+The four studio profiles retain the ten-artifact Preservation Source 1.0
+contract and layer complete level streams, the full vanilla music bank, all
+metatiles, full game text, area palettes, and editable CHR into a ten-artifact
+2.0 workspace. Dependency-free Tkinter applications expose semantic controls
+and visual previews over the same codec registry. Validation enforces exact
+fixed-layout capacity and canonical values, reports byte differences, and
+builds an isolated ROM without touching source or preservation outputs. See
+docs/content_authoring.md.
 
 ### 13. Multi-Revision and Platform Builds - In Progress
 
@@ -543,18 +545,49 @@ boundary, and covered by an appropriate platform runtime gate.
 
 ### 14. Source Reconstruction 2.0 - Planned
 
-A later release may combine the stable preservation source with reversible
-content authoring, isolated expanded-ROM support, and verified official revision
+Source Reconstruction 2.0 is the compatibility and SMB1-family completeness
+release. It combines the stable preservation source with reversible content
+authoring, isolated expanded-ROM support, and verified official revision
 profiles. Its release audit must keep Source Reconstruction 1.0 and the default
 reference `make verify` contract intact.
 
 The developing 2.0 contract combines manifest-checked fixed-layout variants,
-CNROM graphics expansion, five reversible content studios, and the complete
+CNROM graphics expansion, four reversible content studios, and the complete
 selected SMB1 engine family. Its aggregate gate begins with the complete 1.0
 release gate, checks the immutable 1.0 tag target, then validates every later
 build family and their cross-manifest agreement. It must reject a release while
 any in-scope revision or platform profile remains unsupported. See
 `docs/source_reconstruction_2_0.md`.
+
+The required release profiles are Japan/USA, PlayChoice-10, the verified
+European PAL release, Vs. Super Mario Bros., the FDS SMB1 reissue, and All Night
+Nippon Super Mario Bros. The alternate European candidate is investigated and
+retains explicit provenance, but is not promoted to an official supported
+profile without stronger evidence. Japanese SMB2 / The Lost Levels, unrelated
+ports, additional mappers, and speculative hacks are not 2.0 requirements.
+
+Exit criterion: every required profile has a shared-source build, the strongest
+stable byte-identity boundary available for its container, an appropriate
+runtime gate, and inclusion in `make source-2-check`.
+
+### 15. Source Reconstruction 3.0 - Future
+
+Source Reconstruction 3.0 is reserved for semantic consolidation and broader
+authoring after the complete SMB1-family matrix is stable. Candidate work is:
+
+- replacing dense platform conditionals with reviewed platform modules and
+  interfaces;
+- resolving remaining unknown routines, RAM fields, formats, and engine
+  differences introduced by the Vs. and FDS branches;
+- extending the studios to variant-specific levels, graphics, text, sound,
+  disk files, and CHR-RAM resources;
+- deeper behavior tests beyond startup and focused smoke scenarios;
+- additional mapper and ROM-hack architectures that do not belong in the 2.0
+  compatibility contract.
+
+Japanese SMB2 / The Lost Levels may be evaluated for 3.0 after All Night Nippon
+is integrated. It is not promised: if the later engine cannot remain a coherent
+shared source, it should become a separate reconstruction project.
 
 ## Permanent Project Invariants
 
