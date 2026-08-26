@@ -5,7 +5,8 @@
     "author": "doppelganger",
     "url": "https://gist.github.com/1wErt3r/4048722",
     "repository_import_commit": "052aa23781fe028d8d7d2627638a87326107c015",
-    "repository_import_path": "src/smbdis.asm"
+    "repository_import_path": "src/smbdis.asm",
+    "label_policy": "Colon labels in the imported source, including labels sharing a line with their first statement."
   },
   "counts": {"original_labels": 1992, "current_labels": 1993, "direct_renames": 1992, "project_additions": 1},
   "rename_columns": ["original", "current", "current_path"],

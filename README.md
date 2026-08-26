@@ -15,7 +15,7 @@ This repository contains:
 - **src/nrom256_prg_only.cfg** - Linker configuration for the 32 KiB PRG image
 - **bin/ca65.exe** - 6502 assembly compiler from [cc65](http://www.cc65.org/)
 - **bin/ld65.exe** - 6502 linker from [cc65](http://www.cc65.org/)
-- **docs/6502jsm.txt** - Summary of 6502 CPU instructions
+- **docs/6502_reference.md** - NES 6502 instructions, flags, and opcodes
 - **docs/modding_examples.md** - Example gameplay edits and patch ideas
 - **docs/naming.md** - Semantic symbol vocabulary and evidence rules
 - **docs/player_movement.md** - Player input, physics, collision, and traces
@@ -40,7 +40,7 @@ smb1_src/
 |   |-- manifest.json   # Reference identity and extracted-asset hashes
 |   `-- generated/      # Ignored local header and CHR data
 |-- docs/               # Local technical notes
-|   |-- 6502jsm.txt
+|   |-- 6502_reference.md
 |   `-- modding_examples.md
 |-- scripts/            # Cross-platform build, split, and validation logic
 |-- src/                # Assembly source and linker config
@@ -99,7 +99,7 @@ byte-identical to the recorded baseline in `assets/manifest.json`.
 ### Using Makefile
 
 ```bash
-# Check assembly formatting without modifying source files
+# Check tracked text, assembly style, semantic source, and documentation
 make lint
 
 # Normalize assembly formatting and run the same checks

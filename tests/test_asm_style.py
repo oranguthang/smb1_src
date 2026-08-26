@@ -11,7 +11,7 @@ class AssemblyStyleTests(unittest.TestCase):
     def test_nested_source_passes(self) -> None:
         source = """\
 .if ENABLE_DEMO
-DemoEntry:
+handler_demo_entry:
     LDA #$01  ; Select demo mode
     .repeat 2
         NOP
@@ -68,8 +68,8 @@ DemoEntry:
         self.assertIn("comment-period", codes)
 
     def test_formatter_is_idempotent(self) -> None:
-        source = "\n;Header.\nStart: lda #$00 ;first sentence. second sentence.\n\n\n"
-        expected = "; Header\nStart:\n    LDA #$00  ; first sentence. second sentence\n"
+        source = "\n;Header.\nsub_start: lda #$00 ;first sentence. second sentence.\n\n\n"
+        expected = "; Header\nsub_start:\n    LDA #$00  ; first sentence. second sentence\n"
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory, "format.asm")
             path.write_text(source, encoding="utf-8", newline="\n")
@@ -77,6 +77,22 @@ DemoEntry:
             self.assertEqual(path.read_text(encoding="utf-8"), expected)
             self.assertEqual(lint_file(path), [])
             self.assertFalse(format_file(path))
+
+    def test_label_comment_moves_to_preceding_line(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "sample.asm"
+            path.write_text(
+                "sub_example:  ; Explain the entry\n    RTS\n",
+                encoding="utf-8",
+            )
+
+            self.assertIn("label-line", {issue.code for issue in lint_file(path)})
+            self.assertTrue(format_file(path))
+            self.assertEqual(
+                path.read_text(encoding="utf-8"),
+                "; Explain the entry\nsub_example:\n    RTS\n",
+            )
+            self.assertEqual(lint_file(path), [])
 
 
 if __name__ == "__main__":

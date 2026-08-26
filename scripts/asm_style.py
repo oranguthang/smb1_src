@@ -280,6 +280,15 @@ def lint_file(path: Path) -> list[Issue]:
         if label_match:
             if leading:
                 issues.append(Issue(path, line_number, "label-indent", "labels must start at column zero"))
+            if comment is not None:
+                issues.append(
+                    Issue(
+                        path,
+                        line_number,
+                        "label-line",
+                        "label line must end immediately after ':'; put the comment on a preceding line",
+                    )
+                )
             if label_match.group("tail").strip():
                 issues.append(
                     Issue(path, line_number, "label-line", "put the statement after a label on its own line")
@@ -412,6 +421,9 @@ def format_file(path: Path) -> bool:
         if label_match and label_match.group("tail").strip():
             logical_lines.append((label_match.group("label"), None))
             logical_lines.append((label_match.group("tail").strip(), comment))
+        elif label_match and comment is not None:
+            logical_lines.append(("", comment))
+            logical_lines.append((label_match.group("label"), None))
         else:
             logical_lines.append((statement, comment))
 

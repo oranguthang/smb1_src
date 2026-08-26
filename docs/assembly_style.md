@@ -13,7 +13,9 @@ remaining explicit about the few rules that editors cannot enforce.
 - Do not use tabs or trailing whitespace.
 - Do not begin a file with a blank or whitespace-only line.
 - Keep at most one blank line between source lines.
-- Put every label at column zero on a line of its own.
+- Put every label at column zero on a line of its own. The colon must be the
+  final character: put comments on a preceding line and leave no trailing
+  whitespace.
 - Indent instructions and data-emitting directives by four spaces.
 - Indent the contents of `.if`, `.repeat`, `.macro`, and similar blocks by an
   additional four spaces for each nested block.
@@ -31,13 +33,16 @@ handler_demo_entry:
 .endif
 ```
 
-## Case
+## Case and Labels
 
 - Write 6502 mnemonics in uppercase: `LDA`, `JSR`, `RTS`.
 - Write ca65 directives in lowercase: `.byte`, `.word`, `.include`, `.segment`.
 - Write every colon label with its semantic role prefix in lowercase snake_case;
   see `naming.md` for the accepted prefixes.
 - Preserve the declared case of constants and operands.
+- Keep every active colon label unique across all ASM and INC modules.
+- Keep historical names in `provenance/label_renames.json`, not in repeated
+  inline `was:` comments.
 
 ## Comments
 
@@ -67,7 +72,8 @@ bra_initialize_after_boot_check:
 
 ## Tooling
 
-Run the style gate without modifying files:
+Run the complete text, style, semantic, and documentation gate without modifying
+files:
 
 ```bash
 make lint

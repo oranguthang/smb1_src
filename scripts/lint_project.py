@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import ast
 import re
+import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -18,6 +19,19 @@ MARKDOWN_LINK_RE = re.compile(r"(?<!!)\[[^]]+\]\(([^)]+)\)")
 HARDWARE_ADDRESS_RE = re.compile(
     r"\$(?:200[0-7]|400[0-9A-Fa-f]|401[0-7])\b", re.IGNORECASE
 )
+TEXT_SUFFIXES = {
+    ".asm",
+    ".cfg",
+    ".fm2",
+    ".inc",
+    ".json",
+    ".lua",
+    ".md",
+    ".py",
+    ".txt",
+}
+TEXT_FILENAMES = {".editorconfig", ".gitattributes", ".gitignore", "Makefile"}
+FALLBACK_IGNORED_PARTS = {".git", "__pycache__", "build", "references"}
 
 
 @dataclass(frozen=True)
@@ -32,6 +46,69 @@ class Diagnostic:
 
 def line_number(text: str, offset: int) -> int:
     return text.count("\n", 0, offset) + 1
+
+
+def is_text_path(path: Path) -> bool:
+    return path.name in TEXT_FILENAMES or path.suffix.lower() in TEXT_SUFFIXES
+
+
+def tracked_paths(project_root: Path) -> list[Path]:
+    try:
+        result = subprocess.run(
+            ["git", "ls-files"],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+        )
+    except FileNotFoundError:
+        result = None
+    if result is not None and result.returncode == 0:
+        return sorted(
+            project_root / relative
+            for relative in result.stdout.splitlines()
+            if relative and (project_root / relative).is_file()
+        )
+
+    return sorted(
+        path
+        for path in project_root.rglob("*")
+        if path.is_file()
+        and not FALLBACK_IGNORED_PARTS.intersection(
+            path.relative_to(project_root).parts
+        )
+        and path.relative_to(project_root).parts[:2] != ("assets", "generated")
+    )
+
+
+def lint_text_content(path: Path, text: str) -> list[Diagnostic]:
+    diagnostics: list[Diagnostic] = []
+    if not text.endswith("\n"):
+        diagnostics.append(Diagnostic(path, 1, "text file must end with one newline"))
+    elif text.endswith("\n\n"):
+        diagnostics.append(
+            Diagnostic(path, len(text.splitlines()) or 1, "text file has a blank line at EOF")
+        )
+    for number, line in enumerate(text.splitlines(), start=1):
+        if line.endswith((" ", "\t")):
+            diagnostics.append(Diagnostic(path, number, "trailing whitespace"))
+    return diagnostics
+
+
+def lint_tracked_text(project_root: Path) -> list[Diagnostic]:
+    diagnostics: list[Diagnostic] = []
+    for path in tracked_paths(project_root):
+        relative = path.relative_to(project_root)
+        if not is_text_path(relative):
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError as exc:
+            diagnostics.append(Diagnostic(relative, 1, f"text file is not UTF-8: {exc}"))
+            continue
+        diagnostics.extend(lint_text_content(relative, text))
+    return diagnostics
 
 
 def lint_python(project_root: Path) -> list[Diagnostic]:
@@ -59,7 +136,15 @@ def normalize_link_target(raw_target: str) -> str:
 
 def lint_markdown_links(project_root: Path) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
-    paths = [project_root / "README.md", *sorted((project_root / "docs").rglob("*.md"))]
+    paths = [
+        path
+        for path in (
+            project_root / "README.md",
+            project_root / "CONTRIBUTING.md",
+            *sorted((project_root / "docs").rglob("*.md")),
+        )
+        if path.is_file()
+    ]
     for path in paths:
         text = path.read_text(encoding="utf-8")
         for match in MARKDOWN_LINK_RE.finditer(text):
@@ -142,6 +227,7 @@ def lint_raw_hardware_operands(project_root: Path) -> list[Diagnostic]:
 
 def lint_project(project_root: Path) -> list[Diagnostic]:
     diagnostics = [
+        *lint_tracked_text(project_root),
         *lint_python(project_root),
         *lint_markdown_links(project_root),
         *lint_evidence(project_root),
@@ -164,7 +250,10 @@ def main() -> int:
             print(f"[ERROR] {diagnostic}")
         print(f"[FAIL] Found {len(diagnostics)} project invariant error(s)")
         return 1
-    print("[OK] Validated Python syntax, documentation links, evidence tags, and hardware operands")
+    print(
+        "[OK] Validated tracked text, Python syntax, documentation links, "
+        "evidence tags, and hardware operands"
+    )
     return 0
 
 

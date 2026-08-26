@@ -83,6 +83,20 @@ class LintSourceTests(unittest.TestCase):
         messages = self.messages("bra_face_player:\n    RTS\n")
         self.assertEqual(messages, [])
 
+    def test_rejects_inline_label_provenance(self) -> None:
+        messages = self.messages("sub_example:  ; was: sub_C000\n    RTS\n")
+        self.assertIn(
+            "inline label provenance is forbidden; update "
+            "docs/provenance/label_renames.json",
+            messages,
+        )
+
+    def test_rejects_any_content_after_label_colon(self) -> None:
+        for suffix in (" ", "  ; explanation", " LDA #$01"):
+            with self.subTest(suffix=suffix):
+                messages = self.messages(f"sub_example:{suffix}\n    RTS\n")
+                self.assertIn("label line must end immediately after ':'", messages)
+
 
 if __name__ == "__main__":
     unittest.main()

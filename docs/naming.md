@@ -26,7 +26,8 @@ Every colon label must begin with one of the code or data prefixes above and use
 lowercase snake_case. Empty components, doubled underscores, leading or trailing
 underscores, uppercase letters, and unprefixed legacy names are rejected. This
 rule applies to labels only; uppercase hardware and assembly-time constants keep
-their declared convention.
+their declared convention. Every colon label must also be unique across the
+source tree.
 
 ## Data Symbols
 
@@ -57,4 +58,6 @@ unknown until static or runtime evidence supports a semantic name.
 
 The vocabulary is mandatory for all active colon labels. Rename a symbol only
 when control flow, data flow, encoded structure, or runtime evidence supports the
-new role, then run both `make lint` and `make verify`.
+new role, then run both `make lint` and `make verify`. Every rename must update
+the existing provenance entry; every genuinely new label must add one
+`project_additions` record.

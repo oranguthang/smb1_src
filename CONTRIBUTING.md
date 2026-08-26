@@ -23,6 +23,8 @@ Use the vocabulary in `docs/naming.md` and the mechanically checked formatting
 in `docs/assembly_style.md`. Source comments and documentation are English.
 Uncertain interpretations must use an evidence tag and a stable entry in
 `docs/unknowns.md`; do not turn a plausible guess into an unqualified fact.
+`make lint` also requires exactly one final newline and rejects trailing
+whitespace across every tracked text file, including this guide.
 
 For each coherent source change:
 

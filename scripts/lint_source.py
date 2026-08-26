@@ -35,6 +35,9 @@ ADDRESS_NAME_RE = re.compile(
 )
 JSR_RE = re.compile(r"^\s*JSR\s+([A-Za-z_][A-Za-z0-9_]*)\b")
 SUB_LABEL_RE = re.compile(r"^(sub_[A-Za-z0-9_]+):")
+PHYSICAL_LABEL_RE = re.compile(
+    r"^\s*[A-Za-z_@.?][A-Za-z0-9_@.?]*:(.*)$"
+)
 
 
 @dataclass(frozen=True)
@@ -84,6 +87,25 @@ def lint_project(project_root: Path) -> list[Diagnostic]:
             )
 
         for line_number, line in enumerate(lines, start=1):
+            physical_label = PHYSICAL_LABEL_RE.match(line)
+            if physical_label is not None and physical_label.group(1):
+                diagnostics.append(
+                    Diagnostic(
+                        relative_path,
+                        line_number,
+                        "label line must end immediately after ':'",
+                    )
+                )
+            if re.search(r";\s*was:", line, re.IGNORECASE):
+                diagnostics.append(
+                    Diagnostic(
+                        relative_path,
+                        line_number,
+                        "inline label provenance is forbidden; update "
+                        "docs/provenance/label_renames.json",
+                    )
+                )
+
             code = source_code(line)
             if not code:
                 continue

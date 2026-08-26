@@ -50,8 +50,9 @@ produced bytes.
   validated as mapper 0 with vertical mirroring, 32 KiB PRG, and 8 KiB CHR.
 - `make verify` reproduces its complete ROM SHA-1
   `ea343f4e445a9050d4b4fbac2c77d0693b1d0922` byte-for-byte.
-- `make lint` enforces the documented ca65 whitespace, layout, comment-spacing,
-  mnemonic-case, directive-case, role-prefixed snake_case labels, module-size, and direct
+- `make lint` enforces tracked-text final-newline and trailing-whitespace rules,
+  plus the documented ca65 layout, comment-spacing, mnemonic-case,
+  directive-case, role-prefixed snake_case labels, module-size, and direct
   `JSR`/`sub_` consistency rules. The checkers have focused unit tests, and
   `make trace-runtime` validates twelve deterministic emulator scenarios.
 - All 516 RAM and assembly-time constant definitions use explicit `ram_` and
@@ -368,13 +369,14 @@ English from another language written entirely in unaccented Latin characters
 remains a review requirement rather than a probabilistic heuristic.
 
 The four validation layers are now executable as documented. Project lint also
-parses every Python tool and test with `ast`, checks local Markdown link targets,
-requires material source evidence tags to reference the stable unknowns
-registry, rejects orphan registry IDs, and forbids raw PPU/APU/I/O operands
-outside `hardware.inc`. Focused unit tests exercise both accepted and rejected
-cases. `make trace` composes the live FCEUX symbol smoke test with all focused
-and long-movie runtime scenarios; `make verify` remains the independent and
-authoritative byte-identity gate.
+checks final newlines and trailing whitespace across tracked text, parses every
+Python tool and test with `ast`, checks local Markdown link targets including
+`CONTRIBUTING.md`, requires material source evidence tags to reference the
+stable unknowns registry, rejects orphan registry IDs, and forbids raw
+PPU/APU/I/O operands outside `hardware.inc`. Focused unit tests exercise both
+accepted and rejected cases. `make trace` composes the live FCEUX symbol smoke
+test with all focused and long-movie runtime scenarios; `make verify` remains
+the independent and authoritative byte-identity gate.
 
 ### 8. Decode and Round-Trip Data Formats - Complete
 
@@ -425,7 +427,7 @@ The stable contract is recorded in `docs/preservation_source_1_0.md` and the
 machine-readable `config/preservation_source_1_0.json`. `CONTRIBUTING.md` gives
 a subsystem-oriented change workflow that preserves the asset boundary,
 evidence vocabulary, source layout, and validation layers. `make release-check`
-runs lint, 33 focused tests, all ten data round trips, complete-ROM byte
+runs lint, 44 focused tests, all ten data round trips, complete-ROM byte
 verification, the live debugger/runtime layer, and a final manifest audit. The
 audit cross-checks hashes, tool versions, scenario/codec counts, required docs,
 milestone status, Make targets, and the tracked-payload prohibition. The local
