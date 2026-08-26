@@ -455,7 +455,7 @@ complete-ROM comparison rejects every undeclared difference, and a focused
 FCEUX gate observes the resulting spare-life count after game setup. See
 `docs/fixed_layout_variants.md`.
 
-### 11. Expanded-ROM Architecture - Planned
+### 11. Expanded-ROM Architecture - Complete
 
 Super Mario Bros. already occupies a complete NROM-256 PRG address space, so the
 Pac-Man NROM-128-to-NROM-256 expansion technique cannot be reused directly.
@@ -473,6 +473,12 @@ record comparing:
 The expanded layout must have a separate linker configuration and entrypoint.
 It must preserve the original build as the default and mechanically validate
 every fixed-bank operand and allowed patch site.
+
+ADR 0001 selects a conservative CNROM graphics expansion after rejecting unsafe
+power-on assumptions for PRG-bank mappers. The isolated profile preserves the
+complete canonical PRG, duplicates validated CHR into two initial banks, checks
+the Mapper 3 header and every bank hash, and reaches active World 1-1 in FCEUX.
+See docs/adr/0001-expanded-rom-architecture.md and docs/expanded_rom.md.
 
 ### 12. Content Authoring Tools - Planned
 

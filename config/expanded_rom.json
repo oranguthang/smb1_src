@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "cnrom_chr_16k",
+  "description": "Mapper 3 profile with the canonical PRG and two initially identical CHR banks",
+  "mapper": 3,
+  "mirroring": "vertical",
+  "prg_banks_16k": 2,
+  "chr_banks_8k": 2,
+  "prg_sha1": "fefa1097449a3a11ebf8c6199e905996c5dc8fbd",
+  "chr_bank_sha1": [
+    "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5",
+    "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5"
+  ],
+  "fixed_cpu_range": {
+    "start": "0x8000",
+    "end": "0xffff",
+    "allowed_changes": []
+  },
+  "runtime": {
+    "frame": 205,
+    "expected_ram": {
+      "0x0770": "0x01",
+      "0x0772": "0x03",
+      "0x075f": "0x00",
+      "0x0760": "0x00"
+    },
+    "meaning": "The unmodified PRG reaches active World 1-1 under Mapper 3"
+  }
+}

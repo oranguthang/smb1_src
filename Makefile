@@ -43,10 +43,22 @@ HACK_DEBUG ?= $(HACK_BUILD_DIR)/smb.dbg
 HACK_ROM ?= $(HACK_BUILD_DIR)/smb.nes
 HACK_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_fixed_variant.lua
 HACK_RUNTIME_RESULT ?= $(HACK_BUILD_DIR)/runtime.txt
+EXPANDED_MANIFEST ?= $(PROJECT_DIR)config/expanded_rom.json
+EXPANDED_SOURCE ?= $(PROJECT_DIR)src/expanded/cnrom.asm
+EXPANDED_CFG ?= $(PROJECT_DIR)src/expanded/cnrom_prg_only.cfg
+EXPANDED_BUILD_DIR ?= $(PROJECT_DIR)build/expanded/cnrom_chr_16k
+EXPANDED_OBJ ?= $(EXPANDED_BUILD_DIR)/smb.o
+EXPANDED_PRG ?= $(EXPANDED_BUILD_DIR)/smb.prg
+EXPANDED_LABELS ?= $(EXPANDED_BUILD_DIR)/smb.lbl
+EXPANDED_MAP ?= $(EXPANDED_BUILD_DIR)/smb.map
+EXPANDED_DEBUG ?= $(EXPANDED_BUILD_DIR)/smb.dbg
+EXPANDED_ROM ?= $(EXPANDED_BUILD_DIR)/smb.nes
+EXPANDED_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_expanded_runtime.lua
+EXPANDED_RUNTIME_RESULT ?= $(EXPANDED_BUILD_DIR)/runtime.txt
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -138,6 +150,41 @@ validate-hack: verify-hack
 		--movie "$(RUNTIME_MOVIE)" \
 		--lua "$(HACK_RUNTIME_LUA)" \
 		--result "$(HACK_RUNTIME_RESULT)"
+
+build-expanded: _require-assets
+	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
+		--source "$(EXPANDED_SOURCE)" \
+		--config "$(EXPANDED_CFG)" \
+		--manifest "$(ASSET_MANIFEST)" \
+		--object "$(EXPANDED_OBJ)" \
+		--prg "$(EXPANDED_PRG)" \
+		--labels "$(EXPANDED_LABELS)" \
+		--map "$(EXPANDED_MAP)" \
+		--debug-info "$(EXPANDED_DEBUG)" \
+		--output-rom "$(EXPANDED_ROM)" \
+		--prg-only --verify
+	$(PYTHON) "$(PROJECT_DIR)scripts/expanded_rom.py" \
+		--manifest "$(EXPANDED_MANIFEST)" \
+		--prg "$(EXPANDED_PRG)" \
+		--chr "$(GENERATED_CHR)" \
+		--output "$(EXPANDED_ROM)"
+
+verify-expanded: build-expanded
+	$(PYTHON) "$(PROJECT_DIR)scripts/expanded_rom.py" \
+		--manifest "$(EXPANDED_MANIFEST)" \
+		--prg "$(EXPANDED_PRG)" \
+		--chr "$(GENERATED_CHR)" \
+		--output "$(EXPANDED_ROM)" \
+		--verify
+
+validate-expanded: verify-expanded
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_expanded_runtime.py" \
+		--manifest "$(EXPANDED_MANIFEST)" \
+		--fceux "$(FCEUX_EXE)" \
+		--rom "$(EXPANDED_ROM)" \
+		--movie "$(RUNTIME_MOVIE)" \
+		--lua "$(EXPANDED_RUNTIME_LUA)" \
+		--result "$(EXPANDED_RUNTIME_RESULT)"
 
 symbols: build
 	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \
