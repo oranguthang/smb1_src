@@ -480,7 +480,7 @@ complete canonical PRG, duplicates validated CHR into two initial banks, checks
 the Mapper 3 header and every bank hash, and reaches active World 1-1 in FCEUX.
 See docs/adr/0001-expanded-rom-architecture.md and docs/expanded_rom.md.
 
-### 12. Content Authoring Tools - Planned
+### 12. Content Authoring Tools - Complete
 
 Build editors only on top of stable tested codecs. Candidate focused tools are:
 
@@ -493,6 +493,12 @@ Build editors only on top of stable tested codecs. Candidate focused tools are:
 Editors save ignored local assets atomically, expose capacity/format limits,
 compare original and edited content, invoke the shared build pipeline, and never
 invent a second encoding implementation.
+
+The five studio profiles now export all ten stable artifacts to an ignored,
+atomically written JSON workspace. Validation imports the existing codec
+registry, enforces exact fixed-layout capacity and canonical values, reports
+byte differences, and builds an isolated ROM without touching source or
+preservation outputs. See docs/content_authoring.md.
 
 ### 13. Official Multi-Revision Builds - Planned
 

@@ -55,10 +55,17 @@ EXPANDED_DEBUG ?= $(EXPANDED_BUILD_DIR)/smb.dbg
 EXPANDED_ROM ?= $(EXPANDED_BUILD_DIR)/smb.nes
 EXPANDED_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_expanded_runtime.lua
 EXPANDED_RUNTIME_RESULT ?= $(EXPANDED_BUILD_DIR)/runtime.txt
+CONTENT_STUDIO_MANIFEST ?= $(PROJECT_DIR)config/content_studios.json
+CONTENT_WORKSPACE ?= $(PROJECT_DIR)content/workspace
+CONTENT_BUILD_DIR ?= $(PROJECT_DIR)build/content
+CONTENT_PRG ?= $(CONTENT_BUILD_DIR)/smb.prg
+CONTENT_ROM ?= $(CONTENT_BUILD_DIR)/smb.nes
+CONTENT_REPORT ?= $(CONTENT_BUILD_DIR)/diff_report.json
+CONTENT_STUDIO_ARG := $(if $(STUDIO),--studio "$(STUDIO)",)
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded export-content validate-content build-content symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -185,6 +192,39 @@ validate-expanded: verify-expanded
 		--movie "$(RUNTIME_MOVIE)" \
 		--lua "$(EXPANDED_RUNTIME_LUA)" \
 		--result "$(EXPANDED_RUNTIME_RESULT)"
+
+export-content: build-prg
+	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" export \
+		--formats "$(DATA_FORMAT_MANIFEST)" \
+		--studios "$(CONTENT_STUDIO_MANIFEST)" \
+		--labels "$(NATIVE_LABELS)" \
+		--prg "$(NATIVE_PRG)" \
+		--workspace "$(CONTENT_WORKSPACE)" \
+		$(CONTENT_STUDIO_ARG)
+
+validate-content: build-prg
+	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" validate \
+		--formats "$(DATA_FORMAT_MANIFEST)" \
+		--studios "$(CONTENT_STUDIO_MANIFEST)" \
+		--labels "$(NATIVE_LABELS)" \
+		--prg "$(NATIVE_PRG)" \
+		--workspace "$(CONTENT_WORKSPACE)" \
+		--report "$(CONTENT_REPORT)" \
+		$(CONTENT_STUDIO_ARG)
+
+build-content: build
+	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" build \
+		--formats "$(DATA_FORMAT_MANIFEST)" \
+		--studios "$(CONTENT_STUDIO_MANIFEST)" \
+		--labels "$(NATIVE_LABELS)" \
+		--prg "$(NATIVE_PRG)" \
+		--workspace "$(CONTENT_WORKSPACE)" \
+		--header "$(GENERATED_HEADER)" \
+		--chr "$(GENERATED_CHR)" \
+		--output-prg "$(CONTENT_PRG)" \
+		--output-rom "$(CONTENT_ROM)" \
+		--report "$(CONTENT_REPORT)" \
+		$(CONTENT_STUDIO_ARG)
 
 symbols: build
 	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \

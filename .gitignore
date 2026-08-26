@@ -22,3 +22,6 @@ __pycache__/
 
 # Local research repositories
 references/
+
+# Local content-authoring workspaces
+content/workspace/
