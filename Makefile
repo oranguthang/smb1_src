@@ -62,10 +62,29 @@ CONTENT_PRG ?= $(CONTENT_BUILD_DIR)/smb.prg
 CONTENT_ROM ?= $(CONTENT_BUILD_DIR)/smb.nes
 CONTENT_REPORT ?= $(CONTENT_BUILD_DIR)/diff_report.json
 CONTENT_STUDIO_ARG := $(if $(STUDIO),--studio "$(STUDIO)",)
+PROFILE ?= pc10
+REVISION_MANIFEST ?= $(PROJECT_DIR)config/revision_profiles.json
+REVISION_SOURCE ?= $(PROJECT_DIR)src/revisions/$(PROFILE).asm
+REVISION_BUILD_DIR ?= $(PROJECT_DIR)build/revisions/$(PROFILE)
+REVISION_OBJ ?= $(REVISION_BUILD_DIR)/smb.o
+REVISION_PRG ?= $(REVISION_BUILD_DIR)/smb.prg
+REVISION_LABELS ?= $(REVISION_BUILD_DIR)/smb.lbl
+REVISION_MAP ?= $(REVISION_BUILD_DIR)/smb.map
+REVISION_DEBUG ?= $(REVISION_BUILD_DIR)/smb.dbg
+REVISION_ROM ?= $(REVISION_BUILD_DIR)/smb.nes
+REVISION_ASSET_DIR ?= $(GENERATED_ASSET_DIR)/revisions
+REVISION_RUNTIME_RESULT ?= $(REVISION_BUILD_DIR)/runtime.txt
+ifeq ($(PROFILE),pc10)
+REVISION_REFERENCE ?= $(PROJECT_DIR)Super Mario Bros. (PC10).nes
+else ifeq ($(PROFILE),ju)
+REVISION_REFERENCE ?= $(PROJECT_DIR)Super Mario Bros. (JU) [!].nes
+else
+REVISION_REFERENCE ?= $(PROJECT_DIR)$(PROFILE).nes
+endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded export-content validate-content build-content symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded export-content validate-content build-content split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -225,6 +244,63 @@ build-content: build
 		--output-rom "$(CONTENT_ROM)" \
 		--report "$(CONTENT_REPORT)" \
 		$(CONTENT_STUDIO_ARG)
+
+split-revision-assets:
+	$(PYTHON) "$(PROJECT_DIR)scripts/revision_profiles.py" split \
+		--manifest "$(REVISION_MANIFEST)" \
+		--profile "$(PROFILE)" \
+		--reference-rom "$(REVISION_REFERENCE)" \
+		--asset-dir "$(REVISION_ASSET_DIR)"
+
+build-revision: _require-assets
+	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
+		--source "$(REVISION_SOURCE)" \
+		--config "$(NATIVE_CFG)" \
+		--manifest "$(ASSET_MANIFEST)" \
+		--object "$(REVISION_OBJ)" \
+		--prg "$(REVISION_PRG)" \
+		--labels "$(REVISION_LABELS)" \
+		--map "$(REVISION_MAP)" \
+		--debug-info "$(REVISION_DEBUG)" \
+		--output-rom "$(REVISION_ROM)" \
+		--prg-only --verify
+	$(PYTHON) "$(PROJECT_DIR)scripts/revision_profiles.py" build \
+		--manifest "$(REVISION_MANIFEST)" \
+		--profile "$(PROFILE)" \
+		--asset-dir "$(REVISION_ASSET_DIR)" \
+		--header "$(GENERATED_HEADER)" \
+		--prg "$(REVISION_PRG)" \
+		--chr "$(GENERATED_CHR)" \
+		--output "$(REVISION_ROM)"
+
+verify-revision: build-revision
+	$(PYTHON) "$(PROJECT_DIR)scripts/revision_profiles.py" verify \
+		--manifest "$(REVISION_MANIFEST)" \
+		--profile "$(PROFILE)" \
+		--reference-rom "$(REVISION_REFERENCE)" \
+		--asset-dir "$(REVISION_ASSET_DIR)" \
+		--header "$(GENERATED_HEADER)" \
+		--prg "$(REVISION_PRG)" \
+		--chr "$(GENERATED_CHR)" \
+		--output "$(REVISION_ROM)"
+
+validate-revision: verify-revision
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_revision_runtime.py" \
+		--manifest "$(REVISION_MANIFEST)" \
+		--profile "$(PROFILE)" \
+		--fceux "$(FCEUX_EXE)" \
+		--rom "$(REVISION_ROM)" \
+		--movie "$(RUNTIME_MOVIE)" \
+		--lua "$(EXPANDED_RUNTIME_LUA)" \
+		--result "$(REVISION_RUNTIME_RESULT)"
+
+verify-revisions:
+	$(MAKE) verify-revision PROFILE=ju
+	$(MAKE) verify-revision PROFILE=pc10
+
+validate-revisions:
+	$(MAKE) validate-revision PROFILE=ju
+	$(MAKE) validate-revision PROFILE=pc10
 
 symbols: build
 	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \

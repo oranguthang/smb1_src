@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "supported": [
+    {
+      "id": "ju",
+      "name": "Super Mario Bros. (Japan, USA)",
+      "reference_rom": "Super Mario Bros. (JU) [!].nes",
+      "entrypoint": "src/revisions/ju.asm",
+      "rom_size": 40976,
+      "rom_sha1": "ea343f4e445a9050d4b4fbac2c77d0693b1d0922",
+      "header_size": 16,
+      "header_sha1": "40c71db0dc29b16057ec159bca7008241fc3a9f6",
+      "prg_size": 32768,
+      "prg_sha1": "fefa1097449a3a11ebf8c6199e905996c5dc8fbd",
+      "chr_size": 8192,
+      "chr_sha1": "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5",
+      "extra_size": 0,
+      "extra_sha1": null
+    },
+    {
+      "id": "pc10",
+      "name": "Super Mario Bros. (PlayChoice-10 container)",
+      "reference_rom": "Super Mario Bros. (PC10).nes",
+      "entrypoint": "src/revisions/pc10.asm",
+      "rom_size": 49168,
+      "rom_sha1": "d48d2c65fda380217ead73ffa6a46cae62939194",
+      "header_size": 16,
+      "header_sha1": "40c71db0dc29b16057ec159bca7008241fc3a9f6",
+      "prg_size": 32768,
+      "prg_sha1": "fefa1097449a3a11ebf8c6199e905996c5dc8fbd",
+      "chr_size": 8192,
+      "chr_sha1": "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5",
+      "extra_size": 8192,
+      "extra_sha1": "c39c90f9503c4692af4a8fdb3e18ef7cf04e897f"
+    }
+  ],
+  "evaluated_not_supported": [
+    {
+      "id": "europe_rev0",
+      "reference_rom": "Super Mario Bros. (E) (REV0) [!p].nes",
+      "rom_sha1": "ab30029efec6ccfc5d65dfda7fbc6e6489a80805",
+      "prg_sha1": "31b332f6bc338e058a7b958dca285066c405b697",
+      "chr_sha1": "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5",
+      "reason": "Requires a reviewed port of PAL timing, physics, audio, collision, level, and padding alternatives"
+    },
+    {
+      "id": "europe_reva",
+      "reference_rom": "Super Mario Bros. (E) (REVA) [!p].nes",
+      "rom_sha1": "353bc2203f8626c5a52cf1e47264acad07503c01",
+      "prg_sha1": "fbe27f9cca860d227bf28f6769571e9efcbdf178",
+      "chr_sha1": "d1d18b70662b49c5db790a0477366d874b00ad57",
+      "reason": "Has distinct PRG and CHR revisions which require independent semantic reconstruction"
+    }
+  ],
+  "runtime": {
+    "frame": 205,
+    "expected_ram": {
+      "0x0770": "0x01",
+      "0x0772": "0x03",
+      "0x075f": "0x00",
+      "0x0760": "0x00"
+    }
+  }
+}

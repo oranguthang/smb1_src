@@ -500,7 +500,7 @@ registry, enforces exact fixed-layout capacity and canonical values, reports
 byte differences, and builds an isolated ROM without touching source or
 preservation outputs. See docs/content_authoring.md.
 
-### 13. Official Multi-Revision Builds - Planned
+### 13. Official Multi-Revision Builds - Complete
 
 After the canonical reconstruction is mature, evaluate locally available
 official revisions. Each supported profile must have:
@@ -513,6 +513,14 @@ official revisions. Each supported profile must have:
 - focused regional runtime gates where timing or rendering differs.
 
 Facts must not be transferred between revisions by matching addresses alone.
+
+The profile manifest now reproduces the Japan/USA and PlayChoice-10 containers
+from separate compile-time entrypoints over one semantic engine source. Each
+complete output has an isolated directory, exact component hashes, its own
+private-reference comparison, and a common FCEUX startup gate. European REV0
+and REVA are recorded as evaluated but unsupported rather than approximated;
+their independent PRG/CHR facts and remaining reconstruction work are explicit.
+See docs/revision_profiles.md.
 
 ### 14. Source Reconstruction 2.0 - Planned
 
