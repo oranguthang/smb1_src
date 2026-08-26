@@ -1,5 +1,10 @@
 ; -------------------------------------------------------------------------------------
+
 ; CONSTANTS
+
+.ifndef con_initial_lives
+con_initial_lives = $02
+.endif
 
 ; sound effects constants
 con_sfx_small_jump         = %10000000

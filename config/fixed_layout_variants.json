@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "variants": [
+    {
+      "id": "five_lives",
+      "description": "Start a new game with five lives instead of three",
+      "source": "src/variants/five_lives.asm",
+      "changes": [
+        {
+          "region": "prg",
+          "offset": "0x106a",
+          "cpu_address": "0x906a",
+          "original": "0x02",
+          "replacement": "0x04",
+          "reason": "Store four spare lives, which the game displays as five total lives"
+        }
+      ],
+      "runtime": {
+        "hook_cpu_address": "0x9071",
+        "ram_address": "0x075a",
+        "expected": "0x04",
+        "meaning": "Four spare lives are present after primary game setup"
+      }
+    }
+  ]
+}

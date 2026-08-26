@@ -31,10 +31,22 @@ RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/runtime
 DATA_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/data_formats.json
 DATA_FORMAT_SUMMARY ?= $(PROJECT_DIR)build/data_formats.json
 RELEASE_MANIFEST ?= $(PROJECT_DIR)config/preservation_source_1_0.json
+FIXED_VARIANT ?= five_lives
+FIXED_VARIANT_MANIFEST ?= $(PROJECT_DIR)config/fixed_layout_variants.json
+HACK_SOURCE ?= $(PROJECT_DIR)src/variants/five_lives.asm
+HACK_BUILD_DIR ?= $(PROJECT_DIR)build/variants/$(FIXED_VARIANT)
+HACK_OBJ ?= $(HACK_BUILD_DIR)/smb.o
+HACK_PRG ?= $(HACK_BUILD_DIR)/smb.prg
+HACK_LABELS ?= $(HACK_BUILD_DIR)/smb.lbl
+HACK_MAP ?= $(HACK_BUILD_DIR)/smb.map
+HACK_DEBUG ?= $(HACK_BUILD_DIR)/smb.dbg
+HACK_ROM ?= $(HACK_BUILD_DIR)/smb.nes
+HACK_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_fixed_variant.lua
+HACK_RUNTIME_RESULT ?= $(HACK_BUILD_DIR)/runtime.txt
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -92,6 +104,40 @@ verify-prg:
 		--debug-info "$(NATIVE_DEBUG)" \
 		--output-rom "$(NATIVE_ROM)" \
 		--prg-only --verify
+
+build-hack: _require-assets
+	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
+		--source "$(HACK_SOURCE)" \
+		--config "$(NATIVE_CFG)" \
+		--manifest "$(ASSET_MANIFEST)" \
+		--original-rom "$(ORIGINAL_ROM)" \
+		--header "$(GENERATED_HEADER)" \
+		--chr "$(GENERATED_CHR)" \
+		--object "$(HACK_OBJ)" \
+		--prg "$(HACK_PRG)" \
+		--labels "$(HACK_LABELS)" \
+		--map "$(HACK_MAP)" \
+		--debug-info "$(HACK_DEBUG)" \
+		--output-rom "$(HACK_ROM)"
+
+verify-hack: build build-hack
+	$(PYTHON) "$(PROJECT_DIR)scripts/fixed_variant.py" \
+		--manifest "$(FIXED_VARIANT_MANIFEST)" \
+		--variant "$(FIXED_VARIANT)" \
+		--baseline-prg "$(NATIVE_PRG)" \
+		--candidate-prg "$(HACK_PRG)" \
+		--baseline-rom "$(NATIVE_ROM)" \
+		--candidate-rom "$(HACK_ROM)"
+
+validate-hack: verify-hack
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_fixed_variant.py" \
+		--manifest "$(FIXED_VARIANT_MANIFEST)" \
+		--variant "$(FIXED_VARIANT)" \
+		--fceux "$(FCEUX_EXE)" \
+		--rom "$(HACK_ROM)" \
+		--movie "$(RUNTIME_MOVIE)" \
+		--lua "$(HACK_RUNTIME_LUA)" \
+		--result "$(HACK_RUNTIME_RESULT)"
 
 symbols: build
 	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \

@@ -434,7 +434,7 @@ milestone status, Make targets, and the tracked-payload prohibition. The local
 annotated `preservation-source-1.0` tag marks the accepted commit before later
 behavior-changing roadmap work.
 
-### 10. Isolated Fixed-Layout ROM-Hack Variants - Planned
+### 10. Isolated Fixed-Layout ROM-Hack Variants - Complete
 
 Introduce separate entrypoints and outputs:
 
@@ -448,6 +448,12 @@ make validate-hack  # prove intended behavior in an emulator
 
 Small hacks may use changed constants, tables, or proven unused space. The
 preservation entrypoint must never define hack feature flags.
+
+The `five_lives` demonstrator establishes the contract with a separate source
+entrypoint and output directory. Its manifest permits one operand change,
+complete-ROM comparison rejects every undeclared difference, and a focused
+FCEUX gate observes the resulting spare-life count after game setup. See
+`docs/fixed_layout_variants.md`.
 
 ### 11. Expanded-ROM Architecture - Planned
 

@@ -162,6 +162,8 @@ def main() -> int:
             "-g",
             "-I",
             str(source.parent),
+            "-I",
+            str(project_root / "src"),
             "-o",
             str(object_path),
         ],

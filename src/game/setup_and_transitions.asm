@@ -88,7 +88,7 @@ handler_primary_game_setup:
     LDA #$01
     STA ram_fetch_new_game_timer_flag  ; set flag to load game timer from header
     STA ram_player_size  ; set player's size to small
-    LDA #$02
+    LDA #con_initial_lives
     STA ram_numberof_lives  ; give each player three lives
     STA ram_off_scr_numberof_lives
 
