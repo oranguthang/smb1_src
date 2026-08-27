@@ -236,7 +236,7 @@ bra_select_grounded_player_action:
     ORA ram_left_right_buttons  ; and left/right controller bits
     BEQ loc_select_nonanimated_player_frame  ; if no speed or buttons pressed, use standing offset
     LDA ram_player_x_speed_absolute  ; load walking/running speed
-    CMP #$09
+    CMP #con_player_skid_speed_cutoff
     BCC bra_select_walking_player_frame  ; if less than a certain amount, branch, too slow to skid
     LDA ram_player_moving_dir  ; otherwise check to see if moving direction
     AND ram_player_facing_dir  ; and facing direction are the same

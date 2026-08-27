@@ -4,7 +4,7 @@ unused_residual_x_speeds:
     .byte $18, $e8
 
 tbl_kicked_shell_x_speeds:
-    .byte $30, $d0
+    .byte con_kicked_enemy_x_speed, <-con_kicked_enemy_x_speed
 
 tbl_demoted_koopa_x_speeds:
     .byte $08, $f8
@@ -101,12 +101,22 @@ bra_check_player_injury_collision:
     BMI bra_check_player_injury_immunity  ; perform procedure below if player moving upwards
     BNE loc_enemy_stomped  ; or not at all, and branch elsewhere if moving downwards
 bra_check_player_injury_immunity:
+.if con_revision_profile = con_revision_profile_pal
+    LDA #$14  ; use the default PAL collision height
+    LDY ram_enemy_id,x
+    CPY #con_flying_cheep_cheep
+    BNE bra_add_player_enemy_collision_height
+    LDA #$07  ; flying cheep-cheeps use a shorter collision height
+bra_add_player_enemy_collision_height:
+    ADC ram_player_y_position
+.else
     LDA ram_enemy_id,x  ; branch if enemy object < $07
     CMP #con_bloober
     BCC bra_check_stomp_and_injury_timers
     LDA ram_player_y_position  ; add 12 pixels to player's vertical position
     CLC
     ADC #$0c
+.endif
     CMP ram_enemy_y_position,x  ; compare modified player's position to enemy's position
     BCC loc_enemy_stomped  ; branch if this player's position above (less than) enemy's
 bra_check_stomp_and_injury_timers:
@@ -134,7 +144,11 @@ sub_force_injury:
     STA ram_player_status  ; otherwise set player's status to small
     LDA #$08
     STA ram_injury_timer  ; set injured invincibility timer
+.if con_revision_profile = con_revision_profile_pal
+    LDA #con_sfx_pipe_down_injury
+.else
     ASL
+.endif
     STA ram_square1_sound_queue  ; play pipedown/injury sound
     JSR sub_get_player_colors  ; change player's palette if necessary
     LDA #$0a  ; set subroutine to run on next frame
@@ -222,7 +236,11 @@ bra_check_koopa_demotion:
     JMP loc_bounce_player_from_enemy  ; then move onto something else
 
 tbl_enemy_revival_delays:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $0d, $09
+.else
     .byte $10, $0b
+.endif
 
 bra_handle_stomped_shell_enemy:
     LDA #$04  ; set defeated state for enemy

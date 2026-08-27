@@ -15,7 +15,11 @@ tbl_bounding_box_relative_edges:
     .byte $00, $00, $30, $0d
     .byte $00, $00, $08, $08
     .byte $06, $04, $0a, $08
+.if con_revision_profile = con_revision_profile_pal
+    .byte $03, $0c, $0d, $14
+.else
     .byte $03, $0e, $0d, $14
+.endif
     .byte $00, $02, $10, $15
     .byte $04, $04, $0c, $1c
 
@@ -355,4 +359,6 @@ loc_return_block_buffer_y_coordinate:
 ; -------------------------------------------------------------------------------------
 
 ; unused byte
+.if con_revision_profile <> con_revision_profile_pal
     .byte $ff
+.endif

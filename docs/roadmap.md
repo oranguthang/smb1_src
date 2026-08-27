@@ -526,16 +526,18 @@ SMB1 engine family. Each supported profile must have:
 
 Facts must not be transferred between revisions by matching addresses alone.
 
-The initial profile framework reproduces the Japan/USA and PlayChoice-10
-containers from separate compile-time entrypoints over one semantic engine
-source. The remaining 2.0 scope is:
+The profile framework now reproduces the Japan/USA, PlayChoice-10, and verified
+European PAL containers from separate compile-time entrypoints over one
+semantic engine source. PAL has exact complete-ROM verification and a PAL-mode
+runtime startup gate. The remaining required 2.0 scope is:
 
-1. the verified European PAL revision;
-2. the historical alternate European candidate, with its pending-dump
-   provenance kept explicit;
-3. Vs. Super Mario Bros. for the Nintendo VS. System;
-4. the Famicom Disk System reissue of Super Mario Bros.;
-5. All Night Nippon Super Mario Bros.
+1. Vs. Super Mario Bros. for the Nintendo VS. System;
+2. the Famicom Disk System reissue of Super Mario Bros.;
+3. All Night Nippon Super Mario Bros.
+
+The historical alternate European candidate remains an evaluated unsupported
+input with its pending-dump provenance kept explicit. It is not a required 2.0
+release profile.
 
 The Japanese Super Mario Bros. 2 / The Lost Levels profile is explicitly
 outside this release scope. All Night Nippon still requires selected later

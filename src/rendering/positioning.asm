@@ -292,4 +292,6 @@ bra_store_sprite_row_attributes:
 ; -------------------------------------------------------------------------------------
 
 ; unused space
+.if con_revision_profile <> con_revision_profile_pal
     .byte $ff, $ff, $ff, $ff, $ff, $ff
+.endif

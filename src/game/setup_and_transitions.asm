@@ -213,7 +213,7 @@ tbl_game_timer_hundreds_digits:
 handler_setup_entrance_and_game_timer:
     LDA ram_screen_left_page_loc  ; set current page for area objects
     STA ram_player_page_loc  ; as page location for player
-    LDA #$28  ; store value here
+    LDA #con_player_gravity_initial  ; store value here
     STA ram_player_fall_gravity  ; for fractional movement downwards if necessary
     LDA #$01  ; set high byte of player position and
     STA ram_player_facing_dir  ; set facing direction so that player faces right

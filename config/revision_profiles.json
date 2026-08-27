@@ -32,18 +32,25 @@
       "chr_sha1": "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5",
       "extra_size": 8192,
       "extra_sha1": "c39c90f9503c4692af4a8fdb3e18ef7cf04e897f"
+    },
+    {
+      "id": "pal",
+      "name": "Super Mario Bros. (Europe, Rev A)",
+      "reference_rom": "Super Mario Bros. (E) (REV0) [!p].nes",
+      "entrypoint": "src/revisions/pal.asm",
+      "rom_size": 40976,
+      "rom_sha1": "ab30029efec6ccfc5d65dfda7fbc6e6489a80805",
+      "header_size": 16,
+      "header_sha1": "40c71db0dc29b16057ec159bca7008241fc3a9f6",
+      "prg_size": 32768,
+      "prg_sha1": "31b332f6bc338e058a7b958dca285066c405b697",
+      "chr_size": 8192,
+      "chr_sha1": "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5",
+      "extra_size": 0,
+      "extra_sha1": null
     }
   ],
   "evaluated_not_supported": [
-    {
-      "id": "europe_reva",
-      "name": "Super Mario Bros. (Europe, Rev A)",
-      "reference_rom": "Super Mario Bros. (E) (REV0) [!p].nes",
-      "rom_sha1": "ab30029efec6ccfc5d65dfda7fbc6e6489a80805",
-      "prg_sha1": "31b332f6bc338e058a7b958dca285066c405b697",
-      "chr_sha1": "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5",
-      "reason": "Requires a reviewed port of PAL timing, physics, audio, collision, level, and padding alternatives; the supplied historical filename predates the verified Rev A classification"
-    },
     {
       "id": "europe_revb_candidate",
       "name": "Super Mario Bros. (alternate European pending-dump candidate)",

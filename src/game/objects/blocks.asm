@@ -58,7 +58,7 @@ bra_store_block_replacement_metatile:
     LDY $02  ; get vertical high nybble offset
     LDA #$23
     STA ($06),y  ; write blank metatile $23 to block buffer
-    LDA #$10
+    LDA #con_block_bounce_timer
     STA ram_block_bounce_timer  ; set block bounce timer
     PLA  ; pull original metatile from stack
     STA $05  ; and save here

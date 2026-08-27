@@ -275,13 +275,26 @@ bra_load_firebar_y_offset:
 
 ; --------------------------------
 
+.if con_revision_profile <> con_revision_profile_pal
 tbl_flying_cheep_cheep_y_reference_offsets:
     .byte $f8, $a0, $70, $bd, $00
 
 unused_flying_cheep_cheep_background_priorities:
     .byte $20, $20, $20, $00, $00
+.endif
 
 handler_move_flying_cheep_cheep:
+.if con_revision_profile = con_revision_profile_pal
+    LDY #$20  ; use the defeated-enemy gravity step by default
+    LDA ram_enemy_state,x
+    AND #%00100000
+    BNE bra_apply_flying_cheep_cheep_gravity
+    JSR sub_move_enemy_horizontally
+    LDY #$17  ; use the active PAL gravity step
+bra_apply_flying_cheep_cheep_gravity:
+    LDA #$05
+    JMP sub_apply_enemy_vertical_motion
+.else
     LDA ram_enemy_state,x  ; check cheep-cheep's enemy state
     AND #%00100000  ; for d5 set
     BEQ bra_move_active_flying_cheep_cheep  ; branch to continue code if not set
@@ -322,6 +335,7 @@ bra_store_unused_flying_cheep_cheep_attributes:
     LDA unused_flying_cheep_cheep_background_priorities,y  ; load bg priority data and store (this is very likely
     STA ram_enemy_spr_attrib,x  ; !(UNUSED) CODE-004 - overwritten before rendering
     RTS  ; drawing it next frame), then leave
+.endif
 
 ; --------------------------------
 ; $00 - used to hold horizontal difference
@@ -412,7 +426,7 @@ bra_adjust_lakitu_speed_for_player:
     BEQ bra_compute_lakitu_chase_speed  ; if scroll speed not set, branch to same place
     INY  ; otherwise increment offset
     LDA ram_player_x_speed
-    CMP #$19  ; if player not running, branch
+    CMP #con_lakitu_player_speed_cutoff  ; if player not running, branch
     BCC bra_adjust_spiny_throw_speed
     LDA ram_scroll_amount
     CMP #$02  ; if scroll speed below a certain amount, branch

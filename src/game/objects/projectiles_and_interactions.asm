@@ -57,7 +57,7 @@ bra_exit_bubble_processing:
     RTS  ; then leave
 
 tbl_fireball_x_speeds:
-    .byte $40, $c0
+    .byte con_fireball_x_speed, <-con_fireball_x_speed
 
 sub_process_fireball_object:
     STX ram_object_offset  ; store offset as current object
@@ -82,7 +82,7 @@ sub_process_fireball_object:
     DEY  ; decrement to use as offset here
     LDA tbl_fireball_x_speeds,y  ; set horizontal speed of fireball accordingly
     STA ram_fireball_x_speed,x
-    LDA #$04  ; set vertical speed of fireball
+    LDA #con_fireball_y_speed  ; set vertical speed of fireball
     STA ram_fireball_y_speed,x
     LDA #$07
     STA ram_fireball_bound_box_ctrl,x  ; set bounding box size control for fireball
@@ -92,9 +92,9 @@ bra_update_active_fireball:
     CLC  ; as fireball offset for next routines
     ADC #$07
     TAX
-    LDA #$50  ; set downward movement force here
+    LDA #con_fireball_gravity  ; set downward movement force here
     STA $00
-    LDA #$03  ; set maximum speed here
+    LDA #con_fireball_maximum_y_speed  ; set maximum speed here
     STA $02
     LDA #$00
     JSR sub_apply_object_gravity  ; do sub here to impose gravity on fireball and move vertically
@@ -201,7 +201,7 @@ sub_run_game_timer:
     LDA #con_time_running_out_music
     STA ram_event_music_queue  ; otherwise load time running out music
 bra_decrement_game_timer:
-    LDA #$18  ; reset game timer control
+    LDA #con_game_timer_reload  ; reset game timer control
     STA ram_game_timer_ctrl_timer
     LDY #$23  ; set offset for last digit
     LDA #$ff  ; set value to decrement game timer digit
@@ -409,13 +409,17 @@ loc_position_jumpspring:
     BEQ bra_apply_jumpspring_bounce  ; skip to next part if A not pressed
     AND ram_previous_a_b_buttons  ; check for A button pressed in previous frame
     BNE bra_apply_jumpspring_bounce  ; skip to next part if so
-    LDA #$f4
+    LDA #con_jumpspring_y_speed
     STA ram_jumpspring_force  ; otherwise write new jumpspring force here
 bra_apply_jumpspring_bounce:
     CPY #$03  ; check frame control offset again
     BNE bra_draw_jumpspring_object  ; skip to last part if not yet at fifth frame ($03)
     LDA ram_jumpspring_force
     STA ram_player_y_speed  ; store jumpspring force as player's new vertical speed
+.if con_revision_profile = con_revision_profile_pal
+    LDA #$40
+    STA ram_player_active_gravity  ; restore the PAL spring gravity step
+.endif
     LDA #$00
     STA ram_jumpspring_anim_ctrl  ; initialize jumpspring frame control
 bra_draw_jumpspring_object:

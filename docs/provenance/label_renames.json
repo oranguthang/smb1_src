@@ -8,7 +8,7 @@
     "repository_import_path": "src/smbdis.asm",
     "label_policy": "Colon labels in the imported source, including labels sharing a line with their first statement."
   },
-  "counts": {"original_labels": 1992, "current_labels": 1993, "direct_renames": 1992, "project_additions": 1},
+  "counts": {"original_labels": 1992, "current_labels": 1997, "direct_renames": 1992, "project_additions": 5},
   "rename_columns": ["original", "current", "current_path"],
   "renames": [
     ["Start","vec_reset_handler","src/system/boot_and_frame.asm"],
@@ -2006,6 +2006,10 @@
   ],
   "addition_columns": ["current", "current_path", "introduced_in_commit", "reason"],
   "project_additions": [
-    ["tbl_player_state_movement_handlers","src/game/player/physics.asm","32e6b95136427506ed9a2e828fc0d14a1cd63262","Names the inline player-state handler table; no emitted bytes were added."]
+    ["tbl_player_state_movement_handlers","src/game/player/physics.asm","32e6b95136427506ed9a2e828fc0d14a1cd63262","Names the inline player-state handler table; no emitted bytes were added."],
+    ["bra_exit_draw_jumpspring","src/game/level/terrain_objects.asm","95c09653831bfb8f2dba15cc45d733c79232c315","Guards PAL jumpspring creation when all enemy slots are occupied."],
+    ["bra_apply_flying_cheep_cheep_gravity","src/game/enemies/special_behaviors.asm","95c09653831bfb8f2dba15cc45d733c79232c315","Joins the PAL flying Cheep-Cheep gravity paths."],
+    ["bra_store_cancelled_player_y_speed","src/game/collisions/player_background.asm","95c09653831bfb8f2dba15cc45d733c79232c315","Joins the PAL underwater and above-water head-collision paths."],
+    ["bra_add_player_enemy_collision_height","src/game/collisions/actors.asm","95c09653831bfb8f2dba15cc45d733c79232c315","Joins the PAL flying and regular enemy collision-height paths."]
   ]
 }

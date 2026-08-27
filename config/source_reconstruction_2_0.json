@@ -18,8 +18,8 @@
     "content_studios": 4,
     "content_artifacts": 10,
     "revision_manifest": "config/revision_profiles.json",
-    "supported_revisions": ["ju", "pc10"],
-    "evaluated_unsupported_revisions": ["europe_reva", "europe_revb_candidate"],
+    "supported_revisions": ["ju", "pc10", "pal"],
+    "evaluated_unsupported_revisions": ["europe_revb_candidate"],
     "platform_manifest": "config/platform_profiles.json",
     "planned_platform_profiles": ["vs_smb", "fds_smb", "ann_fds"]
   },

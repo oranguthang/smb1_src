@@ -66,7 +66,7 @@ bra_exit_cannon_processing:
 ; --------------------------------
 
 tbl_bullet_bill_x_speeds:
-    .byte $18, $e8
+    .byte con_bullet_bill_x_speed, <-con_bullet_bill_x_speed
 
 sub_bullet_bill_handler:
     LDA ram_timer_control  ; if master timer control set,
@@ -92,7 +92,7 @@ bra_initialize_bullet_bill:
     BCC bra_erase_bullet_bill  ; to cannon either on left or right side, thus branch
     LDA #$01
     STA ram_enemy_state,x  ; otherwise set bullet bill's state
-    LDA #$0a
+    LDA #con_bullet_bill_animation_timer
     STA ram_enemy_frame_timer,x  ; set enemy frame timer
     LDA #con_sfx_blast
     STA ram_square2_sound_queue  ; play fireworks/gunfire sound
@@ -120,7 +120,7 @@ tbl_hammer_misc_to_enemy_slot_offsets:
     .byte $06, $06, $06
 
 tbl_hammer_x_speeds:
-    .byte $10, $f0
+    .byte con_hammer_x_speed, <-con_hammer_x_speed
 
 sub_spawn_hammer_object:
     LDA ram_pseudo_random_bit_reg+1  ; get pseudorandom bits from
@@ -167,7 +167,7 @@ sub_process_hammer_object:
     CLC  ; add 13 bytes to use
     ADC #$0d  ; proper misc object
     TAX  ; return offset to X
-    LDA #$10
+    LDA #con_hammer_gravity
     STA $00  ; set downward movement force
     LDA #$0f
     STA $01  ; set upward movement force (not used)
@@ -179,7 +179,7 @@ sub_process_hammer_object:
     LDX ram_object_offset  ; get original misc object offset
     JMP loc_process_all_hammers  ; branch to essential subroutines
 bra_store_hammer_x_speed:
-    LDA #$fe
+    LDA #con_hammer_initial_y_speed
     STA ram_misc_y_speed,x  ; set hammer's vertical speed
     LDA ram_enemy_state,y  ; get enemy object state
     AND #%11110111  ; mask out d3

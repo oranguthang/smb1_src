@@ -10,6 +10,9 @@
 
 ; Clobbers:
 ; A, X, Y
+.if con_revision_profile = con_revision_profile_pal
+    .byte $ff  ; retained PAL alignment byte
+.endif
 sub_enemies_and_loops_core:
     LDA ram_enemy_flag,x  ; check data here for MSB set
     PHA  ; save in stack
@@ -426,7 +429,7 @@ handler_initialize_retainer:
 ; --------------------------------
 
 tbl_normal_enemy_x_speeds:
-    .byte $f8, $f4
+    .byte <-con_normal_enemy_x_speed, <-con_hard_enemy_x_speed
 
 sub_initialize_normal_enemy:
     LDY #$01  ; load offset of 1 by default
@@ -616,7 +619,7 @@ bra_build_spiny_throw_adjustments:
     LDX ram_object_offset  ; get enemy object buffer offset
     JSR sub_player_lakitu_diff  ; move enemy, change direction, get value - difference
     LDY ram_player_x_speed  ; check player's horizontal speed
-    CPY #$08
+    CPY #con_spiny_player_speed_cutoff
     BCS bra_initialize_spiny_throw_speed  ; if moving faster than a certain amount, branch elsewhere
     TAY  ; otherwise save value in A to Y for now
     LDA ram_pseudo_random_bit_reg+1,x

@@ -480,7 +480,13 @@ off_water_area_1_objects:
     .byte $0d, $c9, $1e, $01, $6c, $01, $62, $35, $63, $53
     .byte $8a, $41, $ac, $01, $b3, $53, $e9, $51, $26, $c3
     .byte $27, $33, $63, $43, $64, $33, $ba, $60, $c9, $61
-    .byte $ce, $0b, $e5, $09, $ee, $0f, $7d, $ca, $7d, $47
+    .byte $ce, $0b
+.if con_revision_profile = con_revision_profile_pal
+    .byte $de, $0f, $e5, $09
+.else
+    .byte $e5, $09, $ee, $0f
+.endif
+    .byte $7d, $ca, $7d, $47
     .byte $fd
 
 ; level 2-2/7-2
@@ -497,15 +503,26 @@ off_water_area_2_objects:
     .byte $c3, $67, $d3, $31, $dc, $06, $f7, $42, $fa, $42
     .byte $23, $b1, $43, $67, $c3, $34, $c7, $34, $d1, $51
     .byte $43, $b3, $47, $33, $9a, $30, $a9, $61, $b8, $62
-    .byte $be, $0b, $d5, $09, $de, $0f, $0d, $ca, $7d, $47
+    .byte $be, $0b
+.if con_revision_profile = con_revision_profile_pal
+    .byte $ce, $0f, $d5, $09
+.else
+    .byte $d5, $09, $de, $0f
+.endif
+    .byte $0d, $ca, $7d, $47
     .byte $fd
 
 ; water area used in level 8-4
 off_water_area_3_objects:
     .byte $49, $0f
     .byte $1e, $01, $39, $73, $5e, $07, $ae, $0b, $1e, $82
-    .byte $6e, $88, $9e, $02, $0d, $04, $2e, $0b, $45, $09
-    .byte $4e, $0f, $ed, $47
+    .byte $6e, $88, $9e, $02, $0d, $04, $2e, $0b
+.if con_revision_profile = con_revision_profile_pal
+    .byte $3e, $0f, $45, $09
+.else
+    .byte $45, $09, $4e, $0f
+.endif
+    .byte $ed, $47
     .byte $fd
 
 ; -------------------------------------------------------------------------------------

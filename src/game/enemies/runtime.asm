@@ -280,11 +280,11 @@ bra_set_hammer_bro_jump_delay:
     STA ram_hammer_bro_jump_timer,x  ; store in jump timer
 
 loc_move_hammer_bro_horizontally:
-    LDY #$fc  ; move hammer bro a little to the left
+    LDY #<-con_hammer_bro_x_speed  ; move hammer bro a little to the left
     LDA ram_frame_counter
     AND #%01000000  ; change hammer bro's direction every 64 frames
     BNE bra_store_hammer_bro_x_speed
-    LDY #$04  ; if d6 set in counter, move him a little to the right
+    LDY #con_hammer_bro_x_speed  ; if d6 set in counter, move him a little to the right
 bra_store_hammer_bro_x_speed:
     STY ram_enemy_x_speed,x  ; store horizontal speed
     LDY #$01  ; set to face right by default
@@ -293,7 +293,7 @@ bra_store_hammer_bro_x_speed:
     INY  ; set to face left
     LDA ram_enemy_interval_timer,x  ; check walking timer
     BNE bra_store_hammer_bro_facing  ; if not yet expired, skip to set moving direction
-    LDA #$f8
+    LDA #con_hammer_bro_chase_x_speed
     STA ram_enemy_x_speed,x  ; otherwise, make the hammer bro walk left towards player
 bra_store_hammer_bro_facing:
     STY ram_enemy_moving_dir,x  ; set moving direction
@@ -372,7 +372,7 @@ loc_move_defeated_enemy:
     JMP sub_move_enemy_horizontally  ; now move defeated enemy horizontally
 
 bra_check_stunned_goomba_timeout:
-    CMP #$0e  ; check to see if enemy timer has reached
+    CMP #con_stunned_goomba_erase_timer  ; check to see if enemy timer has reached
     BNE bra_exit_stunned_enemy_update  ; a certain point, and branch to leave if not
     LDA ram_enemy_id,x
     CMP #con_goomba  ; check for goomba object
@@ -486,7 +486,11 @@ bra_move_counter_driven_object_right:
 ; --------------------------------
 
 tbl_blooper_random_masks_by_hard_mode:
+.if con_revision_profile = con_revision_profile_pal
+    .byte %00000111, %00000001
+.else
     .byte %00111111, %00000011
+.endif
 
 handler_move_blooper:
     LDA ram_enemy_state,x
@@ -595,7 +599,7 @@ bra_exit_blooper_float_down:
 
 bra_check_blooper_near_player_y:
     LDA ram_enemy_y_position,x  ; get vertical coordinate
-    ADC #$10  ; add sixteen pixels
+    ADC #con_blooper_player_y_offset  ; add vertical offset
     CMP ram_player_y_position  ; compare result with player's vertical coordinate
     BCC bra_float_blooper_down  ; if modified vertical less than player's, branch
     LDA #$00

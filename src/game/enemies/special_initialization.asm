@@ -1,7 +1,9 @@
 ; --------------------------------
 
 tbl_firebar_spin_speeds:
-    .byte $28, $38, $28, $38, $28
+    .byte con_firebar_slow_speed, con_firebar_fast_speed
+    .byte con_firebar_slow_speed, con_firebar_fast_speed
+    .byte con_firebar_slow_speed
 
 tbl_firebar_spin_directions:
     .byte $00, $00, $10, $10, $00
@@ -43,9 +45,15 @@ tbl_flying_cheep_cheep_x_offsets:
     .byte $70, $40, $90, $68
 
 tbl_flying_cheep_cheep_x_speeds:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $11, $07, $08, $0a
+    .byte $23, $28, $15, $10
+    .byte $22, $2c, $1f, $1b
+.else
     .byte $0e, $05, $06, $0e
     .byte $1c, $20, $10, $0c
     .byte $1e, $22, $18, $14
+.endif
 
 tbl_flying_cheep_cheep_spawn_delays:
     .byte $10, $60, $20, $48
@@ -71,13 +79,13 @@ bra_set_flying_cheep_cheep_slot_limit:
     AND #%00000011  ; get last two bits of LSFR, first part
     STA $00  ; and store in two places
     STA $01
-    LDA #$fb  ; set vertical speed for cheep-cheep
+    LDA #con_flying_cheep_cheep_y_speed  ; set vertical speed for cheep-cheep
     STA ram_enemy_y_speed,x
     LDA #$00  ; load default value
     LDY ram_player_x_speed  ; check player's horizontal speed
     BEQ bra_build_flying_cheep_cheep_random_seed  ; if player not moving left or right, skip this part
     LDA #$04
-    CPY #$19  ; if moving to the right but not very quickly,
+    CPY #con_flying_cheep_cheep_player_speed_offset  ; if moving to the right but not very quickly,
     BCC bra_build_flying_cheep_cheep_random_seed  ; do not change A
     ASL  ; otherwise, multiply A by 2
 bra_build_flying_cheep_cheep_random_seed:
@@ -531,7 +539,7 @@ bra_check_next_lakitu_slot:
 handler_initialize_jumping_green_paratroopa:
     LDA #$02  ; set for movement to the left
     STA ram_enemy_moving_dir,x
-    LDA #$f8  ; set horizontal speed
+    LDA #con_hammer_bro_chase_x_speed  ; set horizontal speed
     STA ram_enemy_x_speed,x
 loc_set_tall_special_enemy_bounding_box:
     LDA #$03  ; set specific value for bounding box control

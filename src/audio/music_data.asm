@@ -47,7 +47,11 @@ off_music_header_star_cloud:
 off_music_header_end_of_level:
     .byte $20, <off_music_stream_end_of_level, >off_music_stream_end_of_level, $3d, $21
 unused_music_header_residual:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $20, $c5, $fc, $3f, $1d
+.else
     .byte $20, $c4, $fc, $3f, $1d
+.endif
 off_music_header_underground:
     .byte $18, <off_music_stream_underground, >off_music_stream_underground, $00, $00
 off_music_header_silence:
@@ -359,9 +363,28 @@ off_music_stream_victory:
     .byte $26, $22, $1e, $1c, $18, $1e, $22, $0c, $14
 
 ; unused space
+.if con_revision_profile = con_revision_profile_pal
+    .byte $ff, $ff
+.else
     .byte $ff, $ff, $ff
+.endif
 
 tbl_music_note_periods:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $00, $88, $00, $2b, $00, $00, $02, $72
+    .byte $02, $4f, $02, $2e, $02, $0e, $01, $f1
+    .byte $01, $ba, $01, $a1, $01, $8a, $01, $74
+    .byte $01, $5f, $01, $4b, $01, $39, $01, $27
+    .byte $01, $17, $01, $07, $00, $f8, $00, $ea
+    .byte $00, $dd, $00, $d1, $00, $c5, $00, $ba
+    .byte $00, $af, $00, $a5, $00, $9c, $00, $94
+    .byte $00, $8b, $00, $83, $00, $7c, $00, $6e
+    .byte $00, $74, $00, $68, $00, $4e, $00, $5c
+    .byte $00, $58, $00, $52, $00, $4a, $00, $42
+    .byte $00, $3e, $00, $36, $00, $31, $00, $27
+    .byte $00, $20, $04, $1d, $03, $15, $02, $be
+    .byte $02, $98, $01, $d5, $00, $62
+.else
     .byte $00, $88, $00, $2f, $00, $00
     .byte $02, $a6, $02, $80, $02, $5c, $02, $3a
     .byte $02, $1a, $01, $df, $01, $c4, $01, $ab
@@ -375,14 +398,24 @@ tbl_music_note_periods:
     .byte $00, $47, $00, $43, $00, $3b, $00, $35
     .byte $00, $2a, $00, $23, $04, $75, $03, $57
     .byte $02, $f9, $02, $cf, $01, $fc, $00, $6a
+.endif
 
 tbl_music_note_lengths:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $04, $08, $10, $20, $40, $18, $30, $0c
+    .byte $03, $06, $0c, $18, $30, $12, $24, $08
+    .byte $03, $06, $0c, $18, $30, $12, $24, $08
+    .byte $24, $02, $06, $04, $0c, $12, $18, $08
+    .byte $1b, $01, $05, $03, $09, $0d, $12, $06
+    .byte $12, $01, $03, $02, $06, $09, $0c, $04
+.else
     .byte $05, $0a, $14, $28, $50, $1e, $3c, $02
     .byte $04, $08, $10, $20, $40, $18, $30, $0c
     .byte $03, $06, $0c, $18, $30, $12, $24, $08
     .byte $36, $03, $09, $06, $12, $1b, $24, $0c
     .byte $24, $02, $06, $04, $0c, $12, $18, $08
     .byte $12, $01, $03, $02, $06, $09, $0c, $04
+.endif
 
 tbl_castle_clear_music_envelope:
     .byte $98, $99, $9a, $9b

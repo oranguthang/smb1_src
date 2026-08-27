@@ -357,7 +357,11 @@ off_ground_area_18_enemies:
 
 ; level 8-2
 off_ground_area_19_enemies:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $19, $8e, $52, $11, $93, $0e, $0f, $03, $9b, $0e
+.else
     .byte $29, $8e, $52, $11, $83, $0e, $0f, $03, $9b, $0e
+.endif
     .byte $2b, $8e, $5b, $0e, $cb, $8e, $fb, $0e, $fb, $82
     .byte $9b, $82, $bb, $02, $fe, $42, $e8, $bb, $8e, $0f, $0a
     .byte $ab, $0e, $cb, $0e, $f9, $0e, $88, $86, $a6, $06

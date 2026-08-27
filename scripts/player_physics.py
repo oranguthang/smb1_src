@@ -62,20 +62,40 @@ def parse_number(token: str) -> int:
     return int(token, 0)
 
 
-def load_byte_tables(source_path: Path) -> dict[str, tuple[int, ...]]:
+def load_byte_tables(
+    source_path: Path,
+    *,
+    revision_profile: str = "ju",
+) -> dict[str, tuple[int, ...]]:
+    if revision_profile not in {"ju", "pc10", "pal"}:
+        raise ValueError(f"unsupported revision profile: {revision_profile}")
     wanted = set(TABLE_NAMES)
     tables: dict[str, list[int]] = {}
     current: str | None = None
+    active = True
+    condition_stack: list[tuple[bool, bool]] = []
 
     for raw_line in source_path.read_text(encoding="utf-8").splitlines():
         code = raw_line.split(";", 1)[0].strip()
+        if code == ".if con_revision_profile = con_revision_profile_pal":
+            condition = revision_profile == "pal"
+            condition_stack.append((active, condition))
+            active = active and condition
+            continue
+        if code == ".else":
+            parent_active, condition = condition_stack[-1]
+            active = parent_active and not condition
+            continue
+        if code == ".endif":
+            active, _ = condition_stack.pop()
+            continue
         if code.endswith(":"):
             label = code[:-1]
             current = label if label in wanted else None
             if current is not None:
                 tables[current] = []
             continue
-        if current is None or not code.startswith(".byte "):
+        if not active or current is None or not code.startswith(".byte "):
             continue
         values = code.removeprefix(".byte ").split(",")
         tables[current].extend(parse_number(value) for value in values)
@@ -92,6 +112,7 @@ def select_jump_profile_index(
     *,
     swimming: bool = False,
     whirlpool: bool = False,
+    revision_profile: str = "ju",
 ) -> int:
     if not 0 <= horizontal_speed_absolute <= 0xFF:
         raise ValueError("horizontal speed must fit in one byte")
@@ -99,7 +120,12 @@ def select_jump_profile_index(
         return 6 if whirlpool else 5
 
     index = 0
-    for threshold in (0x09, 0x10, 0x19, 0x1C):
+    thresholds = (
+        (0x0A, 0x12, 0x1D, 0x22)
+        if revision_profile == "pal"
+        else (0x09, 0x10, 0x19, 0x1C)
+    )
+    for threshold in thresholds:
         if horizontal_speed_absolute < threshold:
             break
         index += 1
@@ -112,11 +138,13 @@ def jump_profile(
     *,
     swimming: bool = False,
     whirlpool: bool = False,
+    revision_profile: str = "ju",
 ) -> JumpProfile:
     index = select_jump_profile_index(
         horizontal_speed_absolute,
         swimming=swimming,
         whirlpool=whirlpool,
+        revision_profile=revision_profile,
     )
     return JumpProfile(
         index=index,
@@ -228,14 +256,20 @@ def main() -> int:
     parser.add_argument("--frames", type=int, default=24)
     parser.add_argument("--swimming", action="store_true")
     parser.add_argument("--whirlpool", action="store_true")
+    parser.add_argument(
+        "--profile",
+        choices=("ju", "pc10", "pal"),
+        default="ju",
+    )
     args = parser.parse_args()
 
-    tables = load_byte_tables(args.source)
+    tables = load_byte_tables(args.source, revision_profile=args.profile)
     profile = jump_profile(
         tables,
         args.speed,
         swimming=args.swimming,
         whirlpool=args.whirlpool,
+        revision_profile=args.profile,
     )
     rows = trace_jump(
         profile,

@@ -251,6 +251,9 @@ bra_render_next_stair_step:
 handler_draw_jumpspring:
     JSR sub_get_large_area_object_attributes
     JSR sub_find_empty_enemy_slot  ; find empty space in enemy object buffer
+.if con_revision_profile = con_revision_profile_pal
+    BCS bra_exit_draw_jumpspring  ; leave when every enemy slot is occupied
+.endif
     JSR sub_get_area_object_x_position  ; get horizontal coordinate for jumpspring
     STA ram_enemy_x_position,x  ; and store
     LDA ram_current_page_loc  ; store page location of jumpspring
@@ -268,6 +271,7 @@ handler_draw_jumpspring:
     STA ram_metatile_buffer,x
     LDA #$68
     STA ram_metatile_buffer+1,x
+bra_exit_draw_jumpspring:
     RTS
 
 ; --------------------------------
@@ -456,4 +460,6 @@ sub_get_block_buffer_addr:
 ; -------------------------------------------------------------------------------------
 
 ; unused space
+.if con_revision_profile <> con_revision_profile_pal
     .byte $ff, $ff
+.endif

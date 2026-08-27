@@ -143,7 +143,7 @@ bra_decrement_frame_timers:
     LDX #$14  ; load end offset for end of frame timers
     DEC ram_interval_timer_control  ; decrement interval timer control,
     BPL bra_decrement_frame_timers_loop  ; if not expired, only frame timers will decrement
-    LDA #$14
+    LDA #con_interval_timer_reload
     STA ram_interval_timer_control  ; if control for interval timers expired,
     LDX #$23  ; interval timers will decrement along with frame timers
 bra_decrement_frame_timers_loop:

@@ -323,7 +323,7 @@ handler_move_right_platform:
     STA $00  ; store saved value here (residual code)
     LDA ram_platform_collision_flag,x  ; check collision flag, if no collision between player
     BMI bra_exit_right_moving_platform  ; and platform, branch ahead, leave speed unaltered
-    LDA #$10
+    LDA #con_right_platform_x_speed
     STA ram_enemy_x_speed,x  ; otherwise set new speed (gets moving if motionless)
     JSR sub_position_player_on_horizontal_platform  ; use saved value from earlier sub to position player
 bra_exit_right_moving_platform:
@@ -417,4 +417,7 @@ bra_exit_offscreen_bounds_check:
 ; -------------------------------------------------------------------------------------
 
 ; some unused space
+.if con_revision_profile = con_revision_profile_pal
+    .res 56, $ff
+.endif
     .byte $ff, $ff, $ff

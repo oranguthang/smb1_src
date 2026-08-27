@@ -175,26 +175,55 @@ bra_clear_climb_side_timer:
 ; $00 - used to store offset to friction data
 
 tbl_jump_gravity:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $30, $30, $2d, $38, $38, $0d, $04
+.else
     .byte $20, $20, $1e, $28, $28, $0d, $04
+.endif
 
 tbl_fall_gravity:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $a8, $a8, $90, $d0, $d0, $0a, $09
+.else
     .byte $70, $70, $60, $90, $90, $0a, $09
+.endif
 
 tbl_initial_player_y_speed:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $fb, $fb, $fb, $fa, $fa, $fe, $ff
+.else
     .byte $fc, $fc, $fc, $fb, $fb, $fe, $ff
+.endif
 
 tbl_initial_player_y_speed_fraction:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $34, $34, $34, $00, $00, $80, $00
+.else
     .byte $00, $00, $00, $00, $00, $80, $00
+.endif
 
 tbl_maximum_left_speed:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $d0, $e4, $ed
+.else
     .byte $d8, $e8, $f0
+.endif
 
 tbl_maximum_right_speed:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $30, $1c, $13
+    .byte $0e  ; used for pipe intros
+.else
     .byte $28, $18, $10
     .byte $0c  ; used for pipe intros
+.endif
 
 tbl_horizontal_friction:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $c0, $00, $80
+.else
     .byte $e4, $98, $d0
+.endif
 
 tbl_climb_y_speed:
     .byte $00, $ff, $01
@@ -273,16 +302,16 @@ bra_initialize_jump_or_swim:
     LDA #$01  ; set player state to jumping/swimming
     STA ram_player_state
     LDA ram_player_x_speed_absolute  ; check value related to walking/running speed
-    CMP #$09
+    CMP #con_jump_speed_cutoff_a
     BCC bra_select_water_jump_profile  ; branch if below certain values, increment Y
     INY  ; for each amount equal or exceeded
-    CMP #$10
+    CMP #con_jump_speed_cutoff_b
     BCC bra_select_water_jump_profile
     INY
-    CMP #$19
+    CMP #con_jump_speed_cutoff_c
     BCC bra_select_water_jump_profile
     INY
-    CMP #$1c
+    CMP #con_jump_speed_cutoff_d
     BCC bra_select_water_jump_profile  ; note that for jumping, range is 0-4 for Y
     INY
 bra_select_water_jump_profile:
@@ -326,7 +355,7 @@ loc_configure_horizontal_physics:
     LDA ram_player_state  ; if mario is on the ground, branch
     BEQ bra_process_ground_running
     LDA ram_player_x_speed_absolute  ; check something that seems to be related
-    CMP #$19  ; to mario's speed
+    CMP #con_jump_speed_cutoff_c  ; to mario's speed
     BCS loc_load_horizontal_speed_limits  ; if =>$19 branch here
     BCC bra_select_running_speed_profile  ; if not branch elsewhere
 bra_process_ground_running:
@@ -348,7 +377,7 @@ bra_select_running_speed_profile:
     LDA ram_running_speed
     BNE bra_use_fast_friction  ; if running speed set here, branch
     LDA ram_player_x_speed_absolute
-    CMP #$21  ; otherwise check player's walking/running speed
+    CMP #con_player_slow_speed_cap  ; otherwise check player's walking/running speed
     BCC loc_load_horizontal_speed_limits  ; if less than a certain amount, branch ahead
 bra_use_fast_friction:
     INC $00  ; if running speed set or speed => $21 increment $00
@@ -369,7 +398,7 @@ bra_load_right_speed_limit:
     LDY $00  ; get other value in memory
     LDA tbl_horizontal_friction,y  ; get value using value in memory as offset
     STA ram_player_friction_low
-    LDA #$00
+    LDA #con_player_friction_high
     STA ram_player_friction_high  ; init something here
     LDA ram_player_facing_dir
     CMP ram_player_moving_dir  ; check facing direction against moving direction
@@ -382,7 +411,11 @@ bra_return_from_player_physics:
 ; -------------------------------------------------------------------------------------
 
 tbl_player_animation_timer:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $02, $03, $05
+.else
     .byte $02, $04, $07
+.endif
 
 ; Select the animation timer and detect running or skidding
 
@@ -394,10 +427,10 @@ tbl_player_animation_timer:
 sub_update_player_animation_speed:
     LDY #$00  ; initialize offset in Y
     LDA ram_player_x_speed_absolute  ; check player's walking/running speed
-    CMP #$1c  ; against preset amount
+    CMP #con_animation_speed_cutoff_a  ; against preset amount
     BCS bra_store_running_speed  ; if greater than a certain amount, branch ahead
     INY  ; otherwise increment Y
-    CMP #$0e  ; compare against lower amount
+    CMP #con_animation_speed_cutoff_b  ; compare against lower amount
     BCS bra_check_player_skid  ; if greater than this but not greater than first, skip increment
     INY  ; otherwise increment Y again
 bra_check_player_skid:
@@ -413,7 +446,7 @@ bra_store_running_speed:
     JMP loc_store_player_animation_timer
 bra_process_player_skid:
     LDA ram_player_x_speed_absolute  ; check player's walking/running speed
-    CMP #$0b  ; against one last amount
+    CMP #con_animation_speed_cutoff_c  ; against one last amount
     BCS loc_store_player_animation_timer  ; if greater than this amount, branch
     LDA ram_player_facing_dir
     STA ram_player_moving_dir  ; otherwise use facing direction to set moving direction

@@ -156,7 +156,7 @@ make run-content
 # Validate every studio input without opening a window
 make check-studios
 
-# Verify and run both supported official profiles
+# Verify and run all supported official profiles
 make verify-revisions
 make validate-revisions
 

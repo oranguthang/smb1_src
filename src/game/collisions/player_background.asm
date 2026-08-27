@@ -94,8 +94,17 @@ bra_handle_solid_head_collision:
     LDA #con_sfx_bump
     STA ram_square1_sound_queue  ; otherwise load bump sound
 bra_cancel_player_upward_speed:
+.if con_revision_profile = con_revision_profile_pal
+    LDY #$01  ; stop upward motion outside water
+    LDA ram_area_type
+    BNE bra_store_cancelled_player_y_speed
+    DEY  ; preserve a zero vertical speed underwater
+bra_store_cancelled_player_y_speed:
+    STY ram_player_y_speed
+.else
     LDA #$01  ; set player's vertical speed to nullify
     STA ram_player_y_speed  ; jump or swim
+.endif
 
 loc_check_player_feet:
     LDY $eb  ; get block buffer adder offset
@@ -133,7 +142,7 @@ bra_continue_player_floor_check:
     LDY ram_jumpspring_anim_ctrl  ; if jumpspring animating right now,
     BNE bra_set_player_ground_state  ; branch ahead
     LDY $04  ; check lower nybble of vertical coordinate returned
-    CPY #$05  ; from collision detection routine
+    CPY #con_player_ground_collision_limit  ; from collision detection routine
     BCC bra_land_player_on_metatile  ; if lower nybble < 5, branch
     LDA ram_player_moving_dir
     STA $00  ; use player's moving direction as temp variable
@@ -254,7 +263,11 @@ bra_exit_player_side_metatile_check:
     RTS  ; leave
 
 tbl_area_change_delays:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $85, $2b
+.else
     .byte $a0, $34
+.endif
 
 loc_handle_coin_metatile:
     JSR sub_erase_coin_or_axe_metatile  ; do sub to erase coin metatile from block buffer
@@ -394,7 +407,7 @@ sub_check_jumpspring_landing:
     BCC bra_exit_jumpspring_landing_check  ; if carry not set, jumpspring not found, therefore leave
     LDA #$70
     STA ram_player_active_gravity  ; otherwise set vertical movement force for player
-    LDA #$f9
+    LDA #con_jumpspring_collision_y_speed
     STA ram_jumpspring_force  ; set default jumpspring force
     LDA #$03
     STA ram_jumpspring_timer  ; set jumpspring timer to be used later
@@ -424,7 +437,7 @@ sub_handle_pipe_entry:
     LDA $01
     CMP #$10  ; check left foot metatile for warp pipe left metatile
     BNE bra_exit_pipe_entry_check  ; branch to leave if not found
-    LDA #$30
+    LDA #con_pipe_transition_timer
     STA ram_change_area_timer  ; set timer for change of area
     LDA #$03
     STA ram_game_engine_subroutine  ; set to run vertical pipe entry routine on next frame

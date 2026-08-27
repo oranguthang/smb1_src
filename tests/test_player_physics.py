@@ -33,6 +33,23 @@ class PlayerPhysicsTests(unittest.TestCase):
             (0xFC, 0xFC, 0xFC, 0xFB, 0xFB, 0xFE, 0xFF),
         )
 
+    def test_decodes_pal_vertical_profiles(self) -> None:
+        tables = player_physics.load_byte_tables(
+            PHYSICS_SOURCE, revision_profile="pal"
+        )
+        self.assertEqual(
+            tables["tbl_jump_gravity"],
+            (0x30, 0x30, 0x2D, 0x38, 0x38, 0x0D, 0x04),
+        )
+        self.assertEqual(
+            tables["tbl_fall_gravity"],
+            (0xA8, 0xA8, 0x90, 0xD0, 0xD0, 0x0A, 0x09),
+        )
+        self.assertEqual(
+            tables["tbl_initial_player_y_speed"],
+            (0xFB, 0xFB, 0xFB, 0xFA, 0xFA, 0xFE, 0xFF),
+        )
+
     def test_selects_ground_jump_profiles_at_exact_thresholds(self) -> None:
         cases = {
             0x00: 0,
@@ -62,6 +79,26 @@ class PlayerPhysicsTests(unittest.TestCase):
             ),
             6,
         )
+
+    def test_selects_pal_ground_jump_profiles_at_exact_thresholds(self) -> None:
+        cases = {
+            0x09: 0,
+            0x0A: 1,
+            0x11: 1,
+            0x12: 2,
+            0x1C: 2,
+            0x1D: 3,
+            0x21: 3,
+            0x22: 4,
+        }
+        for speed, expected in cases.items():
+            with self.subTest(speed=speed):
+                self.assertEqual(
+                    player_physics.select_jump_profile_index(
+                        speed, revision_profile="pal"
+                    ),
+                    expected,
+                )
 
     def test_released_jump_switches_to_fall_force_after_first_pixel(self) -> None:
         profile = player_physics.jump_profile(self.tables, 0)

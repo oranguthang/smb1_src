@@ -89,7 +89,7 @@ loc_move_player_vertically:
 bra_load_player_vertical_force:
     LDA ram_player_active_gravity  ; dump vertical force
     STA $00
-    LDA #$04  ; set maximum vertical speed here
+    LDA #con_enemy_gravity  ; set maximum vertical speed here
     JMP sub_apply_sprite_object_gravity  ; then jump to move player vertically
 
 ; --------------------------------
@@ -132,7 +132,7 @@ sub_move_drop_platform:
     BNE bra_set_medium_vertical_speed_limit  ; skip ahead of other value set here
 
 sub_move_enemy_downward_slow:
-    LDY #$0f  ; set movement amount for bowser/other objects
+    LDY #con_enemy_slow_gravity  ; set movement amount for bowser/other objects
 bra_set_medium_vertical_speed_limit:
     LDA #$02  ; set maximum speed in A
     BNE sub_apply_enemy_vertical_motion  ; unconditional branch
@@ -140,9 +140,9 @@ bra_set_medium_vertical_speed_limit:
 ; --------------------------------
 
 sub_move_enemy_with_gravity:
-    LDY #$1c  ; set movement amount for podoboo/other objects
+    LDY #con_enemy_medium_gravity  ; set movement amount for podoboo/other objects
 bra_set_high_vertical_speed_limit:
-    LDA #$03  ; set maximum speed in A
+    LDA #con_enemy_maximum_y_speed  ; set maximum speed in A
 sub_apply_enemy_vertical_motion:
     STY $00  ; set movement amount here
     INX  ; increment X for enemy offset
@@ -162,7 +162,7 @@ unused_gravity_block_entry:
 
 sub_apply_block_gravity:
     LDY #$01  ; set offset for maximum speed
-    LDA #$50  ; set movement amount here
+    LDA #con_block_gravity  ; set movement amount here
     STA $00
     LDA tbl_block_maximum_y_speed,y  ; get maximum speed
 

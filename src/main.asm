@@ -20,6 +20,12 @@
 ; -------------------------------------------------------------------------------------
 ; DEFINITIONS
 
+.include "revisions/profile_ids.inc"
+
+.ifndef con_revision_profile
+con_revision_profile = con_revision_profile_ju
+.endif
+
 .include "memory/hardware.inc"
 .include "memory/ram.inc"
 .include "memory/constants.inc"

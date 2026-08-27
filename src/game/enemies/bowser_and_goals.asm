@@ -266,7 +266,11 @@ sub_process_bowser_half:
 ; $01 - used to hold sprite attribute data
 
 tbl_bowser_flame_delays:
+.if con_revision_profile = con_revision_profile_pal
+    .byte $80, $30, $30, $80, $80, $80, $30, $50
+.else
     .byte $bf, $40, $bf, $bf, $bf, $40, $40, $bf
+.endif
 
 sub_set_flame_timer:
     LDY ram_bowser_flame_timer_ctrl  ; load counter as offset
@@ -281,10 +285,10 @@ bra_exit_bowser_flame_handler:
 sub_process_bowser_flame:
     LDA ram_timer_control  ; if master timer control flag set,
     BNE bra_draw_bowser_flame  ; skip all of this
-    LDA #$40  ; load default movement force
+    LDA #con_bowser_flame_x_force  ; load default movement force
     LDY ram_secondary_hard_mode
     BEQ bra_apply_bowser_flame_speed  ; if secondary hard mode flag not set, use default
-    LDA #$60  ; otherwise load alternate movement force to go faster
+    LDA #con_hard_bowser_flame_x_force  ; otherwise load alternate movement force to go faster
 bra_apply_bowser_flame_speed:
     STA $00  ; store value here
     LDA ram_enemy_x_move_force,x

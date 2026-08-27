@@ -38,13 +38,17 @@ def main() -> int:
     )
     command = [
         str(args.fceux.resolve()),
+    ]
+    if args.profile == "pal":
+        command.extend(["-pal", "1"])
+    command.extend([
         "-playmovie", str(args.movie.resolve()),
         "-lua", str(args.lua.resolve()),
         "-max-frames", str(int(runtime["frame"]) + 5),
         "-turbo", "1",
         "-nothrottle", "1",
         str(args.rom.resolve()),
-    ]
+    ])
     subprocess.run(command, check=True, env=environment, cwd=args.rom.parent)
     result = args.result.read_text(encoding="ascii").strip() if args.result.is_file() else ""
     if result != "PASS":

@@ -86,6 +86,8 @@ ifeq ($(PROFILE),pc10)
 REVISION_REFERENCE ?= $(PROJECT_DIR)Super Mario Bros. (PC10).nes
 else ifeq ($(PROFILE),ju)
 REVISION_REFERENCE ?= $(PROJECT_DIR)Super Mario Bros. (JU) [!].nes
+else ifeq ($(PROFILE),pal)
+REVISION_REFERENCE ?= $(PROJECT_DIR)Super Mario Bros. (E) (REV0) [!p].nes
 else
 REVISION_REFERENCE ?= $(PROJECT_DIR)$(PROFILE).nes
 endif
@@ -314,7 +316,7 @@ build-revision: _require-assets
 		--map "$(REVISION_MAP)" \
 		--debug-info "$(REVISION_DEBUG)" \
 		--output-rom "$(REVISION_ROM)" \
-		--prg-only --verify
+		--prg-only
 	$(PYTHON) "$(PROJECT_DIR)scripts/revision_profiles.py" build \
 		--manifest "$(REVISION_MANIFEST)" \
 		--profile "$(PROFILE)" \
@@ -348,10 +350,12 @@ validate-revision: verify-revision
 verify-revisions:
 	$(MAKE) verify-revision PROFILE=ju
 	$(MAKE) verify-revision PROFILE=pc10
+	$(MAKE) verify-revision PROFILE=pal
 
 validate-revisions:
 	$(MAKE) validate-revision PROFILE=ju
 	$(MAKE) validate-revision PROFILE=pc10
+	$(MAKE) validate-revision PROFILE=pal
 
 symbols: build
 	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \
