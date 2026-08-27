@@ -1,7 +1,8 @@
 {
   "schema_version": 1,
   "release": "Preservation Source 1.0",
-  "local_tag": "preservation-source-1.0",
+  "local_tag": "source-reconstruction-1.0",
+  "release_commit": "e36ac8d121e4b09d206ee7403609f9ff7b4fbba4",
   "reference": {
     "rom_sha1": "ea343f4e445a9050d4b4fbac2c77d0693b1d0922",
     "prg_sha1": "fefa1097449a3a11ebf8c6199e905996c5dc8fbd",

@@ -68,6 +68,22 @@ def validate_release(project_root: Path, manifest_path: Path) -> list[str]:
     formats = load_json(project_root / "config" / "data_formats.json")
     errors = validate_hash_contracts(release, assets, runtime)
 
+    tag = release.get("local_tag")
+    release_commit = release.get("release_commit")
+    if tag and release_commit:
+        try:
+            actual_commit = git_lines(
+                project_root, "rev-parse", f"refs/tags/{tag}^{{commit}}"
+            )
+        except subprocess.CalledProcessError:
+            errors.append(f"required annotated release tag is missing: {tag}")
+        else:
+            if actual_commit != [release_commit]:
+                errors.append(
+                    f"release tag target mismatch: expected={release_commit}, "
+                    f"actual={actual_commit[0] if actual_commit else 'missing'}"
+                )
+
     if len(runtime["scenarios"]) != release["evidence"]["runtime_scenarios"]:
         errors.append("runtime scenario count differs from release manifest")
     if len(formats["artifacts"]) != release["evidence"]["data_format_artifacts"]:

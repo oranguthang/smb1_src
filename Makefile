@@ -31,6 +31,7 @@ RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/runtime
 DATA_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/data_formats.json
 DATA_FORMAT_SUMMARY ?= $(PROJECT_DIR)build/data_formats.json
 RELEASE_MANIFEST ?= $(PROJECT_DIR)config/preservation_source_1_0.json
+SOURCE_2_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_2_0.json
 FIXED_VARIANT ?= five_lives
 FIXED_VARIANT_MANIFEST ?= $(PROJECT_DIR)config/fixed_layout_variants.json
 HACK_SOURCE ?= $(PROJECT_DIR)src/variants/five_lives.asm
@@ -84,7 +85,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded export-content validate-content build-content split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded export-content validate-content build-content split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -358,6 +359,24 @@ release-check:
 	$(MAKE) verify
 	$(MAKE) trace
 	$(MAKE) release-audit
+
+source-2-audit:
+	$(PYTHON) "$(PROJECT_DIR)scripts/source_2_audit.py" \
+		--project-root "$(PROJECT_DIR)" \
+		--manifest "$(SOURCE_2_MANIFEST)"
+
+source-2-release-audit:
+	$(PYTHON) "$(PROJECT_DIR)scripts/source_2_audit.py" \
+		--project-root "$(PROJECT_DIR)" \
+		--manifest "$(SOURCE_2_MANIFEST)" \
+		--require-ready
+
+source-2-check:
+	$(MAKE) release-check
+	$(MAKE) validate-hack
+	$(MAKE) validate-expanded
+	$(MAKE) validate-revisions
+	$(MAKE) source-2-release-audit
 
 split:
 	$(PYTHON) "$(PROJECT_DIR)scripts/split_assets.py" \

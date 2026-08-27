@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "release": "Source Reconstruction 2.0",
+  "tag": "source-reconstruction-2.0",
+  "status": "development",
+  "predecessor": {
+    "manifest": "config/preservation_source_1_0.json",
+    "tag": "source-reconstruction-1.0",
+    "commit": "e36ac8d121e4b09d206ee7403609f9ff7b4fbba4"
+  },
+  "contracts": {
+    "fixed_variant_manifest": "config/fixed_layout_variants.json",
+    "fixed_variants": 1,
+    "expanded_manifest": "config/expanded_rom.json",
+    "expanded_profile": "cnrom_chr_16k",
+    "content_studio_manifest": "config/content_studios.json",
+    "content_studios": 5,
+    "content_artifacts": 10,
+    "revision_manifest": "config/revision_profiles.json",
+    "supported_revisions": ["ju", "pc10"],
+    "evaluated_unsupported_revisions": ["europe_reva", "europe_revb_candidate"],
+    "platform_manifest": "config/platform_profiles.json",
+    "planned_platform_profiles": ["vs_smb", "fds_smb", "ann_fds"]
+  },
+  "required_documents": [
+    "docs/preservation_source_1_0.md",
+    "docs/fixed_layout_variants.md",
+    "docs/adr/0001-expanded-rom-architecture.md",
+    "docs/expanded_rom.md",
+    "docs/content_authoring.md",
+    "docs/revision_profiles.md",
+    "docs/platform_profiles.md",
+    "docs/source_reconstruction_2_0.md"
+  ],
+  "required_targets": [
+    "release-check",
+    "verify-hack",
+    "validate-hack",
+    "verify-expanded",
+    "validate-expanded",
+    "verify-revisions",
+    "validate-revisions",
+    "source-2-audit",
+    "source-2-release-audit",
+    "source-2-check"
+  ]
+}

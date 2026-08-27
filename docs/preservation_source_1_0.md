@@ -68,7 +68,7 @@ graphics, and audio data already has an editor-facing schema.
 
 ## After 1.0
 
-Create the local annotated tag `preservation-source-1.0` at this state before
+The local annotated tag `source-reconstruction-1.0` marks this state before
 behavior-changing work. Fixed-layout hacks, mapper expansion, content tools, and
 other revisions belong to later roadmap milestones with separate builds and
 verification. The preservation entrypoint, hashes, and byte-identity gate remain

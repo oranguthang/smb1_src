@@ -7,6 +7,10 @@ the selected reference ROM byte-for-byte and provides semantic source
 navigation, runtime evidence, and typed data round trips without tracking the
 original ROM or CHR payload.
 
+The `roadmap/source-reconstruction-2.0` development line is a tag-ready 2.0
+candidate adding isolated fixed-layout, CNROM, content-authoring, and official
+profile workflows while retaining the complete 1.0 gate as its first contract.
+
 ## Overview
 
 This repository contains:
@@ -27,6 +31,7 @@ This repository contains:
 - **docs/data_formats.md** - Typed authored-data codecs and byte round trips
 - **docs/provenance/label_renames.json** - Original-to-current symbol map
 - **docs/preservation_source_1_0.md** - Stable release scope and evidence boundary
+- **docs/source_reconstruction_2_0.md** - Aggregate 2.0 scope and acceptance gate
 - **CONTRIBUTING.md** - Safe source, data, evidence, and verification workflow
 
 ## Project Structure
@@ -123,6 +128,24 @@ make roundtrip-formats
 
 # Run every Preservation Source 1.0 acceptance gate
 make release-check
+
+# Run Preservation Source 1.0 plus every Source Reconstruction 2.0 gate
+make source-2-check
+
+# Build and validate the isolated fixed-layout demonstrator
+make validate-hack
+
+# Build and validate the isolated CNROM profile
+make validate-expanded
+
+# Export, validate, and build ignored codec-backed content workspaces
+make export-content
+make validate-content
+make build-content
+
+# Verify and run both supported official profiles
+make verify-revisions
+make validate-revisions
 
 # Validate local assets and build build/native/smb.nes
 make build

@@ -431,7 +431,7 @@ runs lint, 44 focused tests, all ten data round trips, complete-ROM byte
 verification, the live debugger/runtime layer, and a final manifest audit. The
 audit cross-checks hashes, tool versions, scenario/codec counts, required docs,
 milestone status, Make targets, and the tracked-payload prohibition. The local
-annotated `preservation-source-1.0` tag marks the accepted commit before later
+annotated `source-reconstruction-1.0` tag marks the accepted commit before later
 behavior-changing roadmap work.
 
 ### 10. Isolated Fixed-Layout ROM-Hack Variants - Complete
@@ -500,10 +500,10 @@ registry, enforces exact fixed-layout capacity and canonical values, reports
 byte differences, and builds an isolated ROM without touching source or
 preservation outputs. See docs/content_authoring.md.
 
-### 13. Official Multi-Revision Builds - Complete
+### 13. Multi-Revision and Platform Builds - In Progress
 
-After the canonical reconstruction is mature, evaluate locally available
-official revisions. Each supported profile must have:
+After the canonical reconstruction is mature, evaluate the complete selected
+SMB1 engine family. Each supported profile must have:
 
 - a tracked revision identifier and exact hashes;
 - an isolated output directory;
@@ -514,13 +514,32 @@ official revisions. Each supported profile must have:
 
 Facts must not be transferred between revisions by matching addresses alone.
 
-The profile manifest now reproduces the Japan/USA and PlayChoice-10 containers
-from separate compile-time entrypoints over one semantic engine source. Each
-complete output has an isolated directory, exact component hashes, its own
-private-reference comparison, and a common FCEUX startup gate. European REV0
-and REVA are recorded as evaluated but unsupported rather than approximated;
-their independent PRG/CHR facts and remaining reconstruction work are explicit.
-See docs/revision_profiles.md.
+The initial profile framework reproduces the Japan/USA and PlayChoice-10
+containers from separate compile-time entrypoints over one semantic engine
+source. The remaining 2.0 scope is:
+
+1. the verified European PAL revision;
+2. the historical alternate European candidate, with its pending-dump
+   provenance kept explicit;
+3. Vs. Super Mario Bros. for the Nintendo VS. System;
+4. the Famicom Disk System reissue of Super Mario Bros.;
+5. All Night Nippon Super Mario Bros.
+
+The Japanese Super Mario Bros. 2 / The Lost Levels profile is explicitly
+outside this release scope. All Night Nippon still requires selected later
+engine changes shared with that title, but supporting those mechanics does not
+imply an SMB2 release profile.
+
+The supplied Vs. reference has an independently reassemblable 32 KiB PRG and
+16 KiB CHR payload. Verified raw 65,500-byte FDS references are now available
+for both the FDS SMB1 reissue and All Night Nippon. Their program files are
+independently reassemblable at the reference boundary. The supplied All Night
+Nippon `.nes` image remains auxiliary because it is an unofficial FDS-to-NROM
+conversion. See `docs/platform_profiles.md`.
+
+Exit criterion: every in-scope profile is built from reviewed semantic source,
+verified against its own private reference at the strongest reproducible
+boundary, and covered by an appropriate platform runtime gate.
 
 ### 14. Source Reconstruction 2.0 - Planned
 
@@ -528,6 +547,14 @@ A later release may combine the stable preservation source with reversible
 content authoring, isolated expanded-ROM support, and verified official revision
 profiles. Its release audit must keep Source Reconstruction 1.0 and the default
 reference `make verify` contract intact.
+
+The developing 2.0 contract combines manifest-checked fixed-layout variants,
+CNROM graphics expansion, five reversible content studios, and the complete
+selected SMB1 engine family. Its aggregate gate begins with the complete 1.0
+release gate, checks the immutable 1.0 tag target, then validates every later
+build family and their cross-manifest agreement. It must reject a release while
+any in-scope revision or platform profile remains unsupported. See
+`docs/source_reconstruction_2_0.md`.
 
 ## Permanent Project Invariants
 

@@ -36,20 +36,22 @@
   ],
   "evaluated_not_supported": [
     {
-      "id": "europe_rev0",
+      "id": "europe_reva",
+      "name": "Super Mario Bros. (Europe, Rev A)",
       "reference_rom": "Super Mario Bros. (E) (REV0) [!p].nes",
       "rom_sha1": "ab30029efec6ccfc5d65dfda7fbc6e6489a80805",
       "prg_sha1": "31b332f6bc338e058a7b958dca285066c405b697",
       "chr_sha1": "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5",
-      "reason": "Requires a reviewed port of PAL timing, physics, audio, collision, level, and padding alternatives"
+      "reason": "Requires a reviewed port of PAL timing, physics, audio, collision, level, and padding alternatives; the supplied historical filename predates the verified Rev A classification"
     },
     {
-      "id": "europe_reva",
+      "id": "europe_revb_candidate",
+      "name": "Super Mario Bros. (alternate European pending-dump candidate)",
       "reference_rom": "Super Mario Bros. (E) (REVA) [!p].nes",
       "rom_sha1": "353bc2203f8626c5a52cf1e47264acad07503c01",
       "prg_sha1": "fbe27f9cca860d227bf28f6769571e9efcbdf178",
       "chr_sha1": "d1d18b70662b49c5db790a0477366d874b00ad57",
-      "reason": "Has distinct PRG and CHR revisions which require independent semantic reconstruction"
+      "reason": "The historical GoodNES candidate has distinct PRG and CHR data, lacks current verified-dump provenance, and requires independent semantic reconstruction"
     }
   ],
   "runtime": {

@@ -1,4 +1,4 @@
-# Official Revision Profiles
+# Revision Profiles
 
 The profile system supports two locally verified official configurations:
 
@@ -22,10 +22,23 @@ their own private references. Run make validate-revisions for the shared FCEUX
 startup observation. No regional timing gate is claimed because the two
 supported profiles share an identical engine PRG.
 
-The locally available European REV0 and REVA images were evaluated separately
-and their exact component hashes are recorded in config/revision_profiles.json.
-They are deliberately not supported profiles. REV0 has a known independently
-reproducible PAL source reference, but porting it requires reviewed timing,
-physics, audio, collision, level-data, and padding alternatives across 21
-source areas. REVA also has distinct PRG and CHR data. Neither is approximated
-by address matching or a binary patch.
+The locally available European images were evaluated by payload identity rather
+than by their historical filenames. The file named `(REV0) [!p]` has complete
+SHA-1 `ab30029e...` and contains the verified PAL PRG/CHR payload commonly
+identified as European Rev A. The file named `(REVA) [!p]` contains the
+historical alternate European candidate formerly catalogued as Rev B with
+pending-dump provenance. The profile IDs therefore use `europe_reva` and
+`europe_revb_candidate`; the supplied filenames remain recorded only as private
+input names.
+
+Both European profiles remain unsupported until their differences are
+represented by reviewed source-level alternatives. The PAL profile requires
+timing, physics, audio, collision, level-data, and padding alternatives across
+the shared engine. The candidate has a mostly Japan/USA-derived PRG and a
+distinct CHR payload, but its uncertain provenance must never be promoted to an
+official revision merely because it can be reproduced byte for byte.
+
+Platform-specific descendants are tracked separately in
+`config/platform_profiles.json` and `docs/platform_profiles.md`. This keeps
+ordinary NROM revision facts separate from VS System and Famicom Disk System
+layout facts.

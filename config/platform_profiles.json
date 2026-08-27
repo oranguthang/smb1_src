@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "id": "vs_smb",
+      "name": "Vs. Super Mario Bros.",
+      "status": "reference_verified",
+      "format": "ines",
+      "reference_rom": "VS. Super Mario Bros. (VS).nes",
+      "rom_size": 49168,
+      "rom_sha1": "3546486ba461536545daf9f27c9bcf275fc162da",
+      "header_size": 16,
+      "header_sha1": "218f56c3299525c56d49bfd23f511fcae7185818",
+      "prg_size": 32768,
+      "prg_sha1": "f25ab9354e24e3cd99b6cfd8331f9be40b603c5b",
+      "chr_size": 16384,
+      "chr_sha1": "19385a81d2abea3ad6ff6b0d220390950ac9d2ee"
+    },
+    {
+      "id": "fds_smb",
+      "name": "Super Mario Bros. Famicom Disk System reissue",
+      "status": "reference_verified",
+      "format": "fds_raw_side",
+      "reference_rom": "Super Mario Brothers (Japan).fds",
+      "disk_size": 65500,
+      "disk_sha1": "383ad8e3890a95de9595f0a6087648f51177da13",
+      "verified_payloads": [
+        {
+          "name": "SMMAIN",
+          "size": 32768,
+          "sha1": "3634eb60ad0fbc60a07683cdf98cc6a1701b56a0"
+        }
+      ]
+    },
+    {
+      "id": "ann_fds",
+      "name": "All Night Nippon Super Mario Bros.",
+      "status": "reference_verified",
+      "format": "fds_raw_side",
+      "reference_rom": "All Night Nippon Super Mario Brothers (Japan) (Promotion Card).fds",
+      "disk_size": 65500,
+      "disk_sha1": "f30bdd3c556604d7eaa6d0f4864d5566e519b5d4",
+      "verified_payloads": [
+        {
+          "name": "NSMMAIN",
+          "size": 32768,
+          "sha1": "8f07dfdda5829983a1deec8c82dd26e196826cd9"
+        },
+        {
+          "name": "NSMDATA2",
+          "size": 3584,
+          "sha1": "48447986778a9c39fc8cabf4e5494d99fab7e020"
+        },
+        {
+          "name": "NSMDATA3",
+          "size": 3346,
+          "sha1": "8941894b39a959aab87338728919a8b475e4f691"
+        },
+        {
+          "name": "NSMDATA4",
+          "size": 3568,
+          "sha1": "eec327d5ebde3891439971986ae23afeefbdd1a7"
+        }
+      ],
+      "auxiliary_conversion": {
+        "reference_rom": "All Night Nippon Super Mario Bros. (J).nes",
+        "classification": "unofficial_fds_to_nrom_conversion",
+        "rom_size": 40976,
+        "rom_sha1": "51db085d47a9e8a7c03c9908acc4245f92a5c891"
+      }
+    }
+  ],
+  "excluded_profiles": [
+    {
+      "id": "smb2_jp_fds",
+      "name": "Super Mario Bros. 2 / The Lost Levels",
+      "reason": "The later engine may supply shared ANN facts, but this release profile is outside the Source Reconstruction 2.0 scope"
+    }
+  ]
+}
