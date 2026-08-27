@@ -22,6 +22,10 @@ class SoundStudio(tk.Tk):
         self.preview_path = preview
         self.song_label = tk.StringVar(value=model.header_labels[0])
         self.channel_name = tk.StringVar()
+        self.channel_enabled = {
+            name: tk.BooleanVar(value=True)
+            for name in ("square2", "square1", "triangle", "noise")
+        }
         self.raw_value = tk.IntVar()
         self.status = tk.StringVar()
         self.compositions = model.compositions()
@@ -74,6 +78,19 @@ class SoundStudio(tk.Tk):
         self.channel_box = ttk.Combobox(channels, textvariable=self.channel_name, state="readonly", width=15)
         self.channel_box.pack(side="left", padx=5)
         self.channel_box.bind("<<ComboboxSelected>>", lambda _event: self.select_channel())
+        mixer = ttk.LabelFrame(parent, text="Preview channels", padding=5)
+        mixer.pack(fill="x", pady=(6, 0))
+        for name, label in (
+            ("square2", "Square 2"),
+            ("square1", "Square 1"),
+            ("triangle", "Triangle"),
+            ("noise", "Noise"),
+        ):
+            ttk.Checkbutton(
+                mixer,
+                text=label,
+                variable=self.channel_enabled[name],
+            ).pack(side="left", padx=10)
         roll_frame = ttk.LabelFrame(parent, text="Piano roll (horizontal scale is NTSC frames)", padding=5)
         roll_frame.pack(fill="both", expand=True, pady=6)
         self.roll = tk.Canvas(roll_frame, bg="#111824", height=330)
@@ -151,7 +168,10 @@ class SoundStudio(tk.Tk):
 
     def refresh_music(self) -> None:
         self.current_song = self.model.song(
-            self.song_label.get(), self.current_song.get("length_adder", 0)
+            self.song_label.get(),
+            self.current_song.get("length_adder", 0),
+            self.current_song.get("event_music", 0),
+            self.current_song.get("area_music", 0),
         )
         self.current_composition["patterns"][self.pattern_box.current()] = self.current_song
         name = self.channel_box.get()
@@ -255,12 +275,22 @@ class SoundStudio(tk.Tk):
 
     def _preview(self, patterns: list[dict], description: str) -> None:
         def action() -> None:
-            path = self.model.write_preview(patterns, self.preview_path)
+            enabled = {
+                name for name, variable in self.channel_enabled.items() if variable.get()
+            }
+            path = self.model.write_preview(
+                patterns,
+                self.preview_path,
+                enabled_channels=enabled,
+            )
             if sys.platform == "win32":
                 import winsound
                 winsound.PlaySound(str(path), winsound.SND_FILENAME | winsound.SND_ASYNC)
             seconds = sum(pattern["frames"] for pattern in patterns) / 60.0988
-            self.status.set(f"{description}: {seconds:.1f} s rendered to {path}")
+            channels = ", ".join(sorted(enabled)) if enabled else "muted"
+            self.status.set(
+                f"{description}: {seconds:.1f} s, channels: {channels} | {path}"
+            )
         guard("Sound Studio", action)
 
     def preview_pattern(self) -> None:

@@ -11,8 +11,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from sound_studio_model import (  # noqa: E402
+    ApuOutputFilter,
     MusicBank,
     NTSC_FRAME_RATE,
+    apu_mix,
     decode_periods,
     timer_frequency,
 )
@@ -27,6 +29,16 @@ def synthetic_bank(values: list[int]) -> MusicBank:
     })()
     model.periods = [136, 47, 0, 678] + [500] * 48
     model.lengths = [5] * 48
+    model.envelope_bytes = bytes([
+        0x98, 0x99, 0x9A, 0x9B,
+        0x90, 0x94, 0x94, 0x95, 0x95, 0x96, 0x97, 0x98,
+        0x90, 0x91, 0x92, 0x92, 0x93, 0x93, 0x93, 0x94,
+        0x94, 0x94, 0x94, 0x94, 0x94, 0x95, 0x95, 0x95,
+        0x95, 0x95, 0x95, 0x96, 0x96, 0x96, 0x96, 0x96,
+        0x96, 0x96, 0x96, 0x96, 0x96, 0x96, 0x96, 0x96,
+        0x96, 0x96, 0x96, 0x96, 0x95, 0x95, 0x94, 0x93,
+        0x15,
+    ])
     return model
 
 
@@ -61,7 +73,7 @@ class SoundStudioModelTests(unittest.TestCase):
             "frames": 6,
             "channels": [{
                 "name": "square2",
-                "events": [{"frequency": 440.0, "frames": 6}],
+                "events": [{"frequency": 440.0, "period": 253, "frames": 6}],
             }],
         }
         with tempfile.TemporaryDirectory() as directory:
@@ -73,6 +85,90 @@ class SoundStudioModelTests(unittest.TestCase):
                 samples = source.readframes(source.getnframes())
             self.assertTrue(any(samples))
             self.assertFalse(math.isnan(timer_frequency(136)))
+
+    def test_preview_channel_switches_can_mute_everything(self) -> None:
+        model = synthetic_bank([])
+        pattern = {
+            "label": "test",
+            "length_adder": 0,
+            "frames": 6,
+            "channels": [{
+                "name": "square2",
+                "events": [{"frequency": 440.0, "period": 253, "frames": 6}],
+            }],
+        }
+        pcm = model.render_pattern(pattern, sample_rate=6000, enabled_channels=set())
+        self.assertEqual(set(pcm), {0})
+
+    def test_noise_renderer_emits_real_four_bit_dac_levels(self) -> None:
+        model = synthetic_bank([])
+        channel = {
+            "events": [{
+                "frames": 4,
+                "beat": "short",
+                "period_index": 3,
+                "length_counter": 2,
+            }],
+        }
+        samples = model._render_noise_channel(channel, 4, 400, 6000)
+        self.assertEqual(set(samples), {0.0, 12.0})
+        gate_end = round(2 * 6000 / (NTSC_FRAME_RATE * 2))
+        self.assertTrue(any(samples[:gate_end]))
+        self.assertFalse(any(samples[gate_end:]))
+
+    def test_nonlinear_mixer_and_output_filter_reject_dc(self) -> None:
+        one_pulse = apu_mix(15, 0, 0, 0, 0)
+        two_pulses = apu_mix(15, 15, 0, 0, 0)
+        self.assertGreater(two_pulses, one_pulse)
+        self.assertLess(two_pulses, one_pulse * 2)
+        output_filter = ApuOutputFilter(44_100)
+        value = 0.0
+        for _index in range(88_200):
+            value = output_filter.process(0.5)
+        self.assertAlmostEqual(value, 0.0, delta=0.0001)
+
+    def test_area_pulse_envelope_silences_a_long_note(self) -> None:
+        model = synthetic_bank([])
+        song = {"event_music": 0, "area_music": 1}
+        channel = {"events": [{"period": 253, "frames": 20}]}
+        samples = model._render_pulse_channel(song, channel, 2000, 6000)
+        frame_samples = round(6000 / NTSC_FRAME_RATE)
+        self.assertTrue(any(samples[:frame_samples * 8]))
+        self.assertFalse(any(samples[frame_samples * 10:]))
+
+    def test_pulse_software_envelopes_start_inside_their_own_tables(self) -> None:
+        model = synthetic_bank([])
+        sample_rate = 6000
+
+        def volumes(song: dict[str, int], count: int) -> list[int]:
+            return [
+                model._pulse_control(
+                    song,
+                    round((frame + 0.5) * sample_rate / NTSC_FRAME_RATE),
+                    sample_rate,
+                )[1]
+                for frame in range(count)
+            ]
+
+        self.assertEqual(volumes({"event_music": 0, "area_music": 1}, 10),
+                         [8, 7, 6, 5, 5, 4, 4, 0, 0, 0])
+        self.assertEqual(volumes({"event_music": 0x08, "area_music": 0}, 6),
+                         [11, 10, 9, 8, 8, 8])
+        self.assertEqual(volumes({"event_music": 0x02, "area_music": 0}, 6),
+                         [3, 4, 5, 5, 6, 6])
+
+    def test_ground_triangle_linear_counter_holds_after_eight_frames(self) -> None:
+        model = synthetic_bank([])
+        song = {"event_music": 0, "area_music": 1}
+        channel = {"events": [{
+            "period": 253,
+            "frames": 20,
+            "length_command": True,
+        }]}
+        samples = model._render_triangle_channel(song, channel, 2000, 6000)
+        frame_samples = round(6000 / NTSC_FRAME_RATE)
+        self.assertGreater(len(set(samples[:frame_samples * 6])), 8)
+        self.assertEqual(len(set(samples[frame_samples * 9:frame_samples * 19])), 1)
 
 
 if __name__ == "__main__":

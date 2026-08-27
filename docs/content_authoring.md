@@ -20,6 +20,14 @@ tiles the second 4 KiB. Sound Studio decodes notes, rests, duration changes, and
 noise beats, draws a piano roll, and renders either one pattern or a complete
 logical composition. The complete overworld preview follows the original
 33-pattern schedule instead of treating its internal parts as separate songs.
+Preview synthesis uses the APU's four-bit channel levels, 15-bit noise shift
+register and hardware length-counter gates, nonlinear pulse/TND transfer curves,
+and the console's two high-pass and one low-pass output filters rather than
+generic oscillator mixing. Pulse previews follow the short area, long
+water/event, and castle-clear software envelopes; Triangle sustain follows the
+engine's `$0F`, `$1F`, and `$FF` linear-counter control modes.
+Four independent preview checkboxes enable or mute Square 2, Square 1,
+Triangle, and Noise without changing the authored music data.
 
 Run `make init-content` before editing. It creates only missing workspace files,
 so opening a studio never overwrites earlier local work. Run
