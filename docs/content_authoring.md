@@ -9,7 +9,7 @@ store local work beneath the ignored `content/workspace/` directory.
 | `make world-studio` | All 36 world-to-area routes and nine player physics tables |
 | `make level-studio` | All 34 area headers, terrain-object streams, enemies, entrances, and page controls |
 | `make graphics-studio` | 512 CHR tiles, 101 metatiles, 26 player frames, eight palette packets, and fixed-length UI text |
-| `make sound-studio` | All 22 vanilla music headers and 76 channel views plus the swim/stomp volume envelope |
+| `make sound-studio` | Fourteen logical compositions, all 22 vanilla headers and 75 active channel views plus the swim/stomp volume envelope |
 
 The programs are semantic editors rather than generic JSON inspectors. Level
 Studio draws every area as a horizontally scrolling page grid and distinguishes
@@ -17,7 +17,9 @@ terrain objects from enemies and entrances. World Studio presents course
 routing and documented physics profiles. Graphics Studio uses the actual SMB1
 pattern-table convention: sprite tiles occupy the first 4 KiB and background
 tiles the second 4 KiB. Sound Studio decodes notes, rests, duration changes, and
-noise beats, draws a piano roll, and renders a local WAV preview.
+noise beats, draws a piano roll, and renders either one pattern or a complete
+logical composition. The complete overworld preview follows the original
+33-pattern schedule instead of treating its internal parts as separate songs.
 
 Run `make init-content` before editing. It creates only missing workspace files,
 so opening a studio never overwrites earlier local work. Run

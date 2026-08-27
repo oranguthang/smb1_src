@@ -24,7 +24,9 @@ class SoundStudio(tk.Tk):
         self.channel_name = tk.StringVar()
         self.raw_value = tk.IntVar()
         self.status = tk.StringVar()
-        self.current_song = model.song(model.header_labels[0])
+        self.compositions = model.compositions()
+        self.current_composition = self.compositions[0]
+        self.current_song = self.current_composition["patterns"][0]
         self.current_channel = self.current_song["channels"][0]
         self.title("SMB1 Sound Studio")
         self.geometry("1240x790")
@@ -38,13 +40,15 @@ class SoundStudio(tk.Tk):
         ttk.Label(toolbar, text="Song").pack(side="left")
         self.song_box = ttk.Combobox(
             toolbar, state="readonly", width=32,
-            values=[self.model.song(label)["name"] for label in self.model.header_labels],
+            values=[composition["name"] for composition in self.compositions],
         )
         self.song_box.current(0)
         self.song_box.pack(side="left", padx=5)
         self.song_box.bind("<<ComboboxSelected>>", lambda _event: self.select_song())
         for text, command in (
-            ("Preview", self.preview), ("Undo", self.undo), ("Save", self.save),
+            ("Preview pattern", self.preview_pattern),
+            ("Preview full song", self.preview_composition),
+            ("Undo", self.undo), ("Save", self.save),
             ("Build ROM", lambda: run_make(self.project_root, "build-content")),
             ("Run FCEUX", lambda: run_make(self.project_root, "run-content")),
         ):
@@ -62,6 +66,10 @@ class SoundStudio(tk.Tk):
     def build_music(self, parent: ttk.Frame) -> None:
         channels = ttk.Frame(parent)
         channels.pack(fill="x")
+        ttk.Label(channels, text="Pattern").pack(side="left")
+        self.pattern_box = ttk.Combobox(channels, state="readonly", width=27)
+        self.pattern_box.pack(side="left", padx=5)
+        self.pattern_box.bind("<<ComboboxSelected>>", lambda _event: self.select_pattern())
         ttk.Label(channels, text="Channel").pack(side="left")
         self.channel_box = ttk.Combobox(channels, textvariable=self.channel_name, state="readonly", width=15)
         self.channel_box.pack(side="left", padx=5)
@@ -120,9 +128,17 @@ class SoundStudio(tk.Tk):
         return len(self.envelope_steps())
 
     def select_song(self) -> None:
-        label = self.model.header_labels[self.song_box.current()]
-        self.song_label.set(label)
-        self.current_song = self.model.song(label)
+        self.current_composition = self.compositions[self.song_box.current()]
+        self.pattern_box.configure(values=[
+            f"{index + 1:02d}: {pattern['name']}"
+            for index, pattern in enumerate(self.current_composition["patterns"])
+        ])
+        self.pattern_box.current(0)
+        self.select_pattern()
+
+    def select_pattern(self) -> None:
+        self.current_song = self.current_composition["patterns"][self.pattern_box.current()]
+        self.song_label.set(self.current_song["label"])
         names = [channel["name"] for channel in self.current_song["channels"]]
         self.channel_box.configure(values=names)
         self.channel_box.current(0)
@@ -134,18 +150,27 @@ class SoundStudio(tk.Tk):
         self.refresh_music()
 
     def refresh_music(self) -> None:
-        self.current_song = self.model.song(self.song_label.get())
+        self.current_song = self.model.song(
+            self.song_label.get(), self.current_song.get("length_adder", 0)
+        )
+        self.current_composition["patterns"][self.pattern_box.current()] = self.current_song
         name = self.channel_box.get()
         self.current_channel = next(channel for channel in self.current_song["channels"] if channel["name"] == name)
         self.events.delete(*self.events.get_children())
         for index, byte in enumerate(self.current_channel["bytes"]):
             address = self.current_channel["start"] + index
-            meaning = self.model.describe_byte(name, byte, self.current_song["length_offset"])
+            meaning = self.model.describe_byte(
+                name,
+                byte,
+                self.current_song["length_offset"],
+                self.current_song.get("length_adder", 0),
+            )
             self.events.insert("", "end", iid=str(index), values=(index, f"${address:04X}", f"${byte:02X}", meaning))
         self.draw_roll()
         total = sum(frames for _frequency, frames in self.model.note_events(self.current_song, self.current_channel))
         self.status.set(
-            f"{self.current_song['name']} / {name}: {len(self.current_channel['bytes'])} bytes, "
+            f"{self.current_composition['name']} / pattern {self.pattern_box.current() + 1} / {name}: "
+            f"{len(self.current_channel['bytes'])} bytes, "
             f"{total} frames | {'unsaved edits' if dirty(self.documents) else 'saved'}"
         )
         self.title("SMB1 Sound Studio" + (" *" if dirty(self.documents) else ""))
@@ -228,14 +253,21 @@ class SoundStudio(tk.Tk):
                 self.draw_envelope(),
             ))
 
-    def preview(self) -> None:
+    def _preview(self, patterns: list[dict], description: str) -> None:
         def action() -> None:
-            path = self.model.write_preview(self.current_song, self.preview_path)
+            path = self.model.write_preview(patterns, self.preview_path)
             if sys.platform == "win32":
                 import winsound
                 winsound.PlaySound(str(path), winsound.SND_FILENAME | winsound.SND_ASYNC)
-            self.status.set(f"Preview rendered to {path}")
+            seconds = sum(pattern["frames"] for pattern in patterns) / 60.0988
+            self.status.set(f"{description}: {seconds:.1f} s rendered to {path}")
         guard("Sound Studio", action)
+
+    def preview_pattern(self) -> None:
+        self._preview([self.current_song], "Pattern preview")
+
+    def preview_composition(self) -> None:
+        self._preview(self.current_composition["patterns"], "Full-song preview")
 
     def undo(self) -> None:
         if not self.model.document.undo():
@@ -266,10 +298,14 @@ def main() -> int:
     documents, labels = load_documents(args.formats, args.studios, args.labels, args.workspace, "sound")
     model = MusicBank(documents["music_bank"], labels, args.prg.read_bytes())
     songs = model.songs()
+    compositions = model.compositions()
     for document in documents.values():
         document.validate()
     if args.check:
-        print(f"[OK] Sound Studio: {len(songs)} headers and {sum(len(song['channels']) for song in songs)} channel views")
+        print(
+            f"[OK] Sound Studio: {len(compositions)} compositions, {len(songs)} headers, "
+            f"and {sum(len(song['channels']) for song in songs)} active channel views"
+        )
         return 0
     preview = args.workspace / "sound" / "preview.wav"
     application = SoundStudio(documents, model, args.project_root, preview)
