@@ -53,9 +53,13 @@ ROM, opens the selected area and page with the original game engine, and embeds
 the native FCEUX window in the Playtest tab. The World and Course controls
 supply the correct route context for shared and bonus areas. Click the game
 screen before using the keyboard; configured gamepads continue to work through
-FCEUX. **Stop** closes only the editor-owned emulator process and returns to the
-map. Set `FCEUX_EXE` when the executable is not available at the default sibling
-path `../fceux_automation/vc/x64/Release/fceux64.exe`.
+FCEUX. The embedded frame scales to the complete Playtest tab while preserving
+the NES aspect ratio; only the unavoidable side or letterbox bars remain. A
+generated per-run FCEUX configuration keeps these video settings isolated from
+the user's emulator configuration. **Stop** closes only the editor-owned
+emulator process and returns to the map. Set `FCEUX_EXE` when the executable is
+not available at the default sibling path
+`../fceux_automation/vc/x64/Release/fceux64.exe`.
 
 Run `make init-content` before editing. It creates only missing workspace files,
 so opening a studio never overwrites earlier local work. Run

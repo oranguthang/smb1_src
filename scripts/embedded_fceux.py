@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import ctypes
 import os
+import re
 import subprocess
 import sys
 import tkinter as tk
@@ -34,10 +35,16 @@ class EmbeddedFceux:
     WS_EX_WINDOWEDGE = 0x00000100
     WS_EX_CLIENTEDGE = 0x00000200
     WS_EX_APPWINDOW = 0x00040000
-    SWP_NOZORDER = 0x0004
     SWP_FRAMECHANGED = 0x0020
+    SWP_NOSIZE = 0x0001
     SWP_SHOWWINDOW = 0x0040
     WM_CLOSE = 0x0010
+    EO_FORCEISCALE = 0x00004000
+    EO_BESTFIT = 0x00010000
+    EO_SQUAREPIXELS = 0x00100000
+    NES_WIDTH = 256
+    NES_HEIGHT = 240
+    RESIZE_DELAY_MS = 180
 
     @staticmethod
     def _user32() -> object:
@@ -53,6 +60,8 @@ class EmbeddedFceux:
             ctypes.c_int, ctypes.c_int, wintypes.UINT,
         )
         user32.SetWindowPos.restype = wintypes.BOOL
+        user32.GetClientRect.argtypes = (wintypes.HWND, ctypes.POINTER(wintypes.RECT))
+        user32.GetClientRect.restype = wintypes.BOOL
         return user32
 
     def __init__(self, host: tk.Widget, status: Callable[[str], None]) -> None:
@@ -62,7 +71,8 @@ class EmbeddedFceux:
         self.window = 0
         self.poll_count = 0
         self.poll_job: str | None = None
-        self.host.bind("<Configure>", lambda _event: self.resize())
+        self.resize_job: str | None = None
+        self.host.bind("<Configure>", self._schedule_resize)
         self.host.bind("<Button-1>", lambda _event: self.focus())
 
     @property
@@ -84,11 +94,16 @@ class EmbeddedFceux:
                 raise OSError(f"Required playtest file is missing: {path}")
         command = [
             str(executable.resolve()),
+        ]
+        embedded_config = self._prepare_config(executable, rom.parent)
+        if embedded_config is not None:
+            command.extend(["-cfg", str(embedded_config.resolve())])
+        command.extend([
             "-window-x", "-10000",
             "-window-y", "-10000",
             "-lua", str(lua.resolve()),
             str(rom.resolve()),
-        ]
+        ])
         startup = subprocess.STARTUPINFO()
         startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         startup.wShowWindow = 0
@@ -144,26 +159,82 @@ class EmbeddedFceux:
         self.resize()
         user32.ShowWindow(self.window, 5)
         self.focus()
+        self.host.after(50, self.resize)
+        self.host.after(250, self.resize)
+
+    def _schedule_resize(self, _event: tk.Event | None = None) -> None:
+        """Fit once after Tk has finished a burst of layout changes."""
+        if not self.window:
+            return
+        if self.resize_job is not None:
+            self.host.after_cancel(self.resize_job)
+        self.resize_job = self.host.after(self.RESIZE_DELAY_MS, self._finish_resize)
+
+    def _finish_resize(self) -> None:
+        self.resize_job = None
+        self.resize()
 
     def resize(self) -> None:
         if not self.window:
             return
-        width = max(1, self.host.winfo_width())
-        height = max(1, self.host.winfo_height())
-        scale = max(1, min(width // 256, height // 240))
-        game_width = 256 * scale
-        game_height = 240 * scale
-        left = (width - game_width) // 2
-        top = (height - game_height) // 2
-        self._user32().SetWindowPos(
+        user32 = self._user32()
+        width, height = self._host_client_size(user32)
+        left, top, game_width, game_height = self._fit_game_rectangle(width, height)
+        user32.SetWindowPos(
             self.window,
             0,
             left,
             top,
             game_width,
             game_height,
-            self.SWP_NOZORDER | self.SWP_FRAMECHANGED | self.SWP_SHOWWINDOW,
+            self.SWP_FRAMECHANGED | self.SWP_SHOWWINDOW,
         )
+
+    def _host_client_size(self, user32: object) -> tuple[int, int]:
+        """Read the final Win32 client area instead of intermediate Tk geometry."""
+        rectangle = wintypes.RECT()
+        if user32.GetClientRect(self.host.winfo_id(), ctypes.byref(rectangle)):
+            return max(1, rectangle.right), max(1, rectangle.bottom)
+        return max(1, self.host.winfo_width()), max(1, self.host.winfo_height())
+
+    @classmethod
+    def _fit_game_rectangle(cls, width: int, height: int) -> tuple[int, int, int, int]:
+        """Fit and center a 256:240 NES frame without changing its aspect ratio."""
+        width = max(1, width)
+        height = max(1, height)
+        if width * cls.NES_HEIGHT <= height * cls.NES_WIDTH:
+            game_width = width
+            game_height = max(1, width * cls.NES_HEIGHT // cls.NES_WIDTH)
+        else:
+            game_height = height
+            game_width = max(1, height * cls.NES_WIDTH // cls.NES_HEIGHT)
+        left = (width - game_width) // 2
+        top = (height - game_height) // 2
+        return left, top, game_width, game_height
+
+    @classmethod
+    def _prepare_config(cls, executable: Path, output_directory: Path) -> Path | None:
+        source = executable.with_name("fceux.cfg")
+        if not source.is_file():
+            return None
+        contents = source.read_text(encoding="utf-8")
+        pattern = re.compile(r'^("?eoptions"?\s+)(\d+)(\s*)$', re.MULTILINE)
+        match = pattern.search(contents)
+        if match is None:
+            return None
+        options = int(match.group(2))
+        options |= cls.EO_BESTFIT
+        options &= ~(cls.EO_FORCEISCALE | cls.EO_SQUAREPIXELS)
+        contents = pattern.sub(
+            lambda item: f"{item.group(1)}{options}{item.group(3)}",
+            contents,
+            count=1,
+        )
+        destination = output_directory / "fceux-embedded.cfg"
+        temporary = destination.with_suffix(".tmp")
+        temporary.write_text(contents, encoding="utf-8")
+        temporary.replace(destination)
+        return destination
 
     def focus(self) -> None:
         if self.window:
@@ -173,6 +244,9 @@ class EmbeddedFceux:
         if self.poll_job is not None:
             self.host.after_cancel(self.poll_job)
             self.poll_job = None
+        if self.resize_job is not None:
+            self.host.after_cancel(self.resize_job)
+            self.resize_job = None
         process = self.process
         if self.window:
             self._user32().PostMessageW(self.window, self.WM_CLOSE, 0, 0)
