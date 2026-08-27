@@ -70,6 +70,7 @@ def lint_project(project_root: Path) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
     sub_labels: dict[str, tuple[Path, int]] = {}
     all_labels: dict[str, tuple[Path, int]] = {}
+    all_symbols: set[str] = set()
     jsr_targets: dict[str, list[tuple[Path, int]]] = {}
 
     for absolute_path in assembly_paths(project_root):
@@ -113,6 +114,7 @@ def lint_project(project_root: Path) -> list[Diagnostic]:
             definition = DEFINITION_RE.match(code)
             if definition is not None:
                 symbol = definition.group(1)
+                all_symbols.add(symbol)
                 if code.endswith(":"):
                     previous = all_labels.get(symbol)
                     if previous is not None:
@@ -179,7 +181,7 @@ def lint_project(project_root: Path) -> list[Diagnostic]:
                     )
 
     for target, callers in sorted(jsr_targets.items()):
-        if target not in all_labels:
+        if target not in all_symbols:
             path, line_number = callers[0]
             diagnostics.append(
                 Diagnostic(path, line_number, f"undefined JSR target: {target}")

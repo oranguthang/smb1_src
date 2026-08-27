@@ -68,13 +68,24 @@ tbl_background_color_buffer_controls:
     .byte $00, $09, $0a, $04
 
 tbl_background_colors:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $1a, $1a, $14, $14  ; Vs. colors selected by area type
+    .byte $14, $1a, $14, $14  ; Vs. colors selected by background control
+.else
     .byte $22, $22, $0f, $0f  ; used by area type if bg color ctrl not set
     .byte $0f, $22, $0f, $0f  ; used by background color control if set
+.endif
 
 tbl_player_palette_colors:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $1a, $33, $39, $00  ; mario's Vs. palette
+    .byte $1a, $36, $39, $1b  ; luigi's Vs. palette
+    .byte $1a, $0d, $39, $33  ; fiery Vs. palette
+.else
     .byte $22, $16, $27, $18  ; mario's colors
     .byte $22, $30, $27, $19  ; luigi's colors
     .byte $22, $37, $27, $16  ; fiery (used by both)
+.endif
 
 handler_prepare_background_and_player_colors:
     LDY ram_background_color_ctrl  ; check background color control
@@ -193,7 +204,11 @@ bra_skip_time_up_screen:
 handler_display_intermediate_screen:
     LDA ram_oper_mode  ; check primary mode of operation
     BEQ bra_skip_intermediate_screen  ; if in title screen mode, skip this
+.if con_revision_profile = con_revision_profile_vs
+    CMP #con_vs_mode_game_over  ; are we in the Vs. game over mode?
+.else
     CMP #con_mode_game_over  ; are we in game over mode?
+.endif
     BEQ bra_display_game_over_screen  ; if so, proceed to display game over screen
     LDA ram_alt_entrance_control  ; otherwise check for mode of alternate entry
     BNE bra_skip_intermediate_screen  ; and branch if found
@@ -243,9 +258,48 @@ bra_queue_rendered_area_columns:
 ; $00 - vram buffer address table low
 ; $01 - vram buffer address table high
 
+.if con_revision_profile = con_revision_profile_vs
+tbl_vs_title_chr_addresses_high:
+    .byte $1e, $1a, $1a, $1a, $1b, $1b, $1c, $1c
+
+tbl_vs_title_chr_addresses_low:
+    .byte $a0, $00, $60, $c0, $10, $80, $00, $80
+
+.endif
+
 handler_copy_title_screen_from_chr:
     LDA ram_oper_mode  ; are we in title screen mode?
     BNE loc_advance_operation_mode_task  ; if not, exit
+.if con_revision_profile = con_revision_profile_vs
+    LDY #$00
+    LDA #$06  ; select the Vs. title-screen CHR bank
+    STA VS_REQUEST
+    LDA tbl_vs_title_chr_addresses_high,y
+    STA PPU_ADDRESS
+    LDA tbl_vs_title_chr_addresses_low,y
+    STA PPU_ADDRESS
+    LDA #$63  ; put address $6300 into the indirect at $00
+    STA $01
+    LDY #$00
+    STY $00
+    LDA PPU_DATA  ; do one garbage read before copying CHR data
+bra_copy_vs_title_screen_data:
+    LDA PPU_DATA
+    STA ($00),y
+    INY
+    BNE bra_check_vs_title_screen_copy_end
+    INC $01
+bra_check_vs_title_screen_copy_end:
+    LDA $01
+    CMP #$64
+    BNE bra_copy_vs_title_screen_data
+    CPY #$5a
+    BCC bra_copy_vs_title_screen_data
+    LDA #$02  ; restore the Vs. program bank
+    STA VS_REQUEST
+    LDA #$1c  ; select the copied title-screen packet
+    JMP loc_store_vram_buffer_control_from_a
+.else
     LDA #>con_title_screen_data_offset  ; load address $1ec0 into
     STA PPU_ADDRESS  ; the vram address register
     LDA #<con_title_screen_data_offset
@@ -269,6 +323,7 @@ bra_check_title_screen_copy_end:
     BCC bra_copy_title_screen_data  ; if not, loop back and do another
     LDA #$05  ; set buffer transfer control to $0300,
     JMP loc_store_vram_buffer_control_from_a  ; increment task and exit
+.endif
 
 ; -------------------------------------------------------------------------------------
 
@@ -281,7 +336,9 @@ bra_clear_title_screen_buffers:
     STA ram_vram_buffer1-1+$100,x
     DEX
     BNE bra_clear_title_screen_buffers
+.if con_revision_profile <> con_revision_profile_vs
     JSR sub_draw_mushroom_icon  ; draw player select icon
+.endif
 loc_advance_screen_task:
     INC ram_screen_routine_task  ; move onto next task
     RTS
@@ -346,7 +403,11 @@ tbl_luigi_name_tiles:
 tbl_warp_zone_number_tiles:
     .byte $04, $03, $02, $00  ; warp zone numbers, note spaces on middle
     .byte $24, $05, $24, $00  ; zone, partly responsible for
+.if con_revision_profile = con_revision_profile_vs
+    .byte $24, $06, $24, $00  ; the Vs. warp-zone layout
+.else
     .byte $08, $07, $06, $00  ; the minus world
+.endif
 
 tbl_game_text_packet_offsets:
     .byte off_top_status_bar_packet-tbl_game_text_packets, off_top_status_bar_packet-tbl_game_text_packets
@@ -413,8 +474,15 @@ bra_check_game_text_player_name:
     DEX  ; check to see if current message number is for time up
     BNE bra_check_luigi_name_replacement
     LDY ram_oper_mode  ; check for game over mode
+.if con_revision_profile = con_revision_profile_vs
+    CPY #con_vs_mode_game_over
+    BEQ bra_check_luigi_name_replacement
+    LDY ram_off_scr_numberof_lives
+    BMI bra_check_luigi_name_replacement
+.else
     CPY #con_mode_game_over
     BEQ bra_check_luigi_name_replacement
+.endif
     EOR #%00000001  ; if not, must be time up, invert d0 to do other player
 bra_check_luigi_name_replacement:
     LSR

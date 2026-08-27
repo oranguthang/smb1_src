@@ -1,5 +1,9 @@
 ; -------------------------------------------------------------------------------------
 
+.if con_revision_profile = con_revision_profile_vs
+    .res 148, $ff  ; preserve the original Vs. module alignment gap
+.endif
+
 tbl_default_oam_offsets:
     .byte $04, $30, $48, $60, $78, $90, $a8, $c0
     .byte $d8, $e8, $24, $f8, $fc, $28, $2c
@@ -9,7 +13,12 @@ tbl_sprite_0_hit_oam_entry:
 
 ; -------------------------------------------------------------------------------------
 
+.if con_revision_profile = con_revision_profile_vs
+handler_initialize_game = handler_initialize_vs_game
+sub_initialize_vs_game_ram:
+.else
 handler_initialize_game:
+.endif
     LDY #$6f  ; clear all memory as in initialization procedure,
     JSR sub_initialize_memory  ; but this time, clear only as far as $076f
     LDY #$1f
@@ -17,6 +26,12 @@ bra_clear_sound_ram_loop:
     STA ram_sound_memory,y  ; clear out memory used
     DEY  ; by the sound engines
     BPL bra_clear_sound_ram_loop
+.if con_revision_profile = con_revision_profile_vs
+    RTS
+
+handler_initialize_vs_game:
+    JSR sub_initialize_vs_game_ram
+.endif
     LDA #$18  ; set demo timer
     STA ram_demo_timer
     JSR sub_load_area_pointer
@@ -30,6 +45,12 @@ bra_clear_game_timers_loop:
     STA ram_timers,x  ; clear out memory between
     DEX  ; $0780 and $07a1
     BPL bra_clear_game_timers_loop
+.if con_revision_profile = con_revision_profile_vs
+    STA ram_frame_counter
+    LDA loc_interval_timer_reload+1  ; copy the interval reload operand from NMI code
+    STA ram_interval_timer_control
+    STA ram_pseudo_random_bit_reg
+.endif
     LDA ram_halfway_page
     LDY ram_alt_entrance_control  ; if ram_alt_entrance_control not set, use halfway page, if any found
     BEQ bra_use_area_start_page
@@ -61,11 +82,19 @@ bra_store_initial_nametable_address:
     LDA ram_primary_hard_mode  ; check to see if primary hard mode has been activated
     BNE bra_enable_secondary_hard_mode  ; if so, activate the secondary no matter where we're at
     LDA ram_world_number  ; otherwise check world number
+.if con_revision_profile = con_revision_profile_vs
+    CMP #con_vs_hard_mode_world
+.else
     CMP #con_world5  ; if less than 5, do not activate secondary
+.endif
     BCC bra_apply_halfway_entrance
     BNE bra_enable_secondary_hard_mode  ; if not equal to, then world > 5, thus activate
     LDA ram_level_number  ; otherwise, world 5, so check level number
+.if con_revision_profile = con_revision_profile_vs
+    CMP #con_vs_hard_mode_level
+.else
     CMP #con_level3  ; if 1 or 2, do not set secondary hard mode flag
+.endif
     BCC bra_apply_halfway_entrance
 bra_enable_secondary_hard_mode:
     INC ram_secondary_hard_mode  ; set secondary hard mode flag for areas 5-3 and beyond
@@ -84,13 +113,33 @@ bra_finish_area_initialization:
 
 ; -------------------------------------------------------------------------------------
 
+.if con_revision_profile = con_revision_profile_vs
+handler_primary_game_setup = handler_primary_vs_game_setup
+sub_initialize_vs_game_setup:
+    JSR sub_vs_select_low_chr_bank
+.else
 handler_primary_game_setup:
+.endif
     LDA #$01
     STA ram_fetch_new_game_timer_flag  ; set flag to load game timer from header
     STA ram_player_size  ; set player's size to small
+.if con_revision_profile = con_revision_profile_vs
+    LDA #$01
+    LDY ram_vs_player_start_mode
+    BNE bra_store_vs_starting_lives
+.endif
     LDA #con_initial_lives
+.if con_revision_profile = con_revision_profile_vs
+bra_store_vs_starting_lives:
+.endif
     STA ram_numberof_lives  ; give each player three lives
     STA ram_off_scr_numberof_lives
+.if con_revision_profile = con_revision_profile_vs
+    RTS
+
+handler_primary_vs_game_setup:
+    JSR sub_initialize_vs_game_setup
+.endif
 
 handler_secondary_game_setup:
     LDA #$00
@@ -204,11 +253,25 @@ tbl_player_starting_y_positions:
     .byte $f0
 
 tbl_player_background_priorities:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $00, $20, $00, $00, $00, $00, $00, $00, $20
+.else
     .byte $00, $20, $00, $00, $00, $00, $00, $00
+.endif
 
 tbl_game_timer_hundreds_digits:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $04, $03, $03, $00, $00
+
+tbl_vs_game_timer_values_a:
+    .byte $05, $04, $03
+
+tbl_vs_game_timer_values_b:
+    .byte $03, $00, $00, $05
+.else
     .byte $20  ; dummy byte, used as part of bg priority data
     .byte $04, $03, $02
+.endif
 
 handler_setup_entrance_and_game_timer:
     LDA ram_screen_left_page_loc  ; set current page for area objects
@@ -246,6 +309,26 @@ bra_set_player_starting_position:
     BEQ bra_check_joypad_override  ; if set to zero, branch (do not use dummy byte for this)
     LDA ram_fetch_new_game_timer_flag  ; do we need to set the game timer? if not, use
     BEQ bra_check_joypad_override  ; old game timer setting
+.if con_revision_profile = con_revision_profile_vs
+    LDA ram_vs_timer_mode
+    BEQ bra_load_vs_default_game_timer
+    LDA tbl_vs_game_timer_values_a,y
+    STA ram_game_timer_display
+    LDA tbl_vs_game_timer_values_b,y
+    STA ram_game_timer_display+1
+    JMP bra_finish_vs_game_timer_digits
+bra_load_vs_default_game_timer:
+    LDA tbl_game_timer_hundreds_digits-1,y
+    STA ram_game_timer_display
+    LDA tbl_game_timer_hundreds_digits+2,y
+    STA ram_game_timer_display+1
+bra_finish_vs_game_timer_digits:
+    LDA #$01
+    STA ram_game_timer_display+2
+    LDA #$00
+    STA ram_fetch_new_game_timer_flag
+    STA ram_star_invincible_timer
+.else
     LDA tbl_game_timer_hundreds_digits,y  ; if game timer is set and game timer flag is also set,
     STA ram_game_timer_display  ; use value of game timer control for first digit of game timer
     LDA #$01
@@ -254,6 +337,7 @@ bra_set_player_starting_position:
     STA ram_game_timer_display+1  ; set second digit of game timer
     STA ram_fetch_new_game_timer_flag  ; clear flag for game timer reset
     STA ram_star_invincible_timer  ; clear star mario timer
+.endif
 bra_check_joypad_override:
     LDY ram_joypad_override  ; if controller bits not set, branch to skip this part
     BEQ bra_check_swimming_entrance
@@ -281,11 +365,23 @@ bra_select_player_entrance_handler:
 tbl_halfway_page_nibbles:
     .byte $56, $40
     .byte $65, $70
+.if con_revision_profile = con_revision_profile_vs
+    .byte $68, $40
+.else
     .byte $66, $40
+.endif
     .byte $66, $40
-    .byte $66, $40
+.if con_revision_profile = con_revision_profile_vs
     .byte $66, $60
+.else
+    .byte $66, $40
+.endif
+    .byte $66, $60
+.if con_revision_profile = con_revision_profile_vs
+    .byte $68, $80
+.else
     .byte $65, $70
+.endif
     .byte $00, $00
 
 handler_player_lose_life:
@@ -298,7 +394,11 @@ handler_player_lose_life:
     BPL bra_prepare_life_restart  ; if player still has lives, branch
     LDA #$00
     STA ram_oper_mode_task  ; initialize mode task,
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_mode_game_over
+.else
     LDA #con_mode_game_over  ; switch to game over mode
+.endif
     STA ram_oper_mode  ; and leave
     RTS
 bra_prepare_life_restart:

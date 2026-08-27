@@ -21,3 +21,8 @@ SPR_DMA               = $4014
 JOYPAD_PORT           = $4016
 JOYPAD_PORT1          = $4016
 JOYPAD_PORT2          = $4017
+
+VS_STATUS             = $4016
+VS_REQUEST            = $4016
+VS_STATUS2            = $4017
+VS_COIN_COUNTER       = $4020

@@ -29,16 +29,20 @@ bra_check_warm_boot_state:
     BCS bra_initialize_after_boot_check  ; if not, give up and proceed with cold boot
     DEX
     BPL bra_check_warm_boot_state
+.if con_revision_profile <> con_revision_profile_vs
     LDA ram_warm_boot_validation  ; second checkpoint, check to see if
     CMP #$a5  ; another location has a specific value
     BNE bra_initialize_after_boot_check
     LDY #con_warm_boot_offset  ; if passed both, load warm boot pointer
+.endif
 bra_initialize_after_boot_check:
     JSR sub_initialize_memory  ; clear memory using pointer in Y
     STA SND_DELTA_REG+1  ; reset delta counter load register
     STA ram_oper_mode  ; reset primary mode of operation
     LDA #$a5  ; set warm boot flag
+.if con_revision_profile <> con_revision_profile_vs
     STA ram_warm_boot_validation
+.endif
     STA ram_pseudo_random_bit_reg  ; set seed for pseudorandom register
     LDA #%00001111
     STA SND_MASTERCTRL_REG  ; enable all sound channels except dmc
@@ -47,6 +51,38 @@ bra_initialize_after_boot_check:
     JSR sub_move_all_sprites_offscreen
     JSR sub_initialize_name_tables  ; initialize both name tables
     INC ram_disable_screen_flag  ; set flag to disable screen output
+.if con_revision_profile = con_revision_profile_vs
+    JSR sub_vs_select_low_chr_bank
+    LDA #$00
+    LDX #$00
+bra_clear_vs_ram_arenas:
+    STA ram_vs_arena1,x
+    STA ram_vs_arena0,x
+    INX
+    BNE bra_clear_vs_ram_arenas
+    LDA #con_vs_request_chr_high+con_vs_request_irq_release
+    STA VS_REQUEST
+    LDA #$1e
+    STA PPU_ADDRESS
+    LDA #$00
+    STA PPU_ADDRESS
+    LDA PPU_DATA  ; discard the buffered CHR read
+    LDY #<ram_vs_saved_data
+bra_load_vs_saved_data:
+    LDA PPU_DATA
+    STA ram_vs_arena0,y
+    INY
+    BNE bra_load_vs_saved_data
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+    LDY #$05
+bra_restore_vs_top_score:
+    LDA ram_vs_saved_top_score,y
+    STA ram_top_score_display,y
+    DEY
+    BPL bra_restore_vs_top_score
+    JSR sub_vs_read_dip_switches
+.endif
     LDA ram_mirror_ppu_ctrl_reg1
     ORA #%10000000  ; enable NMIs
     JSR sub_write_ppu_reg1
@@ -58,6 +94,12 @@ loc_wait_forever_after_reset_failure:
 ; $01 - vram buffer address table high
 
 tbl_vram_buffer_addresses_low:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $01, $a5, $c9, $ed, $11, $00, $41, $41, $4d, $35
+    .byte $3d, $45, $55, $69, $7d, $a9, $b2, $c6, $de, $f6
+    .byte $0c, $22, $36, $4a, $5b, $72, $8a, $a2, $00, $00
+    .byte $00, $e4, $e4, $e4, $e4, $e4, $e4, $e4, $dc
+.else
     .byte <ram_vram_buffer1, <off_water_area_palette_packet, <off_ground_area_palette_packet
     .byte <off_underground_area_palette_packet, <off_castle_area_palette_packet, <ram_vram_buffer1_offset
     .byte <ram_vram_buffer2, <ram_vram_buffer2, <off_bowser_palette_packet
@@ -65,8 +107,15 @@ tbl_vram_buffer_addresses_low:
     .byte <off_mario_thanks_message, <off_luigi_thanks_message, <off_mushroom_retainer_saved_message
     .byte <off_princess_saved_message_1, <off_princess_saved_message_2, <off_world_select_message_1
     .byte <off_world_select_message_2
+.endif
 
 tbl_vram_buffer_addresses_high:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $03, $8e, $8e, $8e, $8f, $03, $03, $03, $8f, $8f
+    .byte $8f, $8f, $8f, $8f, $8f, $8f, $8f, $8f, $8f, $8f
+    .byte $90, $90, $90, $90, $90, $90, $90, $90, $63, $60
+    .byte $60, $80, $80, $80, $80, $80, $80, $80, $80
+.else
     .byte >ram_vram_buffer1, >off_water_area_palette_packet, >off_ground_area_palette_packet
     .byte >off_underground_area_palette_packet, >off_castle_area_palette_packet, >ram_vram_buffer1_offset
     .byte >ram_vram_buffer2, >ram_vram_buffer2, >off_bowser_palette_packet
@@ -74,6 +123,17 @@ tbl_vram_buffer_addresses_high:
     .byte >off_mario_thanks_message, >off_luigi_thanks_message, >off_mushroom_retainer_saved_message
     .byte >off_princess_saved_message_1, >off_princess_saved_message_2, >off_world_select_message_1
     .byte >off_world_select_message_2
+.endif
+
+.if con_revision_profile = con_revision_profile_vs
+off_vs_palette_1f:
+    .byte $3f, $04, $04, $14, $36, $0a, $28, $00
+
+off_vs_palette_1e:
+    .byte $3f, $00, $20, $14, $36, $08, $26, $14, $3e, $12, $06, $14
+    .byte $0a, $12, $3f, $14, $0c, $07, $32, $14, $33, $39, $00, $14
+    .byte $36, $39, $1b, $14, $0d, $39, $33, $14, $33, $39, $00, $00
+.endif
 
 tbl_vram_buffer_offset_addresses:
     .byte <ram_vram_buffer1_offset, <ram_vram_buffer2_offset
@@ -129,12 +189,21 @@ bra_select_vram_buffer_offset:
     LDA ram_mirror_ppu_ctrl_reg2  ; copy mirror of $2001 to register
     STA PPU_CTRL_REG2
     JSR sub_sound_engine  ; play sound
+.if con_revision_profile = con_revision_profile_vs
+    JSR sub_vs_process_coin_service
+    JSR sub_vs_update_credit_display
+    JSR sub_vs_update_saved_data
+.endif
     JSR sub_read_joypads  ; read joypads
+.if con_revision_profile <> con_revision_profile_vs
     JSR sub_pause_routine  ; handle pause
+.endif
     JSR sub_update_top_score
+.if con_revision_profile <> con_revision_profile_vs
     LDA ram_game_pause_status  ; check for pause status
     LSR
     BCS bra_advance_frame_state
+.endif
     LDA ram_timer_control  ; if master timer control not set, decrement
     BEQ bra_decrement_frame_timers  ; all frame and interval timers
     DEC ram_timer_control
@@ -143,6 +212,7 @@ bra_decrement_frame_timers:
     LDX #$14  ; load end offset for end of frame timers
     DEC ram_interval_timer_control  ; decrement interval timer control,
     BPL bra_decrement_frame_timers_loop  ; if not expired, only frame timers will decrement
+loc_interval_timer_reload:
     LDA #con_interval_timer_reload
     STA ram_interval_timer_control  ; if control for interval timers expired,
     LDX #$23  ; interval timers will decrement along with frame timers
@@ -178,9 +248,11 @@ bra_wait_for_sprite_0_clear:
     LDA PPU_STATUS  ; wait for sprite 0 flag to clear, which will
     AND #%01000000  ; not happen until vblank has ended
     BNE bra_wait_for_sprite_0_clear
+.if con_revision_profile <> con_revision_profile_vs
     LDA ram_game_pause_status  ; if in pause mode, do not bother with sprites at all
     LSR
     BCS bra_wait_for_sprite_0_hit
+.endif
     JSR sub_move_sprites_offscreen
     JSR sub_sprite_shuffler
 bra_wait_for_sprite_0_hit:
@@ -199,9 +271,11 @@ bra_skip_sprite_0_synchronization:
     LDA ram_mirror_ppu_ctrl_reg1  ; load saved mirror of $2000
     PHA
     STA PPU_CTRL_REG1
+.if con_revision_profile <> con_revision_profile_vs
     LDA ram_game_pause_status  ; if in pause mode, do not perform operation mode stuff
     LSR
     BCS bra_finish_nmi_frame
+.endif
     JSR sub_oper_mode_execution_tree  ; otherwise do one of many, many possible subroutines
 bra_finish_nmi_frame:
     LDA PPU_STATUS  ; reset flip-flop
@@ -212,6 +286,23 @@ bra_finish_nmi_frame:
 
 ; -------------------------------------------------------------------------------------
 
+.if con_revision_profile = con_revision_profile_vs
+vec_irq_handler:
+    LDA VS_STATUS
+    BMI bra_exit_vs_irq
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+bra_exit_vs_irq:
+    PLA
+    PLA
+    PLA
+    RTS
+
+sub_vs_select_low_chr_bank:
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+    RTS
+.else
 sub_pause_routine:
     LDA ram_oper_mode  ; are we in victory mode?
     CMP #con_mode_victory  ; if so, go ahead
@@ -249,6 +340,7 @@ bra_toggle_pause_mode:
     STA ram_game_pause_status
 bra_exit_pause_handler:
     RTS
+.endif
 
 ; -------------------------------------------------------------------------------------
 ; $00 - used for preset value
@@ -305,6 +397,9 @@ sub_oper_mode_execution_tree:
     JSR sub_dispatch_inline_handler  ; most of what goes on starts here
 
     .word handler_run_title_screen_mode
+.if con_revision_profile = con_revision_profile_vs
+    .word handler_run_vs_player_select_mode
+.endif
     .word handler_run_game_mode
     .word handler_run_victory_mode
     .word handler_run_game_over_mode
@@ -313,7 +408,11 @@ sub_oper_mode_execution_tree:
 
 sub_move_all_sprites_offscreen:
     LDY #$00  ; this routine moves all sprites off the screen
+.if con_revision_profile = con_revision_profile_vs
+    JMP sub_move_sprites_offscreen
+.else
     .byte $2c  ; BIT instruction opcode
+.endif
 
 sub_move_sprites_offscreen:
     LDY #$04  ; this routine moves all but sprite 0

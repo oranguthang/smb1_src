@@ -75,7 +75,11 @@ sub_exec_game_loopback:
     STA ram_area_object_page_sel
     STA ram_enemy_data_offset  ; initialize enemy object data offset
     STA ram_enemy_object_page_loc  ; and enemy object page control
+.if con_revision_profile = con_revision_profile_vs
+    LDA ram_vs_io_buffer,y  ; read the CHR-resident loop offset copied during course loading
+.else
     LDA tbl_area_object_loopback_offsets,y  ; adjust area object offset based on
+.endif
     STA ram_area_data_offset  ; which loop command we encountered
     RTS
 

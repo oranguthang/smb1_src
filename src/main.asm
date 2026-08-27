@@ -45,12 +45,19 @@ con_revision_profile = con_revision_profile_ju
 .include "rendering/background.asm"
 .include "system/hardware_io.asm"
 .include "rendering/hud/status.asm"
+.if con_revision_profile = con_revision_profile_vs
+    .include "platforms/vs/system.asm"
+.endif
 .include "game/setup_and_transitions.asm"
 .include "game/level/parser.asm"
 .include "game/level/special_objects.asm"
 .include "game/level/terrain_objects.asm"
-.include "data/levels/index_and_enemies.asm"
-.include "data/levels/areas.asm"
+.if con_revision_profile = con_revision_profile_vs
+    .include "platforms/vs/levels.asm"
+.else
+    .include "data/levels/index_and_enemies.asm"
+    .include "data/levels/areas.asm"
+.endif
 .include "game/core.asm"
 .include "game/player/physics.asm"
 .include "game/objects/projectiles_and_interactions.asm"

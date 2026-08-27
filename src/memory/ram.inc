@@ -1,5 +1,8 @@
 ; GAME SPECIFIC DEFINES
 
+ram_temp_byte              = $00
+ram_temp_byte_high         = $01
+ram_temp_byte_4            = $04
 ram_object_offset          = $08
 
 ram_frame_counter          = $09
@@ -211,6 +214,11 @@ ram_brick_coin_timer_flag    = $06bc
 ram_star_flag_task_control   = $0746
 
 ram_pseudo_random_bit_reg    = $07a7
+
+.if con_revision_profile = con_revision_profile_vs
+ram_vs_timer_mode            = $6603
+ram_vs_player_start_mode     = $6605
+.endif
 ram_warm_boot_validation    = $07ff
 
 ram_spr_shuffle_amt_offset   = $06e0
@@ -484,6 +492,16 @@ ram_area_music_buffer_alt   = $07c5
 ram_pause_mode_flag         = $07c6
 ram_ground_music_header_ofs  = $07c7
 ram_alt_reg_content_flag     = $07ca
+
+ram_vs_io_buffer             = $6000
+ram_vs_enemy_data            = $6100
+ram_vs_area_data             = $6200
+ram_vs_ppu_display_list      = $6300
+ram_vs_title_buffer          = $6400
+ram_vs_arena0                = $6600
+ram_vs_saved_data            = $6674
+ram_vs_saved_top_score       = $66ba
+ram_vs_arena1                = $6700
 
 ram_note_len_lookup_tbl_ofs   = $f0
 ram_square1_sound_buffer    = $f1

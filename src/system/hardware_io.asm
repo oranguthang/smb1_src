@@ -59,11 +59,20 @@ bra_initialize_attribute_table_loop:
 ; $00 - temp joypad bit
 
 sub_read_joypads:
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release+con_vs_request_controller_strobe
+    STA VS_REQUEST
+    LDA #con_vs_request_irq_release
+    LDX #$00
+    STA VS_REQUEST
+    LDA #$00
+.else
     LDA #$01  ; reset and clear strobe of joypad ports
     STA JOYPAD_PORT
     LSR
     TAX  ; start with joypad 1's port
     STA JOYPAD_PORT
+.endif
     JSR sub_read_port_bits
     INX  ; increment for joypad 2's port
 sub_read_port_bits:
@@ -72,8 +81,10 @@ bra_read_controller_port_loop:
     PHA  ; push previous bit onto stack
     LDA JOYPAD_PORT,x  ; read current bit on joypad port
     STA $00  ; check d1 and d0 of port output
+.if con_revision_profile <> con_revision_profile_vs
     LSR  ; this is necessary on the old
     ORA $00  ; famicom systems in japan
+.endif
     LSR
     PLA  ; read bits from stack
     ROL  ; rotate bit from carry flag

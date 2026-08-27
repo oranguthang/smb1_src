@@ -1,5 +1,8 @@
 ; -------------------------------------------------------------------------------------
 
+.if con_revision_profile = con_revision_profile_vs
+    .include "../platforms/vs/title_and_demo.asm"
+.else
 handler_run_title_screen_mode:
     LDA ram_oper_mode_task
     JSR sub_dispatch_inline_handler
@@ -170,6 +173,7 @@ bra_apply_demo_action:
     CLC  ; clear carry if demo still going
 bra_finish_title_demo:
     RTS
+.endif
 
 ; -------------------------------------------------------------------------------------
 
@@ -192,7 +196,17 @@ sub_victory_mode_subroutines:
     .word handler_setup_victory_mode
     .word handler_player_victory_walk
     .word handler_print_victory_messages
+.if con_revision_profile = con_revision_profile_vs
+    .word handler_vs_victory_time_tally
+.endif
     .word handler_finish_world
+.if con_revision_profile = con_revision_profile_vs
+    .word handler_vs_victory_palette_cycle
+    .word handler_vs_victory_prepare_parade
+    .word handler_vs_victory_advance_course
+    .word handler_vs_victory_wait_parade
+    .word handler_vs_victory_finish_parade
+.endif
 
 ; -------------------------------------------------------------------------------------
 
@@ -241,6 +255,9 @@ bra_finish_victory_walk:
 
 ; -------------------------------------------------------------------------------------
 
+.if con_revision_profile = con_revision_profile_vs
+    .include "../platforms/vs/victory.asm"
+.else
 handler_print_victory_messages:
     LDA ram_secondary_msg_counter  ; load secondary message counter
     BNE bra_advance_victory_message_timer  ; if set, branch to increment message counters
@@ -334,6 +351,7 @@ bra_check_final_world_b_button:
     JSR sub_terminate_game  ; do sub to continue other player or end game
 bra_exit_final_world:
     RTS  ; leave
+.endif
 
 ; -------------------------------------------------------------------------------------
 
@@ -352,6 +370,9 @@ tbl_floating_score_tiles:
     .byte $f9, $50  ; "5000"
     .byte $fa, $50  ; "8000"
     .byte $fd, $fe  ; "1-UP"
+.if con_revision_profile = con_revision_profile_vs
+    .byte $fa, $50  ; arcade 8000-point duplicate
+.endif
 
 ; high nybble is digit number, low nybble is number to
 ; add to the digit of the player's score
@@ -359,13 +380,24 @@ tbl_victory_score_digit_updates:
     .byte $ff  ; dummy
     .byte $41, $42, $44, $45, $48
     .byte $31, $32, $34, $35, $38, $00
+.if con_revision_profile = con_revision_profile_vs
+    .byte $38  ; arcade 8000-point duplicate
+.endif
 
 sub_floatey_numbers_routine:
     LDA ram_floatey_num_control,x  ; load control for floatey number
     BEQ bra_exit_world_completion  ; if zero, branch to leave
+.if con_revision_profile = con_revision_profile_vs
+    CMP #$0c  ; include the arcade-only duplicate 8000-point entry
+.else
     CMP #$0b  ; if less than $0b, branch
+.endif
     BCC bra_check_floating_score_timer
+.if con_revision_profile = con_revision_profile_vs
+    LDA #$0c
+.else
     LDA #$0b  ; otherwise set to $0b, thus keeping
+.endif
     STA ram_floatey_num_control,x  ; it in range
 bra_check_floating_score_timer:
     TAY  ; use as Y

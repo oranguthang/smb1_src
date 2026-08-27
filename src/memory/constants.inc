@@ -106,6 +106,14 @@ con_pipe_transition_timer = $30
 con_player_skid_speed_cutoff = $09
 .endif
 
+con_vs_request_irq_release = %00000010
+con_vs_request_controller_strobe = %00000001
+con_vs_request_chr_high = %00000100
+con_vs_status_service = %00000100
+con_vs_status_dip_1 = %00001000
+con_vs_status_dip_2 = %00010000
+con_vs_status2_dips = %11111100
+
 ; sound effects constants
 con_sfx_small_jump         = %10000000
 con_sfx_flagpole          = %01000000
@@ -186,12 +194,14 @@ con_world2 = 1
 con_world3 = 2
 con_world4 = 3
 con_world5 = 4
+con_vs_hard_mode_world = 3
 con_world6 = 5
 con_world7 = 6
 con_world8 = 7
 con_level1 = 0
 con_level2 = 1
 con_level3 = 2
+con_vs_hard_mode_level = 1
 con_level4 = 3
 
 con_warm_boot_offset        = <$07d6
@@ -214,3 +224,5 @@ con_mode_title_screen  = 0
 con_mode_game         = 1
 con_mode_victory      = 2
 con_mode_game_over     = 3
+con_vs_mode_game       = 2
+con_vs_mode_game_over  = 4

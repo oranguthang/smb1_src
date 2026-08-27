@@ -170,24 +170,39 @@ loc_select_secondary_vram_buffer:
 ; $00 - used as temporary counter in sub_color_rotation
 
 tbl_rotating_palette_colors:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $39, $39, $39, $07, $22, $07
+.else
     .byte $27, $27, $27, $17, $07, $17
+.endif
 
 tbl_blank_palette_packet:
     .byte $3f, $0c, $04, $ff, $ff, $ff, $ff, $00
 
 ; used based on area type
 tbl_area_type_palette_3_colors:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $14, $22, $12, $14
+    .byte $14, $22, $07, $14
+    .byte $14, $22, $07, $02
+    .byte $14, $22, $07, $26
+.else
     .byte $0f, $07, $12, $0f
     .byte $0f, $07, $17, $0f
     .byte $0f, $07, $17, $1c
     .byte $0f, $07, $17, $00
+.endif
 
 sub_color_rotation:
     LDA ram_frame_counter  ; get frame counter
     AND #$07  ; mask out all but three LSB
     BNE bra_exit_color_rotation  ; branch if not set to zero to do this every eighth frame
     LDX ram_vram_buffer1_offset  ; check vram buffer offset
+.if con_revision_profile = con_revision_profile_vs
+    CPX #$21
+.else
     CPX #$31
+.endif
     BCS bra_exit_color_rotation  ; if offset over 48 bytes, branch to leave
     TAY  ; otherwise use frame counter's 3 LSB as offset here
 bra_copy_blank_palette_packet:
@@ -471,6 +486,10 @@ off_palette_3_metatiles:
 ; VRAM BUFFER DATA FOR LOCATIONS IN PRG-ROM
 
 off_water_area_palette_packet:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $3f, $00, $20, $14, $27, $12, $10, $14, $1e, $0e, $14, $14, $36, $12, $14, $14, $39, $12
+    .byte $14, $1a, $33, $39, $00, $14, $08, $36, $39, $14, $33, $36, $39, $14, $14, $36, $08, $00
+.else
     .byte $3f, $00, $20
     .byte $0f, $15, $12, $25
     .byte $0f, $3a, $1a, $0f
@@ -481,8 +500,13 @@ off_water_area_palette_packet:
     .byte $0f, $16, $30, $27
     .byte $0f, $0f, $30, $10
     .byte $00
+.endif
 
 off_ground_area_palette_packet:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $3f, $00, $20, $14, $3c, $0e, $14, $14, $0c, $07, $14, $14, $36, $1f, $14, $14, $39, $07
+    .byte $14, $14, $33, $39, $00, $14, $0e, $36, $39, $14, $33, $36, $39, $14, $14, $0c, $07, $00
+.else
     .byte $3f, $00, $20
     .byte $0f, $29, $1a, $0f
     .byte $0f, $36, $17, $0f
@@ -493,8 +517,13 @@ off_ground_area_palette_packet:
     .byte $0f, $16, $30, $27
     .byte $0f, $0f, $36, $17
     .byte $00
+.endif
 
 off_underground_area_palette_packet:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $3f, $00, $20, $14, $3c, $0e, $3f, $14, $37, $02, $14, $14, $36, $1f, $02, $14, $39, $07
+    .byte $02, $14, $33, $39, $00, $14, $02, $0c, $07, $14, $33, $36, $39, $14, $28, $37, $02, $00
+.else
     .byte $3f, $00, $20
     .byte $0f, $29, $1a, $09
     .byte $0f, $3c, $1c, $0f
@@ -505,8 +534,13 @@ off_underground_area_palette_packet:
     .byte $0f, $16, $30, $27
     .byte $0f, $0c, $3c, $1c
     .byte $00
+.endif
 
 off_castle_area_palette_packet:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $3f, $00, $20, $14, $36, $08, $26, $14, $36, $08, $26, $14, $36, $33, $26, $14, $39, $07
+    .byte $26, $14, $33, $39, $00, $14, $02, $0c, $07, $14, $33, $36, $39, $14, $26, $36, $08, $00
+.else
     .byte $3f, $00, $20
     .byte $0f, $30, $10, $00
     .byte $0f, $30, $10, $00
@@ -517,26 +551,43 @@ off_castle_area_palette_packet:
     .byte $0f, $16, $30, $27
     .byte $0f, $00, $30, $10
     .byte $00
+.endif
 
 off_day_snow_palette_packet:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $3f, $00, $04, $1a, $36, $26, $08, $00
+.else
     .byte $3f, $00, $04
     .byte $22, $30, $00, $10
     .byte $00
+.endif
 
 off_night_snow_palette_packet:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $3f, $00, $04, $14, $36, $26, $08, $00
+.else
     .byte $3f, $00, $04
     .byte $0f, $30, $00, $10
     .byte $00
+.endif
 
 off_mushroom_palette_packet:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $3f, $00, $04, $1a, $39, $33, $14, $00
+.else
     .byte $3f, $00, $04
     .byte $22, $27, $16, $0f
     .byte $00
+.endif
 
 off_bowser_palette_packet:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $3f, $14, $04, $14, $0e, $36, $39, $00
+.else
     .byte $3f, $14, $04
     .byte $0f, $1a, $30, $27
     .byte $00
+.endif
 
 off_mario_thanks_message:
 ; "THANK YOU MARIO!"
@@ -564,7 +615,58 @@ off_mushroom_retainer_saved_message:
     .byte $26, $05, $0f
     .byte $0a, $17, $18, $1d, $11, $0e, $1b, $24
     .byte $0c, $0a, $1c, $1d, $15, $0e, $2b, $00
-
+.if con_revision_profile = con_revision_profile_vs
+off_vs_victory_attributes:
+    .byte $23, $c0, $48, $55, $23, $c2, $01, $d5, $00
+off_vs_victory_palette_packet:
+    .byte $3f, $00, $10, $14, $14, $14, $14, $14, $36, $08, $26, $14
+    .byte $1f, $12, $23, $14, $39, $07, $26, $00
+off_vs_mario_thanks_message:
+; "THANK YOU MARIO!"
+    .byte $24, $e8, $10, $1d, $11, $0a, $17, $14, $24, $22, $18, $1e
+    .byte $24, $16, $0a, $1b, $12, $18, $2b, $27, $c8, $48, $05, $00
+off_vs_luigi_thanks_message:
+; "THANK YOU LUIGI!"
+    .byte $24, $e8, $10, $1d, $11, $0a, $17, $14, $24, $22, $18, $1e
+    .byte $24, $15, $1e, $12, $10, $12, $2b, $27, $c8, $48, $05, $00
+off_vs_peace_message:
+; "PEACE IS PAVED"
+    .byte $25, $09, $0e, $19, $0e, $0a, $0c, $0e, $24, $12, $1c, $24
+    .byte $19, $0a, $1f, $0e, $0d, $27, $d0, $58, $aa, $00
+off_vs_kingdom_saved_message:
+; "WITH KINGDOM SAVED"
+    .byte $25, $47, $12, $20, $12, $1d, $11, $24, $14, $12, $17, $10
+    .byte $0d, $18, $16, $24, $1c, $0a, $1f, $0e, $0d, $00
+off_vs_mario_hurrah_message:
+; "HURRAH TO  MARIO"
+    .byte $25, $89, $10, $11, $1e, $1b, $1b, $0a, $11, $24, $1d, $18
+    .byte $24, $24, $16, $0a, $1b, $12, $18, $00
+off_vs_luigi_hurrah_message:
+; "HURRAH TO  LUIGI"
+    .byte $25, $89, $10, $11, $1e, $1b, $1b, $0a, $11, $24, $1d, $18
+    .byte $24, $24, $15, $1e, $12, $10, $12, $00
+off_vs_only_hero_message:
+; "OUR ONLY HERO"
+    .byte $25, $ca, $0d, $18, $1e, $1b, $24, $18, $17, $15, $22, $24
+    .byte $11, $0e, $1b, $18, $00
+off_vs_trip_ending_message:
+; "THIS ENDS YOUR TRIP"
+    .byte $26, $07, $13, $1d, $11, $12, $1c, $24, $0e, $17, $0d, $1c
+    .byte $24, $22, $18, $1e, $1b, $24, $1d, $1b, $12, $19, $00
+off_vs_friendship_message:
+; "OF A LONG FRIENDSHIP"
+    .byte $26, $46, $14, $18, $0f, $24, $0a, $24, $15, $18, $17, $10
+    .byte $24, $0f, $1b, $12, $0e, $17, $0d, $1c, $11, $12, $19, $00
+off_vs_bonus_points_message:
+; "100000 PTS.ADDED"
+    .byte $26, $88, $10, $01, $00, $00, $00, $00, $00, $24, $19, $1d
+    .byte $1c, $af, $0a, $0d, $0d, $0e, $0d, $27, $e8, $48, $ff, $00
+off_vs_players_left_message:
+; "FOR EACH PLAYER LEFT."
+    .byte $26, $a6, $15, $0f, $18, $1b, $24, $0e, $0a, $0c, $11, $24
+    .byte $19, $15, $0a, $22, $0e, $1b, $24, $15, $0e, $0f, $1d, $af
+    .byte $00
+.else
 off_princess_saved_message_1:
 ; "YOUR QUEST IS OVER."
     .byte $25, $a7, $13
@@ -595,3 +697,4 @@ off_world_select_message_2:
     .byte $1d, $18, $24, $1c, $0e, $15, $0e, $0c, $1d, $24
     .byte $0a, $24, $20, $18, $1b, $15, $0d
     .byte $00
+.endif

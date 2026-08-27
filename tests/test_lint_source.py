@@ -36,6 +36,14 @@ class LintSourceTests(unittest.TestCase):
         )
         self.assertEqual(messages, [])
 
+    def test_accepts_jsr_target_defined_by_symbol_assignment(self) -> None:
+        messages = self.messages(
+            "sub_platform_dispatch = $c000\n"
+            "    JSR sub_platform_dispatch\n"
+            "    RTS\n"
+        )
+        self.assertEqual(messages, [])
+
     def test_rejects_legacy_jsr_target(self) -> None:
         messages = self.messages("    JSR UpdatePlayer\nUpdatePlayer:\n    RTS\n")
         self.assertIn(
