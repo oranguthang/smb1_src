@@ -280,6 +280,7 @@ world-studio:
 
 level-studio:
 	$(MAKE) init-content STUDIO=level
+	$(MAKE) init-content STUDIO=graphics
 	$(PYTHON) "$(PROJECT_DIR)scripts/level_studio.py" $(STUDIO_COMMON_ARGS)
 
 graphics-studio:

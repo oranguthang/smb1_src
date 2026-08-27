@@ -12,14 +12,19 @@ store local work beneath the ignored `content/workspace/` directory.
 | `make sound-studio` | Fourteen logical compositions, all 22 vanilla headers and 75 active channel views plus the swim/stomp volume envelope |
 
 The programs are semantic editors rather than generic JSON inspectors. Level
-Studio draws every area as a horizontally scrolling page grid and distinguishes
-terrain objects from enemies and entrances. World Studio presents course
-routing and documented physics profiles. Graphics Studio uses the actual SMB1
-pattern-table convention: sprite tiles occupy the first 4 KiB and background
-tiles the second 4 KiB. Sound Studio decodes notes, rests, duration changes, and
-noise beats, draws a piano roll, and renders either one pattern or a complete
-logical composition. The complete overworld preview follows the original
-33-pattern schedule instead of treating its internal parts as separate songs.
+Studio reconstructs every area from the authored headers and object streams,
+using the actual CHR, palettes, metatile groups, scenery patterns, terrain
+masks, and actor frames. Its horizontally scrolling map therefore shows the
+game's terrain, clouds, bushes, mountains, blocks, pipes, common structures,
+Goombas, Koopas, and Mario instead of abstract record boxes. Record badges and
+the side tables retain direct access to the underlying bytes. World Studio
+presents course routing and documented physics profiles. Graphics Studio uses
+the actual SMB1 pattern-table convention: sprite tiles occupy the first 4 KiB
+and background tiles the second 4 KiB. Sound Studio decodes notes, rests,
+duration changes, and noise beats, draws a piano roll, and renders either one
+pattern or a complete logical composition. The complete overworld preview
+follows the original 33-pattern schedule instead of treating its internal parts
+as separate songs.
 Preview synthesis uses the APU's four-bit channel levels, 15-bit noise shift
 register and hardware length-counter gates, nonlinear pulse/TND transfer curves,
 and the console's two high-pass and one low-pass output filters rather than
@@ -28,6 +33,22 @@ water/event, and castle-clear software envelopes; Triangle sustain follows the
 engine's `$0F`, `$1F`, and `$FF` linear-counter control modes.
 Four independent preview checkboxes enable or mute Square 2, Square 1,
 Triangle, and Noise without changing the authored music data.
+
+Level Studio also provides an in-place point playtest on Windows. Right-click
+the map, or press **Place Mario** and left-click, to select a starting cell.
+The Lighting selector previews and playtests the area with either the daytime
+blue universal background or the nighttime black background; each area opens
+with its vanilla choice, so World 1-1 starts in Day mode. The placement marker
+uses the small standing-Mario frame and the playtest starts with the matching
+small-player state.
+**Play** saves and validates the level workspace, creates the isolated content
+ROM, opens the selected area and page with the original game engine, and embeds
+the native FCEUX window in the Playtest tab. The World and Course controls
+supply the correct route context for shared and bonus areas. Click the game
+screen before using the keyboard; configured gamepads continue to work through
+FCEUX. **Stop** closes only the editor-owned emulator process and returns to the
+map. Set `FCEUX_EXE` when the executable is not available at the default sibling
+path `../fceux_automation/vc/x64/Release/fceux64.exe`.
 
 Run `make init-content` before editing. It creates only missing workspace files,
 so opening a studio never overwrites earlier local work. Run

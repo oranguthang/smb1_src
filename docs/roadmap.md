@@ -502,6 +502,14 @@ fixed-layout capacity and canonical values, reports byte differences, and
 builds an isolated ROM without touching source or preservation outputs. See
 docs/content_authoring.md.
 
+Level Studio reconstructs its map with the engine's CHR, palette, metatile,
+scenery, terrain, object, and actor tables. It also supports point playtesting:
+Mario can be placed on an arbitrary editor cell, the isolated content ROM is
+built, and the original engine opens that area and page in an FCEUX window
+embedded behind the editor's Play and Stop controls. Day and Night previews use
+the engine's universal background colors and carry the same choice into the
+playtest.
+
 ### 13. Multi-Revision and Platform Builds - In Progress
 
 After the canonical reconstruction is mature, evaluate the complete selected

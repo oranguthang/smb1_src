@@ -7,7 +7,9 @@ editor workflows. None of their source code is copied into this repository.
 
 | Project | Useful evidence | Reuse decision |
 | --- | --- | --- |
-| [SMB Utility](https://github.com/Maseya/SMB-Utility) | Mature visual workflow for SMB1 areas, objects, enemies, and in-level testing | Reference only; its bundled license limits redistribution to non-commercial use |
+| [SMB Utility](https://github.com/Maseya/SMB-Utility) | Mature visual workflow for SMB1 areas, objects, enemies, and point test play from an arbitrary position | Reference only; AGPL-3.0 code is not incorporated |
+| [SMBLevelDrawer](https://github.com/IsoFrieze/SMBLevelDrawer) | Cross-version area rendering coverage for cartridge, FDS, VS., and derivative releases | Reference only; GPL-3.0 code is not incorporated |
+| [smb-vanilla-port](https://github.com/nukep/smb-vanilla-port) | Engine-faithful gameplay behavior and portable runtime architecture | Behavioral reference only; no source is incorporated |
 | [Level-Headed](https://github.com/Coolcord/Level-Headed) | Complete enemy identifiers, area commands, and fixed-buffer constraints | Reference only; GPL-3.0 code is not incorporated |
 | [MushROMs SMB1 level format](https://github.com/bonimy/MushROMs/blob/master/doc/SMB1%20Level%20Format.md) | Bit-level documentation for headers, objects, page controls, enemies, and area transitions | Used to cross-check independently written codecs |
 | [SMBMusEdit](https://github.com/anakrusis/SMBMusEdit) | Confirms that all vanilla song headers, shared streams, allocation limits, and playback need to be visible together | Reference only; the repository does not declare a software license |

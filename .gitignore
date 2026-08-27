@@ -4,6 +4,7 @@ build/
 *.prg
 *.nes
 *.fds
+/*.png
 
 # Extracted ROM data (do not commit to avoid copyright issues)
 assets/generated/
