@@ -216,6 +216,7 @@ ram_star_flag_task_control   = $0746
 ram_pseudo_random_bit_reg    = $07a7
 
 .if con_revision_profile = con_revision_profile_vs
+ram_vs_coin_threshold_mode   = $6602
 ram_vs_timer_mode            = $6603
 ram_vs_player_start_mode     = $6605
 .endif

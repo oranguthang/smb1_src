@@ -309,10 +309,17 @@ sub_check_player_feet_block_buffer:
 
 sub_check_player_head_block_buffer:
     LDA #$00  ; set flag to return vertical coordinate
+.if con_revision_profile = con_revision_profile_vs
+    JMP :+
+.else
     .byte $2c  ; BIT instruction opcode
+.endif
 
 sub_check_player_side_block_buffer:
     LDA #$01  ; set flag to return horizontal coordinate
+.if con_revision_profile = con_revision_profile_vs
+    :
+.endif
     LDX #$00  ; set offset for player object
 
 sub_block_buffer_collision:
@@ -359,6 +366,8 @@ loc_return_block_buffer_y_coordinate:
 ; -------------------------------------------------------------------------------------
 
 ; unused byte
-.if con_revision_profile <> con_revision_profile_pal
+.if con_revision_profile = con_revision_profile_vs
+    .res 6, $ff
+.elseif con_revision_profile <> con_revision_profile_pal
     .byte $ff
 .endif

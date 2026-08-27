@@ -438,9 +438,21 @@ handler_run_game_over_mode:
 
     .word handler_setup_game_over
     .word handler_run_screen_task
+.if con_revision_profile = con_revision_profile_vs
+    .word handler_finish_vs_game_over_delay
+    .word handler_run_vs_high_score_mode
+    .word handler_run_vs_continue_mode
+.endif
     .word handler_run_game_over_screen
 
 ; -------------------------------------------------------------------------------------
+
+.if con_revision_profile = con_revision_profile_vs
+    .include "platforms/vs/game_over/high_scores.asm"
+    .include "platforms/vs/game_over/continue.asm"
+
+; -------------------------------------------------------------------------------------
+.endif
 
 handler_setup_game_over:
     LDA #$00  ; reset screen routine task control for title screen, game,
@@ -455,6 +467,7 @@ handler_setup_game_over:
 ; -------------------------------------------------------------------------------------
 
 handler_run_game_over_screen:
+.if con_revision_profile <> con_revision_profile_vs
     LDA #$00  ; reenable screen
     STA ram_disable_screen_flag
     LDA ram_saved_joypad1_bits  ; check controller for start pressed
@@ -465,8 +478,13 @@ handler_run_game_over_screen:
 sub_terminate_game:
     LDA #con_silence  ; silence music
     STA ram_event_music_queue
+.endif
     JSR sub_transpose_players  ; check if other player can keep
     BCC loc_restart_game  ; going, and do so if possible
+.if con_revision_profile = con_revision_profile_vs
+    LDA ram_numberof_lives
+    BPL loc_restart_game
+.endif
     LDA ram_world_number  ; otherwise put world number of current
     STA ram_continue_world  ; player into secret continue function variable
     LDA #$00
@@ -486,7 +504,11 @@ loc_restart_game:
     STA ram_player_status
     STA ram_game_engine_subroutine  ; reset task for game core
     STA ram_oper_mode_task  ; set modes and leave
-    LDA #$01  ; if in game over mode, switch back to
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_mode_game  ; return to the Vs. game mode
+.else
+    LDA #con_mode_game  ; if in game over mode, switch back to
+.endif
     STA ram_oper_mode  ; game mode, because game is still on
 bra_exit_game_restart:
     RTS

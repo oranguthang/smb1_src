@@ -345,6 +345,11 @@ tbl_score_digit_offsets:
 tbl_status_bar_nibbles:
     .byte $02, $13
 
+.if con_revision_profile = con_revision_profile_vs
+tbl_vs_coin_tally_limits:
+    .byte 100, 150, 200, 250
+.endif
+
 sub_give_one_coin:
     LDA #$01  ; set digit modifier to add 1 coin
     STA ram_digit_modifier+5  ; to the current player's coin tally
@@ -353,10 +358,25 @@ sub_give_one_coin:
     JSR sub_digits_math_routine  ; update the coin tally
     INC ram_coin_tally  ; increment onscreen player's coin amount
     LDA ram_coin_tally
+.if con_revision_profile = con_revision_profile_vs
+    LDX ram_vs_coin_threshold_mode
+    CMP tbl_vs_coin_tally_limits,x
+.else
     CMP #100  ; does player have 100 coins yet?
+.endif
     BNE bra_award_coin_points  ; if not, skip all of this
     LDA #$00
     STA ram_coin_tally  ; otherwise, reinitialize coin amount
+.if con_revision_profile = con_revision_profile_vs
+    LDX ram_current_player
+    LDY tbl_coin_tally_digit_offsets,x
+    LDX #$03
+bra_clear_vs_coin_tally_digits:
+    STA ram_display_digits,y
+    DEY
+    DEX
+    BPL bra_clear_vs_coin_tally_digits
+.endif
     INC ram_numberof_lives  ; give the player an extra life
     LDA #con_sfx_extra_life
     STA ram_square2_sound_queue  ; play 1-up sound

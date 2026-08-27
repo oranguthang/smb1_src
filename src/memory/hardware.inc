@@ -9,6 +9,9 @@ PPU_SCROLL_REG        = $2005
 PPU_ADDRESS           = $2006
 PPU_DATA              = $2007
 
+PPU_NAMETABLE_0       = $2000
+PPU_NAMETABLE_1       = $2400
+
 SND_REGISTER          = $4000
 SND_SQUARE1_REG       = $4000
 SND_SQUARE2_REG       = $4004

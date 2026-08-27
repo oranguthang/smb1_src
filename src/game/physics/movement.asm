@@ -158,10 +158,15 @@ tbl_block_maximum_y_speed:
 ; !(UNUSED) CODE-001 - statically unreachable residual gravity entry
 unused_gravity_block_entry:
     LDY #$00  ; this part appears to be residual,
+.if con_revision_profile = con_revision_profile_vs
+    JMP loc_apply_block_gravity
+.else
     .byte $2c  ; no code branches or jumps to it
+.endif
 
 sub_apply_block_gravity:
     LDY #$01  ; set offset for maximum speed
+loc_apply_block_gravity:
     LDA #con_block_gravity  ; set movement amount here
     STA $00
     LDA tbl_block_maximum_y_speed,y  ; get maximum speed
@@ -175,10 +180,15 @@ sub_apply_sprite_object_gravity:
 
 sub_move_platform_down:
     LDA #$00  ; save value to stack (if branching here, execute next
+.if con_revision_profile = con_revision_profile_vs
+    JMP loc_move_platform_vertically
+.else
     .byte $2c  ; part as BIT instruction)
+.endif
 
 sub_move_platform_up:
     LDA #$01  ; save value to stack
+loc_move_platform_vertically:
     PHA
     LDY ram_enemy_id,x  ; get enemy object identifier
     INX  ; increment offset for enemy object

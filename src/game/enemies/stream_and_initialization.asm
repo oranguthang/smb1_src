@@ -12,6 +12,10 @@
 ; A, X, Y
 .if con_revision_profile = con_revision_profile_pal
     .byte $ff  ; retained PAL alignment byte
+.elseif con_revision_profile = con_revision_profile_vs
+    .repeat 6
+        .byte $ff
+    .endrepeat
 .endif
 sub_enemies_and_loops_core:
     LDA ram_enemy_flag,x  ; check data here for MSB set
@@ -41,13 +45,21 @@ bra_exit_enemy_and_loop_core:
 
 ; loop command data
 tbl_loop_command_world_numbers:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $04, $04, $06, $06, $06, $06, $06, $06, $07, $07, $07
+.else
     .byte $03, $03, $06, $06, $06, $06, $06, $06, $07, $07, $07
+.endif
 
 tbl_loop_command_page_numbers:
     .byte $05, $09, $04, $05, $06, $08, $09, $0a, $06, $0b, $10
 
 tbl_loop_command_player_y_positions:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $40, $b0, $b0, $40, $40, $b0, $40, $80, $f0, $f0, $f0
+.else
     .byte $40, $b0, $b0, $80, $40, $40, $80, $40, $f0, $f0, $f0
+.endif
 
 sub_exec_game_loopback:
     LDA ram_player_page_loc  ; send player back four pages
@@ -76,6 +88,8 @@ sub_exec_game_loopback:
     STA ram_enemy_data_offset  ; initialize enemy object data offset
     STA ram_enemy_object_page_loc  ; and enemy object page control
 .if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
     LDA ram_vs_io_buffer,y  ; read the CHR-resident loop offset copied during course loading
 .else
     LDA tbl_area_object_loopback_offsets,y  ; adjust area object offset based on
@@ -150,6 +164,7 @@ bra_spawn_queued_frenzy_enemy:
 ; $07 - used to hold high nybble of position of extended right boundary
 
 bra_process_enemy_stream:
+    request_vs_low_chr_bank
     LDY ram_enemy_data_offset  ; get offset of enemy object data
     LDA (ram_enemy_data),y  ; load first byte
     CMP #$ff  ; check for EOD terminator
@@ -163,6 +178,7 @@ bra_enforce_enemy_slot_limit:
     CPX #$05  ; check for end of buffer
     BCC bra_compute_enemy_spawn_boundary  ; if not at end of buffer, branch
     INY
+    request_vs_low_chr_bank
     LDA (ram_enemy_data),y  ; check for specific value here
     AND #%00111111  ; !(WHY?) CODE-002 - residual object-range check
     CMP #$2e
@@ -180,6 +196,7 @@ bra_compute_enemy_spawn_boundary:
     STA $06  ; store page location + carry
     LDY ram_enemy_data_offset
     INY
+    request_vs_low_chr_bank
     LDA (ram_enemy_data),y  ; if MSB of enemy object is clear, branch to check for row $0f
     ASL
     BCC bra_parse_enemy_page_command
@@ -190,6 +207,7 @@ bra_compute_enemy_spawn_boundary:
 
 bra_parse_enemy_page_command:
     DEY
+    request_vs_low_chr_bank
     LDA (ram_enemy_data),y  ; reread first byte
     AND #$0f
     CMP #$0f  ; check for special row $0f
@@ -197,6 +215,7 @@ bra_parse_enemy_page_command:
     LDA ram_enemy_object_page_sel  ; if page select set,
     BNE bra_decode_enemy_position  ; branch without reading second byte
     INY
+    request_vs_low_chr_bank
     LDA (ram_enemy_data),y  ; otherwise, get second byte, mask out 2 MSB
     AND #%00111111
     STA ram_enemy_object_page_loc  ; store as page control for enemy object data
@@ -206,8 +225,10 @@ bra_parse_enemy_page_command:
     JMP loc_process_game_loop_command  ; jump back to process loop commands again
 
 bra_decode_enemy_position:
+    request_vs_low_chr_bank
     LDA ram_enemy_object_page_loc  ; store page control as page location
     STA ram_enemy_page_loc,x  ; for enemy object
+    request_vs_low_chr_bank
     LDA (ram_enemy_data),y  ; get first byte of enemy object
     AND #%11110000
     STA ram_enemy_x_position,x  ; store column position
@@ -215,6 +236,7 @@ bra_decode_enemy_position:
     LDA ram_enemy_page_loc,x  ; without subtracting, then subtract borrow
     SBC ram_screen_right_page_loc  ; from page location
     BCS bra_check_enemy_spawn_boundary  ; if enemy object beyond or at boundary, branch
+    request_vs_low_chr_bank
     LDA (ram_enemy_data),y
     AND #%00001111  ; check for special row $0e
     CMP #$0e  ; if found, jump elsewhere
@@ -229,6 +251,10 @@ bra_check_enemy_spawn_boundary:
     BCC loc_spawn_frenzy_enemy_or_vine  ; if enemy object beyond extended boundary, branch
     LDA #$01  ; store value in vertical high byte
     STA ram_enemy_y_high_pos,x
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDA (ram_enemy_data),y  ; get first byte again
     ASL  ; multiply by four to get the vertical
     ASL  ; coordinate
@@ -238,7 +264,9 @@ bra_check_enemy_spawn_boundary:
     CMP #$e0  ; do one last check for special row $0e
     BEQ bra_parse_area_transition_command  ; (necessary if branched to $c1cb)
     INY
+    request_vs_low_chr_bank
     LDA (ram_enemy_data),y  ; get second byte of object
+.if con_revision_profile <> con_revision_profile_vs
     AND #%01000000  ; check to see if hard mode bit is set
     BEQ bra_decode_enemy_or_group_id  ; if not, branch to check for group enemy objects
     LDA ram_secondary_hard_mode  ; if set, check to see if secondary hard mode flag
@@ -246,6 +274,7 @@ bra_check_enemy_spawn_boundary:
 
 bra_decode_enemy_or_group_id:
     LDA (ram_enemy_data),y  ; get second byte and mask out 2 MSB
+.endif
     AND #%00111111
     CMP #$37  ; check for value below $37
     BCC bra_apply_hard_mode_enemy_substitution
@@ -253,11 +282,13 @@ bra_decode_enemy_or_group_id:
     BCC bra_spawn_enemy_group  ; below $3f, branch if below $3f
 
 bra_apply_hard_mode_enemy_substitution:
+.if con_revision_profile <> con_revision_profile_vs
     CMP #con_goomba  ; if below $37, check for goomba
     BNE bra_store_and_initialize_enemy_id  ; value ($3f or more always fails)
     LDY ram_primary_hard_mode  ; check if primary hard mode flag is set
     BEQ bra_store_and_initialize_enemy_id  ; and if so, change goomba to buzzy beetle
     LDA #con_buzzy_beetle
+.endif
 bra_store_and_initialize_enemy_id:
     STA ram_enemy_id,x  ; store enemy object number into buffer
     LDA #$01
@@ -288,6 +319,7 @@ bra_spawn_enemy_group:
     JMP loc_spawn_enemy_group  ; handle enemy group objects
 
 bra_parse_area_transition_command:
+    request_vs_low_chr_bank
     INY  ; increment Y to load third byte of object
     INY
     LDA (ram_enemy_data),y
@@ -299,6 +331,7 @@ bra_parse_area_transition_command:
     CMP ram_world_number  ; is it the same world number as we're on?
     BNE bra_skip_area_transition_command  ; if not, do not use (this allows multiple uses
     DEY  ; of the same area, like the underground bonus areas)
+    request_vs_low_chr_bank
     LDA (ram_enemy_data),y  ; otherwise, get second byte and use as offset
     STA ram_area_pointer  ; to addresses for level and enemy object data
     INY
@@ -309,6 +342,7 @@ bra_skip_area_transition_command:
     JMP loc_advance_enemy_stream_three_bytes
 
 loc_advance_enemy_stream:
+    request_vs_low_chr_bank
     LDY ram_enemy_data_offset  ; load current offset for enemy object data
     LDA (ram_enemy_data),y  ; get first byte
     AND #%00001111  ; check for special row $0e
@@ -457,14 +491,20 @@ handler_initialize_red_koopa:
 ; --------------------------------
 
 tbl_hammer_bro_walking_delays:
+.if con_revision_profile <> con_revision_profile_vs
     .byte $80, $50
+.endif
 
 handler_initialize_hammer_bro:
     LDA #$00  ; init horizontal speed and timer used by hammer bro
     STA ram_hammer_throwing_timer,x  ; apparently to time hammer throwing
     STA ram_enemy_x_speed,x
+.if con_revision_profile = con_revision_profile_vs
+    LDA #$ff  ; use the fixed arcade walking delay
+.else
     LDY ram_secondary_hard_mode  ; get secondary hard mode flag
     LDA tbl_hammer_bro_walking_delays,y
+.endif
     STA ram_enemy_interval_timer,x  ; set value as delay for hammer bro to walk left
     LDA #$0b  ; set specific value for bounding box size control
     JMP loc_set_enemy_bounding_box

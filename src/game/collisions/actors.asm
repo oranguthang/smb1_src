@@ -598,10 +598,17 @@ sub_position_player_on_small_platform:
     LDA ram_enemy_y_position,x  ; for offset
     CLC  ; add positioning data using offset to the vertical
     ADC tbl_small_platform_player_y_offsets-1,y  ; coordinate
+.if con_revision_profile = con_revision_profile_vs
+    JMP :+
+.else
     .byte $2c  ; BIT instruction opcode
+.endif
 
 sub_position_player_on_vertical_platform:
     LDA ram_enemy_y_position,x  ; get vertical coordinate
+.if con_revision_profile = con_revision_profile_vs
+    :
+.endif
     LDY ram_game_engine_subroutine
     CPY #$0b  ; if certain routine being executed on this frame,
     BEQ bra_exit_player_platform_position  ; skip all of this

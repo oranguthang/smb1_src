@@ -277,7 +277,11 @@ loc_handle_coin_metatile:
 loc_handle_axe_metatile:
     LDA #$00
     STA ram_oper_mode_task  ; reset secondary mode
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_mode_victory
+.else
     LDA #$02
+.endif
     STA ram_oper_mode  ; set primary mode to autoctrl mode
     LDA #$18
     STA ram_player_x_speed  ; set horizontal speed and continue to erase axe metatile
@@ -363,10 +367,18 @@ loc_attach_player_to_vine:
     LDA #$00  ; nullify player's horizontal speed
     STA ram_player_x_speed  ; and fractional horizontal movement force
     STA ram_player_x_speed_fraction
+.if con_revision_profile = con_revision_profile_vs
+    LDA ram_enemy_x_position+5  ; sample the arcade collision actor slot
+.else
     LDA ram_player_x_position  ; get player's horizontal coordinate
+.endif
     SEC
     SBC ram_screen_left_x_pos  ; subtract from left side horizontal coordinate
+.if con_revision_profile = con_revision_profile_vs
+    CMP #$0a
+.else
     CMP #$10
+.endif
     BCS bra_align_player_x_to_vine  ; if 16 or more pixels difference, do not alter facing direction
     LDA #$02
     STA ram_player_facing_dir  ; otherwise force player to face left
@@ -472,7 +484,9 @@ bra_select_warp_zone_world:
     STA ram_area_number  ; initialize area number used for area address offset
     STA ram_level_number  ; initialize level number used for world display
     STA ram_alt_entrance_control  ; initialize mode of entry
+.if con_revision_profile <> con_revision_profile_vs
     INC ram_hidden1_up_flag  ; set flag for hidden 1-up blocks
+.endif
     INC ram_fetch_new_game_timer_flag  ; set flag to load new game timer
 bra_exit_pipe_entry_check:
     RTS  ; leave!!!

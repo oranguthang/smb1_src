@@ -2,10 +2,19 @@
 
 ; indirect jump routine called when
 ; $0770 is set to 1
+.if con_revision_profile = con_revision_profile_vs
+    .repeat 9
+        .byte $ff
+    .endrepeat
+.endif
+
 handler_run_game_mode:
     LDA ram_oper_mode_task
     JSR sub_dispatch_inline_handler
 
+.if con_revision_profile = con_revision_profile_vs
+    .word handler_vs_initialize_game_core
+.endif
     .word handler_initialize_area
     .word handler_run_screen_task
     .word handler_secondary_game_setup
@@ -13,10 +22,46 @@ handler_run_game_mode:
 
 ; -------------------------------------------------------------------------------------
 
+.if con_revision_profile = con_revision_profile_vs
+handler_vs_initialize_game_core:
+    INC ram_oper_mode_task
+    LDA #$01
+    STA ram_disable_screen_flag
+    LDA #$00
+    STA ram_sprite0_hit_detect_flag
+    RTS
+.endif
+
 sub_game_core_routine:
+.if con_revision_profile = con_revision_profile_vs
+    LDA ram_number_of_players
+    BEQ bra_merge_vs_player_joypads
+    LDX ram_current_player
+    LDA ram_saved_joypad_bits,x
+    JMP loc_store_vs_player_joypad
+bra_merge_vs_player_joypads:
+    LDA ram_saved_joypad1_bits
+    ORA ram_saved_joypad2_bits
+loc_store_vs_player_joypad:
+    STA ram_saved_joypad1_bits
+    AND #%00000001
+    BEQ bra_filter_vs_vertical_joypad
+    LDA ram_saved_joypad1_bits
+    AND #%11111101
+    STA ram_saved_joypad1_bits
+bra_filter_vs_vertical_joypad:
+    LDA ram_saved_joypad1_bits
+    AND #%00000100
+    BEQ bra_run_player_game_routine
+    LDA ram_saved_joypad1_bits
+    AND #%11110111
+    STA ram_saved_joypad1_bits
+bra_run_player_game_routine:
+.else
     LDX ram_current_player  ; get which player is on the screen
     LDA ram_saved_joypad_bits,x  ; use appropriate player's controller bits
     STA ram_saved_joypad_bits  ; as the master controller bits
+.endif
     JSR sub_game_routines  ; execute one of many possible subs
     LDA ram_oper_mode_task  ; check major task of operating mode
     CMP #$03  ; if we are supposed to be here,

@@ -201,7 +201,15 @@ sub_run_game_timer:
     LDA #con_time_running_out_music
     STA ram_event_music_queue  ; otherwise load time running out music
 bra_decrement_game_timer:
+.if con_revision_profile = con_revision_profile_vs
+    LDA #$11
+    LDY ram_vs_timer_mode
+    BNE loc_store_game_timer_reload
+    LDA #$14
+loc_store_game_timer_reload:
+.else
     LDA #con_game_timer_reload  ; reset game timer control
+.endif
     STA ram_game_timer_ctrl_timer
     LDY #$23  ; set offset for last digit
     LDA #$ff  ; set value to decrement game timer digit
@@ -469,7 +477,13 @@ tbl_vine_growth_heights:
 
 handler_run_vine_object:
     CPX #$05  ; check enemy offset for special use slot
+.if con_revision_profile = con_revision_profile_vs
+    BEQ bra_run_last_vine_object_slot
+    RTS
+bra_run_last_vine_object_slot:
+.else
     BNE bra_exit_vine_handler  ; if not in last slot, branch to leave
+.endif
     LDY ram_vine_flag_offset
     DEY  ; decrement vine flag in Y, use as offset
     LDA ram_vine_height
@@ -522,5 +536,46 @@ bra_write_vine_climb_metatile:
     LDA #$26
     STA ($06),y  ; otherwise, write climbing metatile to block buffer
 bra_exit_vine_handler:
+.if con_revision_profile = con_revision_profile_vs
+    LDA ram_enemy_x_position+5
+    SEC
+    SBC ram_screen_left_x_pos
+    TAY
+    LDA ram_enemy_page_loc+5
+    SBC ram_screen_left_page_loc
+    BMI bra_clear_offscreen_vine_metatiles
+    CPY #$09
+    BCS bra_restore_vine_object_offset
+bra_clear_offscreen_vine_metatiles:
+    LDA #$00
+    STA ram_enemy_flag+5
+    LDA ram_enemy_page_loc+5
+    AND #$01
+    NOP
+    TAY
+    LDA tbl_block_buffer_addresses,y
+    STA $06
+    LDA tbl_block_buffer_addresses+2,y
+    STA $07
+    LDA ram_enemy_x_position+5
+    LSR
+    LSR
+    LSR
+    LSR
+bra_clear_vine_metatile_loop:
+    TAY
+    LDA ($06),y
+    CMP #$26
+    BNE bra_advance_vine_metatile_offset
+    LDA #$00
+    STA ($06),y
+bra_advance_vine_metatile_offset:
+    TYA
+    CLC
+    ADC #$10
+    CMP #$d0
+    BCC bra_clear_vine_metatile_loop
+bra_restore_vine_object_offset:
+.endif
     LDX ram_object_offset  ; get enemy object offset and leave
     RTS

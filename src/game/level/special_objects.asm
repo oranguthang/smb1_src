@@ -6,6 +6,10 @@
 handler_alter_area_attributes:
     LDY ram_area_obj_offset_buffer,x  ; load offset for level object data saved in buffer
     INY  ; load second byte
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDA (ram_area_data),y
     PHA  ; save in stack for now
     AND #%01000000

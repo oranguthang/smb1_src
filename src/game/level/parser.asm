@@ -295,12 +295,21 @@ tbl_block_buffer_low_bounds:
 ; $07 - used as adder to find proper area object code
 
 sub_process_area_data:
+.if con_revision_profile = con_revision_profile_vs
+    JSR sub_vs_select_low_chr_bank
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDX #$02  ; start at the end of area object buffer
 bra_process_area_object_slots:
     STX ram_object_offset
     LDA #$00  ; reset flag
     STA ram_behind_area_parser_flag
     LDY ram_area_data_offset  ; get offset of area data pointer
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDA (ram_area_data),y  ; get first byte of area object
     CMP #$fd  ; if end-of-area, skip all this crap
     BEQ bra_decode_current_area_object
@@ -316,6 +325,10 @@ bra_process_area_object_slots:
     INC ram_area_object_page_loc  ; and increment page location
 bra_check_area_object_row_13:
     DEY
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDA (ram_area_data),y  ; reread first byte of level object
     AND #$0f  ; mask out high nybble
     CMP #$0d  ; row 13?
@@ -328,6 +341,10 @@ bra_check_area_object_row_13:
     LDA ram_area_object_page_sel  ; if page select is set, do not reread
     BNE bra_check_object_behind_renderer
     INY  ; if d6 not set, reread second byte
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDA (ram_area_data),y
     AND #%00011111  ; mask out all but 5 LSB and store in page control
     STA ram_area_object_page_loc
@@ -356,12 +373,32 @@ loc_update_area_object_length:
     DEC ram_area_object_length,x  ; otherwise decrement length or get rid of it
 bra_advance_area_object_slot:
     DEX  ; decrement buffer offset
+.if con_revision_profile = con_revision_profile_vs
+    BMI bra_finish_area_object_slots
+    JMP bra_process_area_object_slots
+bra_finish_area_object_slots:
+.else
     BPL bra_process_area_object_slots  ; and loopback unless exceeded buffer
+.endif
     LDA ram_behind_area_parser_flag  ; check for flag set if objects were behind renderer
+.if con_revision_profile = con_revision_profile_vs
+    BEQ bra_check_area_parser_backloading
+    JMP sub_process_area_data
+bra_check_area_parser_backloading:
+.else
     BNE sub_process_area_data  ; branch if true to load more level data, otherwise
+.endif
     LDA ram_backloading_flag  ; check for flag set if starting right of page $00
+.if con_revision_profile = con_revision_profile_vs
+    BEQ bra_exit_area_parser
+    JMP sub_process_area_data
+.else
     BNE sub_process_area_data  ; branch if true to load more level data, otherwise leave
+.endif
 bra_exit_area_parser:
+.if con_revision_profile = con_revision_profile_vs
+    JSR sub_vs_select_low_chr_bank
+.endif
     RTS
 
 sub_advance_area_object_stream:
@@ -377,6 +414,10 @@ sub_decode_area_data:
     LDY ram_area_obj_offset_buffer,x  ; if not, get offset from buffer
 bra_select_area_object_data_offset:
     LDX #$10  ; load offset of 16 for special row 15
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDA (ram_area_data),y  ; get first byte of level object again
     CMP #$fd
     BEQ bra_exit_area_parser  ; if end of level, leave this routine
@@ -402,6 +443,10 @@ bra_decode_area_object_row_13:
     LDA #$22  ; if so, load offset with 34
     STA $07
     INY  ; get next byte
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDA (ram_area_data),y
     AND #%01000000  ; mask out all but d6 (page control obj bit)
     BEQ bra_exit_area_object_decoder  ; if d6 clear, branch to leave (we handled this earlier)
@@ -417,6 +462,10 @@ bra_classify_special_area_object_rows:
     CMP #$0c  ; row 12-15?
     BCS bra_decode_special_row_object
     INY  ; if not, get second byte of level object
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDA (ram_area_data),y
     AND #%01110000  ; mask out all but d6-d4
     BNE bra_decode_large_area_object  ; if any bits set, branch to handle large object
@@ -429,6 +478,10 @@ bra_decode_large_area_object:
     STA $00  ; store value here (branch for large objects)
     CMP #$70  ; check for vertical pipe object
     BNE bra_finish_large_area_object_id
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDA (ram_area_data),y  ; if not, reload second byte
     AND #%00001000  ; mask out all but d3 (usage control bit)
     BEQ bra_finish_large_area_object_id  ; if d3 clear, branch to get original value
@@ -439,6 +492,10 @@ bra_finish_large_area_object_id:
     JMP loc_shift_area_object_id
 bra_decode_special_row_object:
     INY  ; branch here for rows 12-15
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDA (ram_area_data),y
     AND #%01110000  ; get next byte and mask out all but d6-d4
 loc_shift_area_object_id:
@@ -454,6 +511,10 @@ loc_dispatch_decoded_area_object:
     CMP ram_current_page_loc  ; same page as the renderer, and if so, branch
     BEQ bra_initialize_current_area_object
     LDY ram_area_data_offset  ; if not, get old offset of level pointer
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDA (ram_area_data),y  ; and reload first byte
     AND #%00001111
     CMP #$0e  ; row 14?
@@ -473,6 +534,10 @@ handler_loop_command:
     RTS
 bra_compare_area_object_column:
     LDY ram_area_data_offset  ; get first byte again
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDA (ram_area_data),y
     AND #%11110000  ; mask out low nybble and move high to low
     LSR

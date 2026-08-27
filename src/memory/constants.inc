@@ -109,10 +109,23 @@ con_player_skid_speed_cutoff = $09
 con_vs_request_irq_release = %00000010
 con_vs_request_controller_strobe = %00000001
 con_vs_request_chr_high = %00000100
+con_vs_nmi_palette_1e_f = $24
+con_vs_chr_screen_name_entry = $02
+con_vs_chr_screen_high_scores = $03
+con_vs_chr_screen_box = $04
+con_vs_chr_screen_insert_coin = $05
+con_vs_chr_screen_continue = $06
 con_vs_status_service = %00000100
 con_vs_status_dip_1 = %00001000
 con_vs_status_dip_2 = %00010000
 con_vs_status2_dips = %11111100
+
+.macro request_vs_low_chr_bank
+    .if con_revision_profile = con_revision_profile_vs
+        LDA #con_vs_request_irq_release
+        STA VS_REQUEST
+    .endif
+.endmacro
 
 ; sound effects constants
 con_sfx_small_jump         = %10000000
@@ -225,4 +238,5 @@ con_mode_game         = 1
 con_mode_victory      = 2
 con_mode_game_over     = 3
 con_vs_mode_game       = 2
+con_vs_mode_victory    = 3
 con_vs_mode_game_over  = 4

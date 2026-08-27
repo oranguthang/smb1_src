@@ -54,6 +54,12 @@ tbl_player_swim_kick_tiles:
 ; Clobbers:
 ; A, X, Y
 sub_render_player_graphics:
+.if con_revision_profile = con_revision_profile_vs
+    LDA #$ff  ; retain the arcade renderer preamble
+    .repeat 6
+        NOP
+    .endrepeat
+.endif
     LDA ram_injury_timer  ; if player's injured invincibility timer
     BEQ bra_continue_player_graphics  ; not set, skip checkpoint and continue code
     LDA ram_frame_counter

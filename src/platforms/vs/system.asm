@@ -240,12 +240,10 @@ handler_vs_player_select_initialize:
     INC ram_oper_mode_task
     RTS
 
-sub_vs_load_chr_background = $88f7
-
 handler_vs_player_select_load_screen:
     JSR sub_initialize_name_tables
     LDY #$01  ; player-select screen in the second Vs. CHR bank
-    JSR sub_vs_load_chr_background
+    JSR sub_load_vs_title_chr_screen
     LDA #$00
     STA ram_vs_arena0+$27
     LDA #$01
@@ -275,8 +273,6 @@ off_vs_push_button_packet:
 off_vs_clear_push_button_packet:
     .byte $20, $ea, $4b, $24, $00
 
-sub_vs_initialize_game_ram = $9643
-sub_vs_initialize_game_setup = $96e4
 loc_vs_title_exit = $82fe
 
 handler_vs_player_select_update:
@@ -303,8 +299,8 @@ bra_start_vs_selected_game:
     STA ram_vs_arena0+$28
     STA ram_vs_arena0+$29
     DEC ram_vs_arena0+$10
-    JSR sub_vs_initialize_game_ram
-    JSR sub_vs_initialize_game_setup
+    JSR sub_initialize_vs_game_ram
+    JSR sub_initialize_vs_game_setup
     LDA ram_saved_joypad1_bits
     JMP loc_vs_title_exit
 bra_update_vs_player_select_prompt:
@@ -367,9 +363,6 @@ off_vs_super_players_oam:
     .byte $28, $43, $41, $c0
     .byte $28, $42, $41, $c8
 
-sub_vs_render_super_player_digit = $9d62
-loc_vs_finish_super_players = $9df7
-
 handler_vs_title_super_players:
     LDA ram_vs_arena0+$22
     BNE bra_advance_vs_super_players_screen
@@ -380,7 +373,7 @@ bra_advance_vs_super_players_screen:
     CMP #$01
     BNE bra_render_vs_super_players
     LDY #$07  ; super-players screen in the second Vs. CHR bank
-    JSR sub_vs_load_chr_background
+    JSR sub_load_vs_title_chr_screen
 bra_increment_vs_super_players_state:
     INC ram_vs_arena0+$22
     RTS
@@ -391,7 +384,7 @@ bra_render_vs_super_player_digits:
     LDA ram_temp_byte_4
     CMP #10
     BEQ bra_finish_vs_super_player_digits
-    JSR sub_vs_render_super_player_digit
+    JSR sub_build_vs_high_score_row
     JMP bra_render_vs_super_player_digits
 bra_finish_vs_super_player_digits:
     LDA #$00
@@ -407,7 +400,7 @@ bra_copy_vs_super_players_oam:
     LDA ram_vs_arena0+$17
     CMP #$06
     BNE bra_exit_vs_super_players
-    JMP loc_vs_finish_super_players
+    JMP sub_initialize_vs_score_countdown
 bra_exit_vs_super_players:
     INC ram_oper_mode_task
     RTS

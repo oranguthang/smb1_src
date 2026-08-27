@@ -140,14 +140,23 @@ bra_dispatch_block_contents:
 
 handler_mushroom_or_flower_block:
     LDA #$00  ; load mushroom/fire flower into power-up type
+.if con_revision_profile = con_revision_profile_vs
+    JMP loc_store_block_power_up_type
+.else
     .byte $2c  ; BIT instruction opcode
+.endif
 
 handler_release_star_from_block:
     LDA #$02  ; load star into power-up type
+.if con_revision_profile = con_revision_profile_vs
+    JMP loc_store_block_power_up_type
+.else
     .byte $2c  ; BIT instruction opcode
+.endif
 
 handler_extra_life_mushroom_block:
     LDA #$03  ; load 1-up mushroom into power-up type
+loc_store_block_power_up_type:
     STA $39  ; store correct power-up type
     JMP loc_setup_power_up_object
 

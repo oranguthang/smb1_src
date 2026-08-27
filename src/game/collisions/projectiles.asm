@@ -1,6 +1,9 @@
 ; -------------------------------------------------------------------------------------
 ; $01 - enemy buffer offset
 
+.if con_revision_profile = con_revision_profile_vs
+    .res 23, $ff  ; retained arcade alignment bytes
+.endif
 sub_fireball_enemy_collision:
     LDA ram_fireball_state,x  ; check to see if fireball state is set at all
     BEQ bra_exit_fireball_enemy_collision  ; branch to leave if not
@@ -199,7 +202,11 @@ loc_handle_power_up_collision:
     BEQ bra_award_extra_life_power_up  ; if 1-up mushroom, branch
     LDA #$23  ; otherwise set star mario invincibility
     STA ram_star_invincible_timer  ; timer, and load the star mario music
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_cloud_music  ; the arcade star reuses the cloud-theme request
+.else
     LDA #con_star_power_music  ; into the area music queue, then leave
+.endif
     STA ram_area_music_queue
     RTS
 

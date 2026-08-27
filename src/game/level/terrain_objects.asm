@@ -13,10 +13,15 @@ handler_water_hole:
 
 handler_draw_high_question_block_row:
     LDA #$03  ; start on the fourth row
+.if con_revision_profile = con_revision_profile_vs
+    JMP loc_draw_question_block_row
+.else
     .byte $2c  ; BIT instruction opcode
+.endif
 
 handler_draw_low_question_block_row:
     LDA #$07  ; start on the eighth row
+loc_draw_question_block_row:
     PHA  ; save whatever row to the stack for now
     JSR sub_check_large_area_object_length  ; get low nybble and save as length
     PLA
@@ -29,14 +34,23 @@ handler_draw_low_question_block_row:
 
 handler_draw_high_bridge:
     LDA #$06  ; start on the seventh row from top of screen
+.if con_revision_profile = con_revision_profile_vs
+    JMP loc_draw_bridge
+.else
     .byte $2c  ; BIT instruction opcode
+.endif
 
 handler_draw_middle_bridge:
     LDA #$07  ; start on the eighth row
+.if con_revision_profile = con_revision_profile_vs
+    JMP loc_draw_bridge
+.else
     .byte $2c  ; BIT instruction opcode
+.endif
 
 handler_draw_low_bridge:
     LDA #$09  ; start on the tenth row
+loc_draw_bridge:
     PHA  ; save whatever row to the stack for now
     JSR sub_check_large_area_object_length  ; get low nybble and save as length
     PLA
@@ -253,6 +267,8 @@ handler_draw_jumpspring:
     JSR sub_find_empty_enemy_slot  ; find empty space in enemy object buffer
 .if con_revision_profile = con_revision_profile_pal
     BCS bra_exit_draw_jumpspring  ; leave when every enemy slot is occupied
+.elseif con_revision_profile = con_revision_profile_vs
+    BCS bra_exit_draw_jumpspring
 .endif
     JSR sub_get_area_object_x_position  ; get horizontal coordinate for jumpspring
     STA ram_enemy_x_position,x  ; and store
@@ -402,6 +418,10 @@ bra_exit_object_length_setup:
     RTS
 
 sub_get_large_area_object_attributes:
+.if con_revision_profile = con_revision_profile_vs
+    LDA #con_vs_request_irq_release
+    STA VS_REQUEST
+.endif
     LDY ram_area_obj_offset_buffer,x  ; get offset saved from area obj decoding routine
     LDA (ram_area_data),y  ; get first byte of level object
     AND #%00001111
@@ -461,5 +481,7 @@ sub_get_block_buffer_addr:
 
 ; unused space
 .if con_revision_profile <> con_revision_profile_pal
-    .byte $ff, $ff
+    .if con_revision_profile <> con_revision_profile_vs
+        .byte $ff, $ff
+    .endif
 .endif

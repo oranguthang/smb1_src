@@ -272,6 +272,7 @@ handler_copy_title_screen_from_chr:
     BNE loc_advance_operation_mode_task  ; if not, exit
 .if con_revision_profile = con_revision_profile_vs
     LDY #$00
+sub_load_vs_title_chr_screen:
     LDA #$06  ; select the Vs. title-screen CHR bank
     STA VS_REQUEST
     LDA tbl_vs_title_chr_addresses_high,y
