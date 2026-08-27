@@ -182,9 +182,10 @@ bra_clear_vs_coin_slot:
     RTS
 bra_debounce_vs_coin_slot:
     DEC ram_vs_arena0+$14,x
-    BNE bra_exit_vs_coin_slot_poll
+    BNE bra_exit_vs_coin_debounce
     LDA #$ff
     STA ram_vs_arena0+$0a,x
+bra_exit_vs_coin_debounce:
     RTS
 
 sub_vs_queue_coin_sound:

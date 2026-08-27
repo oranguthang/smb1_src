@@ -4,9 +4,13 @@
     {
       "id": "vs_smb",
       "name": "Vs. Super Mario Bros.",
-      "status": "reference_verified",
+      "status": "supported",
       "format": "ines",
       "reference_rom": "VS. Super Mario Bros. (VS).nes",
+      "entrypoint": "src/revisions/vs.asm",
+      "linker_config": "src/nrom256_prg_only.cfg",
+      "verification_boundary": "complete_ines_image",
+      "verify_target": "make verify-platform PLATFORM=vs_smb",
       "rom_size": 49168,
       "rom_sha1": "3546486ba461536545daf9f27c9bcf275fc162da",
       "header_size": 16,
@@ -14,7 +18,30 @@
       "prg_size": 32768,
       "prg_sha1": "f25ab9354e24e3cd99b6cfd8331f9be40b603c5b",
       "chr_size": 16384,
-      "chr_sha1": "19385a81d2abea3ad6ff6b0d220390950ac9d2ee"
+      "chr_sha1": "19385a81d2abea3ad6ff6b0d220390950ac9d2ee",
+      "runtime": {
+        "emulator": "fceux",
+        "frame": 180,
+        "expected_ram": {
+          "0x0009": "0xaa",
+          "0x073c": "0x0e",
+          "0x0770": "0x00",
+          "0x0772": "0x04",
+          "0x0773": "0x00",
+          "0x0774": "0x00",
+          "0x0778": "0x10",
+          "0x0779": "0x1e",
+          "0x07a2": "0x10",
+          "0x6602": "0x00",
+          "0x6603": "0x00",
+          "0x6605": "0x00",
+          "0x075f": "0x00",
+          "0x0760": "0x00",
+          "0x6606": "0x00",
+          "0x6610": "0x00",
+          "0x6674": "0x00"
+        }
+      }
     },
     {
       "id": "fds_smb",

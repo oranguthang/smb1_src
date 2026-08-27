@@ -409,13 +409,14 @@ sub_oper_mode_execution_tree:
 sub_move_all_sprites_offscreen:
     LDY #$00  ; this routine moves all sprites off the screen
 .if con_revision_profile = con_revision_profile_vs
-    JMP sub_move_sprites_offscreen
+    JMP loc_move_sprites_offscreen_from_y
 .else
     .byte $2c  ; BIT instruction opcode
 .endif
 
 sub_move_sprites_offscreen:
     LDY #$04  ; this routine moves all but sprite 0
+loc_move_sprites_offscreen_from_y:
     LDA #$f8  ; off the screen
 bra_hide_remaining_sprites_loop:
     STA ram_sprite_y_position,y  ; write 248 into OAM data's Y coordinate

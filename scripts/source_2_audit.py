@@ -133,11 +133,24 @@ def validate_source_2(
 
     platforms = load_json(project_root / contracts["platform_manifest"])
     platform_ids = [profile["id"] for profile in platforms["profiles"]]
-    if platform_ids != contracts["planned_platform_profiles"]:
+    supported_platforms = contracts["supported_platform_profiles"]
+    planned_platforms = contracts["planned_platform_profiles"]
+    if platform_ids != supported_platforms + planned_platforms:
         errors.append("platform profile list differs from the 2.0 manifest")
-    if status == "tag-ready" and any(
-        profile.get("status") != "supported" for profile in platforms["profiles"]
+    profiles_by_id = {profile["id"]: profile for profile in platforms["profiles"]}
+    if any(
+        profiles_by_id.get(profile_id, {}).get("status") != "supported"
+        for profile_id in supported_platforms
     ):
+        errors.append("supported platform profile status differs from the 2.0 manifest")
+    if any(
+        profiles_by_id.get(profile_id, {}).get("status") == "supported"
+        for profile_id in planned_platforms
+    ):
+        errors.append("planned platform profile is already marked supported")
+    if status == "tag-ready" and planned_platforms:
+        errors.append("tag-ready 2.0 cannot retain planned platform profiles")
+    if status == "tag-ready" and supported_platforms != platform_ids:
         errors.append("tag-ready 2.0 requires every platform profile to be supported")
 
     for relative in release["required_documents"]:

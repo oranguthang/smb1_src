@@ -14,11 +14,21 @@ sub_music_handler:
     RTS  ; no music, then leave
 
 loc_load_event_music:
+.if con_revision_profile = con_revision_profile_vs
+    LDY #$31  ; initialize the Vs. ending-theme pass counter
+    STY ram_vs_music_counter
+.endif
     STA ram_event_music_buffer  ; copy event music queue contents to buffer
     CMP #con_death_music  ; is it death music?
     BNE bra_prepare_event_music  ; if not, jump elsewhere
     JSR sub_stop_square_1_sound_effect  ; stop sfx in square 1 and 2
     JSR sub_stop_square_2_sound_effect  ; but clear only square 1's sfx buffer
+.if con_revision_profile = con_revision_profile_vs
+    LDY #$00
+    STY ram_note_length_tbl_adder
+    STY ram_area_music_buffer
+    BEQ bra_find_event_music_header  ; death replaces rather than suspends area music in Vs
+.endif
 bra_prepare_event_music:
     LDX ram_area_music_buffer
     STX ram_area_music_buffer_alt  ; save current area music buffer to be re-obtained later
@@ -26,32 +36,75 @@ bra_prepare_event_music:
     STY ram_note_length_tbl_adder  ; default value for additional length byte offset
     STY ram_area_music_buffer  ; clear area music buffer
     CMP #con_time_running_out_music  ; is it time running out music?
+.if con_revision_profile = con_revision_profile_vs
+    BNE :+
+.else
     BNE bra_find_event_music_header
+.endif
     LDX #$08  ; load offset to be added to length byte of header
     STX ram_note_length_tbl_adder
     BNE bra_find_event_music_header  ; unconditional branch
+.if con_revision_profile = con_revision_profile_vs
+    :
+    CMP #con_victory_music
+    BNE bra_find_event_music_header
+loc_advance_vs_victory_music:
+    INC ram_vs_music_counter
+    LDY ram_vs_music_counter
+    CPY #$37
+    BNE bra_load_music_header
+    JMP bra_silence_music
+.endif
 
 bra_load_area_music:
+.if con_revision_profile = con_revision_profile_vs
+    CMP #con_victory_music
+    BNE :+
+    JSR sub_stop_square_1_sound_effect
+    :
+.else
     CMP #$04  ; is it underground music?
     BNE bra_prepare_area_music  ; no, do not stop square 1 sfx
     JSR sub_stop_square_1_sound_effect
+.endif
 bra_prepare_area_music:
-    LDY #$10  ; start counter used only by ground level music
+    LDY #con_ground_music_header_start  ; start counter used only by ground level music
 bra_store_ground_music_header_offset:
     STY ram_ground_music_header_ofs
+.if con_revision_profile = con_revision_profile_vs
+    LDY #con_vs_star_music_header_loop  ; begin at the Vs. four-part star-music loop
+bra_store_vs_star_music_header_offset:
+    STY ram_vs_star_music_header_ofs
+.endif
 
 loc_restart_area_music:
     LDY #$00  ; clear event music buffer
     STY ram_event_music_buffer
     STA ram_area_music_buffer  ; copy area music queue contents to buffer
     CMP #$01  ; is it ground level music?
+.if con_revision_profile = con_revision_profile_vs
+    BNE :+
+.else
     BNE bra_find_area_music_header
+.endif
     INC ram_ground_music_header_ofs  ; increment but only if playing ground level music
     LDY ram_ground_music_header_ofs  ; is it time to loopback ground level music?
-    CPY #$32
+    CPY #con_ground_music_header_loop_end+1
     BNE bra_load_music_header  ; branch ahead with alternate offset
-    LDY #$11
+    LDY #con_ground_music_header_loop
     BNE bra_store_ground_music_header_offset  ; unconditional branch
+
+.if con_revision_profile = con_revision_profile_vs
+    :
+    CMP #con_star_power_music
+    BNE bra_find_area_music_header
+    INC ram_vs_star_music_header_ofs
+    LDY ram_vs_star_music_header_ofs
+    CPY #con_vs_star_music_header_loop_end+1
+    BNE bra_load_music_header
+    LDY #con_vs_star_music_header_loop
+    BNE bra_store_vs_star_music_header_offset  ; unconditional branch
+.endif
 
 bra_find_area_music_header:
     LDY #$08  ; load Y for offset of area music
@@ -113,6 +166,7 @@ bra_handle_regular_music_end:
     LDA ram_area_music_buffer  ; check primary buffer for any music except pipe intro
     AND #%01011111
     BNE bra_restart_area_music  ; if any area music except pipe intro, music loops
+bra_silence_music:
     LDA #$00  ; clear primary and secondary buffers and initialize
     STA ram_area_music_buffer  ; control regs of square and triangle channels
     STA ram_event_music_buffer
@@ -126,7 +180,11 @@ bra_restart_area_music:
     JMP loc_restart_area_music
 
 bra_restart_victory_music:
+.if con_revision_profile = con_revision_profile_vs
+    JMP loc_advance_vs_victory_music
+.else
     JMP loc_load_event_music
+.endif
 
 bra_handle_square_2_length:
     JSR sub_process_length_data  ; store length of note
@@ -152,7 +210,11 @@ bra_update_square_2_music_envelope:
     LDA ram_square2_sound_buffer  ; is there a sound playing on square 2?
     BNE bra_handle_square_1_music
     LDA ram_event_music_buffer  ; check for death music or d4 set on secondary buffer
+.if con_revision_profile = con_revision_profile_vs
+    AND #%10000001
+.else
     AND #%10010001  ; note that regs for death music or d4 are loaded by default
+.endif
     BNE bra_handle_square_1_music
     LDY ram_squ2_envelope_data_ctrl  ; check for contents saved from sub_load_control_regs
     BEQ bra_load_square_2_envelope
@@ -199,7 +261,11 @@ bra_update_square_1_music_envelope:
     LDA ram_square1_sound_buffer  ; is there a sound playing on square 1?
     BNE bra_handle_triangle_music
     LDA ram_event_music_buffer  ; check for death music or d4 set on secondary buffer
+.if con_revision_profile = con_revision_profile_vs
+    AND #%10000001
+.else
     AND #%10010001
+.endif
     BNE bra_load_square_1_sweep_register
     LDY ram_squ1_envelope_data_ctrl  ; check saved envelope offset
     BEQ bra_load_square_1_envelope
@@ -237,7 +303,11 @@ bra_handle_triangle_note:
     LDX ram_tri_note_len_buffer  ; save length in triangle note counter
     STX ram_tri_note_len_counter
     LDA ram_event_music_buffer
+.if con_revision_profile = con_revision_profile_vs
+    AND #%01111110
+.else
     AND #%01101110  ; check for death music or d4 set on secondary buffer
+.endif
     BNE bra_select_triangle_note_sustain  ; if playing any other secondary, skip primary buffer check
     LDA ram_area_music_buffer  ; check primary buffer for water or castle level music
     AND #%00001010
@@ -262,7 +332,11 @@ bra_store_triangle_control_register:
 
 bra_handle_noise_music:
     LDA ram_area_music_buffer  ; check if playing underground or castle music
+.if con_revision_profile = con_revision_profile_vs
+    AND #%01110011
+.else
     AND #%11110011
+.endif
     BEQ bra_exit_music_handler  ; if so, skip the noise routine
     DEC ram_noise_beat_len_counter  ; decrement noise beat length
     BNE bra_exit_music_handler  ; is it time for more data?

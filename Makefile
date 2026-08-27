@@ -91,10 +91,31 @@ REVISION_REFERENCE ?= $(PROJECT_DIR)Super Mario Bros. (E) (REV0) [!p].nes
 else
 REVISION_REFERENCE ?= $(PROJECT_DIR)$(PROFILE).nes
 endif
+PLATFORM ?= vs_smb
+PLATFORM_MANIFEST ?= $(PROJECT_DIR)config/platform_profiles.json
+PLATFORM_ASSET_DIR ?= $(GENERATED_ASSET_DIR)/platforms
+PLATFORM_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/$(PLATFORM)
+PLATFORM_OBJ ?= $(PLATFORM_BUILD_DIR)/smb.o
+PLATFORM_PRG ?= $(PLATFORM_BUILD_DIR)/smb.prg
+PLATFORM_LABELS ?= $(PLATFORM_BUILD_DIR)/smb.lbl
+PLATFORM_MAP ?= $(PLATFORM_BUILD_DIR)/smb.map
+PLATFORM_DEBUG ?= $(PLATFORM_BUILD_DIR)/smb.dbg
+PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.nes
+PLATFORM_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_vs_runtime.lua
+PLATFORM_RUNTIME_RESULT ?= $(PLATFORM_BUILD_DIR)/runtime.txt
+ifeq ($(PLATFORM),vs_smb)
+PLATFORM_SOURCE ?= $(PROJECT_DIR)src/revisions/vs.asm
+PLATFORM_CFG ?= $(NATIVE_CFG)
+PLATFORM_REFERENCE ?= $(PROJECT_DIR)VS. Super Mario Bros. (VS).nes
+else
+PLATFORM_SOURCE ?= $(PROJECT_DIR)src/platforms/$(PLATFORM).asm
+PLATFORM_CFG ?= $(NATIVE_CFG)
+PLATFORM_REFERENCE ?= $(PROJECT_DIR)$(PLATFORM)
+endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -357,6 +378,56 @@ validate-revisions:
 	$(MAKE) validate-revision PROFILE=pc10
 	$(MAKE) validate-revision PROFILE=pal
 
+split-platform-assets:
+	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" split \
+		--manifest "$(PLATFORM_MANIFEST)" \
+		--profile "$(PLATFORM)" \
+		--reference "$(PLATFORM_REFERENCE)" \
+		--asset-dir "$(PLATFORM_ASSET_DIR)"
+
+build-platform:
+	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
+		--source "$(PLATFORM_SOURCE)" \
+		--config "$(PLATFORM_CFG)" \
+		--manifest "$(ASSET_MANIFEST)" \
+		--object "$(PLATFORM_OBJ)" \
+		--prg "$(PLATFORM_PRG)" \
+		--labels "$(PLATFORM_LABELS)" \
+		--map "$(PLATFORM_MAP)" \
+		--debug-info "$(PLATFORM_DEBUG)" \
+		--output-rom "$(PLATFORM_OUTPUT)" \
+		--prg-only
+	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" build \
+		--manifest "$(PLATFORM_MANIFEST)" \
+		--profile "$(PLATFORM)" \
+		--asset-dir "$(PLATFORM_ASSET_DIR)" \
+		--prg "$(PLATFORM_PRG)" \
+		--output "$(PLATFORM_OUTPUT)"
+
+verify-platform: build-platform
+	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" verify \
+		--manifest "$(PLATFORM_MANIFEST)" \
+		--profile "$(PLATFORM)" \
+		--reference "$(PLATFORM_REFERENCE)" \
+		--asset-dir "$(PLATFORM_ASSET_DIR)" \
+		--prg "$(PLATFORM_PRG)" \
+		--output "$(PLATFORM_OUTPUT)"
+
+validate-platform: verify-platform
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_platform_runtime.py" \
+		--manifest "$(PLATFORM_MANIFEST)" \
+		--profile "$(PLATFORM)" \
+		--fceux "$(FCEUX_EXE)" \
+		--image "$(PLATFORM_OUTPUT)" \
+		--lua "$(PLATFORM_RUNTIME_LUA)" \
+		--result "$(PLATFORM_RUNTIME_RESULT)"
+
+verify-platforms:
+	$(MAKE) verify-platform PLATFORM=vs_smb
+
+validate-platforms:
+	$(MAKE) validate-platform PLATFORM=vs_smb
+
 symbols: build
 	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \
 		--debug "$(NATIVE_DEBUG)" \
@@ -431,6 +502,7 @@ source-2-check:
 	$(MAKE) validate-expanded
 	$(MAKE) check-studios
 	$(MAKE) validate-revisions
+	$(MAKE) validate-platforms
 	$(MAKE) source-2-release-audit
 
 split:

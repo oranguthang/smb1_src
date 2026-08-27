@@ -300,6 +300,7 @@ sub_process_area_data:
     LDA #con_vs_request_irq_release
     STA VS_REQUEST
 .endif
+loc_restart_area_object_slots:
     LDX #$02  ; start at the end of area object buffer
 bra_process_area_object_slots:
     STX ram_object_offset
@@ -383,7 +384,7 @@ bra_finish_area_object_slots:
     LDA ram_behind_area_parser_flag  ; check for flag set if objects were behind renderer
 .if con_revision_profile = con_revision_profile_vs
     BEQ bra_check_area_parser_backloading
-    JMP sub_process_area_data
+    JMP loc_restart_area_object_slots
 bra_check_area_parser_backloading:
 .else
     BNE sub_process_area_data  ; branch if true to load more level data, otherwise
@@ -391,7 +392,7 @@ bra_check_area_parser_backloading:
     LDA ram_backloading_flag  ; check for flag set if starting right of page $00
 .if con_revision_profile = con_revision_profile_vs
     BEQ bra_exit_area_parser
-    JMP sub_process_area_data
+    JMP loc_restart_area_object_slots
 .else
     BNE sub_process_area_data  ; branch if true to load more level data, otherwise leave
 .endif

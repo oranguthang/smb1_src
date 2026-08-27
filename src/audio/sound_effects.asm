@@ -10,16 +10,29 @@
 
 ; Clobbers:
 ; A, X, Y
+.if con_revision_profile = con_revision_profile_vs
+    .byte $ff  ; retained arcade alignment byte
+.endif
 sub_sound_engine:
     LDA ram_oper_mode  ; are we in title screen mode?
     BNE bra_enable_sound_engine
     STA SND_MASTERCTRL_REG  ; if so, disable sound and leave
+.if con_revision_profile = con_revision_profile_vs
+    STA ram_square1_sound_buffer
+    STA ram_square2_sound_buffer
+    STA ram_noise_sound_buffer
+    STA ram_event_music_buffer
+    STA ram_area_music_buffer
+    BEQ :+
+.else
     RTS
+.endif
 bra_enable_sound_engine:
     LDA #$ff
     STA JOYPAD_PORT2  ; disable irqs and set frame counter mode???
     LDA #$0f
     STA SND_MASTERCTRL_REG  ; enable first four channels
+.if con_revision_profile <> con_revision_profile_vs
     LDA ram_pause_mode_flag  ; is sound already in pause mode?
     BNE bra_handle_pause_sound
     LDA ram_pause_sound_queue  ; if not, check pause sfx queue
@@ -72,12 +85,16 @@ bra_finish_pause_sound:
     LDA #$00  ; clear pause sfx buffer
     STA ram_pause_sound_buffer
     BEQ bra_clear_sound_queues
+.endif
 
 bra_run_sound_channels:
     JSR sub_handle_square_1_sound_effect  ; play sfx on square channel 1
     JSR sub_handle_square_2_sound_effect  ; ''  ''  '' square channel 2
     JSR sub_handle_noise_sound_effect  ; ''  ''  '' noise channel
     JSR sub_music_handler  ; play music on all channels
+.if con_revision_profile = con_revision_profile_vs
+    :
+.endif
     LDA #$00  ; clear the music queues
     STA ram_area_music_queue
     STA ram_event_music_queue
@@ -87,7 +104,9 @@ bra_clear_sound_queues:
     STA ram_square1_sound_queue
     STA ram_square2_sound_queue
     STA ram_noise_sound_queue
+.if con_revision_profile <> con_revision_profile_vs
     STA ram_pause_sound_queue
+.endif
     LDY ram_dac_counter  ; load some sort of counter
     LDA ram_area_music_buffer
     AND #%00000011  ; check for specific music

@@ -21,7 +21,8 @@
     "supported_revisions": ["ju", "pc10", "pal"],
     "evaluated_unsupported_revisions": ["europe_revb_candidate"],
     "platform_manifest": "config/platform_profiles.json",
-    "planned_platform_profiles": ["vs_smb", "fds_smb", "ann_fds"]
+    "supported_platform_profiles": ["vs_smb"],
+    "planned_platform_profiles": ["fds_smb", "ann_fds"]
   },
   "required_documents": [
     "docs/preservation_source_1_0.md",
@@ -43,6 +44,12 @@
     "check-studios",
     "verify-revisions",
     "validate-revisions",
+    "split-platform-assets",
+    "build-platform",
+    "verify-platform",
+    "validate-platform",
+    "verify-platforms",
+    "validate-platforms",
     "source-2-audit",
     "source-2-release-audit",
     "source-2-check"

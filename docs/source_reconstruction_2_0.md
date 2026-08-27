@@ -16,11 +16,11 @@ The developing release adds four isolated capability groups:
    original ten-artifact 1.0 evidence manifest unchanged.
 4. Exact revision and platform profiles for the selected SMB1 engine family.
 
-The profile family is not complete yet. Japan/USA, PlayChoice-10, and the
-European PAL revision are exact shared-source builds with runtime startup
-gates. The remaining required scope comprises Vs. Super Mario Bros., the
-Famicom Disk System SMB1 reissue, and All Night Nippon Super Mario Bros. The
-Japanese SMB2 / The Lost Levels release is outside the 2.0 scope.
+The profile family is not complete yet. Japan/USA, PlayChoice-10, the European
+PAL revision, and Vs. Super Mario Bros. are exact shared-source builds with
+runtime startup gates. The remaining required scope comprises the Famicom Disk
+System SMB1 reissue and All Night Nippon Super Mario Bros. The Japanese SMB2 /
+The Lost Levels release is outside the 2.0 scope.
 
 The alternate European candidate remains an evaluated provenance record rather
 than a required supported release unless independent evidence establishes its

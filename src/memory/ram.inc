@@ -492,7 +492,9 @@ ram_note_length_tbl_adder    = $07c4
 ram_area_music_buffer_alt   = $07c5
 ram_pause_mode_flag         = $07c6
 ram_ground_music_header_ofs  = $07c7
+ram_vs_star_music_header_ofs = $07c9
 ram_alt_reg_content_flag     = $07ca
+ram_vs_music_counter         = $07cc
 
 ram_vs_io_buffer             = $6000
 ram_vs_enemy_data            = $6100

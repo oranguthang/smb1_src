@@ -526,14 +526,15 @@ SMB1 engine family. Each supported profile must have:
 
 Facts must not be transferred between revisions by matching addresses alone.
 
-The profile framework now reproduces the Japan/USA, PlayChoice-10, and verified
-European PAL containers from separate compile-time entrypoints over one
-semantic engine source. PAL has exact complete-ROM verification and a PAL-mode
-runtime startup gate. The remaining required 2.0 scope is:
+The profile framework now reproduces the Japan/USA, PlayChoice-10, verified
+European PAL, and Vs. Super Mario Bros. containers from separate compile-time
+entrypoints over one semantic engine source. PAL has an exact complete-ROM
+verification and PAL-mode runtime gate. Vs. has a byte-identical 32 KiB PRG,
+exact private-asset container build, and focused arcade title-state gate. The
+remaining required 2.0 scope is:
 
-1. Vs. Super Mario Bros. for the Nintendo VS. System;
-2. the Famicom Disk System reissue of Super Mario Bros.;
-3. All Night Nippon Super Mario Bros.
+1. the Famicom Disk System reissue of Super Mario Bros.;
+2. All Night Nippon Super Mario Bros.
 
 The historical alternate European candidate remains an evaluated unsupported
 input with its pending-dump provenance kept explicit. It is not a required 2.0
@@ -544,9 +545,9 @@ outside this release scope. All Night Nippon still requires selected later
 engine changes shared with that title, but supporting those mechanics does not
 imply an SMB2 release profile.
 
-The supplied Vs. reference has an independently reassemblable 32 KiB PRG and
-16 KiB CHR payload. Verified raw 65,500-byte FDS references are now available
-for both the FDS SMB1 reissue and All Night Nippon. Their program files are
+The supplied Vs. reference now has a complete project-native reconstruction and
+verification gate. Verified raw 65,500-byte FDS references are available for
+both the FDS SMB1 reissue and All Night Nippon. Their program files are
 independently reassemblable at the reference boundary. The supplied All Night
 Nippon `.nes` image remains auxiliary because it is an unofficial FDS-to-NROM
 conversion. See `docs/platform_profiles.md`.

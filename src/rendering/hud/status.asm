@@ -8,8 +8,13 @@ tbl_status_bar_vram_address_and_length:
     .byte $f0, $06  ; top score display on title screen
     .byte $62, $06  ; player score
     .byte $62, $06
+.if con_revision_profile = con_revision_profile_vs
+    .byte $6d, $03  ; coin tally and its arcade multiplication sign
+    .byte $6d, $03
+.else
     .byte $6d, $02  ; coin tally
     .byte $6d, $02
+.endif
     .byte $7a, $03  ; game timer
 
 tbl_status_bar_digit_offsets:

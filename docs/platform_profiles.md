@@ -8,16 +8,19 @@ runtime contracts.
 ## Vs. Super Mario Bros.
 
 The supplied `VS. Super Mario Bros. (VS).nes` image is the verified GoodNES
-payload candidate. Its 32 KiB PRG and 16 KiB CHR payload has been reproduced
-byte for byte by the ignored segaloco meta-disassembly reference. That build
-differs from the supplied image only in two legacy iNES header bytes, so the PRG
-and CHR provide a reliable semantic transfer boundary.
+payload candidate. The repository reconstructs its complete 32 KiB PRG at
+SHA-1 `f25ab9354e24e3cd99b6cfd8331f9be40b603c5b`. VS System input, coin,
+DIP-switch, PPU, title, game-over, level, rendering, and audio alternatives are
+selected from reviewed source by `src/revisions/vs.asm`.
 
-The project build must still originate in this repository. The ignored
-reference repository and its generated binaries are evidence, not build
-dependencies. The final profile must model VS System input, coin, DIP-switch,
-PPU, title, game-over, level, graphics, and audio alternatives in reviewed
-source and must reproduce the complete selected private reference.
+Run `make split-platform-assets PLATFORM=vs_smb` once to extract the private
+16-byte header and 16 KiB CHR into the ignored asset directory. Then
+`make verify-platform PLATFORM=vs_smb` reconstructs and compares the complete
+iNES image at SHA-1 `3546486ba461536545daf9f27c9bcf275fc162da`.
+`make validate-platform PLATFORM=vs_smb` additionally checks the deterministic
+arcade title state in FCEUX without applying the console input movie. The
+ignored reference repositories and their generated binaries remain evidence,
+not build dependencies.
 
 ## Famicom Disk System SMB1
 

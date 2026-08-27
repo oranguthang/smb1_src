@@ -8,7 +8,7 @@
     "repository_import_path": "src/smbdis.asm",
     "label_policy": "Colon labels in the imported source, including labels sharing a line with their first statement."
   },
-  "counts": {"original_labels": 1992, "current_labels": 2251, "direct_renames": 1992, "project_additions": 259},
+  "counts": {"original_labels": 1992, "current_labels": 2267, "direct_renames": 1992, "project_additions": 275},
   "rename_columns": ["original", "current", "current_path"],
   "renames": [
     ["Start","vec_reset_handler","src/system/boot_and_frame.asm"],
@@ -2264,6 +2264,22 @@
     ["tbl_vs_coin_tally_limits","src/game/objects/dynamic.asm","88638d8dfc391ad6708e14879836ba8a5477789c","Vs. coin and motion rule reconstruction"],
     ["bra_clear_vs_coin_tally_digits","src/game/objects/dynamic.asm","88638d8dfc391ad6708e14879836ba8a5477789c","Vs. coin and motion rule reconstruction"],
     ["loc_apply_block_gravity","src/game/physics/movement.asm","88638d8dfc391ad6708e14879836ba8a5477789c","Vs. coin and motion rule reconstruction"],
-    ["loc_move_platform_vertically","src/game/physics/movement.asm","88638d8dfc391ad6708e14879836ba8a5477789c","Vs. coin and motion rule reconstruction"]
+    ["loc_move_platform_vertically","src/game/physics/movement.asm","88638d8dfc391ad6708e14879836ba8a5477789c","Vs. coin and motion rule reconstruction"],
+    ["loc_advance_vs_victory_music","src/audio/music_engine.asm","bf6c2f4c09f799cba11ba11a9fa516d0df4eeb24","Vs. music sequencer reconstruction"],
+    ["bra_store_vs_star_music_header_offset","src/audio/music_engine.asm","bf6c2f4c09f799cba11ba11a9fa516d0df4eeb24","Vs. music sequencer reconstruction"],
+    ["bra_silence_music","src/audio/music_engine.asm","bf6c2f4c09f799cba11ba11a9fa516d0df4eeb24","Vs. music sequencer reconstruction"],
+    ["off_music_header_vs_star_a","src/audio/music_data.asm","684b63ea0136f768e5e526995b458ad904f2ab9e","Vs. music library reconstruction"],
+    ["off_music_header_vs_star_b","src/audio/music_data.asm","684b63ea0136f768e5e526995b458ad904f2ab9e","Vs. music library reconstruction"],
+    ["off_music_header_vs_star_c","src/audio/music_data.asm","684b63ea0136f768e5e526995b458ad904f2ab9e","Vs. music library reconstruction"],
+    ["off_music_header_vs_star_d","src/audio/music_data.asm","684b63ea0136f768e5e526995b458ad904f2ab9e","Vs. music library reconstruction"],
+    ["off_music_header_vs_game_over","src/audio/music_data.asm","684b63ea0136f768e5e526995b458ad904f2ab9e","Vs. music library reconstruction"],
+    ["off_music_stream_vs_star_a","src/audio/music_data.asm","684b63ea0136f768e5e526995b458ad904f2ab9e","Vs. music library reconstruction"],
+    ["off_music_stream_vs_star_b","src/audio/music_data.asm","684b63ea0136f768e5e526995b458ad904f2ab9e","Vs. music library reconstruction"],
+    ["off_music_stream_vs_star_c","src/audio/music_data.asm","684b63ea0136f768e5e526995b458ad904f2ab9e","Vs. music library reconstruction"],
+    ["off_music_stream_vs_star_d","src/audio/music_data.asm","684b63ea0136f768e5e526995b458ad904f2ab9e","Vs. music library reconstruction"],
+    ["off_music_stream_vs_game_over","src/audio/music_data.asm","684b63ea0136f768e5e526995b458ad904f2ab9e","Vs. music library reconstruction"],
+    ["loc_move_sprites_offscreen_from_y","src/system/boot_and_frame.asm","8f18249108e57083b8b5e2956e0c11c97d56483c","Final byte-identical Vs. PRG reconciliation"],
+    ["bra_exit_vs_coin_debounce","src/platforms/vs/system.asm","8f18249108e57083b8b5e2956e0c11c97d56483c","Final byte-identical Vs. PRG reconciliation"],
+    ["loc_restart_area_object_slots","src/game/level/parser.asm","8f18249108e57083b8b5e2956e0c11c97d56483c","Final byte-identical Vs. PRG reconciliation"]
   ]
 }

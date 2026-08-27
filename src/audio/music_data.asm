@@ -2,12 +2,32 @@
 
 ; music header offsets
 
+.if con_revision_profile = con_revision_profile_vs
+con_music_length_offset_d = $20
+con_music_length_offset_e = $28
+con_music_length_offset_victory = $18
+
+tbl_castle_clear_music_envelope = *
+    .byte $98, $99, $9a, $9b
+
+tbl_area_music_envelope_values = *
+    .byte $90, $94, $94, $95, $95, $96, $97, $97, $98
+.else
+con_music_length_offset_d = $18
+con_music_length_offset_e = $20
+con_music_length_offset_victory = $10
+.endif
+
 tbl_music_header_offsets:
     .byte off_music_header_death-con_music_header_data_base  ; event music
     .byte off_music_header_game_over-con_music_header_data_base
     .byte off_music_header_victory-con_music_header_data_base
     .byte off_music_header_castle_clear-con_music_header_data_base
+.if con_revision_profile = con_revision_profile_vs
+    .byte off_music_header_vs_game_over-con_music_header_data_base
+.else
     .byte off_music_header_game_over-con_music_header_data_base
+.endif
     .byte off_music_header_end_of_level-con_music_header_data_base
     .byte off_music_header_time_running_out-con_music_header_data_base
     .byte off_music_header_silence-con_music_header_data_base
@@ -21,7 +41,9 @@ tbl_music_header_offsets:
     .byte off_music_header_star_cloud-con_music_header_data_base
     .byte off_music_header_silence-con_music_header_data_base
 
+con_ground_music_header_start = * - con_music_header_data_base
     .byte off_music_header_ground_lead_in-con_music_header_data_base  ; ground level music layout
+con_ground_music_header_loop = * - con_music_header_data_base
     .byte off_music_header_ground_part_1-con_music_header_data_base, off_music_header_ground_part_1-con_music_header_data_base
     .byte off_music_header_ground_part_2_a-con_music_header_data_base, off_music_header_ground_part_2_b-con_music_header_data_base, off_music_header_ground_part_2_a-con_music_header_data_base, off_music_header_ground_part_2_c-con_music_header_data_base
     .byte off_music_header_ground_part_2_a-con_music_header_data_base, off_music_header_ground_part_2_b-con_music_header_data_base, off_music_header_ground_part_2_a-con_music_header_data_base, off_music_header_ground_part_2_c-con_music_header_data_base
@@ -31,6 +53,20 @@ tbl_music_header_offsets:
     .byte off_music_header_ground_part_4_a-con_music_header_data_base, off_music_header_ground_part_4_b-con_music_header_data_base, off_music_header_ground_part_4_a-con_music_header_data_base, off_music_header_ground_part_4_c-con_music_header_data_base
     .byte off_music_header_ground_part_3_a-con_music_header_data_base, off_music_header_ground_part_3_b-con_music_header_data_base, off_music_header_ground_part_3_a-con_music_header_data_base, off_music_header_ground_lead_in-con_music_header_data_base
     .byte off_music_header_ground_part_4_a-con_music_header_data_base, off_music_header_ground_part_4_b-con_music_header_data_base, off_music_header_ground_part_4_a-con_music_header_data_base, off_music_header_ground_part_4_c-con_music_header_data_base
+con_ground_music_header_loop_end = * - con_music_header_data_base
+
+.if con_revision_profile = con_revision_profile_vs
+    .byte off_music_header_victory-con_music_header_data_base, off_music_header_victory-con_music_header_data_base
+    .byte off_music_header_vs_game_over-con_music_header_data_base
+    .byte off_music_header_victory-con_music_header_data_base, off_music_header_victory-con_music_header_data_base
+
+con_vs_star_music_header_loop = * - con_music_header_data_base
+    .byte off_music_header_vs_star_a-con_music_header_data_base
+    .byte off_music_header_vs_star_b-con_music_header_data_base
+    .byte off_music_header_vs_star_d-con_music_header_data_base
+    .byte off_music_header_vs_star_c-con_music_header_data_base
+con_vs_star_music_header_loop_end = * - con_music_header_data_base
+.endif
 
 ; music headers
 ; header format is as follows:
@@ -40,54 +76,71 @@ tbl_music_header_offsets:
 ; 1 byte - square 1 data offset
 ; 1 byte - noise data offset (not used by secondary music)
 
+.if con_revision_profile = con_revision_profile_vs
+off_music_header_vs_star_a:
+    .byte con_music_length_offset_d, <off_music_stream_vs_star_a, >off_music_stream_vs_star_a, $38, $07, $88
+off_music_header_vs_star_b:
+    .byte con_music_length_offset_d, <off_music_stream_vs_star_b, >off_music_stream_vs_star_b, $33, $06, $7d
+off_music_header_vs_star_c:
+    .byte con_music_length_offset_d, <off_music_stream_vs_star_c, >off_music_stream_vs_star_c, $33, $23, $7d
+off_music_header_vs_star_d:
+    .byte con_music_length_offset_d, <off_music_stream_vs_star_d, >off_music_stream_vs_star_d, $1f, $07, $65
+.endif
+
 off_music_header_time_running_out:
     .byte $08, <off_music_stream_time_running_out, >off_music_stream_time_running_out, $27, $18
 off_music_header_star_cloud:
-    .byte $20, <off_music_stream_star_cloud, >off_music_stream_star_cloud, $2e, $1a, $40
+    .byte con_music_length_offset_e, <off_music_stream_star_cloud, >off_music_stream_star_cloud, $2e, $1a, $40
 off_music_header_end_of_level:
-    .byte $20, <off_music_stream_end_of_level, >off_music_stream_end_of_level, $3d, $21
+    .byte con_music_length_offset_e, <off_music_stream_end_of_level, >off_music_stream_end_of_level, $3d, $21
 unused_music_header_residual:
-.if con_revision_profile = con_revision_profile_pal
+.if con_revision_profile = con_revision_profile_vs
+    .byte con_music_length_offset_e, $7d, $fc, $3f, $1d
+.elseif con_revision_profile = con_revision_profile_pal
     .byte $20, $c5, $fc, $3f, $1d
 .else
     .byte $20, $c4, $fc, $3f, $1d
 .endif
 off_music_header_underground:
-    .byte $18, <off_music_stream_underground, >off_music_stream_underground, $00, $00
+    .byte con_music_length_offset_d, <off_music_stream_underground, >off_music_stream_underground, $00, $00
 off_music_header_silence:
     .byte $08, <off_music_stream_silence, >off_music_stream_silence, $00
 off_music_header_castle:
     .byte $00, <off_music_stream_castle, >off_music_stream_castle, $93, $62
 off_music_header_victory:
-    .byte $10, <off_music_stream_victory, >off_music_stream_victory, $24, $14
+    .byte con_music_length_offset_victory, <off_music_stream_victory, >off_music_stream_victory, $24, $14
+.if con_revision_profile = con_revision_profile_vs
+off_music_header_vs_game_over:
+    .byte $18, <off_music_stream_vs_game_over, >off_music_stream_vs_game_over, $34, $23
+.endif
 off_music_header_game_over:
-    .byte $18, <off_music_stream_game_over, >off_music_stream_game_over, $1e, $14
+    .byte con_music_length_offset_d, <off_music_stream_game_over, >off_music_stream_game_over, $1e, $14
 off_music_header_water:
     .byte $08, <off_music_stream_water, >off_music_stream_water, $a0, $70, $68
 off_music_header_castle_clear:
     .byte $08, <off_music_stream_castle_clear, >off_music_stream_castle_clear, $4c, $24
 off_music_header_ground_part_1:
-    .byte $18, <off_music_stream_ground_part_1, >off_music_stream_ground_part_1, $2d, $1c, $b8
+    .byte con_music_length_offset_d, <off_music_stream_ground_part_1, >off_music_stream_ground_part_1, $2d, $1c, $b8
 off_music_header_ground_part_2_a:
-    .byte $18, <off_music_stream_ground_part_2_a, >off_music_stream_ground_part_2_a, $20, $12, $70
+    .byte con_music_length_offset_d, <off_music_stream_ground_part_2_a, >off_music_stream_ground_part_2_a, $20, $12, $70
 off_music_header_ground_part_2_b:
-    .byte $18, <off_music_stream_ground_part_2_b, >off_music_stream_ground_part_2_b, $1b, $10, $44
+    .byte con_music_length_offset_d, <off_music_stream_ground_part_2_b, >off_music_stream_ground_part_2_b, $1b, $10, $44
 off_music_header_ground_part_2_c:
-    .byte $18, <off_music_stream_ground_part_2_c, >off_music_stream_ground_part_2_c, $11, $0a, $1c
+    .byte con_music_length_offset_d, <off_music_stream_ground_part_2_c, >off_music_stream_ground_part_2_c, $11, $0a, $1c
 off_music_header_ground_part_3_a:
-    .byte $18, <off_music_stream_ground_part_3_a, >off_music_stream_ground_part_3_a, $2d, $10, $58
+    .byte con_music_length_offset_d, <off_music_stream_ground_part_3_a, >off_music_stream_ground_part_3_a, $2d, $10, $58
 off_music_header_ground_part_3_b:
-    .byte $18, <off_music_stream_ground_part_3_b, >off_music_stream_ground_part_3_b, $14, $0d, $3f
+    .byte con_music_length_offset_d, <off_music_stream_ground_part_3_b, >off_music_stream_ground_part_3_b, $14, $0d, $3f
 off_music_header_ground_lead_in:
-    .byte $18, <off_music_stream_ground_lead_in, >off_music_stream_ground_lead_in, $15, $0d, $21
+    .byte con_music_length_offset_d, <off_music_stream_ground_lead_in, >off_music_stream_ground_lead_in, $15, $0d, $21
 off_music_header_ground_part_4_a:
-    .byte $18, <off_music_stream_ground_part_4_a, >off_music_stream_ground_part_4_a, $18, $10, $7a
+    .byte con_music_length_offset_d, <off_music_stream_ground_part_4_a, >off_music_stream_ground_part_4_a, $18, $10, $7a
 off_music_header_ground_part_4_b:
-    .byte $18, <off_music_stream_ground_part_4_b, >off_music_stream_ground_part_4_b, $19, $0f, $54
+    .byte con_music_length_offset_d, <off_music_stream_ground_part_4_b, >off_music_stream_ground_part_4_b, $19, $0f, $54
 off_music_header_ground_part_4_c:
-    .byte $18, <off_music_stream_ground_part_4_c, >off_music_stream_ground_part_4_c, $1e, $12, $2b
+    .byte con_music_length_offset_d, <off_music_stream_ground_part_4_c, >off_music_stream_ground_part_4_c, $1e, $12, $2b
 off_music_header_death:
-    .byte $18, <off_music_stream_death, >off_music_stream_death, $1e, $0f, $2d
+    .byte con_music_length_offset_d, <off_music_stream_death, >off_music_stream_death, $1e, $0f, $2d
 
 ; --------------------------------
 
@@ -115,6 +168,27 @@ off_music_header_death:
 
 ; all music data is organized into sections (unless otherwise stated):
 ; square 2, square 1, triangle, noise
+
+.if con_revision_profile = con_revision_profile_vs
+off_music_stream_vs_star_a:
+    .byte $85, $1c, $14, $84, $0c, $14, $00
+    .byte $6d, $63, $1d, $27
+
+off_music_stream_vs_star_b:
+off_music_stream_vs_star_c:
+    .byte $86, $04, $04, $80, $04, $00
+    .byte $00, $44, $62, $62, $62, $62, $62, $23, $44
+    .byte $54, $54, $54, $54, $54, $55, $8c, $0d, $07
+
+off_music_stream_vs_star_d:
+    .byte $85, $18, $14, $84, $12, $0c, $00
+    .byte $6b, $67, $23, $1d
+
+    .byte $00, $03, $03, $80, $01, $03, $82, $03, $80, $80
+    .byte $85, $22, $1c, $84, $14, $1e
+    .byte $80, $04, $04, $04
+    .byte $85, $22, $1e, $84, $1c, $14
+.endif
 
 off_music_stream_star_cloud:
     .byte $84, $2c, $2c, $2c, $82, $04, $2c, $04, $85, $2c, $84, $2c, $2c
@@ -353,6 +427,62 @@ off_music_stream_castle_clear:
     .byte $81, $28, $87, $2c, $2c, $2c, $84, $30
 
 off_music_stream_victory:
+.if con_revision_profile = con_revision_profile_vs
+    .byte $84, $04, $86, $0c, $84, $62, $10, $86, $12, $84, $1c, $22
+    .byte $1e, $22, $26, $18, $1e, $04, $1c, $00, $e2, $e0, $e2, $9d
+    .byte $1f, $21, $a3, $2d, $74, $f4, $31, $35, $37, $2b, $b1, $2d
+    .byte $84, $12, $14, $04, $18, $1a, $1c, $14, $26, $22, $1e, $1c
+    .byte $18, $1e, $22, $0c, $14
+
+off_music_stream_vs_game_over:
+    .byte $81, $22, $83, $22, $86, $24, $85, $18, $82, $1e, $84, $1e
+    .byte $83, $04, $83, $1c, $83, $18, $84, $1c, $81, $26, $83, $26
+    .byte $86, $26, $85, $1e, $82, $24, $86, $22, $84, $1e, $00, $74
+    .byte $f4, $b5, $6b, $b0, $31, $c4, $ec, $ea, $2d, $76, $f6, $b7
+    .byte $6d, $b0, $b5, $31, $84, $12, $1c, $20, $24, $2a, $26, $24
+    .byte $26, $22, $1e, $22, $24, $1e, $22, $0c, $1e
+
+    .byte $ff, $ff, $ff, $ff, $ff
+
+tbl_music_note_periods = *
+    .byte $00, $88, $00, $2f, $00, $00, $02, $a6, $02, $80, $02, $5c
+    .byte $02, $3a, $02, $1a, $01, $df, $01, $c4, $01, $ab, $01, $93
+    .byte $01, $7c, $01, $67, $01, $53, $01, $40, $01, $2e, $01, $1d
+    .byte $01, $0d, $00, $fe, $00, $ef, $00, $e2, $00, $d5, $00, $c9
+    .byte $00, $be, $00, $b3, $00, $a9, $00, $a0, $00, $97, $00, $8e
+    .byte $00, $86, $00, $77, $00, $7e, $00, $71, $00, $54, $00, $64
+    .byte $00, $5f, $00, $59, $00, $50, $00, $47, $00, $43, $00, $3b
+    .byte $00, $35, $00, $2a, $00, $23, $04, $75, $03, $57, $02, $f9
+    .byte $02, $cf, $01, $fc, $00, $6a
+
+tbl_music_note_lengths = *
+    .byte $05, $0a, $14, $28, $50, $1e, $3c, $02
+    .byte $04, $08, $10, $20, $40, $18, $30, $0c
+    .byte $03, $06, $0c, $18, $30, $12, $24, $08
+    .byte $51, $12, $0d, $09, $1b, $28, $36, $12
+    .byte $36, $03, $09, $06, $12, $1b, $24, $0c
+    .byte $24, $02, $06, $04, $0c, $12, $18, $08
+    .byte $12, $01, $03, $02, $06, $09, $0c, $04
+
+tbl_water_and_event_music_envelope_values = *
+    .byte $90, $91, $92, $92, $93, $93, $93, $94
+    .byte $94, $94, $94, $94, $94, $95, $95, $95
+    .byte $95, $95, $95, $96, $96, $96, $96, $96
+    .byte $96, $96, $96, $96, $96, $96, $96, $96
+    .byte $96, $96, $96, $96, $95, $95, $94, $93
+
+tbl_bowser_flame_volume_envelope = *
+    .byte $15, $16, $16, $17, $17, $18, $19, $19
+    .byte $1a, $1a, $1c, $1d, $1d, $1e, $1e, $1f
+    .byte $1f, $1f, $1f, $1e, $1d, $1c, $1e, $1f
+    .byte $1f, $1e, $1d, $1c, $1a, $18, $16, $14
+
+tbl_brick_shatter_volume_envelope = *
+    .byte $15, $16, $16, $17, $17, $18, $19, $19
+    .byte $1a, $1a, $1c, $1d, $1d, $1e, $1e, $1f
+
+    .byte $ff, $ff, $ff, $ff
+.else
     .byte $83, $04, $84, $0c, $83, $62, $10, $84, $12
     .byte $83, $1c, $22, $1e, $22, $26, $18, $1e, $04, $1c, $00
 
@@ -363,59 +493,59 @@ off_music_stream_victory:
     .byte $26, $22, $1e, $1c, $18, $1e, $22, $0c, $14
 
 ; unused space
-.if con_revision_profile = con_revision_profile_pal
-    .byte $ff, $ff
-.else
-    .byte $ff, $ff, $ff
-.endif
+    .if con_revision_profile = con_revision_profile_pal
+        .byte $ff, $ff
+    .else
+        .byte $ff, $ff, $ff
+    .endif
 
 tbl_music_note_periods:
-.if con_revision_profile = con_revision_profile_pal
-    .byte $00, $88, $00, $2b, $00, $00, $02, $72
-    .byte $02, $4f, $02, $2e, $02, $0e, $01, $f1
-    .byte $01, $ba, $01, $a1, $01, $8a, $01, $74
-    .byte $01, $5f, $01, $4b, $01, $39, $01, $27
-    .byte $01, $17, $01, $07, $00, $f8, $00, $ea
-    .byte $00, $dd, $00, $d1, $00, $c5, $00, $ba
-    .byte $00, $af, $00, $a5, $00, $9c, $00, $94
-    .byte $00, $8b, $00, $83, $00, $7c, $00, $6e
-    .byte $00, $74, $00, $68, $00, $4e, $00, $5c
-    .byte $00, $58, $00, $52, $00, $4a, $00, $42
-    .byte $00, $3e, $00, $36, $00, $31, $00, $27
-    .byte $00, $20, $04, $1d, $03, $15, $02, $be
-    .byte $02, $98, $01, $d5, $00, $62
-.else
-    .byte $00, $88, $00, $2f, $00, $00
-    .byte $02, $a6, $02, $80, $02, $5c, $02, $3a
-    .byte $02, $1a, $01, $df, $01, $c4, $01, $ab
-    .byte $01, $93, $01, $7c, $01, $67, $01, $53
-    .byte $01, $40, $01, $2e, $01, $1d, $01, $0d
-    .byte $00, $fe, $00, $ef, $00, $e2, $00, $d5
-    .byte $00, $c9, $00, $be, $00, $b3, $00, $a9
-    .byte $00, $a0, $00, $97, $00, $8e, $00, $86
-    .byte $00, $77, $00, $7e, $00, $71, $00, $54
-    .byte $00, $64, $00, $5f, $00, $59, $00, $50
-    .byte $00, $47, $00, $43, $00, $3b, $00, $35
-    .byte $00, $2a, $00, $23, $04, $75, $03, $57
-    .byte $02, $f9, $02, $cf, $01, $fc, $00, $6a
-.endif
+    .if con_revision_profile = con_revision_profile_pal
+        .byte $00, $88, $00, $2b, $00, $00, $02, $72
+        .byte $02, $4f, $02, $2e, $02, $0e, $01, $f1
+        .byte $01, $ba, $01, $a1, $01, $8a, $01, $74
+        .byte $01, $5f, $01, $4b, $01, $39, $01, $27
+        .byte $01, $17, $01, $07, $00, $f8, $00, $ea
+        .byte $00, $dd, $00, $d1, $00, $c5, $00, $ba
+        .byte $00, $af, $00, $a5, $00, $9c, $00, $94
+        .byte $00, $8b, $00, $83, $00, $7c, $00, $6e
+        .byte $00, $74, $00, $68, $00, $4e, $00, $5c
+        .byte $00, $58, $00, $52, $00, $4a, $00, $42
+        .byte $00, $3e, $00, $36, $00, $31, $00, $27
+        .byte $00, $20, $04, $1d, $03, $15, $02, $be
+        .byte $02, $98, $01, $d5, $00, $62
+    .else
+        .byte $00, $88, $00, $2f, $00, $00
+        .byte $02, $a6, $02, $80, $02, $5c, $02, $3a
+        .byte $02, $1a, $01, $df, $01, $c4, $01, $ab
+        .byte $01, $93, $01, $7c, $01, $67, $01, $53
+        .byte $01, $40, $01, $2e, $01, $1d, $01, $0d
+        .byte $00, $fe, $00, $ef, $00, $e2, $00, $d5
+        .byte $00, $c9, $00, $be, $00, $b3, $00, $a9
+        .byte $00, $a0, $00, $97, $00, $8e, $00, $86
+        .byte $00, $77, $00, $7e, $00, $71, $00, $54
+        .byte $00, $64, $00, $5f, $00, $59, $00, $50
+        .byte $00, $47, $00, $43, $00, $3b, $00, $35
+        .byte $00, $2a, $00, $23, $04, $75, $03, $57
+        .byte $02, $f9, $02, $cf, $01, $fc, $00, $6a
+    .endif
 
 tbl_music_note_lengths:
-.if con_revision_profile = con_revision_profile_pal
-    .byte $04, $08, $10, $20, $40, $18, $30, $0c
-    .byte $03, $06, $0c, $18, $30, $12, $24, $08
-    .byte $03, $06, $0c, $18, $30, $12, $24, $08
-    .byte $24, $02, $06, $04, $0c, $12, $18, $08
-    .byte $1b, $01, $05, $03, $09, $0d, $12, $06
-    .byte $12, $01, $03, $02, $06, $09, $0c, $04
-.else
-    .byte $05, $0a, $14, $28, $50, $1e, $3c, $02
-    .byte $04, $08, $10, $20, $40, $18, $30, $0c
-    .byte $03, $06, $0c, $18, $30, $12, $24, $08
-    .byte $36, $03, $09, $06, $12, $1b, $24, $0c
-    .byte $24, $02, $06, $04, $0c, $12, $18, $08
-    .byte $12, $01, $03, $02, $06, $09, $0c, $04
-.endif
+    .if con_revision_profile = con_revision_profile_pal
+        .byte $04, $08, $10, $20, $40, $18, $30, $0c
+        .byte $03, $06, $0c, $18, $30, $12, $24, $08
+        .byte $03, $06, $0c, $18, $30, $12, $24, $08
+        .byte $24, $02, $06, $04, $0c, $12, $18, $08
+        .byte $1b, $01, $05, $03, $09, $0d, $12, $06
+        .byte $12, $01, $03, $02, $06, $09, $0c, $04
+    .else
+        .byte $05, $0a, $14, $28, $50, $1e, $3c, $02
+        .byte $04, $08, $10, $20, $40, $18, $30, $0c
+        .byte $03, $06, $0c, $18, $30, $12, $24, $08
+        .byte $36, $03, $09, $06, $12, $1b, $24, $0c
+        .byte $24, $02, $06, $04, $0c, $12, $18, $08
+        .byte $12, $01, $03, $02, $06, $09, $0c, $04
+    .endif
 
 tbl_castle_clear_music_envelope:
     .byte $98, $99, $9a, $9b
@@ -439,3 +569,4 @@ tbl_bowser_flame_volume_envelope:
 tbl_brick_shatter_volume_envelope:
     .byte $15, $16, $16, $17, $17, $18, $19, $19
     .byte $1a, $1a, $1c, $1d, $1d, $1e, $1e, $1f
+.endif

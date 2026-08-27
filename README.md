@@ -160,6 +160,12 @@ make check-studios
 make verify-revisions
 make validate-revisions
 
+# Extract private Vs. container assets once, then verify its full image and runtime
+make split-platform-assets PLATFORM=vs_smb
+make verify-platform PLATFORM=vs_smb
+make validate-platform PLATFORM=vs_smb
+make validate-revisions
+
 # Validate local assets and build build/native/smb.nes
 make build
 
