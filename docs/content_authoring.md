@@ -16,8 +16,12 @@ Studio reconstructs every area from the authored headers and object streams,
 using the actual CHR, palettes, metatile groups, scenery patterns, terrain
 masks, and actor frames. Its horizontally scrolling map therefore shows the
 game's terrain, clouds, bushes, mountains, blocks, pipes, common structures,
-Goombas, Koopas, and Mario instead of abstract record boxes. Record badges and
-the side tables retain direct access to the underlying bytes. World Studio
+Mario, the complete normal-state enemy table, Bowser, Toad, grouped enemies,
+firebars, and moving platforms instead of abstract record boxes. Intro pipes,
+balance ropes, and castle structures use the same metatile layouts as the
+engine. Records that only start an invisible generator remain visible as dashed
+editor markers. Record badges and the side tables retain direct access to the
+underlying bytes. World Studio
 presents course routing and documented physics profiles. Graphics Studio uses
 the actual SMB1 pattern-table convention: sprite tiles occupy the first 4 KiB
 and background tiles the second 4 KiB. Sound Studio decodes notes, rests,
@@ -40,7 +44,10 @@ The Lighting selector previews and playtests the area with either the daytime
 blue universal background or the nighttime black background; each area opens
 with its vanilla choice, so World 1-1 starts in Day mode. The placement marker
 uses the small standing-Mario frame and the playtest starts with the matching
-small-player state.
+small-player state. Area, Lighting, World, Course, and area-header arrow controls
+apply immediately, so browsing visual variants does not require pressing Enter.
+Switching areas resets Mario to the entrance height encoded by the new area
+header; changing Entrance Y updates the marker by the same rule.
 **Play** saves and validates the level workspace, creates the isolated content
 ROM, opens the selected area and page with the original game engine, and embeds
 the native FCEUX window in the Playtest tab. The World and Course controls

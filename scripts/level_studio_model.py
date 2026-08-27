@@ -68,6 +68,7 @@ TERRAIN_RENDER_MASKS = (
     (0xF1, 0x1F), (0xF9, 0x18), (0xF1, 0x18), (0xFF, 0x1F),
 )
 BACKGROUND_COLORS = (0x22, 0x22, 0x0F, 0x0F, 0x0F, 0x22, 0x0F, 0x0F)
+PLAYER_STARTING_Y_POSITIONS = (0x00, 0x20, 0xB0, 0x50, 0x00, 0x00, 0xB0, 0xB0)
 BRICK_METATILES = (0x22, 0x51, 0x52, 0x52, 0x88)
 SOLID_METATILES = (0x69, 0x61, 0x61, 0x62)
 COIN_METATILES = (0xC3, 0xC2, 0xC2, 0xC2)
@@ -75,6 +76,33 @@ BLOCK_METATILES = (
     0xC1, 0xC0, 0x5F, 0x60, 0x55, 0x56, 0x57,
     0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E,
 )
+CASTLE_STRUCTURE_METATILES = (
+    0x00, 0x45, 0x45, 0x45, 0x00,
+    0x00, 0x48, 0x47, 0x46, 0x00,
+    0x45, 0x49, 0x49, 0x49, 0x45,
+    0x47, 0x47, 0x4A, 0x47, 0x47,
+    0x47, 0x47, 0x4B, 0x47, 0x47,
+    0x49, 0x49, 0x49, 0x49, 0x49,
+    0x47, 0x4A, 0x47, 0x4A, 0x47,
+    0x47, 0x4B, 0x47, 0x4B, 0x47,
+    0x47, 0x47, 0x47, 0x47, 0x47,
+    0x4A, 0x47, 0x4A, 0x47, 0x4A,
+    0x4B, 0x47, 0x4B, 0x47, 0x4B,
+)
+FIREBAR_RADIAL_OFFSETS = (
+    (0x00, 0x01, 0x03, 0x04, 0x05, 0x06, 0x07, 0x07, 0x08),
+    (0x00, 0x03, 0x06, 0x09, 0x0B, 0x0D, 0x0E, 0x0F, 0x10),
+    (0x00, 0x04, 0x09, 0x0D, 0x10, 0x13, 0x16, 0x17, 0x18),
+    (0x00, 0x06, 0x0C, 0x12, 0x16, 0x1A, 0x1D, 0x1F, 0x20),
+    (0x00, 0x07, 0x0F, 0x16, 0x1C, 0x21, 0x25, 0x27, 0x28),
+    (0x00, 0x09, 0x12, 0x1B, 0x21, 0x27, 0x2C, 0x2F, 0x30),
+    (0x00, 0x0B, 0x15, 0x1F, 0x27, 0x2E, 0x33, 0x37, 0x38),
+    (0x00, 0x0C, 0x18, 0x24, 0x2D, 0x35, 0x3B, 0x3E, 0x40),
+    (0x00, 0x0E, 0x1B, 0x28, 0x32, 0x3B, 0x42, 0x46, 0x48),
+    (0x00, 0x0F, 0x1F, 0x2D, 0x38, 0x42, 0x4A, 0x4E, 0x50),
+    (0x00, 0x11, 0x22, 0x31, 0x3E, 0x49, 0x51, 0x56, 0x58),
+)
+FIREBAR_QUADRANT_MIRROR_BITS = (0x01, 0x03, 0x02, 0x00)
 
 ENEMY_GRAPHICS_TILES = (
     0xFC, 0xFC, 0xAA, 0xAB, 0xAC, 0xAD,
@@ -92,6 +120,34 @@ ENEMY_GRAPHICS_TILES = (
     0xFC, 0xFC, 0xB2, 0xB3, 0xB4, 0xB5,
     0xFC, 0xFC, 0xB6, 0xB3, 0xB7, 0xB5,
     0xFC, 0xFC, 0x70, 0x71, 0x72, 0x73,
+    0xFC, 0xFC, 0x6E, 0x6E, 0x6F, 0x6F,
+    0xFC, 0xFC, 0x6D, 0x6D, 0x6F, 0x6F,
+    0xFC, 0xFC, 0x6F, 0x6F, 0x6E, 0x6E,
+    0xFC, 0xFC, 0x6F, 0x6F, 0x6D, 0x6D,
+    0xFC, 0xFC, 0xF4, 0xF4, 0xF5, 0xF5,
+    0xFC, 0xFC, 0xF4, 0xF4, 0xF5, 0xF5,
+    0xFC, 0xFC, 0xF5, 0xF5, 0xF4, 0xF4,
+    0xFC, 0xFC, 0xF5, 0xF5, 0xF4, 0xF4,
+    0xFC, 0xFC, 0xFC, 0xFC, 0xEF, 0xEF,
+    0xB9, 0xB8, 0xBB, 0xBA, 0xBC, 0xBC,
+    0xFC, 0xFC, 0xBD, 0xBD, 0xBC, 0xBC,
+    0x7A, 0x7B, 0xDA, 0xDB, 0xD8, 0xD8,
+    0xCD, 0xCD, 0xCE, 0xCE, 0xCF, 0xCF,
+    0x7D, 0x7C, 0xD1, 0x8C, 0xD3, 0xD2,
+    0x7D, 0x7C, 0x89, 0x88, 0x8B, 0x8A,
+    0xD5, 0xD4, 0xE3, 0xE2, 0xD3, 0xD2,
+    0xD5, 0xD4, 0xE3, 0xE2, 0x8B, 0x8A,
+    0xE5, 0xE5, 0xE6, 0xE6, 0xEB, 0xEB,
+    0xEC, 0xEC, 0xED, 0xED, 0xEE, 0xEE,
+    0xFC, 0xFC, 0xD0, 0xD0, 0xD7, 0xD7,
+    0xBF, 0xBE, 0xC1, 0xC0, 0xC2, 0xFC,
+    0xC4, 0xC3, 0xC6, 0xC5, 0xC8, 0xC7,
+    0xBF, 0xBE, 0xCA, 0xC9, 0xC2, 0xFC,
+    0xC4, 0xC3, 0xC6, 0xC5, 0xCC, 0xCB,
+    0xFC, 0xFC, 0xE8, 0xE7, 0xEA, 0xE9,
+    0xF2, 0xF2, 0xF3, 0xF3, 0xF2, 0xF2,
+    0xF1, 0xF1, 0xF1, 0xF1, 0xFC, 0xFC,
+    0xF0, 0xF0, 0xFC, 0xFC, 0xFC, 0xFC,
 )
 ENEMY_GRAPHICS_OFFSETS = (
     0x0C, 0x0C, 0x00, 0x0C, 0x0C, 0xA8, 0x54, 0x3C,
@@ -142,7 +198,13 @@ ENEMY_NAMES = {
     0x27: "small lift up", 0x28: "horizontal lift", 0x29: "falling lift",
     0x2A: "surfing lift", 0x2B: "lift down", 0x2C: "small lift down",
     0x2D: "Bowser", 0x34: "warp-zone marker", 0x35: "Toad",
+    0x37: "two Goombas", 0x38: "three Goombas",
+    0x39: "two high Goombas", 0x3A: "three high Goombas",
+    0x3B: "two green Koopas", 0x3C: "three green Koopas",
+    0x3D: "two high green Koopas", 0x3E: "three high green Koopas",
 }
+
+NONVISUAL_ENEMY_IDS = frozenset({0x14, 0x15, 0x17, 0x34})
 
 
 @dataclass(frozen=True)
@@ -173,6 +235,10 @@ class LevelVisuals:
         block = next(item for item in self.palette_blocks if item["name"] == area_type)
         return tuple(int(value) for value in block["packets"][0]["values"])
 
+    def special_palette(self, name: str) -> tuple[int, ...]:
+        block = next(item for item in self.palette_blocks if item["name"] == name)
+        return tuple(int(value) for value in block["packets"][0]["values"])
+
     def metatile_record(self, value: int) -> tuple[int, int, int, int]:
         group = (value >> 6) & 3
         if value & 0x3F >= METATILE_GROUP_SIZES[group]:
@@ -197,6 +263,10 @@ class LevelVisuals:
         return False, False, False, True
 
     def enemy_tiles(self, identifier: int) -> tuple[int, ...]:
+        if identifier in NONVISUAL_ENEMY_IDS:
+            return ()
+        if identifier == 0x35:
+            return ENEMY_GRAPHICS_TILES[0xA2:0xA8]
         if not 0 <= identifier < len(ENEMY_GRAPHICS_OFFSETS):
             return ()
         offset = ENEMY_GRAPHICS_OFFSETS[identifier]
@@ -204,8 +274,38 @@ class LevelVisuals:
             return ()
         return ENEMY_GRAPHICS_TILES[offset:offset + 6]
 
+    def enemy_display_tiles(self, identifier: int) -> tuple[int, ...]:
+        tiles = self.enemy_tiles(identifier)
+        if 0 <= identifier <= 0x12:
+            return self.facing_left_tiles(tiles)
+        return tiles
+
+    @staticmethod
+    def enemy_horizontal_flips(identifier: int) -> tuple[bool, ...]:
+        """Return normal-state OAM mirroring for symmetric enemy sprites."""
+        if identifier in {0x07, 0x0C, 0x0D, 0x35}:
+            return False, True, False, True, False, True
+        if identifier == 0x11:
+            return True, True, True, True, False, True
+        if 0 <= identifier <= 0x12:
+            return True, True, True, True, True, True
+        return ()
+
+    @staticmethod
+    def bowser_tiles() -> tuple[tuple[int, ...], tuple[int, ...]]:
+        return ENEMY_GRAPHICS_TILES[0xD2:0xD8], ENEMY_GRAPHICS_TILES[0xD8:0xDE]
+
+    @staticmethod
+    def facing_left_tiles(tiles: tuple[int, ...]) -> tuple[int, ...]:
+        result = []
+        for offset in range(0, len(tiles), 2):
+            result.extend(reversed(tiles[offset:offset + 2]))
+        return tuple(result)
+
     @staticmethod
     def enemy_palette(identifier: int) -> int:
+        if identifier == 0x35:
+            return 2
         if not 0 <= identifier < len(ENEMY_PALETTE_ROWS):
             return 1
         return ENEMY_PALETTE_ROWS[identifier] & 3
@@ -240,6 +340,13 @@ def default_preview_theme(name: str, area_stream: dict[str, Any]) -> str:
     color_control = int(area_stream["data"]["header"]["foreground_or_color"])
     color_index = color_control if color_control >= 4 else area_type
     return "Day" if BACKGROUND_COLORS[color_index] == 0x22 else "Night"
+
+
+def player_entrance_preview_position(entrance_control: int) -> tuple[int, int]:
+    """Return the small player's visible starting cell for an area entrance."""
+    index = max(0, min(7, entrance_control))
+    visible_y = max(0, PLAYER_STARTING_Y_POSITIONS[index] - 0x10)
+    return 2, visible_y // 16
 
 
 def describe_area_object(row: int, control: int) -> str:
@@ -308,6 +415,50 @@ def positioned_enemy_objects(stream: dict[str, Any]) -> list[dict[str, Any]]:
     return result
 
 
+def enemy_preview_y(row: int, identifier: int) -> int:
+    """Return the enemy sprite Y coordinate relative to the editor viewport."""
+    if identifier == 0x35:
+        return 0xB8 - 32
+    engine_offset = 8 if identifier < 0x15 else 0
+    return max(0, (row - 2) * 16 + engine_offset)
+
+
+def enemy_group_preview(identifier: int) -> tuple[int, int, int] | None:
+    """Return member ID, count, and viewport Y for an enemy-group command."""
+    if not 0x37 <= identifier <= 0x3E:
+        return None
+    control = identifier - 0x37
+    member = 0x06 if control < 4 else 0x00
+    count = 3 if control & 1 else 2
+    runtime_y = 0x70 if control & 2 else 0xB0
+    return member, count, runtime_y + 8 - 32
+
+
+def firebar_preview_offsets(identifier: int) -> tuple[tuple[int, int], ...]:
+    """Return one exact engine-table pose for a short or long firebar."""
+    if not 0x1B <= identifier <= 0x1F:
+        return ()
+    spin_state = 0x0B if identifier in {0x1D, 0x1E} else 0x05
+    horizontal_index = spin_state & 0x0F
+    if horizontal_index >= 9:
+        horizontal_index = 16 - horizontal_index
+    vertical_index = (spin_state + 8) & 0x0F
+    if vertical_index >= 9:
+        vertical_index = 16 - vertical_index
+    mirror_bits = FIREBAR_QUADRANT_MIRROR_BITS[spin_state >> 3]
+    loop_limit = 11 if identifier == 0x1F else 5
+    result = [(0, 0)]
+    for segment in range(loop_limit):
+        horizontal = FIREBAR_RADIAL_OFFSETS[segment][horizontal_index]
+        vertical = FIREBAR_RADIAL_OFFSETS[segment][vertical_index]
+        if not mirror_bits & 0x01:
+            horizontal = -horizontal
+        if not mirror_bits & 0x02:
+            vertical = -vertical
+        result.append((horizontal, vertical))
+    return tuple(result)
+
+
 def object_width(item: dict[str, Any]) -> int:
     """Return the number of metatile columns occupied by a terrain record."""
     row = int(item["row"])
@@ -319,9 +470,14 @@ def object_width(item: dict[str, Any]) -> int:
         if identifier == 7:
             return 2
     if row == 0x0D and control & 0x40:
-        return 13 if (control & 0x3F) == 4 else 1
+        identifier = control & 0x3F
+        if identifier == 0:
+            return 4
+        return 13 if identifier == 4 else 1
     if row == 0x0F:
         identifier = (control >> 4) & 7
+        if identifier in {0, 1}:
+            return 1
         if identifier == 2:
             return 5
         if identifier == 4:
@@ -555,7 +711,17 @@ def _render_row_c_object(
 
 
 def _render_row_d_object(grid: list[list[int]], column: int, identifier: int) -> None:
-    if identifier == 1:
+    if identifier == 0:
+        top = (0x1C, 0x1D, 0x1E, 0x15)
+        bottom = (0x1F, 0x20, 0x21, 0x15)
+        for offset in range(4):
+            _write(grid, column + offset, 9, top[offset])
+            _write(grid, column + offset, 10, bottom[offset])
+        _write(grid, column + 2, 7, 0x10)
+        _write(grid, column + 2, 8, 0x14)
+        _write(grid, column + 3, 7, 0x11)
+        _write(grid, column + 3, 8, 0x15)
+    elif identifier == 1:
         _write(grid, column, 0, 0x24)
         for row in range(1, 10):
             _write(grid, column, row, 0x25)
@@ -571,11 +737,17 @@ def _render_row_f_object(
     grid: list[list[int]], column: int, identifier: int, length: int,
 ) -> None:
     if identifier == 0:
-        for x in range(column, column + length + 1):
-            _fill_down(grid, x, 0, 12, 0x40)
+        _fill_down(grid, column, 0, 12, 0x40)
     elif identifier == 1:
-        for x in range(column, column + length + 1):
-            _fill_down(grid, x, 1, 12, 0x40 if x in {column, column + length} else 0x44)
+        _fill_down(grid, column, 1, 12, 0x44)
+        _fill_down(grid, column, 1, length, 0x40)
+    elif identifier == 2:
+        starting_row = min(length, 10)
+        for x_offset in range(5):
+            table_column = 4 - x_offset
+            for row in range(starting_row, 11):
+                table_index = table_column + (row - starting_row) * 5
+                _write(grid, column + x_offset, row, CASTLE_STRUCTURE_METATILES[table_index])
     elif identifier == 3:
         heights = (7, 7, 6, 5, 4, 3, 2, 1, 0)
         rows = (3, 3, 4, 5, 6, 7, 8, 9, 10)

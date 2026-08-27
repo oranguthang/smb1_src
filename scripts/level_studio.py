@@ -13,12 +13,17 @@ from tkinter import messagebox, ttk
 from content_studio_model import ChrDocument
 from embedded_fceux import EmbeddedFceux
 from level_studio_model import (
+    NONVISUAL_ENEMY_IDS,
     LevelDocument,
     LevelVisuals,
     area_pointer,
     default_preview_theme,
+    enemy_group_preview,
+    enemy_preview_y,
+    firebar_preview_offsets,
     first_world_context,
     object_width,
+    player_entrance_preview_position,
     positioned_area_objects,
     positioned_enemy_objects,
     render_level_scene,
@@ -52,10 +57,15 @@ class LevelStudio(tk.Tk):
         )
         self.selection: tuple[str, int] | None = None
         self.status = tk.StringVar()
+        self.syncing_controls = False
         self.place_mario_mode = False
         self.metatile_images: dict[tuple[str, str, int], tk.PhotoImage] = {}
-        self.mario_column = 2
-        self.mario_row = 10
+        initial_entrance = int(
+            model.area(initial_area)["data"]["header"]["entrance_control"],
+        )
+        self.mario_column, self.mario_row = player_entrance_preview_position(
+            initial_entrance,
+        )
         default_world, default_level = first_world_context(self.area_name.get())
         self.playtest_world = tk.IntVar(value=default_world + 1)
         self.playtest_level = tk.IntVar(value=default_level + 1)
@@ -81,7 +91,7 @@ class LevelStudio(tk.Tk):
             state="readonly", width=22,
         )
         area_box.pack(side="left", padx=5)
-        area_box.bind("<<ComboboxSelected>>", lambda _event: self.select_area())
+        self.area_name.trace_add("write", self.select_area_from_control)
         ttk.Label(toolbar, text="Lighting").pack(side="left", padx=(5, 2))
         theme_box = ttk.Combobox(
             toolbar,
@@ -91,7 +101,7 @@ class LevelStudio(tk.Tk):
             width=7,
         )
         theme_box.pack(side="left", padx=(0, 5))
-        theme_box.bind("<<ComboboxSelected>>", lambda _event: self.change_theme())
+        self.preview_theme.trace_add("write", self.change_theme_from_control)
         for text, command in (
             ("Add object", self.add_object), ("Add enemy", self.add_enemy),
             ("Delete selected", self.delete_selected), ("Undo", self.undo),
@@ -103,10 +113,12 @@ class LevelStudio(tk.Tk):
         ttk.Label(toolbar, text="World").pack(side="left", padx=(10, 2))
         ttk.Spinbox(
             toolbar, from_=1, to=8, textvariable=self.playtest_world, width=3,
+            command=self.refresh,
         ).pack(side="left")
         ttk.Label(toolbar, text="Course").pack(side="left", padx=(6, 2))
         ttk.Spinbox(
             toolbar, from_=1, to=4, textvariable=self.playtest_level, width=3,
+            command=self.refresh,
         ).pack(side="left")
 
         header = ttk.LabelFrame(self, text="Area header", padding=6)
@@ -121,7 +133,14 @@ class LevelStudio(tk.Tk):
             variable = tk.IntVar()
             self.header_vars[name] = variable
             ttk.Label(header, text=label).grid(row=0, column=column * 2, padx=(3, 1))
-            spin = ttk.Spinbox(header, from_=low, to=high, textvariable=variable, width=4)
+            spin = ttk.Spinbox(
+                header,
+                from_=low,
+                to=high,
+                textvariable=variable,
+                width=4,
+                command=self.apply_header,
+            )
             spin.grid(row=0, column=column * 2 + 1, padx=(0, 8))
             spin.bind("<Return>", lambda _event: self.apply_header())
             spin.bind("<FocusOut>", lambda _event: self.apply_header())
@@ -192,14 +211,27 @@ class LevelStudio(tk.Tk):
         tree.pack(fill="both", expand=True)
         return tree
 
+    def select_area_from_control(self, *_args: str) -> None:
+        if not self.syncing_controls:
+            self.select_area()
+
+    def change_theme_from_control(self, *_args: str) -> None:
+        if not self.syncing_controls:
+            self.change_theme()
+
     def select_area(self) -> None:
         self.selection = None
-        self.preview_theme.set(default_preview_theme(
-            self.area_name.get(), self.model.area(self.area_name.get()),
-        ))
-        default_world, default_level = first_world_context(self.area_name.get())
-        self.playtest_world.set(default_world + 1)
-        self.playtest_level.set(default_level + 1)
+        self.syncing_controls = True
+        try:
+            self.preview_theme.set(default_preview_theme(
+                self.area_name.get(), self.model.area(self.area_name.get()),
+            ))
+            default_world, default_level = first_world_context(self.area_name.get())
+            self.playtest_world.set(default_world + 1)
+            self.playtest_level.set(default_level + 1)
+        finally:
+            self.syncing_controls = False
+        self.reset_mario_to_entrance()
         self.refresh()
 
     def change_theme(self) -> None:
@@ -268,31 +300,19 @@ class LevelStudio(tk.Tk):
             self.draw_badge(x + 2, y + 2, str(item["index"]), "#12628c", f"object:{item['index']}")
         for item in scene.enemies:
             x = int(item["x"]) * CELL
-            y = max(0, (int(item["row"]) - 2) * CELL)
             selected = self.selection == ("enemy", int(item["index"]))
             identifier = int(item["object_or_page"])
-            tiles = self.visuals.enemy_tiles(identifier)
-            if tiles:
-                self.draw_sprite(
-                    tiles,
-                    self.visuals.enemy_palette(identifier),
-                    x,
-                    y,
-                    f"enemy:{item['index']}",
-                )
-            else:
-                self.canvas.create_oval(
-                    x, y, x + CELL, y + CELL,
-                    fill="#c44536", outline="#ffc0b8",
-                    tags=(f"enemy:{item['index']}",),
-                )
+            tag = f"enemy:{item['index']}"
+            y, actor_width, actor_height = self.draw_enemy_preview(
+                item, x, identifier, tag, area_type,
+            )
             if selected:
                 self.canvas.create_rectangle(
-                    x, y, x + CELL, y + CELL * 3 // 2,
+                    x, y, x + actor_width, y + actor_height,
                     outline="#ffe066", width=3,
-                    tags=(f"enemy:{item['index']}",),
+                    tags=(tag,),
                 )
-            self.draw_badge(x, y, str(item["index"]), "#9d2c20", f"enemy:{item['index']}")
+            self.draw_badge(x, y, str(item["index"]), "#9d2c20", tag)
         mario_x = self.mario_column * CELL
         mario_y = self.mario_row * CELL
         self.draw_sprite(
@@ -302,10 +322,6 @@ class LevelStudio(tk.Tk):
             mario_y,
             "mario-start",
             horizontal_flips=self.visuals.player_horizontal_flips(),
-        )
-        self.canvas.create_line(
-            mario_x, mario_y, mario_x + CELL, mario_y,
-            fill="#ffffff", width=2, tags=("mario-start",),
         )
         self.canvas.configure(scrollregion=(0, 0, width, 13 * CELL + 1))
 
@@ -343,14 +359,19 @@ class LevelStudio(tk.Tk):
         y: int,
         tag: str,
         horizontal_flips: tuple[bool, ...] = (),
+        columns: int = 2,
+        palette_override: tuple[int, ...] = (),
     ) -> None:
-        palette = self.visuals.palette(self.area_name.get().rpartition("_")[0])
-        colors = palette[16 + palette_row * 4:20 + palette_row * 4]
+        if palette_override:
+            colors = palette_override
+        else:
+            palette = self.visuals.palette(self.area_name.get().rpartition("_")[0])
+            colors = palette[16 + palette_row * 4:20 + palette_row * 4]
         for index, tile in enumerate(tiles):
             if tile == 0xFC or not 0 <= tile < len(self.visuals.tiles):
                 continue
-            tile_x = x + (index % 2) * 8 * PIXEL_SCALE
-            tile_y = y + (index // 2) * 8 * PIXEL_SCALE
+            tile_x = x + (index % columns) * 8 * PIXEL_SCALE
+            tile_y = y + (index // columns) * 8 * PIXEL_SCALE
             for pixel_row, values in enumerate(self.visuals.tiles[tile]):
                 for pixel_column, pixel in enumerate(values):
                     if pixel == 0:
@@ -365,6 +386,134 @@ class LevelStudio(tk.Tk):
                         left, top, left + PIXEL_SCALE, top + PIXEL_SCALE,
                         fill=NES_RGB[colors[pixel] & 0x3F], outline="", tags=(tag,),
                     )
+
+    def draw_enemy_preview(
+        self,
+        item: dict,
+        x: int,
+        identifier: int,
+        tag: str,
+        area_type: str,
+    ) -> tuple[int, int, int]:
+        group = enemy_group_preview(identifier)
+        if group is not None:
+            member, count, viewport_y = group
+            y = viewport_y * PIXEL_SCALE
+            for member_index in range(count):
+                self.draw_sprite(
+                    self.visuals.enemy_display_tiles(member),
+                    self.visuals.enemy_palette(member),
+                    x + member_index * 24 * PIXEL_SCALE,
+                    y,
+                    tag,
+                    horizontal_flips=self.visuals.enemy_horizontal_flips(member),
+                )
+            width = (count - 1) * 24 * PIXEL_SCALE + CELL
+            return y, width, CELL * 3 // 2
+
+        y = enemy_preview_y(int(item["row"]), identifier) * PIXEL_SCALE
+        if identifier == 0x2D:
+            front, rear = self.visuals.bowser_tiles()
+            flips = (True,) * 6
+            palette = self.visuals.special_palette("bowser")
+            self.draw_sprite(
+                self.visuals.facing_left_tiles(front),
+                1,
+                x,
+                y,
+                tag,
+                horizontal_flips=flips,
+                palette_override=palette,
+            )
+            self.draw_sprite(
+                self.visuals.facing_left_tiles(rear),
+                1,
+                x + CELL,
+                y + CELL // 2,
+                tag,
+                horizontal_flips=flips,
+                palette_override=palette,
+            )
+            return y, CELL * 2, CELL * 2
+        if 0x1B <= identifier <= 0x1F:
+            return self.draw_firebar(identifier, x, y, tag)
+        if 0x24 <= identifier <= 0x2C:
+            width = self.draw_platform(identifier, x, y, tag, area_type)
+            return y, width, CELL
+
+        tiles = self.visuals.enemy_display_tiles(identifier)
+        if tiles:
+            self.draw_sprite(
+                tiles,
+                self.visuals.enemy_palette(identifier),
+                x,
+                y,
+                tag,
+                horizontal_flips=self.visuals.enemy_horizontal_flips(identifier),
+            )
+            return y, CELL, CELL * 3 // 2
+
+        marker_size = CELL // 2
+        marker_x = x + CELL // 4
+        marker_y = y + CELL // 4
+        self.canvas.create_rectangle(
+            marker_x,
+            marker_y,
+            marker_x + marker_size,
+            marker_y + marker_size,
+            outline="#ffc0b8",
+            dash=(3, 2) if identifier in NONVISUAL_ENEMY_IDS else (),
+            tags=(tag,),
+        )
+        return y, CELL, CELL
+
+    def draw_firebar(self, identifier: int, x: int, y: int, tag: str) -> tuple[int, int, int]:
+        offsets = firebar_preview_offsets(identifier)
+        origin_x = x + 4 * PIXEL_SCALE
+        origin_y = y + 4 * PIXEL_SCALE
+        for segment, (offset_x, offset_y) in enumerate(offsets):
+            self.draw_sprite(
+                (0x64 + segment % 2,),
+                2,
+                origin_x + offset_x * PIXEL_SCALE,
+                origin_y + offset_y * PIXEL_SCALE,
+                tag,
+                columns=1,
+            )
+        minimum_y = min(offset_y for _, offset_y in offsets)
+        maximum_x = max(offset_x for offset_x, _ in offsets)
+        maximum_y = max(offset_y for _, offset_y in offsets)
+        top = origin_y + minimum_y * PIXEL_SCALE
+        width = (maximum_x + 12) * PIXEL_SCALE
+        height = (maximum_y - minimum_y + 8) * PIXEL_SCALE
+        return top, width, height
+
+    def draw_platform(
+        self,
+        identifier: int,
+        x: int,
+        y: int,
+        tag: str,
+        area_type: str,
+    ) -> int:
+        small = identifier in {0x2B, 0x2C}
+        tile_count = 3 if small else 4 if area_type == "castle" else 6
+        header = self.model.area(self.area_name.get())["data"]["header"]
+        tile = 0x75 if header["area_style"] == 3 else 0x5B
+        if identifier in {0x26, 0x27, 0x2B, 0x2C}:
+            x_offset = 12
+        else:
+            x_offset = 8 if identifier == 0x24 else 0
+        y_offset = -2 if identifier == 0x24 else 0
+        self.draw_sprite(
+            (tile,) * tile_count,
+            2,
+            x + x_offset * PIXEL_SCALE,
+            y + y_offset * PIXEL_SCALE,
+            tag,
+            columns=tile_count,
+        )
+        return x_offset * PIXEL_SCALE + tile_count * 8 * PIXEL_SCALE
 
     def draw_badge(self, x: int, y: int, text: str, color: str, tag: str) -> None:
         width = 8 + len(text) * 7
@@ -387,6 +536,12 @@ class LevelStudio(tk.Tk):
         self.place_mario_mode = True
         self.status.set("Click the map to place Mario; right-click also places him directly")
         self.canvas.configure(cursor="crosshair")
+
+    def reset_mario_to_entrance(self) -> None:
+        header = self.model.area(self.area_name.get())["data"]["header"]
+        self.mario_column, self.mario_row = player_entrance_preview_position(
+            int(header["entrance_control"]),
+        )
 
     def place_mario(self, event: tk.Event) -> None:
         self.mario_column = max(0, int(self.canvas.canvasx(event.x)) // CELL)
@@ -423,7 +578,7 @@ class LevelStudio(tk.Tk):
             "SMB1_PLAYTEST_LEVEL": str(int(self.playtest_level.get()) - 1),
             "SMB1_PLAYTEST_PAGE": str(page),
             "SMB1_PLAYTEST_X": str((self.mario_column % 16) * 16),
-            "SMB1_PLAYTEST_Y": str(max(32, min(239, (self.mario_row + 2) * 16))),
+            "SMB1_PLAYTEST_Y": str(max(32, min(239, (self.mario_row + 1) * 16))),
             "SMB1_PLAYTEST_THEME": self.preview_theme.get().lower(),
         }
         self.view_notebook.select(1)
@@ -468,8 +623,14 @@ class LevelStudio(tk.Tk):
         area = self.model.area(self.area_name.get())
         replacement = {name: int(variable.get()) for name, variable in self.header_vars.items()}
         if replacement != area["data"]["header"]:
+            entrance_changed = (
+                replacement["entrance_control"]
+                != area["data"]["header"]["entrance_control"]
+            )
             self.model.remember(self.model.area_document)
             area["data"]["header"] = replacement
+            if entrance_changed:
+                self.reset_mario_to_entrance()
             guard("Level Studio", self.refresh)
 
     def apply_record(self) -> None:
