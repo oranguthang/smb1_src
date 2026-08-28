@@ -40,6 +40,15 @@ ANN_TAIL_CORE_CFG ?= $(PROJECT_DIR)src/platforms/ann/tail_core.cfg
 ANN_AUDIO_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_audio_tail.asm
 ANN_AUDIO_CFG ?= $(PROJECT_DIR)src/platforms/ann/audio_tail.cfg
 ANN_AUDIO_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_audio
+ANN_DATA2_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_data2.asm
+ANN_DATA2_CFG ?= $(PROJECT_DIR)src/platforms/ann/data2.cfg
+ANN_DATA2_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_data2
+ANN_DATA3_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_data3.asm
+ANN_DATA3_CFG ?= $(PROJECT_DIR)src/platforms/ann/data3.cfg
+ANN_DATA3_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_data3
+ANN_DATA4_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_data4.asm
+ANN_DATA4_CFG ?= $(PROJECT_DIR)src/platforms/ann/data4.cfg
+ANN_DATA4_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_data4
 FIXED_VARIANT ?= five_lives
 FIXED_VARIANT_MANIFEST ?= $(PROJECT_DIR)config/fixed_layout_variants.json
 HACK_SOURCE ?= $(PROJECT_DIR)src/variants/five_lives.asm
@@ -133,7 +142,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms verify-ann-audio verify-ann-tail-core symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms verify-ann-audio verify-ann-tail-core verify-ann-data2 verify-ann-data3 verify-ann-data4 symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -477,6 +486,60 @@ verify-ann-tail-core:
 		--load-address 0x6000 \
 		--start 0xBFBF \
 		--end 0xE000
+
+verify-ann-data2:
+	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
+		--source "$(ANN_DATA2_SOURCE)" \
+		--config "$(ANN_DATA2_CFG)" \
+		--object "$(ANN_DATA2_BUILD_DIR)/data2.o" \
+		--output "$(ANN_DATA2_BUILD_DIR)/data2.bin" \
+		--labels "$(ANN_DATA2_BUILD_DIR)/data2.lbl" \
+		--map "$(ANN_DATA2_BUILD_DIR)/data2.map"
+	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
+		--manifest "$(PLATFORM_MANIFEST)" \
+		--profile ann_fds \
+		--reference "$(ANN_REFERENCE)" \
+		--candidate "$(ANN_DATA2_BUILD_DIR)/data2.bin" \
+		--payload NSMDATA2 \
+		--load-address 0xC470 \
+		--start 0xC470 \
+		--end 0xD270
+
+verify-ann-data3:
+	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
+		--source "$(ANN_DATA3_SOURCE)" \
+		--config "$(ANN_DATA3_CFG)" \
+		--object "$(ANN_DATA3_BUILD_DIR)/data3.o" \
+		--output "$(ANN_DATA3_BUILD_DIR)/data3.bin" \
+		--labels "$(ANN_DATA3_BUILD_DIR)/data3.lbl" \
+		--map "$(ANN_DATA3_BUILD_DIR)/data3.map"
+	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
+		--manifest "$(PLATFORM_MANIFEST)" \
+		--profile ann_fds \
+		--reference "$(ANN_REFERENCE)" \
+		--candidate "$(ANN_DATA3_BUILD_DIR)/data3.bin" \
+		--payload NSMDATA3 \
+		--load-address 0xC5D0 \
+		--start 0xC5D0 \
+		--end 0xD2E2
+
+verify-ann-data4:
+	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
+		--source "$(ANN_DATA4_SOURCE)" \
+		--config "$(ANN_DATA4_CFG)" \
+		--object "$(ANN_DATA4_BUILD_DIR)/data4.o" \
+		--output "$(ANN_DATA4_BUILD_DIR)/data4.bin" \
+		--labels "$(ANN_DATA4_BUILD_DIR)/data4.lbl" \
+		--map "$(ANN_DATA4_BUILD_DIR)/data4.map"
+	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
+		--manifest "$(PLATFORM_MANIFEST)" \
+		--profile ann_fds \
+		--reference "$(ANN_REFERENCE)" \
+		--candidate "$(ANN_DATA4_BUILD_DIR)/data4.bin" \
+		--payload NSMDATA4 \
+		--load-address 0xC296 \
+		--start 0xC296 \
+		--end 0xD086
 
 validate-platforms:
 	$(MAKE) validate-platform PLATFORM=vs_smb

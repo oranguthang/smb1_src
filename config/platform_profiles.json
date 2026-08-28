@@ -120,6 +120,13 @@
           "offset": 28990,
           "size": 384,
           "sha1": "8b1721dc53856c29637ca03f96b43eb104330ea3"
+        },
+        {
+          "name": "guest_chr_data2",
+          "payload": "NSMDATA2",
+          "offset": 3295,
+          "size": 288,
+          "sha1": "139bb17536ed774e1f4742087f2fe17212492897"
         }
       ],
       "auxiliary_conversion": {

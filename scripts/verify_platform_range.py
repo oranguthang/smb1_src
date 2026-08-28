@@ -48,6 +48,10 @@ def main() -> int:
     parser.add_argument("--profile", required=True)
     parser.add_argument("--reference", required=True, type=Path)
     parser.add_argument("--candidate", required=True, type=Path)
+    parser.add_argument(
+        "--payload",
+        help="FDS payload name; defaults to the profile's primary payload",
+    )
     parser.add_argument("--load-address", required=True, type=parse_number)
     parser.add_argument("--start", required=True, type=parse_number)
     parser.add_argument("--end", required=True, type=parse_number)
@@ -56,12 +60,15 @@ def main() -> int:
         profile = load_profile(args.manifest, args.profile)
         if profile.get("format") != "fds_raw_side":
             raise ValueError("range verification currently requires an FDS profile")
-        primary = profile.get("primary_payload")
-        if not primary:
+        primary_payload = profile.get("primary_payload")
+        if not primary_payload:
             raise ValueError("profile does not declare a primary payload")
+        payload_name = args.payload or primary_payload
         payloads = extract_fds_payloads(args.reference.read_bytes(), profile)
+        if payload_name not in payloads:
+            raise ValueError(f"profile does not declare payload {payload_name}")
         verify_range(
-            payloads[primary],
+            payloads[payload_name],
             args.candidate.read_bytes(),
             args.load_address,
             args.start,
@@ -70,7 +77,7 @@ def main() -> int:
         digest = hashlib.sha1(args.candidate.read_bytes()).hexdigest()
         print(
             f"[OK] {args.profile}: ${args.start:04X}-${args.end:04X} "
-            f"matches {primary} (SHA1 {digest})"
+            f"matches {payload_name} (SHA1 {digest})"
         )
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
         raise SystemExit(f"[ERROR] {exc}") from exc
