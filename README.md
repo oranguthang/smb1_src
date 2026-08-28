@@ -16,7 +16,7 @@ while retaining the complete 1.0 gate as its first contract.
 This repository contains:
 
 - **src/main.asm** - Address-ordered entrypoint for the modular disassembly
-- **src/nrom256_prg_only.cfg** - Linker configuration for the 32 KiB PRG image
+- **config/linker/** - Linker contracts for native, expanded, FDS, and ANN payloads
 - **bin/ca65.exe** - 6502 assembly compiler from [cc65](http://www.cc65.org/)
 - **bin/ld65.exe** - 6502 linker from [cc65](http://www.cc65.org/)
 - **docs/6502_reference.md** - NES 6502 instructions, flags, and opcodes
@@ -44,15 +44,16 @@ smb1_src/
 |-- assets/
 |   |-- manifest.json   # Reference identity and extracted-asset hashes
 |   `-- generated/      # Ignored local container, graphics, and content assets
+|-- config/
+|   `-- linker/         # Native, expanded, FDS, and ANN linker contracts
 |-- docs/               # Local technical notes
 |   |-- 6502_reference.md
 |   `-- modding_examples.md
 |-- scripts/            # Cross-platform build, split, and validation logic
-|-- src/                # Assembly source and linker config
+|-- src/                # Assembly source
 |   |-- audio/          # Sound effects, music engine, and music data
 |   |-- data/           # Level streams and fixed interrupt vectors
 |   |-- game/           # Modes, physics, objects, enemies, and collisions
-|   |-- nrom256_prg_only.cfg
 |   |-- main.asm
 |   |-- memory/         # Hardware, RAM, and assembly-time definitions
 |   |-- rendering/      # Screens, backgrounds, HUD, and actor composition
