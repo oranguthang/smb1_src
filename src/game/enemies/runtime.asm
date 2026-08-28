@@ -51,8 +51,12 @@ bra_dispatch_enemy_object_handler:
 
 ; --------------------------------
 
+.if con_revision_profile = con_revision_profile_ann
+handler_no_enemy_object_handler = handler_end_enemy_initialization
+.else
 handler_no_enemy_object_handler:
     RTS
+.endif
 
 ; --------------------------------
 
@@ -87,7 +91,11 @@ sub_dispatch_enemy_movement:
     .word sub_move_normal_enemy
     .word sub_move_normal_enemy
     .word sub_move_normal_enemy
+.if con_revision_profile = con_revision_profile_ann
+    .word handler_ann_piranha_plant_b
+.else
     .word sub_move_normal_enemy
+.endif
     .word handler_move_hammer_bro
     .word sub_move_normal_enemy
     .word handler_move_blooper
@@ -107,8 +115,12 @@ sub_dispatch_enemy_movement:
 
 ; --------------------------------
 
+.if con_revision_profile = con_revision_profile_ann
+handler_no_enemy_movement = handler_end_enemy_initialization
+.else
 handler_no_enemy_movement:
     RTS
+.endif
 
 ; --------------------------------
 
@@ -155,33 +167,7 @@ bra_render_large_platform:
 
 ; --------------------------------
 
-sub_dispatch_large_platform_movement:
-    LDA ram_enemy_id,x  ; subtract $24 to get proper offset for jump table
-    SEC
-    SBC #$24
-    JSR sub_dispatch_inline_handler
-
-    .word handler_move_balance_platform  ; table used by objects $24-$2a
-    .word handler_move_vertical_platform
-    .word handler_move_large_lift_platform
-    .word handler_move_large_lift_platform
-    .word handler_move_horizontal_platform
-    .word handler_move_drop_platform
-    .word handler_move_right_platform
-
-; -------------------------------------------------------------------------------------
-
-sub_erase_enemy_object:
-    LDA #$00  ; clear all enemy object variables
-    STA ram_enemy_flag,x
-    STA ram_enemy_id,x
-    STA ram_enemy_state,x
-    STA ram_floatey_num_control,x
-    STA ram_enemy_interval_timer,x
-    STA ram_shell_chain_counter,x
-    STA ram_enemy_spr_attrib,x
-    STA ram_enemy_frame_timer,x
-    RTS
+.include "game/enemies/runtime_dispatch_helpers.asm"
 
 ; -------------------------------------------------------------------------------------
 
@@ -358,8 +344,15 @@ bra_revive_stunned_enemy:
     INY
     STY ram_enemy_moving_dir,x  ; store as pseudorandom movement direction
     DEY  ; decrement for use as pointer
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_ann_primary_hard_mode
+    BEQ bra_set_revived_enemy_x_speed
+    LDA ram_ann_hard_mode
+    BNE bra_set_revived_enemy_x_speed
+.else
     LDA ram_primary_hard_mode  ; check primary hard mode flag
     BEQ bra_set_revived_enemy_x_speed  ; if not set, use pointer as-is
+.endif
     INY
     INY  ; otherwise increment 2 bytes to next data
 bra_set_revived_enemy_x_speed:
@@ -649,7 +642,11 @@ bra_move_active_swimming_cheep_cheep:
     LDA ram_enemy_page_loc,x
     SBC #$00  ; subtract borrow again, this time from the
     STA ram_enemy_page_loc,x  ; page location, then save
+.if con_revision_profile = con_revision_profile_ann
+    LDA #con_ann_swimming_cheep_cheep_y_force
+.else
     LDA #$20
+.endif
     STA $02  ; save new value here
     CPX #$02  ; check enemy object offset
     BCC bra_exit_swimming_cheep_cheep_movement  ; if in first or second slot, branch to leave

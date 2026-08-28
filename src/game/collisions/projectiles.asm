@@ -69,6 +69,9 @@ bra_exit_fireball_enemy_collision:
 
 tbl_bowser_disguise_enemy_ids:
     .byte con_goomba, con_green_koopa, con_buzzy_beetle, con_spiny, con_lakitu, con_bloober, con_hammer_bro, con_bowser
+.if con_revision_profile = con_revision_profile_ann
+    .byte con_bowser
+.endif
 
 sub_handle_enemy_fireball_collision:
     JSR sub_relative_enemy_position  ; get relative coordinate of enemy
@@ -122,10 +125,24 @@ bra_check_other_fireball_enemy_targets:
 
 sub_shell_or_block_defeat:
     LDA ram_enemy_id,x  ; check for piranha plant
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_piranha_plant_b_object
+    BEQ bra_adjust_ann_piranha_plant_y
+.endif
     CMP #con_piranha_plant
     BNE bra_stun_enemy_from_attack  ; branch if not found
+.if con_revision_profile = con_revision_profile_ann
+bra_adjust_ann_piranha_plant_y:
+    TAY
+.endif
     LDA ram_enemy_y_position,x
     ADC #$18  ; add 24 pixels to enemy object's vertical position
+.if con_revision_profile = con_revision_profile_ann
+    CPY #con_ann_piranha_plant_b_object
+    BNE bra_store_ann_defeated_piranha_y
+    SBC #$31
+bra_store_ann_defeated_piranha_y:
+.endif
     STA ram_enemy_y_position,x
 bra_stun_enemy_from_attack:
     JSR sub_check_enemy_stun_eligibility  ; do yet another sub
@@ -157,7 +174,12 @@ sub_player_hammer_collision:
     LDA ram_frame_counter  ; get frame counter
     LSR  ; shift d0 into carry
     BCC bra_exit_player_hammer_collision  ; branch to leave if d0 not set to execute every other frame
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_player_offscreen_bits
+    ORA ram_timer_control
+.else
     LDA ram_timer_control  ; if either master timer control
+.endif
     ORA ram_misc_offscreen_bits  ; or any offscreen bits for hammer are set,
     BNE bra_exit_player_hammer_collision  ; branch to leave
     TXA
@@ -191,6 +213,13 @@ bra_exit_player_hammer_collision:
 
 loc_handle_power_up_collision:
     JSR sub_erase_enemy_object  ; erase the power-up object
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_power_up_type
+    CMP #con_ann_poison_mushroom_power_up
+    BNE bra_award_ann_power_up
+    JMP sub_injure_player
+bra_award_ann_power_up:
+.endif
     LDA #$06
     JSR sub_setup_floatey_number  ; award 1000 points to player by default
     LDA #con_sfx_power_up_grab

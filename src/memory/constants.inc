@@ -148,6 +148,7 @@ con_sfx_coin_grab          = %00000001
 
 con_sfx_bowser_flame       = %00000010
 con_sfx_brick_shatter      = %00000001
+con_sfx_skid               = %10000000
 
 ; music constants
 con_silence               = %10000000

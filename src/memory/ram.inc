@@ -132,7 +132,11 @@ ram_game_timer_display      = $07ec
 ram_game_timer_display      = $07f8
 .endif
 ram_ann_game_timer_digits   = $07ec
+ram_ann_game_timer_last_digit = $07ee
+ram_ann_coin_display_second_last_digit = $07e7
+ram_ann_coin_display_last_digit = $07e8
 ram_ann_game_level_end_apu_on = $07f6
+ram_ann_game_over_choice    = $07f8
 ram_digit_modifier         = $0134
 
 ram_vertical_flip_flag      = $0109
@@ -183,6 +187,7 @@ ram_fetch_new_game_timer_flag = $0757
 ram_game_timer_expired_flag  = $0759
 
 ram_primary_hard_mode       = $076a
+ram_ann_primary_hard_mode   = $077d
 ram_secondary_hard_mode     = $06cc
 ram_world_select_number     = $076b
 ram_world_select_enable_flag = $07fc
@@ -191,6 +196,7 @@ ram_continue_world         = $07fd
 ram_ann_course_number       = $075f
 ram_ann_hard_mode           = $07fb
 ram_fds_sprite0_irq_flag    = $077b
+ram_ann_render_clear_skip   = $077c
 ram_fds_background_pattern_bits = $077a
 ram_fds_disk_loader_task    = $07fc
 ram_fds_control_mirror      = $fa

@@ -247,6 +247,14 @@ bra_select_grounded_player_action:
     LDA ram_player_moving_dir  ; otherwise check to see if moving direction
     AND ram_player_facing_dir  ; and facing direction are the same
     BNE bra_select_walking_player_frame  ; if moving direction = facing direction, branch, don't skid
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_game_engine_subroutine
+    CMP #con_ann_player_size_change_routine
+    BCS :+
+    LDA #con_sfx_skid
+    STA ram_noise_sound_queue
+    :
+.endif
     INY  ; otherwise increment to skid offset ($03)
 
 loc_select_nonanimated_player_frame:

@@ -336,6 +336,7 @@ loc_advance_misc_object_slot:
 
 ; -------------------------------------------------------------------------------------
 
+.if con_revision_profile <> con_revision_profile_ann
 tbl_coin_tally_digit_offsets:
     .byte $17, $1d
 
@@ -344,6 +345,7 @@ tbl_score_digit_offsets:
 
 tbl_status_bar_nibbles:
     .byte $02, $13
+.endif
 
 .if con_revision_profile = con_revision_profile_vs
 tbl_vs_coin_tally_limits:
@@ -353,8 +355,12 @@ tbl_vs_coin_tally_limits:
 sub_give_one_coin:
     LDA #$01  ; set digit modifier to add 1 coin
     STA ram_digit_modifier+5  ; to the current player's coin tally
+.if con_revision_profile = con_revision_profile_ann
+    LDY #con_ann_coin_digit_offset
+.else
     LDX ram_current_player  ; get current player on the screen
     LDY tbl_coin_tally_digit_offsets,x  ; get offset for player's coin tally
+.endif
     JSR sub_digits_math_routine  ; update the coin tally
     INC ram_coin_tally  ; increment onscreen player's coin amount
     LDA ram_coin_tally
@@ -386,13 +392,21 @@ bra_award_coin_points:
     STA ram_digit_modifier+4  ; 200 points to the player
 
 sub_add_to_score:
+.if con_revision_profile = con_revision_profile_ann
+    LDY #con_ann_score_digit_offset
+.else
     LDX ram_current_player  ; get current player
     LDY tbl_score_digit_offsets,x  ; get offset for player's score
+.endif
     JSR sub_digits_math_routine  ; update the score internally with value in digit modifier
 
 sub_get_status_bar_nibbles:
+.if con_revision_profile = con_revision_profile_ann
+    LDA #con_ann_score_coin_status_nibbles
+.else
     LDY ram_current_player  ; get current player
     LDA tbl_status_bar_nibbles,y  ; get nybbles based on player, use to update score and coins
+.endif
 
 sub_update_number:
     JSR sub_print_status_bar_numbers  ; print status bar numbers based on nybbles, whatever they be
@@ -457,6 +471,12 @@ handler_process_power_up_object:
     BEQ bra_move_mushroom_power_up  ; if normal mushroom, branch ahead to move it
     CMP #$03
     BEQ bra_move_mushroom_power_up  ; if 1-up mushroom, branch ahead to move it
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_poison_mushroom_power_up
+    BEQ bra_move_mushroom_power_up
+    CMP #con_ann_special_mushroom_power_up
+    BEQ bra_move_mushroom_power_up
+.endif
     CMP #$02
     BNE loc_run_power_up_subsystems  ; if not star, branch elsewhere to skip movement
     JSR sub_move_jumping_enemy  ; otherwise impose gravity on star power-up and make it jump

@@ -418,12 +418,16 @@ tbl_halfway_page_nibbles:
     .byte $66, $40
 .if con_revision_profile = con_revision_profile_vs
     .byte $66, $60
+.elseif con_revision_profile = con_revision_profile_ann
+    .byte $66, $60
 .else
     .byte $66, $40
 .endif
     .byte $66, $60
 .if con_revision_profile = con_revision_profile_vs
     .byte $68, $80
+.elseif con_revision_profile = con_revision_profile_ann
+    .byte $67, $80
 .else
     .byte $65, $70
 .endif
@@ -472,7 +476,9 @@ bra_mask_halfway_page_nibble:
     LDA #$00  ; beginning of the level
 bra_store_halfway_page:
     STA ram_halfway_page  ; store as halfway page for player
+.if con_revision_profile <> con_revision_profile_ann
     JSR sub_transpose_players  ; switch players around if 2-player game
+.endif
     JMP loc_restart_game  ; continue the game
 
 ; -------------------------------------------------------------------------------------
@@ -503,16 +509,27 @@ handler_setup_game_over:
     LDA #$00  ; reset screen routine task control for title screen, game,
     STA ram_screen_routine_task  ; and game over modes
     STA ram_sprite0_hit_detect_flag  ; disable sprite 0 check
+.if con_revision_profile = con_revision_profile_ann
+    STA ram_ann_game_over_choice
+.endif
     LDA #con_game_over_music
     STA ram_event_music_queue  ; put game over music in secondary queue
     INC ram_disable_screen_flag  ; disable screen output
+.if con_revision_profile = con_revision_profile_ann
+    JMP loc_finish_ann_title_screen
+.else
     INC ram_oper_mode_task  ; set secondary mode to 1
     RTS
+.endif
 
 ; -------------------------------------------------------------------------------------
 
 handler_run_game_over_screen:
-.if con_revision_profile <> con_revision_profile_vs
+.if con_revision_profile = con_revision_profile_ann
+    LDA #$00
+    STA ram_disable_screen_flag
+    JMP handler_ann_game_over_menu
+.elseif con_revision_profile <> con_revision_profile_vs
     LDA #$00  ; reenable screen
     STA ram_disable_screen_flag
     LDA ram_saved_joypad1_bits  ; check controller for start pressed
@@ -520,20 +537,29 @@ handler_run_game_over_screen:
     BNE sub_terminate_game
     LDA ram_screen_timer  ; if not pressed, wait for
     BNE bra_exit_game_restart  ; screen timer to expire
-sub_terminate_game:
-    LDA #con_silence  ; silence music
-    STA ram_event_music_queue
 .endif
+sub_terminate_game:
+.if con_revision_profile = con_revision_profile_ann
+    LDA #con_silence
+    STA ram_event_music_queue
+.else
+    .if con_revision_profile <> con_revision_profile_vs
+        LDA #con_silence  ; silence music
+        STA ram_event_music_queue
+    .endif
     JSR sub_transpose_players  ; check if other player can keep
     BCC loc_restart_game  ; going, and do so if possible
-.if con_revision_profile = con_revision_profile_vs
-    LDA ram_numberof_lives
-    BPL loc_restart_game
-.endif
+    .if con_revision_profile = con_revision_profile_vs
+        LDA ram_numberof_lives
+        BPL loc_restart_game
+    .endif
     LDA ram_world_number  ; otherwise put world number of current
     STA ram_continue_world  ; player into secret continue function variable
+.endif
     LDA #$00
+.if con_revision_profile <> con_revision_profile_ann
     ASL  ; residual ASL instruction
+.endif
     STA ram_oper_mode_task  ; reset all modes to title screen and
     STA ram_screen_timer  ; leave
     STA ram_oper_mode
@@ -558,6 +584,7 @@ loc_restart_game:
 bra_exit_game_restart:
     RTS
 
+.if con_revision_profile <> con_revision_profile_ann
 sub_transpose_players:
     SEC  ; set carry flag by default to end game
     LDA ram_number_of_players  ; if only a 1 player game, leave
@@ -580,6 +607,7 @@ bra_transpose_player_data_loop:
     CLC  ; clear carry flag to get game going
 bra_exit_player_transpose:
     RTS
+.endif
 
 ; -------------------------------------------------------------------------------------
 

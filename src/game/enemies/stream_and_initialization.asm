@@ -41,68 +41,18 @@ bra_resolve_bowser_rear_slot:
 bra_exit_enemy_and_loop_core:
     RTS
 
-; --------------------------------
-
-; loop command data
-tbl_loop_command_world_numbers:
-.if con_revision_profile = con_revision_profile_vs
-    .byte $04, $04, $06, $06, $06, $06, $06, $06, $07, $07, $07
-.else
-    .byte $03, $03, $06, $06, $06, $06, $06, $06, $07, $07, $07
-.endif
-
-tbl_loop_command_page_numbers:
-    .byte $05, $09, $04, $05, $06, $08, $09, $0a, $06, $0b, $10
-
-tbl_loop_command_player_y_positions:
-.if con_revision_profile = con_revision_profile_vs
-    .byte $40, $b0, $b0, $40, $40, $b0, $40, $80, $f0, $f0, $f0
-.else
-    .byte $40, $b0, $b0, $80, $40, $40, $80, $40, $f0, $f0, $f0
-.endif
-
-sub_exec_game_loopback:
-    LDA ram_player_page_loc  ; send player back four pages
-    SEC
-    SBC #$04
-    STA ram_player_page_loc
-    LDA ram_current_page_loc  ; send current page back four pages
-    SEC
-    SBC #$04
-    STA ram_current_page_loc
-    LDA ram_screen_left_page_loc  ; subtract four from page location
-    SEC  ; of screen's left border
-    SBC #$04
-    STA ram_screen_left_page_loc
-    LDA ram_screen_right_page_loc  ; do the same for the page location
-    SEC  ; of screen's right border
-    SBC #$04
-    STA ram_screen_right_page_loc
-    LDA ram_area_object_page_loc  ; subtract four from page control
-    SEC  ; for area objects
-    SBC #$04
-    STA ram_area_object_page_loc
-    LDA #$00  ; initialize page select for both
-    STA ram_enemy_object_page_sel  ; area and enemy objects
-    STA ram_area_object_page_sel
-    STA ram_enemy_data_offset  ; initialize enemy object data offset
-    STA ram_enemy_object_page_loc  ; and enemy object page control
-.if con_revision_profile = con_revision_profile_vs
-    LDA #con_vs_request_irq_release
-    STA VS_REQUEST
-    LDA ram_vs_io_buffer,y  ; read the CHR-resident loop offset copied during course loading
-.else
-    LDA tbl_area_object_loopback_offsets,y  ; adjust area object offset based on
-.endif
-    STA ram_area_data_offset  ; which loop command we encountered
-    RTS
+.include "game/enemies/loop_command_data.asm"
 
 loc_process_game_loop_command:
     LDA ram_loop_command  ; check if loop command was found
     BEQ bra_spawn_queued_frenzy_enemy
     LDA ram_current_column_pos  ; check to see if we're still on the first page
     BNE bra_spawn_queued_frenzy_enemy  ; if not, do not loop yet
+.if con_revision_profile = con_revision_profile_ann
+    LDY #con_ann_loop_command_count
+.else
     LDY #$0b  ; start at the end of each set of loop data
+.endif
 bra_find_matching_loop_command:
     DEY
     BMI bra_spawn_queued_frenzy_enemy  ; if all data is checked and not match, do not loop
@@ -114,10 +64,29 @@ bra_find_matching_loop_command:
     BNE bra_find_matching_loop_command
     LDA ram_player_y_position  ; check to see if the player is at the correct position
     CMP tbl_loop_command_player_y_positions,y  ; if not, branch to check for world 7
+.if con_revision_profile = con_revision_profile_ann
+    BNE bra_handle_incorrect_ann_loop_path
+.else
     BNE bra_handle_incorrect_loop_path
+.endif
     LDA ram_player_state  ; check to see if the player is
     CMP #$00  ; on solid ground (i.e. not jumping or falling)
+.if con_revision_profile = con_revision_profile_ann
+    BNE bra_handle_incorrect_ann_loop_path
+.else
     BNE bra_handle_incorrect_loop_path  ; if not, player fails to pass loop, and loopback
+.endif
+.if con_revision_profile = con_revision_profile_ann
+    INC ram_multi_loop_correct_cntr
+bra_handle_incorrect_ann_loop_path:
+    INC ram_multi_loop_pass_cntr
+    LDA ram_multi_loop_pass_cntr
+    CMP tbl_ann_loop_command_required_counts,y
+    BNE bra_clear_loop_command
+    LDA ram_multi_loop_correct_cntr
+    CMP tbl_ann_loop_command_required_counts,y
+    BEQ bra_reset_multi_loop_state
+.else
     LDA ram_world_number  ; are we in world 7? (check performed on correct
     CMP #con_world7  ; vertical position and on solid ground)
     BNE bra_reset_multi_loop_state  ; if not, initialize flags used there, otherwise
@@ -135,6 +104,7 @@ bra_handle_incorrect_loop_path:
     LDA ram_world_number  ; are we in world 7? (check performed on
     CMP #con_world7  ; incorrect vertical position or not on solid ground)
     BEQ bra_advance_world_7_loop_sequence
+.endif
 bra_execute_game_loopback:
     JSR sub_exec_game_loopback  ; if player is not in right place, loop back
     JSR sub_kill_all_enemies
@@ -285,8 +255,15 @@ bra_apply_hard_mode_enemy_substitution:
 .if con_revision_profile <> con_revision_profile_vs
     CMP #con_goomba  ; if below $37, check for goomba
     BNE bra_store_and_initialize_enemy_id  ; value ($3f or more always fails)
-    LDY ram_primary_hard_mode  ; check if primary hard mode flag is set
-    BEQ bra_store_and_initialize_enemy_id  ; and if so, change goomba to buzzy beetle
+    .if con_revision_profile = con_revision_profile_ann
+        LDY ram_ann_primary_hard_mode
+        BEQ bra_store_and_initialize_enemy_id
+        LDY ram_ann_hard_mode
+        BNE bra_store_and_initialize_enemy_id
+    .else
+        LDY ram_primary_hard_mode  ; check if primary hard mode flag is set
+        BEQ bra_store_and_initialize_enemy_id  ; and if so, change goomba to buzzy beetle
+    .endif
     LDA #con_buzzy_beetle
 .endif
 bra_store_and_initialize_enemy_id:
@@ -379,7 +356,11 @@ bra_dispatch_enemy_initializer:
     .word sub_initialize_normal_enemy
     .word sub_initialize_normal_enemy
     .word handler_initialize_red_koopa
+.if con_revision_profile = con_revision_profile_ann
+    .word sub_initialize_piranha_plant
+.else
     .word handler_no_enemy_initialization
+.endif
     .word handler_initialize_hammer_bro
     .word handler_initialize_goomba
     .word handler_initialize_blooper
@@ -471,7 +452,11 @@ tbl_normal_enemy_x_speeds:
 
 sub_initialize_normal_enemy:
     LDY #$01  ; load offset of 1 by default
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_ann_primary_hard_mode
+.else
     LDA ram_primary_hard_mode  ; check for primary hard mode flag set
+.endif
     BNE bra_select_normal_enemy_x_speed
     DEY  ; if not set, decrement offset
 bra_select_normal_enemy_x_speed:
@@ -499,6 +484,11 @@ handler_initialize_hammer_bro:
     LDA #$00  ; init horizontal speed and timer used by hammer bro
     STA ram_hammer_throwing_timer,x  ; apparently to time hammer throwing
     STA ram_enemy_x_speed,x
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_world_number
+    CMP #con_world7
+    BCS bra_finish_ann_hammer_bro_delay
+.endif
 .if con_revision_profile = con_revision_profile_vs
     LDA #$ff  ; use the fixed arcade walking delay
 .else
@@ -506,6 +496,9 @@ handler_initialize_hammer_bro:
     LDA tbl_hammer_bro_walking_delays,y
 .endif
     STA ram_enemy_interval_timer,x  ; set value as delay for hammer bro to walk left
+.if con_revision_profile = con_revision_profile_ann
+bra_finish_ann_hammer_bro_delay:
+.endif
     LDA #$0b  ; set specific value for bounding box size control
     JMP loc_set_enemy_bounding_box
 
@@ -607,7 +600,11 @@ bra_find_active_lakitu:
     BPL bra_find_active_lakitu  ; loop until all slots are checked
     INC ram_lakitu_reappear_timer  ; increment reappearance timer
     LDA ram_lakitu_reappear_timer
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_lakitu_spawn_delay
+.else
     CMP #$07  ; check to see if we're up to a certain value yet
+.endif
     BCC bra_exit_lakitu_spiny_handler  ; if not, leave
     LDX #$04  ; start with the last enemy slot again
 bra_find_empty_enemy_slot_for_lakitu:
@@ -623,6 +620,12 @@ bra_spawn_lakitu:
     STA ram_enemy_id,x
     JSR sub_setup_lakitu  ; do a sub to set up lakitu
     LDA #$20
+.if con_revision_profile = con_revision_profile_ann
+    LDY ram_ann_hard_mode
+    BEQ bra_store_ann_lakitu_x_offset
+    LDA #con_ann_lakitu_hard_mode_x_offset
+bra_store_ann_lakitu_x_offset:
+.endif
     JSR sub_put_at_right_extent  ; finish setting up lakitu
 bra_restore_current_enemy_slot:
     LDX ram_object_offset  ; get enemy object buffer offset again and leave

@@ -56,12 +56,22 @@ bra_resolve_player_enemy_collision:
     STA ram_enemy_collision_bits,x
     CPY #con_spiny  ; branch if spiny
     BEQ bra_check_player_injury_collision
+.if con_revision_profile = con_revision_profile_ann
+    CPY #con_bullet_bill_cannon_var
+    BEQ bra_check_player_injury_collision
+.endif
     CPY #con_piranha_plant  ; branch if piranha plant
     BEQ sub_injure_player
+.if con_revision_profile = con_revision_profile_ann
+    CPY #con_ann_piranha_plant_b_object
+    BEQ sub_injure_player
+.endif
     CPY #con_podoboo  ; branch if podoboo
     BEQ sub_injure_player
+.if con_revision_profile <> con_revision_profile_ann
     CPY #con_bullet_bill_cannon_var  ; branch if bullet bill
     BEQ bra_check_player_injury_collision
+.endif
     CPY #$15  ; branch if object => $15
     BCS sub_injure_player
     LDA ram_area_type  ; branch if water type level
@@ -97,9 +107,15 @@ bra_exit_player_enemy_collision:
     RTS  ; leave!!!
 
 bra_check_player_injury_collision:
+.if con_revision_profile = con_revision_profile_ann
+    LDY ram_player_y_speed
+    DEY
+    BPL loc_enemy_stomped
+.else
     LDA ram_player_y_speed  ; check player's vertical speed
     BMI bra_check_player_injury_immunity  ; perform procedure below if player moving upwards
     BNE loc_enemy_stomped  ; or not at all, and branch elsewhere if moving downwards
+.endif
 bra_check_player_injury_immunity:
 .if con_revision_profile = con_revision_profile_pal
     LDA #$14  ; use the default PAL collision height
@@ -136,6 +152,9 @@ bra_check_left_side_enemy_injury:
 
 sub_injure_player:
     LDA ram_injury_timer  ; check again to see if injured invincibility timer is
+.if con_revision_profile = con_revision_profile_ann
+    ORA ram_star_invincible_timer
+.endif
     BNE bra_exit_player_injury_collision  ; at zero, and branch to leave if so
 
 sub_force_injury:
@@ -216,13 +235,20 @@ bra_award_stomped_enemy_points:
     STA ram_enemy_state,x  ; set d5 in enemy state
     JSR sub_clear_enemy_vertical_motion  ; nullify vertical speed, physics-related thing,
     STA ram_enemy_x_speed,x  ; and horizontal speed
+.if con_revision_profile = con_revision_profile_ann
+    JMP bra_handle_stomped_shell_enemy
+.else
     LDA #$fd  ; set player's vertical speed, to give bounce
     STA ram_player_y_speed
     RTS
+.endif
 
 bra_check_koopa_demotion:
     CMP #$09  ; branch elsewhere if enemy object < $09
     BCC bra_handle_stomped_shell_enemy
+.if con_revision_profile = con_revision_profile_ann
+    JSR sub_handle_ann_stomped_shell_enemy
+.endif
     AND #%00000001  ; demote koopa paratroopas to ordinary troopas
     STA ram_enemy_id,x
     LDY #$00  ; return enemy to normal state
@@ -233,7 +259,11 @@ bra_check_koopa_demotion:
     JSR sub_enemy_face_player  ; turn enemy around if necessary
     LDA tbl_demoted_koopa_x_speeds,y
     STA ram_enemy_x_speed,x  ; set appropriate moving speed based on direction
+.if con_revision_profile = con_revision_profile_ann
+    RTS
+.else
     JMP loc_bounce_player_from_enemy  ; then move onto something else
+.endif
 
 tbl_enemy_revival_delays:
 .if con_revision_profile = con_revision_profile_pal
@@ -242,6 +272,7 @@ tbl_enemy_revival_delays:
     .byte $10, $0b
 .endif
 
+sub_handle_ann_stomped_shell_enemy:
 bra_handle_stomped_shell_enemy:
     LDA #$04  ; set defeated state for enemy
     STA ram_enemy_state,x
@@ -255,8 +286,20 @@ bra_handle_stomped_shell_enemy:
     LDA tbl_enemy_revival_delays,y  ; load timer setting according to flag
     STA ram_enemy_interval_timer,x  ; set as enemy timer to revive stomped enemy
 loc_bounce_player_from_enemy:
+.if con_revision_profile = con_revision_profile_ann
+    LDY #$fa
+    LDA ram_enemy_id,x
+    CMP #con_red_paratroopa
+    BEQ bra_store_ann_player_stomp_speed
+    CMP #con_green_paratroopa_fly
+    BNE bra_store_ann_player_stomp_speed
+    LDY #$f8
+bra_store_ann_player_stomp_speed:
+    STY ram_player_y_speed
+.else
     LDA #$fc  ; set player's vertical speed for bounce
     STA ram_player_y_speed  ; and then leave!!!
+.endif
     RTS
 
 loc_check_enemy_facing_right:
@@ -311,6 +354,10 @@ sub_enemies_collision:
     BEQ bra_exit_enemy_collision_scan
     CMP #con_piranha_plant  ; if piranha plant, branch to leave
     BEQ bra_exit_enemy_collision_scan
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_piranha_plant_b_object
+    BEQ bra_exit_enemy_collision_scan
+.endif
     LDA ram_enemy_offscr_bits_masked,x  ; if masked offscreen bits nonzero, branch to leave
     BNE bra_exit_enemy_collision_scan
     JSR sub_get_enemy_bounding_box_offset  ; otherwise, do sub, get appropriate bounding box offset for
@@ -329,6 +376,10 @@ bra_check_enemy_collision_pairs_loop:
     BEQ loc_advance_enemy_collision_pair  ; branch if enemy object is lakitu
     CMP #con_piranha_plant
     BEQ loc_advance_enemy_collision_pair  ; branch if enemy object is piranha plant
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_piranha_plant_b_object
+    BEQ loc_advance_enemy_collision_pair
+.endif
     LDA ram_enemy_offscr_bits_masked,x
     BNE loc_advance_enemy_collision_pair  ; branch if masked offscreen bits set
     TXA  ; get second enemy object's bounding box offset
@@ -434,6 +485,10 @@ sub_enemy_turn_around:
     LDA ram_enemy_id,x  ; check for specific enemies
     CMP #con_piranha_plant
     BEQ bra_exit_enemy_turn_around  ; if piranha plant, leave
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_piranha_plant_b_object
+    BEQ bra_exit_enemy_turn_around
+.endif
     CMP #con_lakitu
     BEQ bra_exit_enemy_turn_around  ; if lakitu, leave
     CMP #con_hammer_bro
@@ -563,6 +618,19 @@ bra_check_platform_top_collision:
 
 bra_store_platform_collision_flag:
     LDX ram_object_offset  ; get enemy object buffer offset
+.if con_revision_profile = con_revision_profile_ann
+    PHA
+    LDA ram_player_y_high_pos
+    CMP #$01
+    BNE bra_restore_ann_platform_collision_flag
+    LDA ram_player_y_position
+    CMP #$df
+    BCC bra_restore_ann_platform_collision_flag
+    PLA
+    RTS
+bra_restore_ann_platform_collision_flag:
+    PLA
+.endif
     STA ram_platform_collision_flag,x  ; save either bounding box counter or enemy offset here
     LDA #$00
     STA ram_player_state  ; set player state to normal then leave
@@ -586,73 +654,4 @@ bra_handle_platform_side_collision:
     JSR sub_impede_player_move  ; deal with horizontal collision
 bra_exit_platform_side_collision:
     LDX ram_object_offset  ; return with enemy object buffer offset
-    RTS
-
-; -------------------------------------------------------------------------------------
-
-tbl_small_platform_player_y_offsets:
-    .byte $80, $00
-
-sub_position_player_on_small_platform:
-    TAY  ; use bounding box counter saved in collision flag
-    LDA ram_enemy_y_position,x  ; for offset
-    CLC  ; add positioning data using offset to the vertical
-    ADC tbl_small_platform_player_y_offsets-1,y  ; coordinate
-.if con_revision_profile = con_revision_profile_vs
-    JMP :+
-.else
-    .byte $2c  ; BIT instruction opcode
-.endif
-
-sub_position_player_on_vertical_platform:
-    LDA ram_enemy_y_position,x  ; get vertical coordinate
-.if con_revision_profile = con_revision_profile_vs
-    :
-.endif
-    LDY ram_game_engine_subroutine
-    CPY #$0b  ; if certain routine being executed on this frame,
-    BEQ bra_exit_player_platform_position  ; skip all of this
-    LDY ram_enemy_y_high_pos,x
-    CPY #$01  ; if vertical high byte offscreen, skip this
-    BNE bra_exit_player_platform_position
-    SEC  ; subtract 32 pixels from vertical coordinate
-    SBC #$20  ; for the player object's height
-    STA ram_player_y_position  ; save as player's new vertical coordinate
-    TYA
-    SBC #$00  ; subtract borrow and store as player's
-    STA ram_player_y_high_pos  ; new vertical high byte
-    LDA #$00
-    STA ram_player_y_speed  ; initialize vertical speed and low byte of force
-    STA ram_player_y_speed_fraction  ; and then leave
-bra_exit_player_platform_position:
-    RTS
-
-; -------------------------------------------------------------------------------------
-
-sub_check_player_vertical:
-    LDA ram_player_offscreen_bits  ; if player object is completely offscreen
-    CMP #$f0  ; vertically, leave this routine
-    BCS bra_exit_vertical_platform_player_position
-    LDY ram_player_y_high_pos  ; if player high vertical byte is not
-    DEY  ; within the screen, leave this routine
-    BNE bra_exit_vertical_platform_player_position
-    LDA ram_player_y_position  ; if on the screen, check to see how far down
-    CMP #$d0  ; the player is vertically
-bra_exit_vertical_platform_player_position:
-    RTS
-
-; -------------------------------------------------------------------------------------
-
-sub_get_enemy_bounding_box_offset:
-    LDA ram_object_offset  ; get enemy object buffer offset
-
-sub_get_enemy_bounding_box_offset_from_x:
-    ASL  ; multiply A by four, then add four
-    ASL  ; to skip player's bounding box
-    CLC
-    ADC #$04
-    TAY  ; send to Y
-    LDA ram_enemy_offscreen_bits  ; get offscreen bits for enemy object
-    AND #%00001111  ; save low nybble
-    CMP #%00001111  ; check for all bits set
     RTS

@@ -55,6 +55,7 @@ handler_player_on_ground:
     STA ram_player_facing_dir  ; otherwise set new facing direction
 bra_apply_ground_movement:
     JSR sub_apply_player_horizontal_friction  ; do a sub to impose friction on player's walk/run
+sub_move_player_and_update_scroll:
     JSR sub_move_player_horizontally  ; do another sub to move player horizontally
     STA ram_player_x_scroll  ; set returned value as player's movement speed for scroll
     RTS
@@ -103,8 +104,12 @@ loc_process_airborne_horizontal_input:
     BEQ bra_move_airborne_player  ; if not pressing any, skip
     JSR sub_apply_player_horizontal_friction  ; otherwise process horizontal movement
 bra_move_airborne_player:
+.if con_revision_profile = con_revision_profile_ann
+    JSR sub_move_player_and_update_scroll
+.else
     JSR sub_move_player_horizontally  ; do a sub to move player horizontally
     STA ram_player_x_scroll  ; set player's speed here, to be used for scroll later
+.endif
     LDA ram_game_engine_subroutine
     CMP #$0b  ; check for specific routine selected
     BNE bra_move_player_vertically  ; branch if not set to run
@@ -188,6 +193,11 @@ tbl_fall_gravity:
     .byte $70, $70, $60, $90, $90, $0a, $09
 .endif
 
+.if con_revision_profile = con_revision_profile_ann
+tbl_horizontal_friction = *
+    .byte $e4, $98, $d0
+.endif
+
 tbl_initial_player_y_speed:
 .if con_revision_profile = con_revision_profile_pal
     .byte $fb, $fb, $fb, $fa, $fa, $fe, $ff
@@ -218,11 +228,13 @@ tbl_maximum_right_speed:
     .byte $0c  ; used for pipe intros
 .endif
 
+.if con_revision_profile <> con_revision_profile_ann
 tbl_horizontal_friction:
-.if con_revision_profile = con_revision_profile_pal
-    .byte $c0, $00, $80
-.else
-    .byte $e4, $98, $d0
+    .if con_revision_profile = con_revision_profile_pal
+        .byte $c0, $00, $80
+    .else
+        .byte $e4, $98, $d0
+    .endif
 .endif
 
 tbl_climb_y_speed:

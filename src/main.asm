@@ -58,10 +58,11 @@ con_revision_profile = con_revision_profile_ju
 .include "game/level/terrain_objects.asm"
 .if con_revision_profile = con_revision_profile_vs
     .include "platforms/vs/levels.asm"
-.else
+.elseif con_revision_profile <> con_revision_profile_ann
     .include "data/levels/index_and_enemies.asm"
     .include "data/levels/areas.asm"
 .endif
+.include "game/gameplay_core.asm"
 .include "game/core.asm"
 .include "game/player/physics.asm"
 .include "game/objects/projectiles_and_interactions.asm"
@@ -76,6 +77,7 @@ con_revision_profile = con_revision_profile_ju
 .include "game/platforms.asm"
 .include "game/collisions/projectiles.asm"
 .include "game/collisions/actors.asm"
+.include "game/collisions/platform_positioning.asm"
 .include "game/collisions/player_background.asm"
 .include "game/collisions/enemy_background.asm"
 .include "game/collisions/bounding_boxes.asm"
@@ -84,6 +86,10 @@ con_revision_profile = con_revision_profile_ju
 .include "rendering/actors/objects.asm"
 .include "rendering/actors/player.asm"
 .include "rendering/positioning.asm"
+.if con_revision_profile = con_revision_profile_ann
+    .include "data/levels/index_and_enemies.asm"
+    .include "data/levels/areas.asm"
+.endif
 .include "audio/sound_effects.asm"
 .include "audio/music_engine.asm"
 .include "audio/music_data.asm"

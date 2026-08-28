@@ -185,7 +185,11 @@ sub_run_game_timer:
     BEQ bra_exit_game_timer  ; branch to leave
     LDA ram_player_y_high_pos
     CMP #$02  ; if player below the screen,
+.if con_revision_profile = con_revision_profile_ann
+    BPL bra_exit_game_timer
+.else
     BCS bra_exit_game_timer  ; branch to leave regardless of level type
+.endif
     LDA ram_game_timer_ctrl_timer  ; if game timer control not yet expired,
     BNE bra_exit_game_timer  ; branch to leave
     LDA ram_game_timer_display
@@ -211,11 +215,19 @@ loc_store_game_timer_reload:
     LDA #con_game_timer_reload  ; reset game timer control
 .endif
     STA ram_game_timer_ctrl_timer
+.if con_revision_profile = con_revision_profile_ann
+    LDY #con_ann_game_timer_digit_offset
+.else
     LDY #$23  ; set offset for last digit
+.endif
     LDA #$ff  ; set value to decrement game timer digit
     STA ram_digit_modifier+5
     JSR sub_digits_math_routine  ; do sub to decrement game timer slowly
+.if con_revision_profile = con_revision_profile_ann
+    LDA #con_ann_game_timer_status_selector
+.else
     LDA #$a4  ; set status nybbles to update game timer display
+.endif
     JMP sub_print_status_bar_numbers  ; do sub to update the display
 bra_trigger_time_up:
     STA ram_player_status  ; init player status (note A will always be zero here)
@@ -233,7 +245,9 @@ handler_run_warp_zone_object:
     AND ram_player_y_high_pos  ; same bits set as in vertical high byte (why?)
     BNE bra_exit_game_timer  ; if so, branch to leave
     STA ram_scroll_lock  ; otherwise nullify scroll lock flag
+.if con_revision_profile <> con_revision_profile_ann
     INC ram_warp_zone_control  ; increment warp zone flag to make warp pipes for warp zone
+.endif
     JMP sub_erase_enemy_object  ; kill this object
 
 ; -------------------------------------------------------------------------------------
@@ -370,10 +384,22 @@ bra_skip_flagpole_score_award:
     JMP loc_render_flagpole_objects  ; jump to skip ahead and draw flag and floatey number
 bra_award_flagpole_score:
     LDY ram_flagpole_score  ; get score offset from earlier (when player touched flagpole)
+.if con_revision_profile = con_revision_profile_ann
+    CPY #con_ann_flagpole_one_up_score
+    BNE bra_add_ann_flagpole_score
+    INC ram_numberof_lives
+    LDA #con_sfx_extra_life
+    STA ram_square2_sound_queue
+    JMP bra_finish_ann_flagpole_score
+bra_add_ann_flagpole_score:
+.endif
     LDA tbl_flagpole_score_modifiers,y  ; get amount to award player points
     LDX tbl_flagpole_score_digits,y  ; get digit with which to award points
     STA ram_digit_modifier,x  ; store in digit modifier
     JSR sub_add_to_score  ; do sub to award player points depending on height of collision
+.if con_revision_profile = con_revision_profile_ann
+bra_finish_ann_flagpole_score:
+.endif
     LDA #$05
     STA ram_game_engine_subroutine  ; set to run end-of-level subroutine on next frame
 loc_render_flagpole_objects:
@@ -417,8 +443,22 @@ loc_position_jumpspring:
     BEQ bra_apply_jumpspring_bounce  ; skip to next part if A not pressed
     AND ram_previous_a_b_buttons  ; check for A button pressed in previous frame
     BNE bra_apply_jumpspring_bounce  ; skip to next part if so
+.if con_revision_profile = con_revision_profile_ann
+    TYA
+    PHA
+.endif
     LDA #con_jumpspring_y_speed
+.if con_revision_profile = con_revision_profile_ann
+    LDY ram_ann_hard_mode
+    BEQ bra_store_ann_jumpspring_force
+    JSR sub_ann_hard_mode_spring
+bra_store_ann_jumpspring_force:
+.endif
     STA ram_jumpspring_force  ; otherwise write new jumpspring force here
+.if con_revision_profile = con_revision_profile_ann
+    PLA
+    TAY
+.endif
 bra_apply_jumpspring_bounce:
     CPY #$03  ; check frame control offset again
     BNE bra_draw_jumpspring_object  ; skip to last part if not yet at fifth frame ($03)
@@ -477,7 +517,7 @@ tbl_vine_growth_heights:
 
 handler_run_vine_object:
     CPX #$05  ; check enemy offset for special use slot
-.if con_revision_profile = con_revision_profile_vs
+.if con_revision_profile = con_revision_profile_vs .or con_revision_profile = con_revision_profile_ann
     BEQ bra_run_last_vine_object_slot
     RTS
 bra_run_last_vine_object_slot:
@@ -536,7 +576,7 @@ bra_write_vine_climb_metatile:
     LDA #$26
     STA ($06),y  ; otherwise, write climbing metatile to block buffer
 bra_exit_vine_handler:
-.if con_revision_profile = con_revision_profile_vs
+.if con_revision_profile = con_revision_profile_vs .or con_revision_profile = con_revision_profile_ann
     LDA ram_enemy_x_position+5
     SEC
     SBC ram_screen_left_x_pos
@@ -551,7 +591,9 @@ bra_clear_offscreen_vine_metatiles:
     STA ram_enemy_flag+5
     LDA ram_enemy_page_loc+5
     AND #$01
-    NOP
+    .if con_revision_profile = con_revision_profile_vs
+        NOP
+    .endif
     TAY
     LDA tbl_block_buffer_addresses,y
     STA $06

@@ -40,13 +40,32 @@ bra_store_altered_foreground_scenery:
 ; --------------------------------
 
 handler_warp_zone_scroll_lock:
+.if con_revision_profile = con_revision_profile_ann
+    LDX #$80  ; select the normal ANN warp text range
+    LDA ram_ann_hard_mode
+    BNE bra_select_ann_hard_mode_warp_zone
+.else
     LDX #$04  ; load value of 4 for game text routine as default
+.endif
     LDA ram_world_number  ; warp zone (4-3-2), then check world number
     BEQ bra_activate_warp_zone
     INX  ; if world number > 1, increment for next warp zone (5)
     LDY ram_area_type  ; check area type
     DEY
     BNE bra_activate_warp_zone  ; if ground area type, increment for last warp zone
+.if con_revision_profile = con_revision_profile_ann
+    JMP bra_increment_ann_warp_zone
+
+bra_select_ann_hard_mode_warp_zone:
+    LDX #$84  ; select the hard-mode ANN warp text range
+    LDA ram_world_number
+    BNE bra_increment_ann_warp_zone
+    DEX
+    LDY ram_level_number  ; use the later-engine goal index
+    DEY
+    BEQ bra_activate_warp_zone
+bra_increment_ann_warp_zone:
+.endif
     INX  ; (8-7-6) and move on
 bra_activate_warp_zone:
     TXA
@@ -265,9 +284,17 @@ handler_draw_water_pipe:
     JSR sub_get_large_area_object_attributes  ; get row and lower nybble
     LDY ram_area_object_length,x  ; get length (residual code, water pipe is 1 col thick)
     LDX $07  ; get row
+.if con_revision_profile = con_revision_profile_ann
+    LDA #con_ann_water_pipe_top_metatile
+.else
     LDA #$6b
+.endif
     STA ram_metatile_buffer,x  ; draw something here and below it
+.if con_revision_profile = con_revision_profile_ann
+    LDA #con_ann_water_pipe_bottom_metatile
+.else
     LDA #$6c
+.endif
     STA ram_metatile_buffer+1,x
     RTS
 
@@ -348,6 +375,18 @@ handler_draw_vertical_pipe:
 bra_skip_piranha_plant:
     TYA  ; save value in stack
     PHA
+.if con_revision_profile = con_revision_profile_ann
+    LDY ram_area_object_length,x  ; only create the plant on the pipe's first column
+    BEQ bra_render_vertical_pipe
+    JSR sub_find_empty_enemy_slot
+    BCS bra_render_vertical_pipe
+    LDA ram_world_number
+    ORA ram_area_number
+    ORA ram_ann_hard_mode  ; suppress plants in the first area and later-engine hard mode
+    BEQ bra_render_vertical_pipe
+    LDA #con_piranha_plant
+    JSR sub_initialize_ann_pipe_piranha_plant
+.else
     LDA ram_area_number
     ORA ram_world_number  ; if at world 1-1, do not add piranha plant ever
     BEQ bra_render_vertical_pipe
@@ -370,6 +409,7 @@ bra_skip_piranha_plant:
     LDA #con_piranha_plant  ; write piranha plant's value into buffer
     STA ram_enemy_id,x
     JSR sub_initialize_piranha_plant
+.endif
 bra_render_vertical_pipe:
     PLA  ; get value saved earlier and use as Y
     TAY
@@ -391,6 +431,24 @@ sub_get_pipe_height:
     STA $06  ; vertical length, then load Y with
     LDY ram_area_object_length,x  ; length left over
     RTS
+
+.if con_revision_profile = con_revision_profile_ann
+sub_initialize_ann_pipe_piranha_plant:
+    STA ram_enemy_id,x
+    JSR sub_get_area_object_x_position
+    CLC
+    ADC #$08
+    STA ram_enemy_x_position,x
+    LDA ram_current_page_loc
+    ADC #$00
+    STA ram_enemy_page_loc,x
+    LDA #$01
+    STA ram_enemy_y_high_pos,x
+    STA ram_enemy_flag,x
+    JSR sub_get_area_object_y_position
+    STA ram_enemy_y_position,x
+    JMP sub_initialize_piranha_plant
+.endif
 
 sub_find_empty_enemy_slot:
     LDX #$00  ; start at first enemy slot

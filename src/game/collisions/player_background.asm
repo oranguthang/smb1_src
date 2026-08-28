@@ -283,6 +283,9 @@ loc_handle_axe_metatile:
     LDA #$02
 .endif
     STA ram_oper_mode  ; set primary mode to autoctrl mode
+.if con_revision_profile = con_revision_profile_ann
+    JSR sub_ann_load_player_physics
+.endif
     LDA #$18
     STA ram_player_x_speed  ; set horizontal speed and continue to erase axe metatile
 sub_erase_coin_or_axe_metatile:
@@ -347,6 +350,15 @@ bra_select_flagpole_score_y_position:
     BNE bra_select_flagpole_score_y_position  ; do this until all data is checked (use last one if all checked)
 bra_store_flagpole_score_index:
     STX ram_flagpole_score  ; store offset here to be used later
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_ann_coin_display_second_last_digit
+    CMP ram_ann_coin_display_last_digit
+    BNE bra_start_flagpole_routine
+    CMP ram_ann_game_timer_last_digit
+    BNE bra_start_flagpole_routine
+    LDA #con_ann_flagpole_one_up_score
+    STA ram_flagpole_score
+.endif
 bra_start_flagpole_routine:
     LDA #$04
     STA ram_game_engine_subroutine  ; set value to run flagpole slide routine
@@ -404,6 +416,10 @@ bra_exit_player_vine_position:
 ; --------------------------------
 
 sub_check_invisible_metatiles:
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_invisible_blank_metatile
+    BEQ bra_return_invisible_metatile_test
+.endif
     CMP #$5f  ; check for hidden coin block
     BEQ bra_return_invisible_metatile_test  ; branch to leave if found
     CMP #$60  ; check for hidden 1-up block
@@ -419,6 +435,9 @@ sub_check_jumpspring_landing:
     BCC bra_exit_jumpspring_landing_check  ; if carry not set, jumpspring not found, therefore leave
     LDA #$70
     STA ram_player_active_gravity  ; otherwise set vertical movement force for player
+.if con_revision_profile = con_revision_profile_ann
+    STA ram_player_fall_gravity
+.endif
     LDA #con_jumpspring_collision_y_speed
     STA ram_jumpspring_force  ; set default jumpspring force
     LDA #$03
@@ -459,7 +478,11 @@ sub_handle_pipe_entry:
     STA ram_player_spr_attrib  ; set background priority bit in player's attributes
     LDA ram_warp_zone_control  ; check warp zone control
     BEQ bra_exit_pipe_entry_check  ; branch to leave if none found
+.if con_revision_profile = con_revision_profile_ann
+    AND #%00000111
+.else
     AND #%00000011  ; mask out all but 2 LSB
+.endif
     ASL
     ASL  ; multiply by four
     TAX  ; save as offset to warp zone numbers (starts at left pipe)
@@ -471,7 +494,17 @@ sub_handle_pipe_entry:
     BCC bra_select_warp_zone_world  ; if player at middle, but not too far right, use offset and skip
     INX  ; otherwise increment for last pipe
 bra_select_warp_zone_world:
+.if con_revision_profile = con_revision_profile_ann
+    LDA tbl_warp_zone_number_tiles,x
+    LDY ram_ann_hard_mode
+    BEQ bra_store_ann_warp_zone_world
+    SEC
+    SBC #$09
+bra_store_ann_warp_zone_world:
+    TAY
+.else
     LDY tbl_warp_zone_number_tiles,x  ; get warp zone numbers
+.endif
     DEY  ; decrement for use as world number
     STY ram_world_number  ; store as world number and offset
     LDX tbl_world_area_pointer_offsets,y  ; get offset to where this world's area offsets are

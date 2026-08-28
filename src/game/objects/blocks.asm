@@ -120,7 +120,11 @@ sub_bump_block:
     JSR sub_check_bumped_block  ; do a sub to check which block player bumped head on
     BCC bra_exit_block_content_check  ; if no match was found, branch to leave
     TYA  ; move block number to A
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_block_item_count
+.else
     CMP #$09  ; if block number was within 0-8 range,
+.endif
     BCC bra_dispatch_block_contents  ; branch to use current number
     SBC #$05  ; otherwise subtract 5 for second set to get proper number
 bra_dispatch_block_contents:
@@ -131,6 +135,9 @@ bra_dispatch_block_contents:
     .word handler_run_coin_block
     .word handler_extra_life_mushroom_block
     .word handler_mushroom_or_flower_block
+.if con_revision_profile = con_revision_profile_ann
+    .word handler_mushroom_or_flower_block
+.endif
     .word handler_release_vine_from_block
     .word handler_release_star_from_block
     .word handler_run_coin_block
@@ -171,14 +178,26 @@ bra_exit_block_content_check:
 ; --------------------------------
 
 tbl_brick_and_question_block_metatiles:
+.if con_revision_profile = con_revision_profile_ann
+    .byte $c1, $c0, $5e, $5f, $60  ; used by question blocks
+
+; these two sets are functionally identical, but look different
+    .byte $54, $55, $56, $57, $58  ; used by ground level types
+    .byte $59, $5a, $5b, $5c, $5d  ; used by other level types
+.else
     .byte $c1, $c0, $5f, $60  ; used by question blocks
 
 ; these two sets are functionally identical, but look different
     .byte $55, $56, $57, $58, $59  ; used by ground level types
     .byte $5a, $5b, $5c, $5d, $5e  ; used by other level types
+.endif
 
 sub_check_bumped_block:
+.if con_revision_profile = con_revision_profile_ann
+    LDY #con_ann_block_metatile_last_index
+.else
     LDY #$0d  ; start at end of metatile data
+.endif
 bra_check_bumped_blocks_loop:
     CMP tbl_brick_and_question_block_metatiles,y  ; check to see if current metatile matches
     BEQ bra_return_matching_bumped_metatile  ; metatile found in block buffer, branch if so

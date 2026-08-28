@@ -37,14 +37,23 @@ tbl_enemy_graphics_tiles:
     .byte $fc, $fc, $fc, $fc, $ef, $ef  ; defeated goomba
     .byte $b9, $b8, $bb, $ba, $bc, $bc  ; lakitu frame 1
     .byte $fc, $fc, $bd, $bd, $bc, $bc  ; frame 2
+.if con_revision_profile = con_revision_profile_ann
+    .byte $76, $79, $77, $77, $78, $78  ; princess
+    .byte $cd, $7a, $ce, $7b, $cf, $ee  ; mushroom retainer
+.else
     .byte $7a, $7b, $da, $db, $d8, $d8  ; princess
     .byte $cd, $cd, $ce, $ce, $cf, $cf  ; mushroom retainer
+.endif
     .byte $7d, $7c, $d1, $8c, $d3, $d2  ; hammer bro frame 1
     .byte $7d, $7c, $89, $88, $8b, $8a  ; frame 2
     .byte $d5, $d4, $e3, $e2, $d3, $d2  ; frame 3
     .byte $d5, $d4, $e3, $e2, $8b, $8a  ; frame 4
     .byte $e5, $e5, $e6, $e6, $eb, $eb  ; piranha plant frame 1
+.if con_revision_profile = con_revision_profile_ann
+    .byte $ec, $ec, $ed, $ed, $eb, $eb  ; frame 2
+.else
     .byte $ec, $ec, $ed, $ed, $ee, $ee  ; frame 2
+.endif
     .byte $fc, $fc, $d0, $d0, $d7, $d7  ; podoboo
     .byte $bf, $be, $c1, $c0, $c2, $fc  ; bowser front frame 1
     .byte $c4, $c3, $c6, $c5, $c8, $c7  ; bowser rear frame 1
@@ -56,13 +65,21 @@ tbl_enemy_graphics_tiles:
     .byte $f0, $f0, $fc, $fc, $fc, $fc  ; frame 3
 
 tbl_enemy_graphics_offsets:
+.if con_revision_profile = con_revision_profile_ann
+    .byte $0c, $0c, $00, $0c, $c0, $a8, $54, $3c
+.else
     .byte $0c, $0c, $00, $0c, $0c, $a8, $54, $3c
+.endif
     .byte $ea, $18, $48, $48, $cc, $c0, $18, $18
     .byte $18, $90, $24, $ff, $48, $9c, $d2, $d8
     .byte $f0, $f6, $fc
 
 tbl_enemy_sprite_attributes:
+.if con_revision_profile = con_revision_profile_ann
+    .byte $01, $02, $03, $02, $22, $01, $03, $03
+.else
     .byte $01, $02, $03, $02, $01, $01, $03, $03
+.endif
     .byte $03, $01, $01, $02, $02, $21, $01, $02
     .byte $01, $01, $02, $ff, $02, $02, $01, $01
     .byte $02, $02, $02
@@ -74,6 +91,18 @@ tbl_jumpspring_graphics_offsets:
     .byte $18, $19, $1a, $19, $18
 
 sub_render_enemy_graphics:
+.if con_revision_profile = con_revision_profile_ann
+    LDA #$00
+    STA ram_ann_render_clear_skip
+    LDA #$02
+    LDY ram_ann_hard_mode
+    BEQ :+
+    JSR sub_ann_hard_mode_render_spring
+    :
+    STA tbl_enemy_sprite_attributes+24
+    STA tbl_enemy_sprite_attributes+25
+    STA tbl_enemy_sprite_attributes+26
+.endif
     LDA ram_enemy_y_position,x  ; get enemy object vertical position
     STA $02
     LDA ram_enemy_rel_x_pos  ; get enemy object horizontal position
@@ -311,12 +340,21 @@ bra_check_enemy_animation_eligibility:
     CMP #$15  ; check for mushroom retainer/princess object
     BNE bra_check_enemy_animation_frame  ; which uses different code here, branch if not found
     INY  ; residual instruction
+.if con_revision_profile = con_revision_profile_ann
+    LDA #$03
+    STA $ec
+.endif
     LDA ram_world_number  ; are we on world 8?
     CMP #con_world8
     BCS loc_apply_defeated_enemy_graphics  ; if so, leave the offset alone (use princess)
+.if con_revision_profile = con_revision_profile_ann
+    INC ram_ann_render_clear_skip
+.endif
     LDX #$a2  ; otherwise, set for mushroom retainer object instead
+.if con_revision_profile <> con_revision_profile_ann
     LDA #$03  ; set alternate state here
     STA $ec
+.endif
     BNE loc_apply_defeated_enemy_graphics  ; unconditional branch
 
 bra_check_enemy_animation_frame:
@@ -335,12 +373,20 @@ loc_check_enemy_animation_pause:
     TAX  ; to animate various enemy objects
 
 loc_apply_defeated_enemy_graphics:
+.if con_revision_profile = con_revision_profile_ann
+    LDA $ef
+    CMP #con_ann_piranha_plant_b_object
+    BEQ :+
+.endif
     LDA $ed  ; check saved enemy state
     AND #%00100000  ; for d5 set
     BEQ loc_draw_enemy_object  ; branch if not set
     LDA $ef
     CMP #$04  ; check for saved enemy object => $04
     BCC loc_draw_enemy_object  ; branch if less
+.if con_revision_profile = con_revision_profile_ann
+    :
+.endif
     LDY #$01
     STY ram_vertical_flip_flag  ; set vertical flip flag
     DEY
@@ -361,6 +407,10 @@ bra_clip_enemy_sprites:
     JMP loc_clip_enemy_sprites  ; jump if found
 
 bra_check_enemy_vertical_flip:
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_ann_render_clear_skip
+    BNE bra_clip_enemy_sprites
+.endif
     LDA ram_vertical_flip_flag  ; check if vertical flip flag is set here
     BEQ bra_check_enemy_sprite_symmetry  ; branch if not
     LDA ram_sprite_attributes,y  ; get attributes of first sprite we dealt with
@@ -375,6 +425,10 @@ bra_check_enemy_vertical_flip:
     LDA $ef
     CMP #con_hammer_bro  ; check saved enemy object for hammer bro
     BEQ bra_flip_enemy_tiles_vertically
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_piranha_plant_b_object
+    BEQ bra_flip_enemy_tiles_vertically
+.endif
     CMP #con_lakitu  ; check saved enemy object for lakitu
     BEQ bra_flip_enemy_tiles_vertically  ; branch for hammer bro or lakitu
     CMP #$15
@@ -411,6 +465,10 @@ bra_select_symmetric_enemy_graphics:
     BEQ bra_mirror_enemy_graphics
     CMP #con_piranha_plant  ; check for piranha plant object
     BEQ bra_mirror_enemy_graphics
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_piranha_plant_b_object
+    BEQ bra_mirror_enemy_graphics
+.endif
     CMP #con_podoboo  ; check for podoboo object
     BEQ bra_mirror_enemy_graphics  ; branch if either of three are found
     CMP #con_spiny  ; check for spiny object
@@ -483,7 +541,12 @@ bra_check_jumpspring_sprite_symmetry:
     LDA $ef  ; check for jumpspring object (any frame)
     CMP #$18
     BCC loc_clip_enemy_sprites  ; branch if not jumpspring object at all
+.if con_revision_profile = con_revision_profile_ann
+    LDA #$80
+    ORA tbl_enemy_sprite_attributes+24
+.else
     LDA #$82
+.endif
     STA ram_sprite_attributes+8,y  ; set vertical flip and palette bits of
     STA ram_sprite_attributes+16,y  ; second and third row left sprites
     ORA #%01000000

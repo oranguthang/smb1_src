@@ -113,6 +113,15 @@
           ]
         }
       ],
+      "source_assets": [
+        {
+          "name": "guest_chr",
+          "payload": "NSMMAIN",
+          "offset": 28990,
+          "size": 384,
+          "sha1": "8b1721dc53856c29637ca03f96b43eb104330ea3"
+        }
+      ],
       "auxiliary_conversion": {
         "reference_rom": "All Night Nippon Super Mario Bros. (J).nes",
         "classification": "unofficial_fds_to_nrom_conversion",

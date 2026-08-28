@@ -64,6 +64,14 @@ difference for the reference extractor, the ignored segaloco meta-disassembly
 reproduces all four program payloads (`NSMMAIN` and `NSMDATA2` through
 `NSMDATA4`) exactly.
 
+`make split-platform-assets PLATFORM=ann_fds` also extracts the 384-byte guest
+CHR region embedded in `NSMMAIN` to the ignored
+`assets/generated/platforms/ann_fds/source/guest_chr.bin` file. The manifest
+records its payload offset, size, and SHA-1
+`8b1721dc53856c29637ca03f96b43eb104330ea3`; the authored bitmap bytes never
+enter Git. Tables, course streams, tile maps, code, and the initialized save
+record remain readable source rather than being hidden behind asset slices.
+
 The supplied GoodNES `.nes` image with SHA-1 `51db085d...` remains classified
 as an unofficial FDS-to-NROM conversion. It is useful as auxiliary behavioral
 and content evidence but is not the identity boundary for the original disk

@@ -168,6 +168,9 @@ tbl_flagpole_score_number_tiles:
     .byte $fa, $fb
     .byte $f8, $fb
     .byte $f6, $fb
+.if con_revision_profile = con_revision_profile_ann
+    .byte $fd, $fe
+.endif
 
 sub_render_flagpole_graphics:
     LDY ram_enemy_spr_data_offset,x  ; get sprite data offset for flagpole flag
@@ -395,13 +398,25 @@ loc_exit_jumping_coin_graphics:
 
 ; tiles arranged in top left, right, bottom left, right order
 tbl_power_up_graphics_tiles:
+.if con_revision_profile = con_revision_profile_ann
+    .byte $d8, $da, $db, $ff  ; regular mushroom
+.else
     .byte $76, $77, $78, $79  ; regular mushroom
+.endif
     .byte $d6, $d6, $d9, $d9  ; fire flower
     .byte $8d, $8d, $e4, $e4  ; star
+.if con_revision_profile = con_revision_profile_ann
+    .byte $d8, $da, $db, $ff  ; 1-up mushroom
+    .byte $d8, $da, $db, $ff  ; poison mushroom
+.else
     .byte $76, $77, $78, $79  ; 1-up mushroom
+.endif
 
 tbl_power_up_sprite_attributes:
     .byte $02, $01, $02, $01
+.if con_revision_profile = con_revision_profile_ann
+    .byte $03
+.endif
 
 sub_draw_power_up:
     LDY ram_enemy_spr_data_offset+5  ; get power-up's sprite data offset
@@ -436,6 +451,10 @@ bra_draw_power_up_sprite_rows:
     BEQ bra_clip_power_up_sprites  ; if regular mushroom, branch, do not change colors or flip
     CMP #$03
     BEQ bra_clip_power_up_sprites  ; if 1-up mushroom, branch, do not change colors or flip
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_poison_mushroom_power_up
+    BEQ bra_clip_power_up_sprites
+.endif
     STA $00  ; store power-up type here now
     LDA ram_frame_counter  ; get frame counter
     LSR  ; divide by 2 to change colors every two frames

@@ -50,6 +50,16 @@ class PlayerPhysicsTests(unittest.TestCase):
             (0xFB, 0xFB, 0xFB, 0xFA, 0xFA, 0xFE, 0xFF),
         )
 
+    def test_decodes_ann_later_engine_table_order(self) -> None:
+        tables = player_physics.load_byte_tables(
+            PHYSICS_SOURCE, revision_profile="ann"
+        )
+        self.assertEqual(tables["tbl_horizontal_friction"], (0xE4, 0x98, 0xD0))
+        self.assertEqual(
+            tables["tbl_initial_player_y_speed"],
+            (0xFC, 0xFC, 0xFC, 0xFB, 0xFB, 0xFE, 0xFF),
+        )
+
     def test_selects_ground_jump_profiles_at_exact_thresholds(self) -> None:
         cases = {
             0x00: 0,

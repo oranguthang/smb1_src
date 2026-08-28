@@ -28,11 +28,19 @@ bra_check_hammer_bro_background_collision:
     CPY #con_hammer_bro  ; check for hammer bro
     BNE bra_check_enemy_background_collision_eligibility  ; branch if not found
     JMP loc_handle_hammer_bro_background_collision  ; otherwise jump elsewhere
+.if con_revision_profile = con_revision_profile_ann
+bra_exit_ann_enemy_ground_collision:
+    RTS
+.endif
 bra_check_enemy_background_collision_eligibility:
     CPY #con_spiny  ; if enemy object is spiny, branch
     BEQ bra_check_metatile_under_enemy
     CPY #con_power_up_object  ; if special power-up object, branch
     BEQ bra_check_metatile_under_enemy
+.if con_revision_profile = con_revision_profile_ann
+    CPY #con_ann_piranha_plant_b_object
+    BEQ bra_exit_ann_enemy_ground_collision
+.endif
     CPY #$07  ; if enemy object =>$07, branch to leave
     BCS bra_exit_enemy_background_collision
 bra_check_metatile_under_enemy:
@@ -50,9 +58,11 @@ bra_handle_enemy_floor_collision:
     BEQ bra_handle_enemy_without_floor_collision  ; if blank $26, coins, or hidden blocks, jump, enemy falls through
     CMP #$23
     BNE bra_land_enemy_on_metatile  ; check for blank metatile $23 and branch if not found
+.if con_revision_profile <> con_revision_profile_ann
     LDY $02  ; get vertical coordinate used to find block
     LDA #$00  ; store default blank metatile in that spot so we won't
     STA ($06),y  ; trigger this routine accidentally again
+.endif
     LDA ram_enemy_id,x
     CMP #$15  ; if enemy object => $15, branch ahead
     BCS sub_check_enemy_stun_eligibility
@@ -65,10 +75,19 @@ bra_award_block_hit_enemy_points:
     JSR sub_setup_floatey_number
 
 sub_check_enemy_stun_eligibility:
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_enemy_id,x
+.endif
     CMP #$09  ; perform many comparisons on enemy object identifier
     BCC sub_set_stun
     CMP #$11  ; if the enemy object identifier is equal to the values
     BCS sub_set_stun  ; $09, $0e, $0f or $10, it will be modified, and not
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_piranha_plant
+    BEQ sub_set_stun
+    CMP #con_ann_piranha_plant_b_object
+    BEQ sub_set_stun
+.endif
     CMP #$0a  ; modified if not any of those values, note that piranha plant will
     BCC bra_demote_stunned_enemy  ; always fail this test because A will still have vertical
     CMP #con_piranha_plant  ; coordinate from previous addition, also these comparisons
@@ -77,10 +96,20 @@ bra_demote_stunned_enemy:
     AND #%00000001  ; erase all but LSB, essentially turning enemy object
     STA ram_enemy_id,x  ; into green or red koopa troopa to demote them
 sub_set_stun:
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_power_up_object
+    BEQ bra_finish_ann_enemy_stun_state
+    CMP #con_goomba
+    BEQ bra_finish_ann_enemy_stun_state
+    LDA #$02
+    STA ram_enemy_state,x
+bra_finish_ann_enemy_stun_state:
+.else
     LDA ram_enemy_state,x  ; load enemy state
     AND #%11110000  ; save high nybble
     ORA #%00000010
     STA ram_enemy_state,x  ; set d1 of enemy state
+.endif
     DEC ram_enemy_y_position,x
     DEC ram_enemy_y_position,x  ; subtract two pixels from enemy's vertical position
     LDA ram_enemy_id,x
@@ -348,6 +377,10 @@ sub_check_non_solid_enemy_metatile:
     BEQ bra_return_enemy_floor_metatile_test
     CMP #$c3  ; underwater coin?
     BEQ bra_return_enemy_floor_metatile_test
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_invisible_blank_metatile
+    BEQ bra_return_enemy_floor_metatile_test
+.endif
     CMP #$5f  ; hidden coin block?
     BEQ bra_return_enemy_floor_metatile_test
     CMP #$60  ; hidden 1-up block?

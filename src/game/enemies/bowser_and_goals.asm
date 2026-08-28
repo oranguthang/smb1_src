@@ -433,6 +433,23 @@ handler_run_star_flag:
     .word handler_wait_for_area_end_music
 
 handler_set_fireworks_count:
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_game_timer_display+2
+    CMP ram_ann_coin_display_last_digit
+    BNE bra_select_no_ann_fireworks
+    AND #$01
+    BEQ bra_select_six_ann_fireworks
+    LDY #$03
+    LDA #$03
+    BNE bra_store_fireworks_count
+bra_select_six_ann_fireworks:
+    LDY #$00
+    LDA #$06
+    BNE bra_store_fireworks_count
+bra_select_no_ann_fireworks:
+    LDY #$00
+    LDA #$ff
+.else
     LDY #$05  ; set default state for star flag object
     LDA ram_game_timer_display+2  ; get game timer's last digit
     CMP #$01
@@ -444,6 +461,7 @@ handler_set_fireworks_count:
     CMP #$06
     BEQ bra_store_fireworks_count  ; if last digit of game timer set to 6, skip ahead
     LDA #$ff  ; otherwise set value for no fireworks
+.endif
 bra_store_fireworks_count:
     STA ram_fireworks_counter  ; set fireworks counter here
     STY ram_enemy_state,x  ; set whatever state we have in star flag object
@@ -465,7 +483,11 @@ handler_award_game_timer_points:
     LDA #con_sfx_timer_tick
     STA ram_square2_sound_queue  ; load timer tick sound
 bra_skip_game_timer_tick_sound:
+.if con_revision_profile = con_revision_profile_ann
+    LDY #con_ann_game_timer_digit_offset
+.else
     LDY #$23  ; set offset here to subtract from game timer's last digit
+.endif
     LDA #$ff  ; set adder here to $ff, or -1, to subtract one
     STA ram_digit_modifier+5  ; from the last digit of the game timer
     JSR sub_digits_math_routine  ; subtract digit
@@ -473,18 +495,26 @@ bra_skip_game_timer_tick_sound:
     STA ram_digit_modifier+5  ; per game timer interval subtracted
 
 loc_award_end_area_points:
+.if con_revision_profile = con_revision_profile_ann
+    LDY #con_ann_score_digit_offset
+.else
     LDY #$0b  ; load offset for mario's score by default
     LDA ram_current_player  ; check player on the screen
     BEQ bra_award_points_to_current_player  ; if mario, do not change
     LDY #$11  ; otherwise load offset for luigi's score
 bra_award_points_to_current_player:
+.endif
     JSR sub_digits_math_routine  ; award 50 points per game timer interval
+.if con_revision_profile = con_revision_profile_ann
+    LDA #con_ann_end_area_status_selector
+.else
     LDA ram_current_player  ; get player on the screen (or 500 points per
     ASL  ; fireworks explosion if branched here from there)
     ASL  ; shift to high nybble
     ASL
     ASL
     ORA #%00000100  ; add four to set nybble for game timer
+.endif
     JMP sub_update_number  ; jump to print the new score and game timer
 
 handler_raise_star_flag_and_launch_fireworks:
@@ -567,7 +597,11 @@ handler_move_piranha_plant:
 
 bra_check_player_near_piranha_pipe:
     LDA $00  ; get saved horizontal difference
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_piranha_plant_player_cutoff
+.else
     CMP #$21
+.endif
     BCC bra_finish_piranha_plant_update  ; if player within a certain distance, branch to leave
 
 bra_reverse_piranha_plant_speed:

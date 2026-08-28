@@ -109,7 +109,11 @@ tbl_foreground_scenery_metatiles:
     .byte $00, $00, $00, $00, $86, $87
 
 tbl_terrain_metatiles:
+.if con_revision_profile = con_revision_profile_ann
+    .byte $69, con_ann_normal_floor_metatile, $52, $62
+.else
     .byte $69, $54, $52, $62
+.endif
 
 tbl_terrain_render_masks:
     .byte %00000000, %00000000  ; no ceiling or floor
@@ -247,7 +251,11 @@ bra_advance_terrain_row:
     BNE bra_advance_terrain_bit  ; if not underground, skip this part
     CPX #$0b
     BNE bra_advance_terrain_bit  ; if we're at the bottom of the screen, override
+.if con_revision_profile = con_revision_profile_ann
+    LDA #con_ann_normal_floor_metatile
+.else
     LDA #$54  ; old terrain type with ground level terrain type
+.endif
     STA $07
 bra_advance_terrain_bit:
     INY  ; increment bitmasks offset in Y
@@ -436,12 +444,20 @@ bra_classify_area_object_row_14:
     BNE bra_decode_area_object_row_13
     LDA #$00  ; if so, load offset with $00
     STA $07
+.if con_revision_profile = con_revision_profile_ann
+    LDA #con_ann_row_14_area_object_offset
+.else
     LDA #$2e  ; and load A with another value
+.endif
     BNE loc_dispatch_decoded_area_object  ; unconditional branch
 bra_decode_area_object_row_13:
     CMP #$0d  ; row 13?
     BNE bra_classify_special_area_object_rows
+.if con_revision_profile = con_revision_profile_ann
+    LDA #con_ann_row_13_area_object_offset
+.else
     LDA #$22  ; if so, load offset with 34
+.endif
     STA $07
     INY  ; get next byte
 .if con_revision_profile = con_revision_profile_vs
@@ -470,7 +486,11 @@ bra_classify_special_area_object_rows:
     LDA (ram_area_data),y
     AND #%01110000  ; mask out all but d6-d4
     BNE bra_decode_large_area_object  ; if any bits set, branch to handle large object
+.if con_revision_profile = con_revision_profile_ann
+    LDA #con_ann_small_area_object_offset
+.else
     LDA #$16
+.endif
     STA $07  ; otherwise set offset of 24 for small object
     LDA (ram_area_data),y  ; reload second byte of level object
     AND #%00001111  ; mask out higher nybble and jump
@@ -584,12 +604,19 @@ bra_dispatch_current_area_object:
     .word handler_draw_staircase
     .word handler_draw_exit_pipe
     .word handler_residual_flag_balls
+.if con_revision_profile = con_revision_profile_ann
+    .word handler_ann_draw_flipped_vertical_pipe_a
+    .word handler_ann_draw_flipped_vertical_pipe_b
+.endif
 
 ; small objects (rows $00-$0b or 00-11, d6-d4 all clear)
     .word handler_draw_question_block  ; power-up
     .word handler_draw_question_block  ; coin
     .word handler_draw_question_block  ; hidden, coin
     .word handler_draw_hidden_extra_life_block  ; hidden, 1-up
+.if con_revision_profile = con_revision_profile_ann
+    .word handler_draw_question_block  ; later-engine question block variant
+.endif
     .word handler_draw_item_brick  ; brick, power-up
     .word handler_draw_item_brick  ; brick, vine
     .word handler_draw_item_brick  ; brick, star

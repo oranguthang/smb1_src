@@ -183,15 +183,25 @@ bra_exit_horizontal_offscreen_check:
 ; --------------------------------
 
 tbl_vertical_offscreen_bit_masks:
+.if con_revision_profile = con_revision_profile_ann
+    .byte $0f, $07, $03, $01
+    .byte $00, $08, $0c, $0e
+    .byte $00
+.else
     .byte $00, $08, $0c, $0e
     .byte $0f, $07, $03, $01
     .byte $00
+.endif
 
 tbl_vertical_offscreen_default_indices:
     .byte $04, $00, $04
 
 tbl_vertical_screen_edge_units:
+.if con_revision_profile = con_revision_profile_ann
+    .byte $00, $ff
+.else
     .byte $ff, $00
+.endif
 
 loc_get_vertical_offscreen_bits:
     STX $04  ; save position in buffer to here

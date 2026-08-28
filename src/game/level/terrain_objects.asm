@@ -67,7 +67,11 @@ loc_draw_bridge:
 handler_residual_flag_balls:
     JSR sub_get_large_area_object_attributes  ; get low nybble from object byte
     LDX #$02  ; render flag balls on third row from top
+.if con_revision_profile = con_revision_profile_ann
+    LDA #con_ann_flagpole_tip_metatile
+.else
     LDA #$6d  ; of screen downwards based on low nybble
+.endif
     JMP sub_render_under_part
 
 ; --------------------------------
@@ -265,7 +269,7 @@ bra_render_next_stair_step:
 handler_draw_jumpspring:
     JSR sub_get_large_area_object_attributes
     JSR sub_find_empty_enemy_slot  ; find empty space in enemy object buffer
-.if con_revision_profile = con_revision_profile_pal
+.if con_revision_profile = con_revision_profile_pal .or con_revision_profile = con_revision_profile_ann
     BCS bra_exit_draw_jumpspring  ; leave when every enemy slot is occupied
 .elseif con_revision_profile = con_revision_profile_vs
     BCS bra_exit_draw_jumpspring
@@ -386,7 +390,11 @@ sub_render_under_part:
     BEQ bra_write_under_part_metatile  ; if question block w/ coin, overwrite
     CPY #$c0
     BCS bra_advance_under_part_row  ; if any other metatile with palette 3, wait until next row
+.if con_revision_profile = con_revision_profile_ann
+    CPY #con_ann_normal_floor_metatile
+.else
     CPY #$54
+.endif
     BNE bra_write_under_part_metatile  ; if cracked rock terrain, overwrite
     CMP #$50
     BEQ bra_advance_under_part_row  ; if stem top of mushroom, wait until next row
@@ -481,7 +489,7 @@ sub_get_block_buffer_addr:
 
 ; unused space
 .if con_revision_profile <> con_revision_profile_pal
-    .if con_revision_profile <> con_revision_profile_vs .and con_revision_profile <> con_revision_profile_fds_smb
+    .if con_revision_profile <> con_revision_profile_vs .and con_revision_profile <> con_revision_profile_fds_smb .and con_revision_profile <> con_revision_profile_ann
         .byte $ff, $ff
     .endif
 .endif

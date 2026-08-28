@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -16,6 +17,10 @@ TABLE_NAMES = (
     "tbl_maximum_left_speed",
     "tbl_maximum_right_speed",
     "tbl_horizontal_friction",
+)
+
+PROFILE_CONDITION_RE = re.compile(
+    r"^\.(if|elseif) con_revision_profile (=|<>) con_revision_profile_([a-z0-9_]+)$"
 )
 
 
@@ -67,7 +72,7 @@ def load_byte_tables(
     *,
     revision_profile: str = "ju",
 ) -> dict[str, tuple[int, ...]]:
-    if revision_profile not in {"ju", "pc10", "pal"}:
+    if revision_profile not in {"ju", "pc10", "pal", "ann"}:
         raise ValueError(f"unsupported revision profile: {revision_profile}")
     wanted = set(TABLE_NAMES)
     tables: dict[str, list[int]] = {}
@@ -77,21 +82,31 @@ def load_byte_tables(
 
     for raw_line in source_path.read_text(encoding="utf-8").splitlines():
         code = raw_line.split(";", 1)[0].strip()
-        if code == ".if con_revision_profile = con_revision_profile_pal":
-            condition = revision_profile == "pal"
-            condition_stack.append((active, condition))
-            active = active and condition
+        condition_match = PROFILE_CONDITION_RE.fullmatch(code)
+        if condition_match is not None:
+            directive, operator, profile = condition_match.groups()
+            condition = revision_profile == profile
+            if operator == "<>":
+                condition = not condition
+            if directive == "if":
+                condition_stack.append((active, condition))
+                active = active and condition
+            else:
+                parent_active, branch_taken = condition_stack[-1]
+                active = parent_active and not branch_taken and condition
+                condition_stack[-1] = (parent_active, branch_taken or condition)
             continue
         if code == ".else":
-            parent_active, condition = condition_stack[-1]
-            active = parent_active and not condition
+            parent_active, branch_taken = condition_stack[-1]
+            active = parent_active and not branch_taken
+            condition_stack[-1] = (parent_active, True)
             continue
         if code == ".endif":
             active, _ = condition_stack.pop()
             continue
-        if code.endswith(":"):
-            label = code[:-1]
-            current = label if label in wanted else None
+        if code.endswith(":") or code.endswith(" = *"):
+            label = code[:-1] if code.endswith(":") else code.removesuffix(" = *")
+            current = label if active and label in wanted else None
             if current is not None:
                 tables[current] = []
             continue

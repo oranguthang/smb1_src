@@ -150,6 +150,21 @@ loc_finish_flying_cheep_cheep_spawn:
 ; --------------------------------
 
 handler_initialize_bowser:
+.if con_revision_profile = con_revision_profile_ann
+    LDY #$04
+bra_scan_ann_duplicate_bowsers:
+    CPY ram_object_offset
+    BEQ bra_keep_ann_bowser_slot
+    LDA ram_enemy_id,y
+    CMP #con_bowser
+    BNE bra_keep_ann_bowser_slot
+    LDA #$00
+    STA ram_enemy_id,y
+    STA ram_enemy_flag,y
+bra_keep_ann_bowser_slot:
+    DEY
+    BPL bra_scan_ann_duplicate_bowsers
+.endif
     JSR sub_duplicate_enemy_object  ; jump to create another bowser object
     STX ram_bowser_front_offset  ; save offset of first here
     LDA #$00
@@ -423,8 +438,15 @@ loc_spawn_enemy_group:
     BCS bra_store_group_enemy_type  ; if so, branch
     PHA  ; save another copy to stack
     LDY #con_goomba  ; load value for goomba enemy
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_ann_primary_hard_mode
+    BEQ bra_restore_group_enemy_type
+    LDA ram_ann_hard_mode
+    BNE bra_restore_group_enemy_type
+.else
     LDA ram_primary_hard_mode  ; if primary hard mode flag not set,
     BEQ bra_restore_group_enemy_type  ; branch, otherwise change to value
+.endif
     LDY #con_buzzy_beetle  ; for buzzy beetle
 bra_restore_group_enemy_type:
     PLA  ; get second copy from stack
@@ -505,7 +527,11 @@ handler_initialize_enemy_frenzy:
 
 ; frenzy object jump table
     .word handler_spawn_lakitu_or_spiny
+.if con_revision_profile = con_revision_profile_ann
+    .word handler_no_ann_frenzy_initialization
+.else
     .word handler_no_frenzy_initialization
+.endif
     .word handler_initialize_flying_cheep_cheep
     .word handler_initialize_bowser_flame
     .word handler_initialize_fireworks
@@ -513,8 +539,10 @@ handler_initialize_enemy_frenzy:
 
 ; --------------------------------
 
+.if con_revision_profile <> con_revision_profile_ann
 handler_no_frenzy_initialization:
     RTS
+.endif
 
 ; --------------------------------
 
@@ -532,6 +560,9 @@ bra_check_next_lakitu_slot:
     LDA #$00
     STA ram_enemy_frenzy_buffer  ; empty enemy frenzy buffer
     STA ram_enemy_flag,x  ; disable enemy buffer flag for this object
+.if con_revision_profile = con_revision_profile_ann
+handler_no_ann_frenzy_initialization:
+.endif
     RTS
 
 ; --------------------------------
@@ -657,23 +688,4 @@ loc_initialize_small_lift:
 
 ; --------------------------------
 
-tbl_platform_x_offsets_low:
-    .byte $08,$0c,$f8
-
-tbl_platform_x_offsets_high:
-    .byte $00,$00,$ff
-
-sub_offset_platform_x_position:
-    LDA ram_enemy_x_position,x  ; get horizontal coordinate
-    CLC
-    ADC tbl_platform_x_offsets_low,y  ; add or subtract pixels depending on offset
-    STA ram_enemy_x_position,x  ; store as new horizontal coordinate
-    LDA ram_enemy_page_loc,x
-    ADC tbl_platform_x_offsets_high,y  ; add or subtract page location depending on offset
-    STA ram_enemy_page_loc,x  ; store as new page location
-    RTS  ; and go back
-
-; --------------------------------
-
-handler_end_enemy_initialization:
-    RTS
+.include "game/enemies/platform_initialization_helpers.asm"

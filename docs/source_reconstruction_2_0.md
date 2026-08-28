@@ -43,3 +43,31 @@ development and is not tag-ready. The release tag will remain an explicit
 maintainer action after every profile and aggregate gate is complete. Generated
 ROMs, disk images, extracted assets, content workspaces, traces, and emulator
 results remain ignored local data.
+
+## ANN Reconstruction Boundary
+
+The shared ANN program is reconstructed through the end of actor positioning at
+`$BFBF`. The complete `$B0E2-$BFBF` rendering interval is byte-identical to the
+verified `NSMMAIN` payload. The remaining program tail has the following proven
+layout:
+
+| CPU range | Size | Ownership |
+| --- | ---: | --- |
+| `$BFBF-$C1D3` | 532 bytes | FDS loader, file tables, prompt, and error reporting |
+| `$C1D3-$C230` | 93 bytes | ANN game-over menu |
+| `$C230-$C26F` | 63 bytes | Later-engine player-physics selectors |
+| `$C26F-$C339` | 202 bytes | Course descriptor and loader helpers |
+| `$C339-$C42B` | 242 bytes | Course sequence, scenery offsets, and pointer tables |
+| `$C42B-$C745` | 794 bytes | Title processing, cursor, demo, initialization, and tile map |
+| `$C745-$D13E` | 2,553 bytes | ANN course and enemy data |
+| `$D13E-$D2BE` | 384 bytes | Private guest CHR source asset |
+| `$D2BE-$D2E4` | 38 bytes | Initialized FDS save record and alignment |
+| `$D2E4-$DFFA` | 3,350 bytes | ANN sound engine, effects, music, periods, and envelopes |
+| `$DFFA-$E000` | 6 bytes | NMI, reset, and FDS IRQ vectors |
+
+This tail must be switched into the production entrypoint as one address-space
+unit. Inserting only the 532-byte loader overflows the fixed 32 KiB FDS image,
+because the current temporary ANN build still places the larger SMB1 level bank
+at `$BFBF`. Replacing that bank with the compact ANN course/title/save layout
+provides the corresponding space and restores every downstream address. This is
+an assembly-layout dependency, not a reason to retain opaque program bytes.

@@ -13,6 +13,7 @@ from platform_profiles import (
     build_fds_image,
     build_ines_image,
     extract_fds_payloads,
+    extract_source_assets,
     make_fds_template,
     parse_fds_side,
     payload_paths,
@@ -118,6 +119,36 @@ class FdsPlatformProfileTests(unittest.TestCase):
             build_fds_image(self.profile, self.template, {"MAIN": self.payload}),
             self.image,
         )
+
+    def test_extracts_validated_source_asset_slice(self) -> None:
+        profile = dict(self.profile)
+        profile["source_assets"] = [
+            {
+                "name": "middle",
+                "payload": "MAIN",
+                "offset": 1,
+                "size": 3,
+                "sha1": hashlib.sha1(b"BCD").hexdigest(),
+            }
+        ]
+        self.assertEqual(
+            extract_source_assets({"MAIN": self.payload}, profile),
+            {"middle": b"BCD"},
+        )
+
+    def test_rejects_source_asset_outside_payload(self) -> None:
+        profile = dict(self.profile)
+        profile["source_assets"] = [
+            {
+                "name": "bad",
+                "payload": "MAIN",
+                "offset": len(self.payload),
+                "size": 1,
+                "sha1": hashlib.sha1(b"x").hexdigest(),
+            }
+        ]
+        with self.assertRaisesRegex(ValueError, "range exceeds payload"):
+            extract_source_assets({"MAIN": self.payload}, profile)
 
     def test_template_retains_unselected_file_data(self) -> None:
         records = parse_fds_side(self.template)

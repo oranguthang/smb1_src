@@ -171,6 +171,29 @@ def extract_fds_payloads(
     return payloads
 
 
+def extract_source_assets(
+    payloads: dict[str, bytes], profile: dict[str, Any]
+) -> dict[str, bytes]:
+    assets: dict[str, bytes] = {}
+    for descriptor in profile.get("source_assets", []):
+        name = descriptor["name"]
+        payload_name = descriptor["payload"]
+        if name in assets:
+            raise ValueError(f"duplicate source asset name: {name}")
+        if payload_name not in payloads:
+            raise ValueError(f"unknown source asset payload: {payload_name}")
+        offset = int(descriptor["offset"])
+        size = int(descriptor["size"])
+        payload = payloads[payload_name]
+        if offset < 0 or size < 0 or offset + size > len(payload):
+            raise ValueError(f"source asset range exceeds payload: {name}")
+        data = payload[offset : offset + size]
+        if sha1(data) != descriptor["sha1"]:
+            raise ValueError(f"source asset hash mismatch: {name}")
+        assets[name] = data
+    return assets
+
+
 def make_fds_template(image: bytes, profile: dict[str, Any]) -> bytes:
     extract_fds_payloads(image, profile)
     template = bytearray(image)
@@ -315,12 +338,15 @@ def main() -> int:
                     raise ValueError("split requires a private platform reference")
                 reference = args.reference.read_bytes()
                 payloads = extract_fds_payloads(reference, profile)
+                source_assets = extract_source_assets(payloads, profile)
                 template = make_fds_template(reference, profile)
                 atomic_write(template_path, template)
                 primary = profile.get("primary_payload")
                 for name, data in payloads.items():
                     if name != primary:
                         atomic_write(profile_assets / "payloads" / f"{name}.bin", data)
+                for name, data in source_assets.items():
+                    atomic_write(profile_assets / "source" / f"{name}.bin", data)
                 print(f"[OK] Extracted private platform assets: {profile_assets}")
                 return 0
             if args.output is None:

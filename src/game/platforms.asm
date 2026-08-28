@@ -11,10 +11,16 @@ handler_move_balance_platform:
 bra_check_balance_platform_state:
     LDA ram_enemy_state,x  ; get object's state (set to $ff or other platform offset)
     BPL bra_update_balance_platform_pair  ; if doing other balance platform, branch to leave
+bra_exit_balance_platform_update:
     RTS
 
 bra_update_balance_platform_pair:
     TAY  ; save offset from state as Y
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_enemy_id,y
+    CMP #con_ann_balance_platform_object
+    BNE bra_exit_balance_platform_update
+.endif
     LDA ram_platform_collision_flag,x  ; get collision flag of platform
     STA $00  ; store here
     LDA ram_enemy_moving_dir,x  ; get moving direction
@@ -372,6 +378,10 @@ sub_offscreen_bounds_check:
     LDY ram_enemy_id,x
     CPY #con_hammer_bro  ; check for hammer bro object
     BEQ bra_limit_left_offscreen_bound
+.if con_revision_profile = con_revision_profile_ann
+    CPY #con_ann_piranha_plant_b_object
+    BEQ bra_limit_left_offscreen_bound
+.endif
     CPY #con_piranha_plant  ; check for piranha plant object
     BNE bra_extend_left_offscreen_bound  ; these two will be erased sooner than others if too far left
 bra_limit_left_offscreen_bound:
@@ -403,6 +413,10 @@ bra_extend_left_offscreen_bound:
     BEQ bra_exit_offscreen_bounds_check
     CPY #con_piranha_plant  ; if piranha plant, do not erase
     BEQ bra_exit_offscreen_bounds_check
+.if con_revision_profile = con_revision_profile_ann
+    CPY #con_ann_piranha_plant_b_object
+    BEQ bra_exit_offscreen_bounds_check
+.endif
     CPY #con_flagpole_flag_object  ; if flagpole flag, do not erase
     BEQ bra_exit_offscreen_bounds_check
     CPY #con_star_flag_object  ; if star flag, do not erase
