@@ -28,6 +28,20 @@
       "offset": 0,
       "size": 8192,
       "sha1": "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5"
+    },
+    {
+      "path": "source/base_course_enemy_streams.bin",
+      "region": "prg",
+      "offset": 7536,
+      "size": 1087,
+      "sha1": "16bd5a146588d7731f254e7722bab5467111c7c2"
+    },
+    {
+      "path": "source/base_course_area_streams.bin",
+      "region": "prg",
+      "offset": 8623,
+      "size": 3373,
+      "sha1": "63119cee5b53a6c64ef4a203bdbb9fcd7c0a2f42"
     }
   ]
 }

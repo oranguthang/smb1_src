@@ -43,7 +43,7 @@ smb1_src/
 |   `-- ld65.exe
 |-- assets/
 |   |-- manifest.json   # Reference identity and extracted-asset hashes
-|   `-- generated/      # Ignored local header and CHR data
+|   `-- generated/      # Ignored local container, graphics, and content assets
 |-- docs/               # Local technical notes
 |   |-- 6502_reference.md
 |   `-- modding_examples.md
@@ -80,7 +80,8 @@ make split
 This validates the complete ROM identity before extracting:
 
 - `assets/generated/header/smb.hdr` - 16-byte iNES header;
-- `assets/generated/chr/smb.chr` - 8192-byte CHR-ROM payload.
+- `assets/generated/chr/smb.chr` - 8192-byte CHR-ROM payload;
+- two typed course packs containing the enemy and area-object streams.
 
 The ROM and extracted files are ignored and are not included in the repository.
 PAL revisions and ROMs with extra trailing payloads are rejected by default.
@@ -89,8 +90,8 @@ PAL revisions and ROMs with extra trailing payloads are rejected by default.
 
 ### Preservation PRG build
 
-The reconstruction can be assembled and checked without proprietary graphics
-or a ROM image:
+After the one-time `make split`, the reconstruction can be assembled and
+checked without retaining the ROM image:
 
 ```bash
 make build-prg

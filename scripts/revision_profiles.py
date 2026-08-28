@@ -43,6 +43,31 @@ def split_rom(rom: bytes, profile: dict[str, Any]) -> tuple[bytes, bytes, bytes,
     return regions
 
 
+def extract_source_assets(
+    regions: tuple[bytes, bytes, bytes, bytes], profile: dict[str, Any]
+) -> dict[str, bytes]:
+    region_names = ("header", "prg", "chr", "extra")
+    source_regions = dict(zip(region_names, regions))
+    assets: dict[str, bytes] = {}
+    for descriptor in profile.get("source_assets", []):
+        name = descriptor["name"]
+        region_name = descriptor["region"]
+        if name in assets:
+            raise ValueError(f"duplicate source asset name: {name}")
+        if region_name not in source_regions:
+            raise ValueError(f"unknown source asset region: {region_name}")
+        offset = int(descriptor["offset"])
+        size = int(descriptor["size"])
+        region = source_regions[region_name]
+        if offset < 0 or size < 0 or offset + size > len(region):
+            raise ValueError(f"source asset range exceeds region: {name}")
+        data = region[offset : offset + size]
+        if sha1(data) != descriptor["sha1"]:
+            raise ValueError(f"source asset hash mismatch: {name}")
+        assets[name] = data
+    return assets
+
+
 def atomic_write(path: Path, data: bytes) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(
@@ -94,12 +119,18 @@ def main() -> int:
         if args.command == "split":
             if args.reference_rom is None:
                 raise ValueError("split requires a private reference ROM")
-            _, _, _, extra = split_rom(args.reference_rom.read_bytes(), profile)
+            regions = split_rom(args.reference_rom.read_bytes(), profile)
+            _, _, _, extra = regions
+            for name, data in extract_source_assets(regions, profile).items():
+                atomic_write(
+                    args.asset_dir / args.profile / "source" / f"{name}.bin",
+                    data,
+                )
             if extra:
                 atomic_write(extra_path, extra)
                 print(f"[OK] Extracted private platform payload: {extra_path}")
             else:
-                print(f"[OK] {args.profile} has no extra private platform payload")
+                print(f"[OK] Extracted private revision assets: {args.profile}")
             return 0
         if not all((args.header, args.prg, args.chr, args.output)):
             raise ValueError("build and verify require header, PRG, CHR, and output")

@@ -42,6 +42,7 @@
     "verify-expanded",
     "validate-expanded",
     "check-studios",
+    "split-revision-assets",
     "verify-revisions",
     "validate-revisions",
     "split-platform-assets",

@@ -37,8 +37,8 @@ limit, not a mandate to fragment cohesive code.
 | `src/game/level/parser.asm` | `$92B0-$96C4` | 551 | Column parser, scenery, terrain, and area-object dispatch |
 | `src/game/level/special_objects.asm` | `$96C5-$9956` | 401 | Area attributes, ledges, castles, pipes, and scroll locks |
 | `src/game/level/terrain_objects.asm` | `$9957-$9BF7` | 459 | Holes, bridges, blocks, cannons, stairs, springs, and buffer helpers |
-| `src/data/levels/index_and_enemies.asm` | `$9BF8-$A1AE` | 431 | Area lookup tables and enemy object streams |
-| `src/data/levels/areas.asm` | `$A1AF-$AEDB` | 514 | Encoded area-object streams |
+| `src/data/levels/index_and_enemies.asm` | `$9BF8-$A1AE` | 326 | Area lookup tables and bounded enemy-stream assets |
+| `src/data/levels/areas.asm` | `$A1AF-$AEDB` | 143 | Bounded area-object stream assets |
 | `src/game/core.asm` | `$AEDC-$B328` | 644 | Game mode, scrolling, player control states, and area transitions |
 | `src/game/player/physics.asm` | `$B329-$B623` | 485 | Walking, running, jumping, swimming, climbing, and friction |
 | `src/game/objects/projectiles_and_interactions.asm` | `$B624-$B9B9` | 522 | Fireballs, bubbles, timer, warp zones, flagpole, spring, and vine |

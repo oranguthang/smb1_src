@@ -94,8 +94,8 @@ con_revision_profile = con_revision_profile_ju
     .include "platforms/ann/title_menu.asm"
     .include "platforms/ann/title_setup.asm"
     .include "platforms/ann/title_map.asm"
-    .include "platforms/ann/course_enemy_data.asm"
-    .include "platforms/ann/course_area_data.asm"
+    .include "platforms/ann/primary_course_enemy_streams.asm"
+    .include "platforms/ann/primary_course_area_streams.asm"
     .include "platforms/ann/guest_chr_and_save.asm"
 .endif
 .include "audio/sound_effects.asm"

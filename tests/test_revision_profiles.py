@@ -9,7 +9,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from revision_profiles import build_image, split_rom
+from revision_profiles import build_image, extract_source_assets, split_rom
 
 
 class RevisionProfileTests(unittest.TestCase):
@@ -44,6 +44,36 @@ class RevisionProfileTests(unittest.TestCase):
     def test_rejects_component_substitution(self) -> None:
         with self.assertRaisesRegex(ValueError, "prg hash mismatch"):
             build_image(self.profile, self.header, b"Q" * 32, self.chr, self.extra)
+
+    def test_extracts_validated_source_asset_slice(self) -> None:
+        profile = dict(self.profile)
+        profile["source_assets"] = [
+            {
+                "name": "middle",
+                "region": "prg",
+                "offset": 1,
+                "size": 3,
+                "sha1": hashlib.sha1(b"PPP").hexdigest(),
+            }
+        ]
+        self.assertEqual(
+            extract_source_assets(split_rom(self.rom, profile), profile),
+            {"middle": b"PPP"},
+        )
+
+    def test_rejects_source_asset_outside_region(self) -> None:
+        profile = dict(self.profile)
+        profile["source_assets"] = [
+            {
+                "name": "bad",
+                "region": "prg",
+                "offset": len(self.prg),
+                "size": 1,
+                "sha1": hashlib.sha1(b"x").hexdigest(),
+            }
+        ]
+        with self.assertRaisesRegex(ValueError, "range exceeds region"):
+            extract_source_assets(split_rom(self.rom, profile), profile)
 
 
 if __name__ == "__main__":

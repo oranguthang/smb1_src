@@ -18,6 +18,13 @@ only its size and SHA-1. Run make split-revision-assets PROFILE=pc10 once with
 the matching private ROM to create the ignored local platform asset. Ordinary
 profile builds validate but never overwrite it.
 
+The PAL PRG contains two enemy-stream byte changes and twelve area-stream byte
+changes relative to Japan/USA. They are content differences, not executable
+code or addresses. `make split-revision-assets PROFILE=pal` therefore extracts
+two ignored, checksum-validated PAL course packs. The shared ASM keeps every
+semantic stream label and capacity while selecting the PAL pack at assembly
+time; Japan/USA, PlayChoice-10, and FDS SMB1 share the canonical base packs.
+
 Run make verify-revisions to assemble and compare all complete images against
 their own private references. Run make validate-revisions for the common FCEUX
 startup observation. The PAL profile explicitly enables PAL emulation timing;

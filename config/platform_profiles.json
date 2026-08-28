@@ -144,6 +144,20 @@
       ],
       "source_assets": [
         {
+          "name": "primary_course_enemy_streams",
+          "payload": "NSMMAIN",
+          "offset": 26437,
+          "size": 566,
+          "sha1": "913675dd93b0964ca24ceb54cbd32791e445a42e"
+        },
+        {
+          "name": "primary_course_area_streams",
+          "payload": "NSMMAIN",
+          "offset": 27003,
+          "size": 1987,
+          "sha1": "bef449c01457c26a34fba0486125e7e140c2885f"
+        },
+        {
           "name": "guest_chr",
           "payload": "NSMMAIN",
           "offset": 28990,

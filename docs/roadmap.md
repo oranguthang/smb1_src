@@ -575,6 +575,12 @@ build family and their cross-manifest agreement. It must reject a release while
 any in-scope revision or platform profile remains unsupported. See
 `docs/source_reconstruction_2_0.md`.
 
+Editable course streams use ignored, checksum-validated content packs while
+their semantic labels, capacities, pointer tables, and loaders remain reviewed
+ASM. Japan/USA and FDS SMB1 share one byte-identical base pair, PAL selects its
+own pair for the fourteen differing content bytes, and ANN keeps primary,
+supplemental, and extended pairs tied to their original FDS payload ranges.
+
 The required release profiles are Japan/USA, PlayChoice-10, the verified
 European PAL release, Vs. Super Mario Bros., the FDS SMB1 reissue, and All Night
 Nippon Super Mario Bros. The alternate European candidate is investigated and

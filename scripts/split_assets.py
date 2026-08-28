@@ -133,7 +133,7 @@ def main() -> int:
     if sha1(chr_data) != str(reference.get("chr_sha1", "")).lower():
         fail("reference CHR checksum does not match the manifest")
 
-    regions = {"header": header, "chr": chr_data}
+    regions = {"header": header, "prg": prg, "chr": chr_data}
     assets = manifest.get("assets")
     if not isinstance(assets, list) or not assets:
         fail("manifest has no assets")

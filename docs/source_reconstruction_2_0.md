@@ -57,7 +57,7 @@ semantic source, and the following `$BFBF-$E000` tail has this proven layout:
 | `$C26F-$C339` | 202 bytes | Course descriptor and loader helpers |
 | `$C339-$C42B` | 242 bytes | Course sequence, scenery offsets, and pointer tables |
 | `$C42B-$C745` | 794 bytes | Title processing, cursor, demo, initialization, and tile map |
-| `$C745-$D13E` | 2,553 bytes | ANN course and enemy data |
+| `$C745-$D13E` | 2,553 bytes | Private primary course source assets with semantic boundaries |
 | `$D13E-$D2BE` | 384 bytes | Private guest CHR source asset |
 | `$D2BE-$D2E4` | 38 bytes | Initialized FDS save record and alignment |
 | `$D2E4-$DFFA` | 3,350 bytes | ANN sound engine, effects, music, periods, and envelopes |
