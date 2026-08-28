@@ -10,7 +10,9 @@
 
 ; Clobbers:
 ; A, X, Y
-.if con_revision_profile = con_revision_profile_fds_smb
+.if con_revision_profile = con_revision_profile_ann
+    .byte $ff  ; retained ANN program alignment byte
+.elseif con_revision_profile = con_revision_profile_fds_smb
     .byte $ff, $ff  ; retained FDS program alignment bytes
 .elseif con_revision_profile = con_revision_profile_vs
     .byte $ff  ; retained arcade alignment byte
@@ -566,7 +568,30 @@ tbl_brick_shatter_noise_frequencies:
     .byte $01, $0e, $0e, $0d, $0b, $06, $0c, $0f
     .byte $0a, $09, $03, $0d, $08, $0d, $06, $0c
 
+.if con_revision_profile = con_revision_profile_ann
+tbl_ann_skid_triangle_periods:
+    .byte $47, $49, $42, $4a, $43, $4b
+
+bra_start_ann_skid_sound:
+    STY ram_noise_sound_buffer
+    LDA #$06
+    STA ram_noise_sfx_len_counter
+
+bra_continue_ann_skid_sound:
+    LDA ram_noise_sfx_len_counter
+    TAY
+    LDA tbl_ann_skid_triangle_periods-1,y
+    STA SND_TRIANGLE_REG+2
+    LDA #$18
+    STA SND_TRIANGLE_REG
+    STA SND_TRIANGLE_REG+3
+    BNE bra_decrement_noise_sound_length
+.endif
+
 bra_start_brick_shatter_sound:
+.if con_revision_profile = con_revision_profile_ann
+    STY ram_noise_sound_buffer
+.endif
     LDA #$20  ; load length of brick shatter sound
     STA ram_noise_sfx_len_counter
 
@@ -589,12 +614,31 @@ bra_decrement_noise_sound_length:
     BNE bra_exit_noise_sound
     LDA #$f0  ; if done, stop playing the sfx
     STA SND_NOISE_REG
+.if con_revision_profile = con_revision_profile_ann
+    LDA #$00
+    STA SND_TRIANGLE_REG
+.endif
     LDA #$00
     STA ram_noise_sound_buffer
 bra_exit_noise_sound:
     RTS
 
 sub_handle_noise_sound_effect:
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_noise_sound_buffer
+    BMI bra_continue_ann_skid_sound
+    LDY ram_noise_sound_queue
+    BMI bra_start_ann_skid_sound
+    LSR ram_noise_sound_queue
+    BCS bra_start_brick_shatter_sound
+    LSR
+    BCS bra_continue_brick_shatter_sound
+    LSR ram_noise_sound_queue
+    BCS bra_start_bowser_flame_sound
+    LSR
+    BCS bra_continue_bowser_flame_sound
+    RTS
+.else
     LDY ram_noise_sound_queue  ; check for sfx in queue
     BEQ bra_continue_noise_sound
     STY ram_noise_sound_buffer  ; if found, put in buffer
@@ -612,8 +656,12 @@ bra_continue_noise_sound:
     BCS bra_continue_bowser_flame_sound  ; bowser flame
 bra_exit_noise_sound_handler:
     RTS
+.endif
 
 bra_start_bowser_flame_sound:
+.if con_revision_profile = con_revision_profile_ann
+    STY ram_noise_sound_buffer
+.endif
     LDA #$40  ; load length of bowser flame sound
     STA ram_noise_sfx_len_counter
 

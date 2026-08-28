@@ -37,6 +37,9 @@ ANN_REFERENCE ?= $(PROJECT_DIR)All Night Nippon Super Mario Brothers (Japan) (Pr
 ANN_TAIL_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_tail
 ANN_TAIL_CORE_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_tail_core.asm
 ANN_TAIL_CORE_CFG ?= $(PROJECT_DIR)src/platforms/ann/tail_core.cfg
+ANN_AUDIO_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_audio_tail.asm
+ANN_AUDIO_CFG ?= $(PROJECT_DIR)src/platforms/ann/audio_tail.cfg
+ANN_AUDIO_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_audio
 FIXED_VARIANT ?= five_lives
 FIXED_VARIANT_MANIFEST ?= $(PROJECT_DIR)config/fixed_layout_variants.json
 HACK_SOURCE ?= $(PROJECT_DIR)src/variants/five_lives.asm
@@ -130,7 +133,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms verify-ann-tail-core symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms verify-ann-audio verify-ann-tail-core symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -441,6 +444,23 @@ verify-platforms:
 	$(MAKE) verify-platform PLATFORM=vs_smb
 	$(MAKE) verify-platform PLATFORM=fds_smb
 
+verify-ann-audio:
+	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
+		--source "$(ANN_AUDIO_SOURCE)" \
+		--config "$(ANN_AUDIO_CFG)" \
+		--object "$(ANN_AUDIO_BUILD_DIR)/audio.o" \
+		--output "$(ANN_AUDIO_BUILD_DIR)/audio.bin" \
+		--labels "$(ANN_AUDIO_BUILD_DIR)/audio.lbl" \
+		--map "$(ANN_AUDIO_BUILD_DIR)/audio.map"
+	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
+		--manifest "$(PLATFORM_MANIFEST)" \
+		--profile ann_fds \
+		--reference "$(ANN_REFERENCE)" \
+		--candidate "$(ANN_AUDIO_BUILD_DIR)/audio.bin" \
+		--load-address 0x6000 \
+		--start 0xD2E4 \
+		--end 0xDFFA
+
 verify-ann-tail-core:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
 		--source "$(ANN_TAIL_CORE_SOURCE)" \
@@ -456,7 +476,7 @@ verify-ann-tail-core:
 		--candidate "$(ANN_TAIL_BUILD_DIR)/core.bin" \
 		--load-address 0x6000 \
 		--start 0xBFBF \
-		--end 0xC745
+		--end 0xE000
 
 validate-platforms:
 	$(MAKE) validate-platform PLATFORM=vs_smb

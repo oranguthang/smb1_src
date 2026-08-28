@@ -105,8 +105,12 @@ off_music_header_silence:
     .byte $08, <off_music_stream_silence, >off_music_stream_silence, $00
 off_music_header_castle:
     .byte $00, <off_music_stream_castle, >off_music_stream_castle, $93, $62
+.if con_revision_profile = con_revision_profile_ann
+off_music_header_victory = off_music_header_game_over
+.else
 off_music_header_victory:
     .byte con_music_length_offset_victory, <off_music_stream_victory, >off_music_stream_victory, $24, $14
+.endif
 .if con_revision_profile = con_revision_profile_vs
 off_music_header_vs_game_over:
     .byte $18, <off_music_stream_vs_game_over, >off_music_stream_vs_game_over, $34, $23
@@ -482,20 +486,24 @@ tbl_brick_shatter_volume_envelope = *
 
     .byte $ff, $ff, $ff, $ff
 .else
-    .byte $83, $04, $84, $0c, $83, $62, $10, $84, $12
-    .byte $83, $1c, $22, $1e, $22, $26, $18, $1e, $04, $1c, $00
+    .if con_revision_profile = con_revision_profile_ann
+; ANN has no separate victory stream
+    .else
+        .byte $83, $04, $84, $0c, $83, $62, $10, $84, $12
+        .byte $83, $1c, $22, $1e, $22, $26, $18, $1e, $04, $1c, $00
 
-    .byte $e3, $e1, $e3, $1d, $de, $e0, $23
-    .byte $ec, $75, $74, $f0, $f4, $f6, $ea, $31, $2d
+        .byte $e3, $e1, $e3, $1d, $de, $e0, $23
+        .byte $ec, $75, $74, $f0, $f4, $f6, $ea, $31, $2d
 
-    .byte $83, $12, $14, $04, $18, $1a, $1c, $14
-    .byte $26, $22, $1e, $1c, $18, $1e, $22, $0c, $14
+        .byte $83, $12, $14, $04, $18, $1a, $1c, $14
+        .byte $26, $22, $1e, $1c, $18, $1e, $22, $0c, $14
 
 ; unused space
-    .if con_revision_profile = con_revision_profile_pal
-        .byte $ff, $ff
-    .else
-        .byte $ff, $ff, $ff
+        .if con_revision_profile = con_revision_profile_pal
+            .byte $ff, $ff
+        .else
+            .byte $ff, $ff, $ff
+        .endif
     .endif
 
 tbl_music_note_periods:

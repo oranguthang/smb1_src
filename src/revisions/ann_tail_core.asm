@@ -13,7 +13,6 @@ sub_initialize_name_tables = $6d24
 handler_run_screen_task = $654c
 sub_ann_initialize_life_down_extension = $c3b7
 handler_ann_ending_text_player_setup = $c86f
-off_ann_save_data = $d2e3
 off_ann_player_physics_parameters = $7fe4
 off_ann_player_friction_shift_opcode = $8145
 off_ann_title_player_name = $66ed
@@ -27,6 +26,17 @@ handler_secondary_game_setup = $6f48
 loc_finish_ann_title_screen = $63b9
 sub_terminate_game = $7109
 loc_restart_game = $7119
+vec_nmi_handler = $60a3
+vec_reset_handler = $6000
+vec_ann_irq_handler = $61a5
+
+con_sfx_extra_life = %01000000
+con_time_running_out_music = %01000000
+con_end_of_castle_music = %00001000
+con_victory_music = %00000100
+con_death_music = %00000001
+con_music_header_offset_table_base = tbl_music_header_offsets - 1
+con_music_header_data_base = tbl_music_header_offsets
 
 .p02
 
@@ -40,3 +50,10 @@ loc_restart_game = $7119
 .include "../platforms/ann/title_menu.asm"
 .include "../platforms/ann/title_setup.asm"
 .include "../platforms/ann/title_map.asm"
+.include "../platforms/ann/course_enemy_data.asm"
+.include "../platforms/ann/course_area_data.asm"
+.include "../platforms/ann/guest_chr_and_save.asm"
+.include "../audio/sound_effects.asm"
+.include "../audio/music_engine.asm"
+.include "../audio/music_data.asm"
+.include "../data/vectors.asm"
