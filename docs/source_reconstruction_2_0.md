@@ -71,3 +71,6 @@ Private graphics and typed course streams are reproducibly extracted from the
 validated reference into ignored content packs, then included through explicit
 per-stream boundaries. Together the four exact payloads reconstruct the
 complete ANN disk side without retaining opaque executable code.
+The music library uses the same boundary: relocatable headers remain reviewed
+ASM, while the profile-specific note streams, timing and pitch tables, and
+envelopes come from validated private packs under shared semantic labels.

@@ -24,6 +24,9 @@ code or addresses. `make split-revision-assets PROFILE=pal` therefore extracts
 two ignored, checksum-validated PAL course packs. The shared ASM keeps every
 semantic stream label and capacity while selecting the PAL pack at assembly
 time; Japan/USA, PlayChoice-10, and FDS SMB1 share the canonical base packs.
+The same boundary is used for music: PAL has its own 1,601-byte pack because
+its victory padding, pitch periods, and note-length tables differ, while the
+1,602-byte Japan/USA pack is byte-identical in FDS SMB1.
 
 Run make verify-revisions to assemble and compare all complete images against
 their own private references. Run make validate-revisions for the common FCEUX

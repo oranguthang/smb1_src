@@ -81,7 +81,8 @@ This validates the complete ROM identity before extracting:
 
 - `assets/generated/header/smb.hdr` - 16-byte iNES header;
 - `assets/generated/chr/smb.chr` - 8192-byte CHR-ROM payload;
-- two typed course packs containing the enemy and area-object streams.
+- two typed course packs containing the enemy and area-object streams;
+- one bounded music-data pack containing streams, lookup tables, and envelopes.
 
 The ROM and extracted files are ignored and are not included in the repository.
 PAL revisions and ROMs with extra trailing payloads are rejected by default.

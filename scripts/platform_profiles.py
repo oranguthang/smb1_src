@@ -316,11 +316,17 @@ def main() -> int:
             if args.command == "split":
                 if args.reference is None:
                     raise ValueError("split requires a private platform reference")
-                header, _, chr_data = split_ines_reference(
+                header, prg_data, chr_data = split_ines_reference(
                     args.reference.read_bytes(), profile
+                )
+                source_assets = extract_source_assets(
+                    {"header": header, "prg": prg_data, "chr": chr_data},
+                    profile,
                 )
                 atomic_write(header_path, header)
                 atomic_write(chr_path, chr_data)
+                for name, data in source_assets.items():
+                    atomic_write(profile_assets / "source" / f"{name}.bin", data)
                 print(f"[OK] Extracted private platform assets: {profile_assets}")
                 return 0
             if args.prg is None or args.output is None:

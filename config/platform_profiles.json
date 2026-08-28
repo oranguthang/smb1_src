@@ -19,6 +19,15 @@
       "prg_sha1": "f25ab9354e24e3cd99b6cfd8331f9be40b603c5b",
       "chr_size": 16384,
       "chr_sha1": "19385a81d2abea3ad6ff6b0d220390950ac9d2ee",
+      "source_assets": [
+        {
+          "name": "vs_music_data",
+          "payload": "prg",
+          "offset": 31017,
+          "size": 1745,
+          "sha1": "7d744d43e8ae6e77ac23968e031649df62cc09b6"
+        }
+      ],
       "runtime": {
         "emulator": "fceux",
         "frame": 180,
@@ -143,6 +152,13 @@
         }
       ],
       "source_assets": [
+        {
+          "name": "ann_music_data",
+          "payload": "NSMMAIN",
+          "offset": 31216,
+          "size": 1546,
+          "sha1": "05646319c3031fdd7f155af5a94c32ad03d7e735"
+        },
         {
           "name": "primary_course_enemy_streams",
           "payload": "NSMMAIN",

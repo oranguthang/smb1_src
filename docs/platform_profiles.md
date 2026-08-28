@@ -22,6 +22,11 @@ arcade title state in FCEUX without applying the console input movie. The
 ignored reference repositories and their generated binaries remain evidence,
 not build dependencies.
 
+The splitter also extracts the 1,745-byte Vs. music-data range from PRG. Its
+additional star and game-over streams, lookup tables, and envelopes retain
+semantic ASM labels, while all address-bearing music headers remain
+relocatable source.
+
 ## Famicom Disk System SMB1
 
 The FDS reissue relocates the early SMB engine into the Disk System memory map,
@@ -99,6 +104,11 @@ tile maps, executable code, and the initialized save record remain reviewed
 source. The streams retain the formats decoded by the Level Studio, providing
 a stable boundary for profile-aware editing without turning code into opaque
 binary data.
+
+The 1,546-byte `ann_music_data.bin` pack applies the same rule to the ANN music
+library. The profile has no standalone victory stream, so that semantic
+boundary is retained as an explicit zero-size alias rather than hidden by a
+profile-specific source layout.
 
 This profile is supported at the complete-container identity boundary.
 `make validate-platform PLATFORM=ann_fds` verifies all four payloads and the

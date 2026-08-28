@@ -36,7 +36,7 @@ produced bytes.
 
 - The original `src/smbdis.asm` contained one address-ordered source file of
   16,351 lines. `src/main.asm` is now a 73-line address-ordered module index.
-- The PRG is split across 38 cohesive ASM modules. Excluding the entrypoint and
+- The PRG is split across 39 cohesive ASM modules. Excluding the entrypoint and
   fixed ten-line vector block, module sizes range from 136 to 694 lines after
   label-per-line formatting.
 - Hardware definitions, RAM aliases, constants, code, and data were separated
@@ -580,6 +580,10 @@ their semantic labels, capacities, pointer tables, and loaders remain reviewed
 ASM. Japan/USA and FDS SMB1 share one byte-identical base pair, PAL selects its
 own pair for the fourteen differing content bytes, and ANN keeps primary,
 supplemental, and extended pairs tied to their original FDS payload ranges.
+
+Music follows the same authored-data rule. Relocatable indexes and
+address-bearing headers stay in ASM, while bounded Japan/USA/FDS, PAL, Vs., and
+ANN stream-and-table packs are selected behind one set of semantic labels.
 
 The required release profiles are Japan/USA, PlayChoice-10, the verified
 European PAL release, Vs. Super Mario Bros., the FDS SMB1 reissue, and All Night

@@ -62,6 +62,13 @@
           "offset": 8623,
           "size": 3373,
           "sha1": "bca7dcdef9a1346c5cd92511ead44d0892b33664"
+        },
+        {
+          "name": "pal_music_data",
+          "region": "prg",
+          "offset": 31161,
+          "size": 1601,
+          "sha1": "db3e33f719f0294413998b189e1cb039dff409c4"
         }
       ]
     }

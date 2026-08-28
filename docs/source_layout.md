@@ -63,7 +63,8 @@ limit, not a mandate to fragment cohesive code.
 | `src/rendering/positioning.asm` | `$F12A-$F2CF` | 295 | Relative coordinates, offscreen bits, and generic sprite composition |
 | `src/audio/sound_effects.asm` | `$F2D0-$F690` | 601 | Audio dispatcher and square/noise sound effects |
 | `src/audio/music_engine.asm` | `$F691-$F90C` | 371 | Music headers, channel sequencing, lengths, and envelopes |
-| `src/audio/music_data.asm` | `$F90D-$FFF9` | 408 | Music headers, note streams, frequency tables, and envelopes |
+| `src/audio/music_data.asm` | `$F90D-$F9B7` | 174 | Relocatable music indexes and address-bearing headers |
+| `src/audio/music_streams.asm` | `$F9B8-$FFF9` | 163 | Profile-selected note streams, frequency tables, and envelopes |
 | `src/data/vectors.asm` | `$FFFA-$FFFF` | 10 | NMI, reset, and IRQ vectors |
 
 ## Verification Baseline
@@ -78,7 +79,7 @@ limit, not a mandate to fragment cohesive code.
 
 ## Modular Baseline Result
 
-The native PRG now consists of 38 cohesive ASM modules plus a 73-line include
+The native PRG now consists of 39 cohesive ASM modules plus a 73-line include
 index and three definition includes. Ordinary modules range from 136 to 694
 lines; the fixed vector block is intentionally ten lines. Tables stay beside
 their owning code unless they form a substantial address-ordered data set.

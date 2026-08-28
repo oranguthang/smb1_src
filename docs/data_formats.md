@@ -55,7 +55,9 @@ silently producing a partial record.
 
 Music decoding preserves the distinct channel grammars documented in
 `src/audio/music_data.asm`: square-2/triangle note versus length bytes and the
-split length/note or length/beat fields used by square 1 and noise. Channel
+split length/note or length/beat fields used by square 1 and noise. Address-
+bearing headers remain ASM, while `src/audio/music_streams.asm` retains every
+semantic boundary around the ignored profile-specific data packs. Channel
 lengths are declared because the original header stores offsets, not a uniform
 delimiter for every channel.
 

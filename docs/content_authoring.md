@@ -37,6 +37,9 @@ water/event, and castle-clear software envelopes; Triangle sustain follows the
 engine's `$0F`, `$1F`, and `$FF` linear-counter control modes.
 Four independent preview checkboxes enable or mute Square 2, Square 1,
 Triangle, and Noise without changing the authored music data.
+The linked headers remain relocatable ASM; note streams, timing tables, and
+envelopes come from checksum-validated profile packs with the same labels that
+the Sound Studio and engine consume.
 
 Level Studio also provides an in-place point playtest on Windows. Right-click
 the map, or press **Place Mario** and left-click, to select a starting cell.

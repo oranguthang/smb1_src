@@ -42,6 +42,13 @@
       "offset": 8623,
       "size": 3373,
       "sha1": "63119cee5b53a6c64ef4a203bdbb9fcd7c0a2f42"
+    },
+    {
+      "path": "source/base_music_data.bin",
+      "region": "prg",
+      "offset": 31160,
+      "size": 1602,
+      "sha1": "40a353b3e6f86c206e37033680d4e15fe8710808"
     }
   ]
 }
