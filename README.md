@@ -2,14 +2,16 @@
 
 A comprehensive disassembly of Super Mario Bros for the Nintendo Entertainment System (NES).
 
-The current stable reconstruction is **Preservation Source 1.0**. It rebuilds
-the selected reference ROM byte-for-byte and provides semantic source
-navigation, runtime evidence, and typed data round trips without tracking the
-original ROM or CHR payload.
+The current stable reconstruction is **Source Reconstruction 2.0**. It retains
+the byte-identical Preservation Source 1.0 baseline while adding isolated
+fixed-layout and CNROM builds, four graphical content-authoring programs, and
+exact shared-source profiles for the selected SMB1 cartridge, arcade, and FDS
+family. Original ROMs, disk images, CHR payloads, and extracted content remain
+private ignored inputs.
 
-The `roadmap/source-reconstruction-2.0` development line is building isolated
-fixed-layout, CNROM, graphical content-authoring, and official profile workflows
-while retaining the complete 1.0 gate as its first contract.
+The immutable `source-reconstruction-1.0` tag preserves the original release
+contract. Source Reconstruction 2.0 keeps every 1.0 acceptance gate and layers
+its profile, authoring, expansion, and runtime contracts on top.
 
 ## Overview
 

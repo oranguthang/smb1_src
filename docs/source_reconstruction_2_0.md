@@ -30,6 +30,12 @@ identity. Source Reconstruction 3.0 is reserved for later semantic
 consolidation, variant-wide authoring, deeper behavioral evidence, and possible
 evaluation of the Japanese SMB2 engine.
 
+Run `make split-all` once to validate every supported private reference and
+populate all ignored native, revision, arcade, and FDS assets. The command runs
+every input independently and reports all failures together at the end.
+`make verify-all` performs the corresponding byte-identity matrix, including
+both canonical JU entrypoint contracts, without running emulator observations.
+
 The `make source-2-check` command is the aggregate acceptance gate. It first
 runs the complete make release-check gate for 1.0. It then validates the
 fixed-layout variant, expanded image, and supported profiles statically and in
@@ -39,9 +45,9 @@ target. The 2.0 layer also runs `make check-studios` so every ignored GUI
 workspace remains encodable without requiring a display server.
 
 The tracked `config/source_reconstruction_2_0.json` manifest is tag-ready. The
-release tag remains an explicit maintainer action after review of the accepted
-commit. Generated ROMs, disk images, extracted assets, content workspaces,
-traces, emulator results, and the private FDS BIOS remain ignored local data.
+annotated `source-reconstruction-2.0` tag marks the accepted release commit.
+Generated ROMs, disk images, extracted assets, content workspaces, traces,
+emulator results, and the private FDS BIOS remain ignored local data.
 
 ## ANN Reconstruction Boundary
 
