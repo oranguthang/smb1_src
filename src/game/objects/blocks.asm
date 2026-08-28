@@ -36,9 +36,17 @@ bra_check_bumped_brick:
     STY ram_block_state,x  ; note this applies to both player sizes
     LDA #$c4  ; load empty block metatile into A for now
     LDY $00  ; get metatile from before
+.if con_revision_profile = con_revision_profile_ann
+    CPY #con_ann_brick_with_coins_line_metatile
+.else
     CPY #$58  ; is it brick with coins (with line)?
+.endif
     BEQ bra_start_brick_coin_timer  ; if so, branch
+.if con_revision_profile = con_revision_profile_ann
+    CPY #con_ann_brick_with_coins_metatile
+.else
     CPY #$5d  ; is it brick with coins (without line)?
+.endif
     BNE bra_store_block_replacement_metatile  ; if not, branch ahead to store empty block metatile
 bra_start_brick_coin_timer:
     LDA ram_brick_coin_timer_flag  ; check brick coin timer flag

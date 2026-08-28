@@ -2371,7 +2371,7 @@
     ["bra_adjust_ann_piranha_plant_y","src/game/collisions/projectiles.asm","1baf9c9186854fbb48e3805ed437af695fdde2cc","ANN projectile, actor, platform, background, and bounding-box collision behavior reconstructed from NSMMAIN"],
     ["bra_store_ann_defeated_piranha_y","src/game/collisions/projectiles.asm","1baf9c9186854fbb48e3805ed437af695fdde2cc","ANN projectile, actor, platform, background, and bounding-box collision behavior reconstructed from NSMMAIN"],
     ["bra_award_ann_power_up","src/game/collisions/projectiles.asm","1baf9c9186854fbb48e3805ed437af695fdde2cc","ANN projectile, actor, platform, background, and bounding-box collision behavior reconstructed from NSMMAIN"],
-    ["sub_handle_ann_stomped_shell_enemy","src/game/collisions/actors.asm","1baf9c9186854fbb48e3805ed437af695fdde2cc","ANN projectile, actor, platform, background, and bounding-box collision behavior reconstructed from NSMMAIN"],
+    ["bra_set_ann_high_stomp_speed","src/game/collisions/actors.asm","63ff56746ae16704a47d083851e3a456b3fa8311","Final profile-specific stomp behavior required by the byte-identical ANN NSMMAIN integration"],
     ["handler_run_ann_disk_loader","src/platforms/ann/disk_loader.asm","4379c8d6037902df783e8b4390409cea5cf74712","Reconstructed from the All Night Nippon NSMMAIN disk-loader range"],
     ["handler_ann_disk_loader_data4","src/platforms/ann/disk_loader.asm","4379c8d6037902df783e8b4390409cea5cf74712","Reconstructed from the All Night Nippon NSMMAIN disk-loader range"],
     ["handler_load_ann_disk_data4","src/platforms/ann/disk_loader.asm","4379c8d6037902df783e8b4390409cea5cf74712","Reconstructed from the All Night Nippon NSMMAIN disk-loader range"],

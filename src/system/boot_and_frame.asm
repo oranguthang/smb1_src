@@ -506,7 +506,11 @@ sub_pause_routine:
     CMP #con_mode_game  ; are we in game mode?
     BNE bra_exit_pause_handler  ; if not, leave
     LDA ram_oper_mode_task  ; if we are in game mode, are we running game engine?
-    CMP #$03
+    .if con_revision_profile = con_revision_profile_ann
+        CMP #con_ann_game_mode_process
+    .else
+        CMP #$03
+    .endif
     BNE bra_exit_pause_handler  ; if not, leave
 bra_check_pause_debounce_timer:
     LDA ram_game_pause_timer  ; check if pause timer is still counting down

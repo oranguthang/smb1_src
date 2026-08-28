@@ -1,4 +1,4 @@
--- Validate the focused Vs. System startup state without console movie input
+-- Validate a focused platform startup state without console movie input
 
 local target_frame = assert(tonumber(os.getenv("SMB_PLATFORM_FRAME")))
 local expected_json = assert(os.getenv("SMB_PLATFORM_EXPECTED"))

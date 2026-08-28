@@ -42,7 +42,11 @@ bra_check_enemy_background_collision_eligibility:
     BEQ bra_exit_ann_enemy_ground_collision
 .endif
     CPY #$07  ; if enemy object =>$07, branch to leave
+.if con_revision_profile = con_revision_profile_ann
+    BCS bra_exit_ann_enemy_ground_collision
+.else
     BCS bra_exit_enemy_background_collision
+.endif
 bra_check_metatile_under_enemy:
     JSR sub_check_metatile_under_enemy  ; if enemy object < $07, or = $12 or $2e, do this sub
     BNE bra_handle_enemy_floor_collision  ; if block underneath enemy, branch

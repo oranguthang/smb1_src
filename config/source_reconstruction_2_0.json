@@ -2,7 +2,7 @@
   "schema_version": 1,
   "release": "Source Reconstruction 2.0",
   "tag": "source-reconstruction-2.0",
-  "status": "development",
+  "status": "tag-ready",
   "predecessor": {
     "manifest": "config/preservation_source_1_0.json",
     "tag": "source-reconstruction-1.0",
@@ -21,8 +21,8 @@
     "supported_revisions": ["ju", "pc10", "pal"],
     "evaluated_unsupported_revisions": ["europe_revb_candidate"],
     "platform_manifest": "config/platform_profiles.json",
-    "supported_platform_profiles": ["vs_smb"],
-    "planned_platform_profiles": ["fds_smb", "ann_fds"]
+    "supported_platform_profiles": ["vs_smb", "fds_smb", "ann_fds"],
+    "planned_platform_profiles": []
   },
   "required_documents": [
     "docs/preservation_source_1_0.md",

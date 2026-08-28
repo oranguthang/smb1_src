@@ -236,7 +236,7 @@ bra_award_stomped_enemy_points:
     JSR sub_clear_enemy_vertical_motion  ; nullify vertical speed, physics-related thing,
     STA ram_enemy_x_speed,x  ; and horizontal speed
 .if con_revision_profile = con_revision_profile_ann
-    JMP bra_handle_stomped_shell_enemy
+    JMP loc_bounce_player_from_enemy
 .else
     LDA #$fd  ; set player's vertical speed, to give bounce
     STA ram_player_y_speed
@@ -247,12 +247,17 @@ bra_check_koopa_demotion:
     CMP #$09  ; branch elsewhere if enemy object < $09
     BCC bra_handle_stomped_shell_enemy
 .if con_revision_profile = con_revision_profile_ann
-    JSR sub_handle_ann_stomped_shell_enemy
+    JSR sub_ann_bounce_player_from_enemy
 .endif
     AND #%00000001  ; demote koopa paratroopas to ordinary troopas
     STA ram_enemy_id,x
+.if con_revision_profile = con_revision_profile_ann
+    LDA #$00
+    STA ram_enemy_state,x
+.else
     LDY #$00  ; return enemy to normal state
     STY ram_enemy_state,x
+.endif
     LDA #$03  ; award 400 points to the player
     JSR sub_setup_floatey_number
     JSR sub_clear_enemy_vertical_motion  ; nullify physics-related thing and vertical speed
@@ -272,7 +277,6 @@ tbl_enemy_revival_delays:
     .byte $10, $0b
 .endif
 
-sub_handle_ann_stomped_shell_enemy:
 bra_handle_stomped_shell_enemy:
     LDA #$04  ; set defeated state for enemy
     STA ram_enemy_state,x
@@ -282,7 +286,11 @@ bra_handle_stomped_shell_enemy:
     ADC ram_stomp_timer
     JSR sub_setup_floatey_number  ; award points accordingly
     INC ram_stomp_timer  ; increment stomp timer of some sort
+.if con_revision_profile = con_revision_profile_ann
+    LDY ram_ann_primary_hard_mode
+.else
     LDY ram_primary_hard_mode  ; check primary hard mode flag
+.endif
     LDA tbl_enemy_revival_delays,y  ; load timer setting according to flag
     STA ram_enemy_interval_timer,x  ; set as enemy timer to revive stomped enemy
 loc_bounce_player_from_enemy:
@@ -290,9 +298,10 @@ loc_bounce_player_from_enemy:
     LDY #$fa
     LDA ram_enemy_id,x
     CMP #con_red_paratroopa
-    BEQ bra_store_ann_player_stomp_speed
+    BEQ bra_set_ann_high_stomp_speed
     CMP #con_green_paratroopa_fly
     BNE bra_store_ann_player_stomp_speed
+bra_set_ann_high_stomp_speed:
     LDY #$f8
 bra_store_ann_player_stomp_speed:
     STY ram_player_y_speed

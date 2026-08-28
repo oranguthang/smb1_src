@@ -167,7 +167,7 @@ handler_load_ann_disk_data3:
     STA ram_ann_primary_hard_mode
     JSR sub_initialize_name_tables
     JSR sub_advance_ann_disk_loader
-    JMP handler_ann_ending_text_player_setup
+    JMP handler_ann_set_ending_player_name
 
 sub_check_ann_disk_file_count:
     TYA

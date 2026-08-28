@@ -512,7 +512,7 @@ original engine opens that area and page in an FCEUX window embedded behind the
 editor's Play and Stop controls. Day and Night previews use the engine's
 universal background colors and carry the same choice into the playtest.
 
-### 13. Multi-Revision and Platform Builds - In Progress
+### 13. Multi-Revision and Platform Builds - Complete
 
 After the canonical reconstruction is mature, evaluate the complete selected
 SMB1 engine family. Each supported profile must have:
@@ -527,39 +527,39 @@ SMB1 engine family. Each supported profile must have:
 Facts must not be transferred between revisions by matching addresses alone.
 
 The profile framework now reproduces the Japan/USA, PlayChoice-10, verified
-European PAL, Vs. Super Mario Bros., and FDS SMB1 containers from separate
-compile-time entrypoints over one semantic engine source. PAL has an exact
-complete-ROM verification and PAL-mode runtime gate. Vs. has a byte-identical
-32 KiB PRG, exact private-asset container build, and focused arcade title-state
-gate. FDS SMB1 has a byte-identical 32 KiB `SMMAIN` payload and exact rebuilt
-65,500-byte disk side; its BIOS-backed runtime gate is still pending. The
-remaining required 2.0 scope is:
-
-1. the FDS SMB1 runtime gate;
-2. All Night Nippon Super Mario Bros. source, container, and runtime gates.
+European PAL, Vs. Super Mario Bros., FDS SMB1, and All Night Nippon containers
+from separate compile-time entrypoints over one semantic engine source. PAL has
+an exact complete-ROM verification and PAL-mode runtime gate. Vs. has a
+byte-identical 32 KiB PRG, exact private-asset container build, and focused
+arcade title-state gate. FDS SMB1 has a byte-identical 32 KiB `SMMAIN` payload
+and exact rebuilt 65,500-byte disk side. All four ANN program payloads are
+project-native exact builds and reconstruct its complete disk side. FDS SMB1
+and ANN have deterministic FCEUX title-state gates at frame 1200. Both use a
+legally obtained, hash-checked 8 KiB FDS BIOS that remains a private local
+dependency and must never enter Git.
 
 The historical alternate European candidate remains an evaluated unsupported
 input with its pending-dump provenance kept explicit. It is not a required 2.0
 release profile.
 
 The Japanese Super Mario Bros. 2 / The Lost Levels profile is explicitly
-outside this release scope. All Night Nippon still requires selected later
-engine changes shared with that title, but supporting those mechanics does not
-imply an SMB2 release profile.
+outside this release scope. All Night Nippon contains selected later-engine
+changes shared with that title, but supporting those mechanics does not imply
+an SMB2 release profile.
 
 The supplied Vs. reference has a complete project-native reconstruction and
-verification gate. FDS SMB1 now reconstructs its complete raw disk side from a
-zeroed private template plus the source-built `SMMAIN` payload. The All Night
-Nippon program files remain independently reassemblable only in the ignored
-reference project and still need transfer into project-native source. The
-supplied All Night Nippon `.nes` image remains auxiliary because it is an
-unofficial FDS-to-NROM conversion. See `docs/platform_profiles.md`.
+verification gate. FDS SMB1 reconstructs its complete raw disk side from a
+zeroed private template plus the source-built `SMMAIN` payload. All Night Nippon
+uses the same private-template boundary with source-built `NSMMAIN`, `NSMDATA2`,
+`NSMDATA3`, and `NSMDATA4` payloads. Its supplied `.nes` image remains auxiliary
+because it is an unofficial FDS-to-NROM conversion. See
+`docs/platform_profiles.md`.
 
 Exit criterion: every in-scope profile is built from reviewed semantic source,
 verified against its own private reference at the strongest reproducible
 boundary, and covered by an appropriate platform runtime gate.
 
-### 14. Source Reconstruction 2.0 - Planned
+### 14. Source Reconstruction 2.0 - Complete
 
 Source Reconstruction 2.0 is the compatibility and SMB1-family completeness
 release. It combines the stable preservation source with reversible content
@@ -567,7 +567,7 @@ authoring, isolated expanded-ROM support, and verified official revision
 profiles. Its release audit must keep Source Reconstruction 1.0 and the default
 reference `make verify` contract intact.
 
-The developing 2.0 contract combines manifest-checked fixed-layout variants,
+The completed 2.0 contract combines manifest-checked fixed-layout variants,
 CNROM graphics expansion, four reversible content studios, and the complete
 selected SMB1 engine family. Its aggregate gate begins with the complete 1.0
 release gate, checks the immutable 1.0 tag target, then validates every later

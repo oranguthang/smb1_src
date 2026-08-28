@@ -84,15 +84,18 @@ def load_debug_symbols(path: Path) -> list[tuple[int, str, str]]:
     return symbols
 
 
-def symbol_priority(name: str) -> tuple[int, str]:
+def symbol_priority(name: str) -> tuple[int, int, str]:
     prefixes = (
         "sub_", "vec_", "handler_", "loc_", "bra_", "tbl_", "off_",
         "unused_", "ram_", "zp_",
     )
+    profile_specific_ram = name.startswith(
+        ("ram_ann_", "ram_fds_", "ram_vs_", "ram_pal_", "ram_pc10_")
+    )
     for priority, prefix in enumerate(prefixes):
         if name.startswith(prefix):
-            return priority, name
-    return len(prefixes), name
+            return priority, int(profile_specific_ram), name
+    return len(prefixes), int(profile_specific_ram), name
 
 
 def choose_unique_addresses(labels: list[tuple[int, str]]) -> list[tuple[int, str]]:

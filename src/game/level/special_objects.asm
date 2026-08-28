@@ -70,7 +70,11 @@ bra_increment_ann_warp_zone:
 bra_activate_warp_zone:
     TXA
     STA ram_warp_zone_control  ; store number here to be used by warp zone routine
+.if con_revision_profile = con_revision_profile_ann
+    JSR sub_draw_ann_warp_text
+.else
     JSR sub_write_game_text  ; print text and warp zone numbers
+.endif
     LDA #con_piranha_plant
     JSR sub_kill_enemies  ; load identifier for piranha plants and do sub
 

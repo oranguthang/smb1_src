@@ -46,6 +46,20 @@ class DebugSymbolsTests(unittest.TestCase):
         )
         self.assertEqual(selected, [(0x8000, "sub_named")])
 
+    def test_fceux_alias_selection_prefers_shared_ram_name(self) -> None:
+        selected = choose_unique_addresses(
+            [
+                (0x075F, "ram_ann_course_number"),
+                (0x075F, "ram_world_number"),
+                (0x0760, "ram_ann_course_sub"),
+                (0x0760, "ram_area_number"),
+            ]
+        )
+        self.assertEqual(
+            selected,
+            [(0x075F, "ram_world_number"), (0x0760, "ram_area_number")],
+        )
+
     def test_unknown_config_symbol_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

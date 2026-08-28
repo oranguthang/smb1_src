@@ -87,8 +87,16 @@ con_revision_profile = con_revision_profile_ju
 .include "rendering/actors/player.asm"
 .include "rendering/positioning.asm"
 .if con_revision_profile = con_revision_profile_ann
-    .include "data/levels/index_and_enemies.asm"
-    .include "data/levels/areas.asm"
+    .include "platforms/ann/disk_loader.asm"
+    .include "platforms/ann/game_over_and_physics.asm"
+    .include "platforms/ann/course_loader.asm"
+    .include "platforms/ann/course_tables.asm"
+    .include "platforms/ann/title_menu.asm"
+    .include "platforms/ann/title_setup.asm"
+    .include "platforms/ann/title_map.asm"
+    .include "platforms/ann/course_enemy_data.asm"
+    .include "platforms/ann/course_area_data.asm"
+    .include "platforms/ann/guest_chr_and_save.asm"
 .endif
 .include "audio/sound_effects.asm"
 .include "audio/music_engine.asm"

@@ -2,9 +2,6 @@
 ANN_CONSTANTS_INC = 1
 
 ; Packets supplied by the interchangeable ANN disk payloads
-off_ann_disk_error_palette_packet = $c121
-off_ann_disk_error_text_packet = $c15f
-off_ann_title_cursor_packet = $c4cb
 off_ann_title_map_packet = $c5e6
 off_ann_ending_attribute_packet = $c88d
 off_ann_ending_palette_packet = $c896
@@ -21,8 +18,6 @@ off_ann_ending_palette_extension = $c973
 off_ann_throne_room_map = $c983
 
 ; Entry point reconstructed with the later-engine game-over module
-handler_run_ann_disk_loader = $bfbf
-handler_ann_disk_loader_data2 = $c05e
 sub_advance_ann_game_after_course = $7109
 con_ann_course_number_cutoff = 8
 con_ann_final_course_number = 7
@@ -61,9 +56,6 @@ con_ann_piranha_plant_player_cutoff = $13
 con_ann_balance_platform_object = $24
 con_ann_piranha_plant_b_object = $04
 
-handler_ann_victory_disk_init = $c092
-handler_ann_victory_disk_check = $c099
-handler_ann_victory_disk_data = $c09f
 handler_ann_ending_screen = $c5d0
 handler_ann_ending_message = $c61f
 handler_ann_victory_extra_lives = $c663
@@ -71,14 +63,21 @@ handler_ann_victory_palette_cycle = $c6b1
 handler_ann_victory_lives_draw = $c6f7
 handler_ann_victory_toad = $c713
 handler_ann_victory_disk_save = $c72e
+handler_ann_set_ending_player_name = $c86f
 handler_ann_title_cursor = $c531
 handler_ann_title_score = $c548
-handler_ann_game_over_menu = $c1d8
 handler_ann_draw_flipped_vertical_pipe_a = $c470
 handler_ann_draw_flipped_vertical_pipe_b = $c475
 handler_ann_piranha_plant_b = $c4c0
 sub_ann_hard_mode_spring = $c4fe
 sub_ann_hard_mode_render_spring = $c50c
+sub_ann_initialize_life_down_extension = $c3b7
+
+off_ann_player_palette = $65be
+off_ann_title_player_name = $66ed
+off_ann_thanks_player_name = $6cdc
+off_ann_player_physics_parameters = $7fe4
+off_ann_player_friction_shift_opcode = $8145
 
 off_ann_toad_graphics_1 = $d13e
 off_ann_toad_graphics_2 = $d19e
@@ -93,14 +92,15 @@ con_ann_guest_chr_address = $07a0
 con_ann_guest_letter_chr_address = $0ee0
 con_ann_toad_palette_vram_index = 29
 sub_ann_tally_timer_score = $9f5b
-sub_ann_load_course = $c286
-sub_ann_load_course_streams = $c2a5
-sub_ann_load_player_physics = $c252
-sub_ann_load_default_player_physics = $c25b
-
+sub_ann_bounce_player_from_enemy = loc_bounce_player_from_enemy
+sub_draw_ann_warp_text = handler_draw_ann_warp_text
+sub_load_area_pointer = sub_ann_load_course
 bra_advance_victory_mode_task = bra_advance_ann_victory_mode_task
 bra_exit_world_completion = bra_exit_ann_world_completion
 sub_write_game_text = handler_write_ann_game_text
+tbl_area_object_loopback_offsets = tbl_ann_course_loopback_offsets
+tbl_area_pointers = tbl_ann_course_area_offsets
+tbl_world_area_pointer_offsets = tbl_ann_course_world_offsets
 tbl_warp_zone_number_tiles = tbl_ann_warp_zone_number_tiles
 
 .endif

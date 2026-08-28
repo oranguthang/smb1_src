@@ -22,6 +22,7 @@ DEBUG_WATCHES ?= $(PROJECT_DIR)config/debugger_watches.json
 DEBUG_SUMMARY ?= $(NATIVE_BUILD_DIR)/debug_symbols.json
 FCEUX_SYMBOL_DIR ?= $(NATIVE_BUILD_DIR)
 FCEUX_EXE ?= $(PROJECT_DIR)../fceux_automation/vc/x64/Release/fceux64.exe
+FDS_BIOS ?= $(dir $(FCEUX_EXE))disksys.rom
 DEBUG_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_debug_symbols.lua
 DEBUG_RUNTIME_RESULT ?= $(NATIVE_BUILD_DIR)/debug_symbols_runtime.txt
 RUNTIME_MOVIE ?= $(PROJECT_DIR)movies/smb1_any_percent.fm2
@@ -117,12 +118,12 @@ PLATFORM_LABELS ?= $(PLATFORM_BUILD_DIR)/smb.lbl
 PLATFORM_MAP ?= $(PLATFORM_BUILD_DIR)/smb.map
 PLATFORM_DEBUG ?= $(PLATFORM_BUILD_DIR)/smb.dbg
 PLATFORM_RUNTIME_RESULT ?= $(PLATFORM_BUILD_DIR)/runtime.txt
+PLATFORM_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_platform_runtime.lua
 ifeq ($(PLATFORM),vs_smb)
 PLATFORM_SOURCE ?= $(PROJECT_DIR)src/revisions/vs.asm
 PLATFORM_CFG ?= $(NATIVE_CFG)
 PLATFORM_REFERENCE ?= $(PROJECT_DIR)VS. Super Mario Bros. (VS).nes
 PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.nes
-PLATFORM_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_vs_runtime.lua
 else ifeq ($(PLATFORM),fds_smb)
 PLATFORM_SOURCE ?= $(PROJECT_DIR)src/revisions/fds_smb.asm
 PLATFORM_CFG ?= $(PROJECT_DIR)src/fds_prg.cfg
@@ -133,6 +134,10 @@ PLATFORM_SOURCE ?= $(PROJECT_DIR)src/revisions/ann.asm
 PLATFORM_CFG ?= $(PROJECT_DIR)src/fds_prg.cfg
 PLATFORM_REFERENCE ?= $(PROJECT_DIR)All Night Nippon Super Mario Brothers (Japan) (Promotion Card).fds
 PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.fds
+PLATFORM_PAYLOAD_ARGS = \
+	--payload NSMDATA2=$(ANN_DATA2_BUILD_DIR)/data2.bin \
+	--payload NSMDATA3=$(ANN_DATA3_BUILD_DIR)/data3.bin \
+	--payload NSMDATA4=$(ANN_DATA4_BUILD_DIR)/data4.bin
 else
 PLATFORM_SOURCE ?= $(PROJECT_DIR)src/platforms/$(PLATFORM).asm
 PLATFORM_CFG ?= $(NATIVE_CFG)
@@ -142,7 +147,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms verify-ann-audio verify-ann-tail-core verify-ann-data2 verify-ann-data3 verify-ann-data4 symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-data2 build-ann-data3 build-ann-data4 verify-ann-audio verify-ann-tail-core verify-ann-data2 verify-ann-data3 verify-ann-data4 symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -412,6 +417,10 @@ split-platform-assets:
 		--reference "$(PLATFORM_REFERENCE)" \
 		--asset-dir "$(PLATFORM_ASSET_DIR)"
 
+ifeq ($(PLATFORM),ann_fds)
+build-platform: build-ann-payloads
+endif
+
 build-platform:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
 		--source "$(PLATFORM_SOURCE)" \
@@ -429,6 +438,7 @@ build-platform:
 		--profile "$(PLATFORM)" \
 		--asset-dir "$(PLATFORM_ASSET_DIR)" \
 		--prg "$(PLATFORM_PRG)" \
+		$(PLATFORM_PAYLOAD_ARGS) \
 		--output "$(PLATFORM_OUTPUT)"
 
 verify-platform: build-platform
@@ -438,6 +448,7 @@ verify-platform: build-platform
 		--reference "$(PLATFORM_REFERENCE)" \
 		--asset-dir "$(PLATFORM_ASSET_DIR)" \
 		--prg "$(PLATFORM_PRG)" \
+		$(PLATFORM_PAYLOAD_ARGS) \
 		--output "$(PLATFORM_OUTPUT)"
 
 validate-platform: verify-platform
@@ -445,6 +456,7 @@ validate-platform: verify-platform
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile "$(PLATFORM)" \
 		--fceux "$(FCEUX_EXE)" \
+		--fds-bios "$(FDS_BIOS)" \
 		--image "$(PLATFORM_OUTPUT)" \
 		--lua "$(PLATFORM_RUNTIME_LUA)" \
 		--result "$(PLATFORM_RUNTIME_RESULT)"
@@ -452,6 +464,7 @@ validate-platform: verify-platform
 verify-platforms:
 	$(MAKE) verify-platform PLATFORM=vs_smb
 	$(MAKE) verify-platform PLATFORM=fds_smb
+	$(MAKE) verify-platform PLATFORM=ann_fds
 
 verify-ann-audio:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
@@ -487,7 +500,9 @@ verify-ann-tail-core:
 		--start 0xBFBF \
 		--end 0xE000
 
-verify-ann-data2:
+build-ann-payloads: build-ann-data2 build-ann-data3 build-ann-data4
+
+build-ann-data2:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
 		--source "$(ANN_DATA2_SOURCE)" \
 		--config "$(ANN_DATA2_CFG)" \
@@ -495,6 +510,8 @@ verify-ann-data2:
 		--output "$(ANN_DATA2_BUILD_DIR)/data2.bin" \
 		--labels "$(ANN_DATA2_BUILD_DIR)/data2.lbl" \
 		--map "$(ANN_DATA2_BUILD_DIR)/data2.map"
+
+verify-ann-data2: build-ann-data2
 	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
@@ -505,7 +522,7 @@ verify-ann-data2:
 		--start 0xC470 \
 		--end 0xD270
 
-verify-ann-data3:
+build-ann-data3:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
 		--source "$(ANN_DATA3_SOURCE)" \
 		--config "$(ANN_DATA3_CFG)" \
@@ -513,6 +530,8 @@ verify-ann-data3:
 		--output "$(ANN_DATA3_BUILD_DIR)/data3.bin" \
 		--labels "$(ANN_DATA3_BUILD_DIR)/data3.lbl" \
 		--map "$(ANN_DATA3_BUILD_DIR)/data3.map"
+
+verify-ann-data3: build-ann-data3
 	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
@@ -523,7 +542,7 @@ verify-ann-data3:
 		--start 0xC5D0 \
 		--end 0xD2E2
 
-verify-ann-data4:
+build-ann-data4:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
 		--source "$(ANN_DATA4_SOURCE)" \
 		--config "$(ANN_DATA4_CFG)" \
@@ -531,6 +550,8 @@ verify-ann-data4:
 		--output "$(ANN_DATA4_BUILD_DIR)/data4.bin" \
 		--labels "$(ANN_DATA4_BUILD_DIR)/data4.lbl" \
 		--map "$(ANN_DATA4_BUILD_DIR)/data4.map"
+
+verify-ann-data4: build-ann-data4
 	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
@@ -543,6 +564,8 @@ verify-ann-data4:
 
 validate-platforms:
 	$(MAKE) validate-platform PLATFORM=vs_smb
+	$(MAKE) validate-platform PLATFORM=fds_smb
+	$(MAKE) validate-platform PLATFORM=ann_fds
 
 symbols: build
 	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \

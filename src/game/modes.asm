@@ -393,7 +393,7 @@ handler_prepare_ann_title_background:
     LDA ram_oper_mode
     BNE loc_finish_ann_title_screen
     LDA #$05
-    JMP bra_finish_alternate_palette_selection
+    JMP loc_store_vram_buffer_control_from_a
 .else
     JMP loc_advance_operation_mode_task  ; jump to set next major task in victory mode
 .endif

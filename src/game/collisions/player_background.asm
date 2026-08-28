@@ -180,7 +180,11 @@ bra_check_player_side_metatiles_loop:
     BEQ bra_check_lower_player_side  ; branch ahead if nothing found
     CMP #$1c  ; otherwise check for pipe metatiles
     BEQ bra_check_lower_player_side  ; if collided with sideways pipe (top), branch ahead
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_water_pipe_top_metatile
+.else
     CMP #$6b
+.endif
     BEQ bra_check_lower_player_side  ; if collided with water pipe (top), branch ahead
     JSR sub_check_climbable_metatiles  ; do sub to see if player bumped into anything climbable
     BCC bra_handle_player_side_metatile  ; if not, branch to alternate section of code
@@ -220,7 +224,11 @@ bra_check_side_pipe_bottom:
     LDY ram_player_facing_dir  ; get player's facing direction
     DEY
     BNE loc_stop_player_horizontal_movement  ; if facing left, branch to impede movement
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_water_pipe_bottom_metatile
+.else
     CMP #$6c  ; otherwise check for pipe metatiles
+.endif
     BEQ bra_start_side_pipe_entry  ; if collided with sideways pipe (bottom), branch
     CMP #$1f  ; if collided with water pipe (bottom), continue
     BNE loc_stop_player_horizontal_movement  ; otherwise branch to impede player's movement
@@ -574,7 +582,11 @@ sub_check_solid_metatiles:
     RTS
 
 tbl_climbable_metatile_range_upper_bounds:
+.if con_revision_profile = con_revision_profile_ann
+    .byte $24, con_ann_flagpole_tip_metatile, $8a, $c6
+.else
     .byte $24, $6d, $8a, $c6
+.endif
 
 sub_check_climbable_metatiles:
     JSR sub_get_metatile_attributes  ; find appropriate offset based on metatile's 2 MSB
