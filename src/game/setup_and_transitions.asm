@@ -200,6 +200,10 @@ bra_initialize_area_state_bytes:
     BNE bra_clear_memory_byte  ; if not, go ahead anyway
     CPY #$60  ; otherwise, check to see if we're at $0160-$01ff
     BCS bra_skip_preserved_area_state_byte  ; if so, skip write
+.if con_revision_profile = con_revision_profile_fds_smb
+    CPY #$04  ; preserve the FDS BIOS interrupt workspace at $0100-$0103
+    BCC bra_skip_preserved_area_state_byte
+.endif
 bra_clear_memory_byte:
     STA ($06),y  ; otherwise, initialize byte with current low byte in Y
 bra_skip_preserved_area_state_byte:

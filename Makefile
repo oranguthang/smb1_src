@@ -100,17 +100,23 @@ PLATFORM_PRG ?= $(PLATFORM_BUILD_DIR)/smb.prg
 PLATFORM_LABELS ?= $(PLATFORM_BUILD_DIR)/smb.lbl
 PLATFORM_MAP ?= $(PLATFORM_BUILD_DIR)/smb.map
 PLATFORM_DEBUG ?= $(PLATFORM_BUILD_DIR)/smb.dbg
-PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.nes
-PLATFORM_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_vs_runtime.lua
 PLATFORM_RUNTIME_RESULT ?= $(PLATFORM_BUILD_DIR)/runtime.txt
 ifeq ($(PLATFORM),vs_smb)
 PLATFORM_SOURCE ?= $(PROJECT_DIR)src/revisions/vs.asm
 PLATFORM_CFG ?= $(NATIVE_CFG)
 PLATFORM_REFERENCE ?= $(PROJECT_DIR)VS. Super Mario Bros. (VS).nes
+PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.nes
+PLATFORM_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_vs_runtime.lua
+else ifeq ($(PLATFORM),fds_smb)
+PLATFORM_SOURCE ?= $(PROJECT_DIR)src/revisions/fds_smb.asm
+PLATFORM_CFG ?= $(PROJECT_DIR)src/fds_prg.cfg
+PLATFORM_REFERENCE ?= $(PROJECT_DIR)Super Mario Brothers (Japan).fds
+PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.fds
 else
 PLATFORM_SOURCE ?= $(PROJECT_DIR)src/platforms/$(PLATFORM).asm
 PLATFORM_CFG ?= $(NATIVE_CFG)
 PLATFORM_REFERENCE ?= $(PROJECT_DIR)$(PLATFORM)
+PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.nes
 endif
 
 .DEFAULT_GOAL := build
@@ -424,6 +430,7 @@ validate-platform: verify-platform
 
 verify-platforms:
 	$(MAKE) verify-platform PLATFORM=vs_smb
+	$(MAKE) verify-platform PLATFORM=fds_smb
 
 validate-platforms:
 	$(MAKE) validate-platform PLATFORM=vs_smb

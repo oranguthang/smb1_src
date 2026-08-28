@@ -18,9 +18,11 @@ The developing release adds four isolated capability groups:
 
 The profile family is not complete yet. Japan/USA, PlayChoice-10, the European
 PAL revision, and Vs. Super Mario Bros. are exact shared-source builds with
-runtime startup gates. The remaining required scope comprises the Famicom Disk
-System SMB1 reissue and All Night Nippon Super Mario Bros. The Japanese SMB2 /
-The Lost Levels release is outside the 2.0 scope.
+runtime startup gates. The Famicom Disk System SMB1 reissue now has an exact
+shared-source `SMMAIN` build and exact complete-disk reconstruction; its FDS
+BIOS-backed runtime gate remains pending. All Night Nippon Super Mario Bros.
+still requires project-native source integration. The Japanese SMB2 / The Lost
+Levels release is outside the 2.0 scope.
 
 The alternate European candidate remains an evaluated provenance record rather
 than a required supported release unless independent evidence establishes its

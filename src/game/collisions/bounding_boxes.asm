@@ -368,6 +368,6 @@ loc_return_block_buffer_y_coordinate:
 ; unused byte
 .if con_revision_profile = con_revision_profile_vs
     .res 6, $ff
-.elseif con_revision_profile <> con_revision_profile_pal
+.elseif con_revision_profile <> con_revision_profile_pal .and con_revision_profile <> con_revision_profile_fds_smb
     .byte $ff
 .endif

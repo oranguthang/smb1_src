@@ -46,16 +46,26 @@
     {
       "id": "fds_smb",
       "name": "Super Mario Bros. Famicom Disk System reissue",
-      "status": "reference_verified",
+      "status": "reconstructed",
       "format": "fds_raw_side",
       "reference_rom": "Super Mario Brothers (Japan).fds",
+      "entrypoint": "src/revisions/fds_smb.asm",
+      "linker_config": "src/fds_prg.cfg",
+      "verification_boundary": "complete_fds_side",
+      "verify_target": "make verify-platform PLATFORM=fds_smb",
       "disk_size": 65500,
       "disk_sha1": "383ad8e3890a95de9595f0a6087648f51177da13",
+      "template_sha1": "1dac51ec971c9aae48b7ef7b67e74fb80c1d1b78",
+      "primary_payload": "SMMAIN",
       "verified_payloads": [
         {
           "name": "SMMAIN",
           "size": 32768,
-          "sha1": "3634eb60ad0fbc60a07683cdf98cc6a1701b56a0"
+          "sha1": "3634eb60ad0fbc60a07683cdf98cc6a1701b56a0",
+          "records": [
+            {"file_id": 3, "load_address": 24576, "size": 16384, "file_type": 0},
+            {"file_id": 4, "load_address": 40960, "size": 16384, "file_type": 0}
+          ]
         }
       ]
     },
@@ -67,26 +77,40 @@
       "reference_rom": "All Night Nippon Super Mario Brothers (Japan) (Promotion Card).fds",
       "disk_size": 65500,
       "disk_sha1": "f30bdd3c556604d7eaa6d0f4864d5566e519b5d4",
+      "template_sha1": "f9cc1120a7ca847763406572edc7aaa9212b0183",
+      "primary_payload": "NSMMAIN",
       "verified_payloads": [
         {
           "name": "NSMMAIN",
           "size": 32768,
-          "sha1": "8f07dfdda5829983a1deec8c82dd26e196826cd9"
+          "sha1": "8f07dfdda5829983a1deec8c82dd26e196826cd9",
+          "records": [
+            {"file_id": 5, "load_address": 24576, "size": 32768, "file_type": 0}
+          ]
         },
         {
           "name": "NSMDATA2",
           "size": 3584,
-          "sha1": "48447986778a9c39fc8cabf4e5494d99fab7e020"
+          "sha1": "48447986778a9c39fc8cabf4e5494d99fab7e020",
+          "records": [
+            {"file_id": 32, "load_address": 50288, "size": 3584, "file_type": 0}
+          ]
         },
         {
           "name": "NSMDATA3",
           "size": 3346,
-          "sha1": "8941894b39a959aab87338728919a8b475e4f691"
+          "sha1": "8941894b39a959aab87338728919a8b475e4f691",
+          "records": [
+            {"file_id": 48, "load_address": 50640, "size": 3346, "file_type": 0}
+          ]
         },
         {
           "name": "NSMDATA4",
           "size": 3568,
-          "sha1": "eec327d5ebde3891439971986ae23afeefbdd1a7"
+          "sha1": "eec327d5ebde3891439971986ae23afeefbdd1a7",
+          "records": [
+            {"file_id": 64, "load_address": 49814, "size": 3568, "file_type": 0}
+          ]
         }
       ],
       "auxiliary_conversion": {

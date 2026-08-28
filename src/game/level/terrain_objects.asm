@@ -481,7 +481,7 @@ sub_get_block_buffer_addr:
 
 ; unused space
 .if con_revision_profile <> con_revision_profile_pal
-    .if con_revision_profile <> con_revision_profile_vs
+    .if con_revision_profile <> con_revision_profile_vs .and con_revision_profile <> con_revision_profile_fds_smb
         .byte $ff, $ff
     .endif
 .endif

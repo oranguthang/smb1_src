@@ -30,10 +30,24 @@ uses disk files and CHR RAM, and relies on FDS platform services. The supplied
 the optional 16-byte FDS file header. Its SHA-1 is
 `383ad8e3890a95de9595f0a6087648f51177da13`.
 
-The ignored segaloco meta-disassembly reproduces the 32 KiB `SMMAIN` program
-payload exactly. This establishes a source-transfer baseline, but the project
-profile remains incomplete until the disk memory map, file layout, CHR-RAM
-loading, platform services, and build are represented and verified here.
+The project-native `src/revisions/fds_smb.asm` entrypoint reconstructs the full
+32 KiB `SMMAIN` payload at SHA-1
+`3634eb60ad0fbc60a07683cdf98cc6a1701b56a0`. It shares the semantic SMB1 source
+with the cartridge profiles while selecting the `$6000-$DFFF` load map, FDS
+reset and interrupt contract, BIOS stack workspace, and exact alignment bytes.
+
+Run `make split-platform-assets PLATFORM=fds_smb` once. The extractor validates
+the complete private disk and writes an ignored template with both `SMMAIN`
+file records zeroed; disk metadata, license data, and CHR-RAM source files stay
+in that private template. `make verify-platform PLATFORM=fds_smb` then builds
+`SMMAIN` from source, restores its two records, and compares the entire rebuilt
+65,500-byte disk side at SHA-1
+`383ad8e3890a95de9595f0a6087648f51177da13`.
+
+This profile is reconstructed at the strongest container identity boundary but
+is not marked supported yet. Its remaining release gate is deterministic FDS
+startup in an emulator configured with a legally obtained 8 KiB FDS BIOS; the
+BIOS is never stored in the repository.
 
 ## All Night Nippon Super Mario Bros.
 

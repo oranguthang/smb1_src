@@ -164,7 +164,10 @@ make validate-revisions
 make split-platform-assets PLATFORM=vs_smb
 make verify-platform PLATFORM=vs_smb
 make validate-platform PLATFORM=vs_smb
-make validate-revisions
+
+# Extract the private FDS template once, then verify the exact rebuilt disk side
+make split-platform-assets PLATFORM=fds_smb
+make verify-platform PLATFORM=fds_smb
 
 # Validate local assets and build build/native/smb.nes
 make build

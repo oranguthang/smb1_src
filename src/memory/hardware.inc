@@ -29,3 +29,10 @@ VS_STATUS             = $4016
 VS_REQUEST            = $4016
 VS_STATUS2            = $4017
 VS_COIN_COUNTER       = $4020
+
+FDS_CONTROL           = $4025
+
+con_fds_control_motor_on       = %00000001
+con_fds_control_transfer_reset = %00000010
+con_fds_control_read_mode      = %00000100
+con_fds_control_io_mask        = %00100000

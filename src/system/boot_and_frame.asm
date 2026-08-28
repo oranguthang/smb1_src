@@ -9,7 +9,9 @@
 ; Clobbers:
 ; A, X, Y
 vec_reset_handler:
+.if con_revision_profile <> con_revision_profile_fds_smb
     SEI  ; pretty standard 6502 type init here
+.endif
     CLD
     LDA #%00010000  ; init PPU control register 1
     STA PPU_CTRL_REG1
@@ -51,7 +53,10 @@ bra_initialize_after_boot_check:
     JSR sub_move_all_sprites_offscreen
     JSR sub_initialize_name_tables  ; initialize both name tables
     INC ram_disable_screen_flag  ; set flag to disable screen output
-.if con_revision_profile = con_revision_profile_vs
+.if con_revision_profile = con_revision_profile_fds_smb
+    LDA #con_fds_control_io_mask+con_fds_control_read_mode+con_fds_control_transfer_reset+con_fds_control_motor_on
+    STA FDS_CONTROL
+.elseif con_revision_profile = con_revision_profile_vs
     JSR sub_vs_select_low_chr_bank
     LDA #$00
     LDX #$00
@@ -82,6 +87,9 @@ bra_restore_vs_top_score:
     DEY
     BPL bra_restore_vs_top_score
     JSR sub_vs_read_dip_switches
+.endif
+.if con_revision_profile = con_revision_profile_fds_smb
+    CLI
 .endif
     LDA ram_mirror_ppu_ctrl_reg1
     ORA #%10000000  ; enable NMIs
@@ -148,6 +156,9 @@ tbl_vram_buffer_offset_addresses:
 ; Clobbers:
 ; A, X, Y
 vec_nmi_handler:
+.if con_revision_profile = con_revision_profile_fds_smb
+    CLI
+.endif
     LDA ram_mirror_ppu_ctrl_reg1  ; disable NMIs in mirror reg
     AND #%01111111  ; save all other bits
     STA ram_mirror_ppu_ctrl_reg1

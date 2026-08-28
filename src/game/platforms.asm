@@ -420,6 +420,6 @@ bra_exit_offscreen_bounds_check:
 .if con_revision_profile = con_revision_profile_pal
     .res 56, $ff
 .endif
-.if con_revision_profile <> con_revision_profile_vs
+.if con_revision_profile <> con_revision_profile_vs .and con_revision_profile <> con_revision_profile_fds_smb
     .byte $ff, $ff, $ff
 .endif

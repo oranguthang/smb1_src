@@ -292,6 +292,6 @@ bra_store_sprite_row_attributes:
 ; -------------------------------------------------------------------------------------
 
 ; unused space
-.if con_revision_profile <> con_revision_profile_pal
+.if con_revision_profile <> con_revision_profile_pal .and con_revision_profile <> con_revision_profile_fds_smb
     .byte $ff, $ff, $ff, $ff, $ff, $ff
 .endif

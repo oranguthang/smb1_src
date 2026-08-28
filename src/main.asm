@@ -36,7 +36,11 @@ con_revision_profile = con_revision_profile_ju
 .p02
 
 .segment "PRG"
-.org $8000
+.if con_revision_profile = con_revision_profile_fds_smb
+    .org $6000
+.else
+    .org $8000
+.endif
 
 .include "system/boot_and_frame.asm"
 

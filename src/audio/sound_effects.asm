@@ -10,7 +10,9 @@
 
 ; Clobbers:
 ; A, X, Y
-.if con_revision_profile = con_revision_profile_vs
+.if con_revision_profile = con_revision_profile_fds_smb
+    .byte $ff, $ff  ; retained FDS program alignment bytes
+.elseif con_revision_profile = con_revision_profile_vs
     .byte $ff  ; retained arcade alignment byte
 .endif
 sub_sound_engine:
