@@ -84,7 +84,11 @@ bra_store_initial_nametable_address:
     DEC ram_area_object_length+2
     LDA #$0b  ; set value for renderer to update 12 column sets
     STA ram_column_sets  ; 12 column sets = 24 metatile columns = 1 1/2 screens
+.if con_revision_profile = con_revision_profile_ann
+    JSR sub_ann_load_course_streams
+.else
     JSR sub_get_area_data_addresses  ; get enemy and level addresses and load header
+.endif
 .if con_revision_profile = con_revision_profile_ann
     LDA ram_ann_hard_mode  ; check the later-engine hard mode flag
 .else

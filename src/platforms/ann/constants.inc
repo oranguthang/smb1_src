@@ -94,7 +94,9 @@ con_ann_guest_letter_chr_address = $0ee0
 con_ann_toad_palette_vram_index = 29
 sub_ann_tally_timer_score = $9f5b
 sub_ann_load_course = $c286
+sub_ann_load_course_streams = $c2a5
 sub_ann_load_player_physics = $c252
+sub_ann_load_default_player_physics = $c25b
 
 bra_advance_victory_mode_task = bra_advance_ann_victory_mode_task
 bra_exit_world_completion = bra_exit_ann_world_completion

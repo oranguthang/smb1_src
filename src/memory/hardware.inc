@@ -35,6 +35,7 @@ FDS_TIMER_DATA_LO     = $4020
 FDS_TIMER_DATA_HI     = $4021
 FDS_TIMER_CONTROL     = $4022
 FDS_MEDIA_STATUS      = $4030
+FDS_DRIVE_STATUS      = $4032
 
 con_fds_control_motor_on       = %00000001
 con_fds_control_transfer_reset = %00000010
@@ -47,3 +48,4 @@ con_fds_irq_mode_game          = %11000000
 con_fds_nmi_split_timer        = 5720
 
 sub_fds_bios_delay_short = $e149
+sub_fds_bios_load_files = $e1f8

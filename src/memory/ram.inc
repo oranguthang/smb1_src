@@ -136,6 +136,7 @@ ram_ann_game_timer_last_digit = $07ee
 ram_ann_coin_display_second_last_digit = $07e7
 ram_ann_coin_display_last_digit = $07e8
 ram_ann_game_level_end_apu_on = $07f6
+ram_ann_disk_file_id        = $07f7
 ram_ann_game_over_choice    = $07f8
 ram_digit_modifier         = $0134
 
@@ -199,6 +200,10 @@ ram_fds_sprite0_irq_flag    = $077b
 ram_ann_render_clear_skip   = $077c
 ram_fds_background_pattern_bits = $077a
 ram_fds_disk_loader_task    = $07fc
+ram_ann_disk_main_request   = $07fd
+ram_ann_player_first_start  = $0757
+ram_ann_player_goals        = $075c
+ram_ann_course_sub          = $0760
 ram_fds_control_mirror      = $fa
 ram_fds_irq_mode            = $0101
 

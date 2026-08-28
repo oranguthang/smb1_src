@@ -33,6 +33,10 @@ DATA_FORMAT_SUMMARY ?= $(PROJECT_DIR)build/data_formats.json
 CONTENT_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/content_formats.json
 RELEASE_MANIFEST ?= $(PROJECT_DIR)config/preservation_source_1_0.json
 SOURCE_2_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_2_0.json
+ANN_REFERENCE ?= $(PROJECT_DIR)All Night Nippon Super Mario Brothers (Japan) (Promotion Card).fds
+ANN_TAIL_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_tail
+ANN_TAIL_CORE_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_tail_core.asm
+ANN_TAIL_CORE_CFG ?= $(PROJECT_DIR)src/platforms/ann/tail_core.cfg
 FIXED_VARIANT ?= five_lives
 FIXED_VARIANT_MANIFEST ?= $(PROJECT_DIR)config/fixed_layout_variants.json
 HACK_SOURCE ?= $(PROJECT_DIR)src/variants/five_lives.asm
@@ -126,7 +130,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms verify-ann-tail-core symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -436,6 +440,23 @@ validate-platform: verify-platform
 verify-platforms:
 	$(MAKE) verify-platform PLATFORM=vs_smb
 	$(MAKE) verify-platform PLATFORM=fds_smb
+
+verify-ann-tail-core:
+	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
+		--source "$(ANN_TAIL_CORE_SOURCE)" \
+		--config "$(ANN_TAIL_CORE_CFG)" \
+		--object "$(ANN_TAIL_BUILD_DIR)/core.o" \
+		--output "$(ANN_TAIL_BUILD_DIR)/core.bin" \
+		--labels "$(ANN_TAIL_BUILD_DIR)/core.lbl" \
+		--map "$(ANN_TAIL_BUILD_DIR)/core.map"
+	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
+		--manifest "$(PLATFORM_MANIFEST)" \
+		--profile ann_fds \
+		--reference "$(ANN_REFERENCE)" \
+		--candidate "$(ANN_TAIL_BUILD_DIR)/core.bin" \
+		--load-address 0x6000 \
+		--start 0xBFBF \
+		--end 0xC745
 
 validate-platforms:
 	$(MAKE) validate-platform PLATFORM=vs_smb

@@ -284,7 +284,7 @@ loc_handle_axe_metatile:
 .endif
     STA ram_oper_mode  ; set primary mode to autoctrl mode
 .if con_revision_profile = con_revision_profile_ann
-    JSR sub_ann_load_player_physics
+    JSR sub_ann_load_default_player_physics
 .endif
     LDA #$18
     STA ram_player_x_speed  ; set horizontal speed and continue to erase axe metatile
