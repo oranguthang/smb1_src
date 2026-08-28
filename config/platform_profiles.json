@@ -26,6 +26,13 @@
           "offset": 31017,
           "size": 1745,
           "sha1": "7d744d43e8ae6e77ac23968e031649df62cc09b6"
+        },
+        {
+          "name": "vs_area_palette_packets",
+          "payload": "prg",
+          "offset": 3749,
+          "size": 176,
+          "sha1": "ba51b532be6fe7de5c7823d1913768c88599a21e"
         }
       ],
       "runtime": {
@@ -152,6 +159,13 @@
         }
       ],
       "source_assets": [
+        {
+          "name": "ann_metatile_graphics",
+          "payload": "NSMMAIN",
+          "offset": 2695,
+          "size": 408,
+          "sha1": "25957486e9bdee0bdaa84e10df123e876b1a35f4"
+        },
         {
           "name": "ann_music_data",
           "payload": "NSMMAIN",

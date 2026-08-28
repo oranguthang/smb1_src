@@ -30,7 +30,7 @@ limit, not a mandate to fragment cohesive code.
 | `src/system/boot_and_frame.asm` | `$8000-$8230` | 328 | Reset, NMI frame driver, timers, pause, sprite shuffling, and mode dispatch |
 | `src/game/modes.asm` | `$8231-$8566` | 444 | Title, demo, victory, and floating-score flow |
 | `src/rendering/screens.asm` | `$8567-$88AD` | 462 | Screen tasks, palettes, text, and title-screen transfer |
-| `src/rendering/background.asm` | `$88AE-$8E03` | 597 | Area rendering, attributes, metatiles, palettes, and messages |
+| `src/rendering/background.asm` | `$88AE-$8E03` | 518 | Area rendering, attributes, metatiles, palettes, and messages |
 | `src/system/hardware_io.asm` | `$8E04-$8EF3` | 160 | Jump dispatch, controller input, PPU buffers, and nametable initialization |
 | `src/rendering/hud/status.asm` | `$8EF4-$8FBB` | 136 | Status digits, score arithmetic, and top-score updates |
 | `src/game/setup_and_transitions.asm` | `$8FBC-$92AF` | 423 | Game/area setup, entrances, life loss, and game over |

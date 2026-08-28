@@ -49,6 +49,20 @@
       "offset": 31160,
       "size": 1602,
       "sha1": "40a353b3e6f86c206e37033680d4e15fe8710808"
+    },
+    {
+      "path": "source/base_area_palette_packets.bin",
+      "region": "prg",
+      "offset": 3236,
+      "size": 176,
+      "sha1": "8fb62e91761a355d8d017c38c4c6e2762d5c4de9"
+    },
+    {
+      "path": "source/base_metatile_graphics.bin",
+      "region": "prg",
+      "offset": 2832,
+      "size": 404,
+      "sha1": "00a6a7493ac875ae00192f68216b01ccf03ed1cc"
     }
   ]
 }

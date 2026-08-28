@@ -24,7 +24,12 @@ editor markers. Record badges and the side tables retain direct access to the
 underlying bytes. World Studio
 presents course routing and documented physics profiles. Graphics Studio uses
 the actual SMB1 pattern-table convention: sprite tiles occupy the first 4 KiB
-and background tiles the second 4 KiB. Sound Studio decodes notes, rests,
+and background tiles the second 4 KiB. Its eight editable area-palette packets
+retain stable labels over the shared console/FDS or Vs.-specific ignored pack.
+The 101 editable 2x2 metatiles use the shared graphics pack; the ANN build
+selects its 102-record later-engine counterpart without changing renderer
+pointers.
+Sound Studio decodes notes, rests,
 duration changes, and noise beats, draws a piano roll, and renders either one
 pattern or a complete logical composition. The complete overworld preview
 follows the original 33-pattern schedule instead of treating its internal parts

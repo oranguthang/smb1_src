@@ -50,6 +50,12 @@ byte, and bits 5-0 hold the transfer length. Non-repeat packets carry exactly
 that many bytes. Fixed metatile and player-frame record sizes are structural
 properties in the manifest, so a shifted table boundary fails instead of
 silently producing a partial record.
+The eight area-palette packets retain independent ASM labels over one bounded
+content pack. Japan/USA, PAL, FDS SMB1, and ANN share identical bytes; Vs.
+selects its own validated arcade palette pack.
+The four metatile palette groups likewise retain their address table and group
+labels in ASM. Their fixed four-byte tile records come from a shared 404-byte
+pack or ANN's 408-byte later-engine layout.
 
 ## Audio and Tuning Data
 

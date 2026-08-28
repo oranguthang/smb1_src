@@ -25,7 +25,8 @@ not build dependencies.
 The splitter also extracts the 1,745-byte Vs. music-data range from PRG. Its
 additional star and game-over streams, lookup tables, and envelopes retain
 semantic ASM labels, while all address-bearing music headers remain
-relocatable source.
+relocatable source. A separate 176-byte source asset holds the eight arcade
+area-palette packets behind the same labels used by Graphics Studio.
 
 ## Famicom Disk System SMB1
 
@@ -85,6 +86,9 @@ content into `assets/generated/platforms/ann_fds/source/`. The 384-byte
 `NSMDATA2` guest CHR region becomes `supplemental_guest_chr.bin`. Their
 respective SHA-1 values are `8b1721dc53856c29637ca03f96b43eb104330ea3`
 and `139bb17536ed774e1f4742087f2fe17212492897`.
+The 408-byte `ann_metatile_graphics.bin` source asset preserves ANN's
+later-engine 102-record metatile layout. The four palette-group labels and
+their pointer table remain reviewed ASM.
 
 Six typed course packs use the same private extraction boundary:
 

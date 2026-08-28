@@ -585,6 +585,14 @@ Music follows the same authored-data rule. Relocatable indexes and
 address-bearing headers stay in ASM, while bounded Japan/USA/FDS, PAL, Vs., and
 ANN stream-and-table packs are selected behind one set of semantic labels.
 
+The eight area-palette packets are also bounded authored data. Japan/USA, PAL,
+FDS SMB1, and ANN share one byte-identical pack, while Vs. selects its own
+arcade colors without duplicating the packet labels or surrounding renderer.
+
+Metatile graphics are bounded at the same authoring layer. The original
+pointer table and four palette-group labels remain ASM; JU, PAL, FDS SMB1, and
+Vs. share 101 fixed records, while ANN selects its 102-record later layout.
+
 The required release profiles are Japan/USA, PlayChoice-10, the verified
 European PAL release, Vs. Super Mario Bros., the FDS SMB1 reissue, and All Night
 Nippon Super Mario Bros. The alternate European candidate is investigated and

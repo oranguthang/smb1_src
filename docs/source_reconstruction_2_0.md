@@ -74,3 +74,7 @@ complete ANN disk side without retaining opaque executable code.
 The music library uses the same boundary: relocatable headers remain reviewed
 ASM, while the profile-specific note streams, timing and pitch tables, and
 envelopes come from validated private packs under shared semantic labels.
+Area palettes follow the same model: eight stable packet labels select either
+the shared console/FDS content pack or the Vs.-specific arcade pack.
+Metatile composition keeps its pointer table and four group boundaries in ASM,
+selecting either the shared 404-byte content pack or ANN's 408-byte layout.
