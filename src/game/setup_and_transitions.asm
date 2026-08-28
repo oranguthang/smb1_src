@@ -8,17 +8,22 @@ tbl_default_oam_offsets:
     .byte $04, $30, $48, $60, $78, $90, $a8, $c0
     .byte $d8, $e8, $24, $f8, $fc, $28, $2c
 
+.if con_revision_profile <> con_revision_profile_ann
 tbl_sprite_0_hit_oam_entry:
     .byte $18, $ff, $23, $58
+.endif
 
 ; -------------------------------------------------------------------------------------
 
-.if con_revision_profile = con_revision_profile_vs
+.if con_revision_profile = con_revision_profile_ann
+handler_initialize_game = handler_initialize_area
+.else
+    .if con_revision_profile = con_revision_profile_vs
 handler_initialize_game = handler_initialize_vs_game
 sub_initialize_vs_game_ram:
-.else
+    .else
 handler_initialize_game:
-.endif
+    .endif
     LDY #$6f  ; clear all memory as in initialization procedure,
     JSR sub_initialize_memory  ; but this time, clear only as far as $076f
     LDY #$1f
@@ -26,15 +31,16 @@ bra_clear_sound_ram_loop:
     STA ram_sound_memory,y  ; clear out memory used
     DEY  ; by the sound engines
     BPL bra_clear_sound_ram_loop
-.if con_revision_profile = con_revision_profile_vs
-    RTS
+    .if con_revision_profile = con_revision_profile_vs
+        RTS
 
 handler_initialize_vs_game:
-    JSR sub_initialize_vs_game_ram
-.endif
+        JSR sub_initialize_vs_game_ram
+    .endif
     LDA #$18  ; set demo timer
     STA ram_demo_timer
     JSR sub_load_area_pointer
+.endif
 
 handler_initialize_area:
     LDY #$4b  ; clear all memory again, only as far as $074b
@@ -79,11 +85,17 @@ bra_store_initial_nametable_address:
     LDA #$0b  ; set value for renderer to update 12 column sets
     STA ram_column_sets  ; 12 column sets = 24 metatile columns = 1 1/2 screens
     JSR sub_get_area_data_addresses  ; get enemy and level addresses and load header
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_ann_hard_mode  ; check the later-engine hard mode flag
+.else
     LDA ram_primary_hard_mode  ; check to see if primary hard mode has been activated
+.endif
     BNE bra_enable_secondary_hard_mode  ; if so, activate the secondary no matter where we're at
     LDA ram_world_number  ; otherwise check world number
 .if con_revision_profile = con_revision_profile_vs
     CMP #con_vs_hard_mode_world
+.elseif con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_hard_mode_course
 .else
     CMP #con_world5  ; if less than 5, do not activate secondary
 .endif
@@ -92,6 +104,8 @@ bra_store_initial_nametable_address:
     LDA ram_level_number  ; otherwise, world 5, so check level number
 .if con_revision_profile = con_revision_profile_vs
     CMP #con_vs_hard_mode_level
+.elseif con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_hard_mode_goal
 .else
     CMP #con_level3  ; if 1 or 2, do not set secondary hard mode flag
 .endif
@@ -108,42 +122,54 @@ bra_finish_area_initialization:
     STA ram_area_music_queue
     LDA #$01  ; disable screen output
     STA ram_disable_screen_flag
+.if con_revision_profile = con_revision_profile_ann
+    JSR sub_ann_load_player_physics
+    JMP loc_finish_ann_title_screen
+.else
     INC ram_oper_mode_task  ; increment one of the modes
     RTS
+.endif
 
 ; -------------------------------------------------------------------------------------
 
-.if con_revision_profile = con_revision_profile_vs
+.if con_revision_profile = con_revision_profile_ann
+handler_primary_game_setup = handler_secondary_game_setup
+.else
+    .if con_revision_profile = con_revision_profile_vs
 handler_primary_game_setup = handler_primary_vs_game_setup
 sub_initialize_vs_game_setup:
-    JSR sub_vs_select_low_chr_bank
-.else
+        JSR sub_vs_select_low_chr_bank
+    .else
 handler_primary_game_setup:
-.endif
+    .endif
     LDA #$01
     STA ram_fetch_new_game_timer_flag  ; set flag to load game timer from header
     STA ram_player_size  ; set player's size to small
-.if con_revision_profile = con_revision_profile_vs
-    LDA #$01
-    LDY ram_vs_player_start_mode
-    BNE bra_store_vs_starting_lives
-.endif
+    .if con_revision_profile = con_revision_profile_vs
+        LDA #$01
+        LDY ram_vs_player_start_mode
+        BNE bra_store_vs_starting_lives
+    .endif
     LDA #con_initial_lives
-.if con_revision_profile = con_revision_profile_vs
+    .if con_revision_profile = con_revision_profile_vs
 bra_store_vs_starting_lives:
-.endif
+    .endif
     STA ram_numberof_lives  ; give each player three lives
     STA ram_off_scr_numberof_lives
-.if con_revision_profile = con_revision_profile_vs
-    RTS
+    .if con_revision_profile = con_revision_profile_vs
+        RTS
 
 handler_primary_vs_game_setup:
-    JSR sub_initialize_vs_game_setup
+        JSR sub_initialize_vs_game_setup
+    .endif
 .endif
 
 handler_secondary_game_setup:
     LDA #$00
     STA ram_disable_screen_flag  ; enable screen output
+.if con_revision_profile = con_revision_profile_ann
+    STA ram_ann_game_level_end_apu_on
+.endif
     TAY
 bra_clear_vram_buffer_loop:
     STA ram_vram_buffer1-1,y  ; clear buffer at $0300-$03ff
@@ -155,10 +181,15 @@ bra_clear_vram_buffer_loop:
     LDA #$ff
     STA ram_bal_platform_alignment  ; initialize balance platform assignment flag
     LDA ram_screen_left_page_loc  ; get left side page location
+.if con_revision_profile = con_revision_profile_ann
+    AND #$01
+    STA ram_ann_ppu_background_select
+.else
     LSR ram_mirror_ppu_ctrl_reg1  ; shift LSB of ppu register #1 mirror out
     AND #$01  ; mask out all but LSB of page location
     ROR  ; rotate LSB of page location into carry then onto mirror
     ROL ram_mirror_ppu_ctrl_reg1  ; this is to set the proper PPU name table
+.endif
     JSR sub_get_area_music  ; load proper music into queue
     LDA #$38  ; load sprite shuffle amounts to be used later
     STA ram_spr_shuffle_amt+2
@@ -172,6 +203,7 @@ bra_initialize_oam_offsets_loop:
     STA ram_spr_data_offset,x
     DEX  ; do this until they're all set
     BPL bra_initialize_oam_offsets_loop
+.if con_revision_profile <> con_revision_profile_ann
     LDY #$03  ; set up sprite #0
 bra_initialize_sprite_0_oam_loop:
     LDA tbl_sprite_0_hit_oam_entry,y
@@ -179,10 +211,16 @@ bra_initialize_sprite_0_oam_loop:
     DEY
     BPL bra_initialize_sprite_0_oam_loop
     JSR sub_do_nothing2  ; these jsrs doesn't do anything useful
+.endif
     JSR sub_do_nothing1
+.if con_revision_profile = con_revision_profile_ann
+    INC ram_sprite0_hit_detect_flag
+    JMP loc_finish_ann_title_screen
+.else
     INC ram_sprite0_hit_detect_flag  ; set sprite #0 check flag
     INC ram_oper_mode_task  ; increment to next task
     RTS
+.endif
 
 ; -------------------------------------------------------------------------------------
 
@@ -202,6 +240,9 @@ bra_initialize_area_state_bytes:
     BCS bra_skip_preserved_area_state_byte  ; if so, skip write
 .if con_revision_profile = con_revision_profile_fds_smb
     CPY #$04  ; preserve the FDS BIOS interrupt workspace at $0100-$0103
+    BCC bra_skip_preserved_area_state_byte
+.elseif con_revision_profile = con_revision_profile_ann
+    CPY #$09  ; preserve the ANN FDS interrupt workspace at $0100-$0108
     BCC bra_skip_preserved_area_state_byte
 .endif
 bra_clear_memory_byte:

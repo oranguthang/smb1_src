@@ -6,4 +6,5 @@ con_revision_profile_pc10 = 1
 con_revision_profile_pal = 2
 con_revision_profile_vs = 3
 con_revision_profile_fds_smb = 4
+con_revision_profile_ann = 5
 .endif

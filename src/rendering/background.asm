@@ -243,38 +243,7 @@ bra_copy_area_palette_colors:
 bra_exit_color_rotation:
     RTS  ; leave
 
-; -------------------------------------------------------------------------------------
-; $00 - temp store for offset control bit
-; $01 - temp vram buffer offset
-; $02 - temp store for vertical high nybble in block buffer routine
-; $03 - temp adder for high byte of name table address
-; $04, $05 - name table address low/high
-; $06, $07 - block buffer address low/high
-
-tbl_block_metatile_tiles:
-    .byte $45, $45, $47, $47
-    .byte $47, $47, $47, $47
-    .byte $57, $58, $59, $5a
-    .byte $24, $24, $24, $24
-    .byte $26, $26, $26, $26
-
-sub_remove_coin_axe:
-    LDY #$41  ; set low byte so offset points to $0341
-    LDA #$03  ; load offset for default blank metatile
-    LDX ram_area_type  ; check area type
-    BNE bra_write_blank_metatile  ; if not water type, use offset
-    LDA #$04  ; otherwise load offset for blank metatile used in water
-bra_write_blank_metatile:
-    JSR sub_put_block_metatile  ; do a sub to write blank metatile to vram buffer
-    LDA #$06
-    STA ram_vram_buffer_addr_ctrl  ; set vram address controller to $0341 and leave
-    RTS
-
-sub_replace_block_metatile:
-    JSR sub_write_block_metatile  ; write metatile to vram buffer to replace block object
-    INC ram_block_residual_counter  ; increment unused counter (residual code)
-    DEC ram_block_rep_flag,x  ; decrement flag (residual code)
-    RTS  ; leave
+.include "rendering/block_updates.asm"
 
 sub_destroy_block_metatile:
     LDA #$00  ; force blank metatile if branched/jumped to this point
@@ -284,12 +253,20 @@ sub_write_block_metatile:
     CMP #$00  ; check contents of A for blank metatile
     BEQ bra_select_block_metatile_tiles  ; branch if found (unconditional if branched from 8a6b)
     LDY #$00  ; load offset for brick metatile w/ line
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_brick_with_coins_line_metatile
+.else
     CMP #$58
+.endif
     BEQ bra_select_block_metatile_tiles  ; use offset if metatile is brick with coins (w/ line)
     CMP #$51
     BEQ bra_select_block_metatile_tiles  ; use offset if metatile is breakable brick w/ line
     INY  ; increment offset for brick metatile w/o line
+.if con_revision_profile = con_revision_profile_ann
+    CMP #con_ann_brick_with_coins_metatile
+.else
     CMP #$5d
+.endif
     BEQ bra_select_block_metatile_tiles  ; use offset if metatile is brick with coins (w/o line)
     CMP #$52
     BEQ bra_select_block_metatile_tiles  ; use offset if metatile is breakable brick w/o line
@@ -435,7 +412,9 @@ off_palette_1_metatiles:
     .byte $45, $47, $45, $47  ; breakable brick w/ line
     .byte $47, $47, $47, $47  ; breakable brick
     .byte $45, $47, $45, $47  ; breakable brick (not used)
+.if con_revision_profile <> con_revision_profile_ann
     .byte $b4, $b6, $b5, $b7  ; cracked rock terrain
+.endif
     .byte $45, $47, $45, $47  ; brick with line (power-up)
     .byte $45, $47, $45, $47  ; brick with line (vine)
     .byte $45, $47, $45, $47  ; brick with line (star)
@@ -446,6 +425,9 @@ off_palette_1_metatiles:
     .byte $47, $47, $47, $47  ; brick (star)
     .byte $47, $47, $47, $47  ; brick (coins)
     .byte $47, $47, $47, $47  ; brick (1-up)
+.if con_revision_profile = con_revision_profile_ann
+    .byte $24, $24, $24, $24  ; blank reserved by the later metatile layout
+.endif
     .byte $24, $24, $24, $24  ; hidden block (1 coin)
     .byte $24, $24, $24, $24  ; hidden block (1-up)
     .byte $ab, $ac, $ad, $ae  ; solid block (3-d block)
@@ -457,6 +439,9 @@ off_palette_1_metatiles:
     .byte $24, $24, $24, $24  ; blank used for jumpspring
     .byte $24, $47, $24, $47  ; half brick used for jumpspring
     .byte $82, $83, $84, $85  ; solid block (water level, green rock)
+.if con_revision_profile = con_revision_profile_ann
+    .byte $b4, $b6, $b5, $b7  ; normal floor in the later metatile layout
+.endif
     .byte $24, $47, $24, $47  ; half brick (???)
     .byte $86, $8a, $87, $8b  ; water pipe top
     .byte $8e, $91, $8f, $92  ; water pipe bottom
@@ -597,6 +582,7 @@ off_mario_thanks_message:
     .byte $16, $0a, $1b, $12, $18, $2b
     .byte $00
 
+.if con_revision_profile <> con_revision_profile_ann
 off_luigi_thanks_message:
 ; "THANK YOU LUIGI!"
     .byte $25, $48, $10
@@ -604,6 +590,7 @@ off_luigi_thanks_message:
     .byte $22, $18, $1e, $24
     .byte $15, $1e, $12, $10, $12, $2b
     .byte $00
+.endif
 
 off_mushroom_retainer_saved_message:
 ; "BUT OUR PRINCESS IS IN"
@@ -666,7 +653,7 @@ off_vs_players_left_message:
     .byte $26, $a6, $15, $0f, $18, $1b, $24, $0e, $0a, $0c, $11, $24
     .byte $19, $15, $0a, $22, $0e, $1b, $24, $15, $0e, $0f, $1d, $af
     .byte $00
-.else
+.elseif con_revision_profile <> con_revision_profile_ann
 off_princess_saved_message_1:
 ; "YOUR QUEST IS OVER."
     .byte $25, $a7, $13

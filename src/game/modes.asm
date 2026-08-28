@@ -1,6 +1,7 @@
 ; -------------------------------------------------------------------------------------
 
-.if con_revision_profile = con_revision_profile_vs
+.if con_revision_profile = con_revision_profile_ann
+.elseif con_revision_profile = con_revision_profile_vs
     .include "../platforms/vs/title_and_demo.asm"
 .else
 handler_run_title_screen_mode:
@@ -178,9 +179,24 @@ bra_finish_title_demo:
 ; -------------------------------------------------------------------------------------
 
 handler_run_victory_mode:
+.if con_revision_profile = con_revision_profile_ann
+bra_exit_ann_victory_mode = handler_run_victory_mode-1
+.endif
     JSR sub_victory_mode_subroutines  ; run victory mode subroutines
     LDA ram_oper_mode_task  ; get current task of victory mode
+.if con_revision_profile = con_revision_profile_ann
+    BEQ bra_render_victory_player
+    LDX ram_ann_course_number
+    CPX #con_ann_final_course_number
+    BNE bra_run_victory_enemy_objects
+    CMP #con_ann_victory_disk_data_task
+    BEQ bra_exit_ann_victory_mode
+    CMP #con_ann_victory_disk_save_task
+    BEQ bra_exit_ann_victory_mode
+bra_run_victory_enemy_objects:
+.else
     BEQ bra_render_victory_player  ; if on bridge collapse, skip enemy processing
+.endif
     LDX #$00
     STX ram_object_offset  ; otherwise reset enemy object offset
     JSR sub_enemies_and_loops_core  ; and run enemy code
@@ -189,17 +205,32 @@ bra_render_victory_player:
     JMP sub_render_player_graphics  ; draw the player, then leave
 
 sub_victory_mode_subroutines:
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_ann_course_number
+    CMP #con_ann_final_course_number
+    BEQ loc_dispatch_ann_final_victory_task
+.endif
     LDA ram_oper_mode_task
     JSR sub_dispatch_inline_handler
 
     .word handler_bridge_collapse
     .word handler_setup_victory_mode
     .word handler_player_victory_walk
+.if con_revision_profile = con_revision_profile_ann
+    .word handler_print_ann_victory_messages
+.else
     .word handler_print_victory_messages
-.if con_revision_profile = con_revision_profile_vs
+.endif
+.if con_revision_profile = con_revision_profile_ann
+    .word handler_ann_victory_time_tally
+.elseif con_revision_profile = con_revision_profile_vs
     .word handler_vs_victory_time_tally
 .endif
+.if con_revision_profile = con_revision_profile_ann
+    .word handler_finish_ann_world
+.else
     .word handler_finish_world
+.endif
 .if con_revision_profile = con_revision_profile_vs
     .word handler_vs_victory_palette_cycle
     .word handler_vs_victory_prepare_parade
@@ -207,16 +238,165 @@ sub_victory_mode_subroutines:
     .word handler_vs_victory_wait_parade
     .word handler_vs_victory_finish_parade
 .endif
+.if con_revision_profile = con_revision_profile_ann
+loc_dispatch_ann_final_victory_task:
+    LDA ram_oper_mode_task
+    JSR sub_dispatch_inline_handler
+
+tbl_ann_final_victory_handlers:
+    .word handler_bridge_collapse
+    .word handler_setup_victory_mode
+    .word handler_player_victory_walk
+    .word handler_ann_victory_disk_init
+    .word handler_ann_victory_disk_check
+    .word handler_ann_victory_disk_data
+    .word handler_ann_ending_screen
+    .word handler_ann_ending_message
+    .word handler_ann_victory_time_tally
+    .word handler_ann_victory_extra_lives
+    .word handler_ann_victory_palette_cycle
+    .word handler_ann_victory_lives_draw
+    .word handler_ann_victory_toad
+    .word handler_ann_victory_disk_save
+.endif
+
+; -------------------------------------------------------------------------------------
+
+.if con_revision_profile = con_revision_profile_ann
+tbl_ann_toad_graphics_addresses:
+    .word off_ann_toad_graphics_1
+    .word off_ann_toad_graphics_2
+    .word off_ann_toad_graphics_3
+    .word off_ann_toad_graphics_4
+    .word off_ann_toad_graphics_5
+    .word off_ann_toad_graphics_6
+    .word off_ann_toad_graphics_7
+
+tbl_ann_toad_chr_addresses_high:
+    .byte >con_ann_toad_chr_address
+    .byte >con_ann_guest_chr_address
+    .byte >con_ann_guest_letter_chr_address
+
+tbl_ann_toad_chr_addresses_low:
+    .byte <con_ann_toad_chr_address
+    .byte <con_ann_guest_chr_address
+    .byte <con_ann_guest_letter_chr_address
+
+tbl_ann_toad_chr_copy_limits:
+    .byte $30, $50, $60
+
+handler_load_ann_toad_graphics:
+    LDA ram_level_number
+    CMP #$03
+    BNE bra_finish_ann_toad_graphics_load
+    LDY ram_ann_hard_mode
+    BNE bra_finish_ann_toad_graphics_load
+    STY ram_temp_byte_6
+    LDA ram_ann_course_number
+    ASL
+    TAX
+    LDA tbl_ann_toad_graphics_addresses,x
+    STA ram_temp_byte
+    INX
+    LDA tbl_ann_toad_graphics_addresses,x
+    STA ram_temp_byte_high
+bra_copy_ann_toad_chr_region:
+    LDX ram_temp_byte_6
+    LDA tbl_ann_toad_chr_addresses_high,x
+    STA PPU_ADDRESS
+    LDA tbl_ann_toad_chr_addresses_low,x
+    STA PPU_ADDRESS
+bra_copy_ann_toad_chr_byte:
+    LDA (ram_temp_byte),y
+    STA PPU_DATA
+    INY
+    TYA
+    CMP tbl_ann_toad_chr_copy_limits,x
+    BNE bra_copy_ann_toad_chr_byte
+    INC ram_temp_byte_6
+    LDA ram_temp_byte_6
+    CMP #$03
+    BNE bra_copy_ann_toad_chr_region
+bra_finish_ann_toad_graphics_load:
+    JMP loc_finish_ann_title_screen
+
+tbl_ann_toad_palette_addresses:
+    .word off_ann_toad_palette_1
+    .word off_ann_toad_palette_2
+    .word off_ann_toad_palette_3
+    .word off_ann_toad_palette_4
+
+tbl_ann_toad_palette_offsets:
+    .byte $04, $02, $00, $04, $02, $00, $08
+
+off_ann_toad_palette_1:
+    .byte $30, $12
+off_ann_toad_palette_2:
+    .byte $30, $1a
+off_ann_toad_palette_3:
+    .byte $30, $16
+off_ann_toad_palette_4:
+    .byte $17, $2a
+off_ann_toad_palette_common:
+    .byte $3f, $18, $04, $0f, $36
+ram_ann_toad_palette_buffer = *
+    .byte $00, $00, $00
+.endif
 
 ; -------------------------------------------------------------------------------------
 
 handler_setup_victory_mode:
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_ann_hard_mode
+    BNE bra_finish_ann_toad_palette_setup
+    LDX ram_ann_course_number
+    CPX #con_ann_final_course_number
+    BEQ bra_finish_ann_toad_palette_setup
+    LDY tbl_ann_toad_palette_offsets,x
+    LDA tbl_ann_toad_palette_addresses,y
+    STA ram_temp_byte
+    INY
+    LDA tbl_ann_toad_palette_addresses,y
+    STA ram_temp_byte_high
+    LDY #$00
+bra_copy_ann_toad_palette:
+    LDA (ram_temp_byte),y
+    STA ram_ann_toad_palette_buffer,y
+    INY
+    CPY #$02
+    BNE bra_copy_ann_toad_palette
+    LDA #con_ann_toad_palette_vram_index
+    STA ram_vram_buffer_addr_ctrl
+bra_finish_ann_toad_palette_setup:
+.endif
     LDX ram_screen_right_page_loc  ; get page location of right side of screen
     INX  ; increment to next page
     STX ram_destination_page_loc  ; store here
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_ann_hard_mode
+    BEQ bra_queue_ann_victory_music
+    LDA ram_ann_course_number
+    CMP #$03
+    BCC bra_queue_ann_victory_music
+    LDA #con_ann_final_course_number
+    STA ram_ann_course_number
+bra_queue_ann_victory_music:
+.endif
     LDA #con_end_of_castle_music
     STA ram_event_music_queue  ; play win castle music
+.if con_revision_profile = con_revision_profile_ann
+loc_finish_ann_title_screen:
+    INC ram_oper_mode_task
+    RTS
+
+handler_prepare_ann_title_background:
+    LDA ram_oper_mode
+    BNE loc_finish_ann_title_screen
+    LDA #$05
+    JMP bra_finish_alternate_palette_selection
+.else
     JMP loc_advance_operation_mode_task  ; jump to set next major task in victory mode
+.endif
 
 ; -------------------------------------------------------------------------------------
 
@@ -257,6 +437,8 @@ bra_finish_victory_walk:
 
 .if con_revision_profile = con_revision_profile_vs
     .include "../platforms/vs/victory.asm"
+.elseif con_revision_profile = con_revision_profile_ann
+    .include "../platforms/ann/victory_late.asm"
 .else
 handler_print_victory_messages:
     LDA ram_secondary_msg_counter  ; load secondary message counter

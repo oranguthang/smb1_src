@@ -3,6 +3,7 @@
 ram_temp_byte              = $00
 ram_temp_byte_high         = $01
 ram_temp_byte_4            = $04
+ram_temp_byte_6            = $06
 ram_object_offset          = $08
 
 ram_frame_counter          = $09
@@ -125,7 +126,13 @@ ram_display_digits         = $07d7
 ram_top_score_display       = $07d7
 ram_score_and_coin_display   = $07dd
 ram_player_score_display    = $07dd
+.if con_revision_profile = con_revision_profile_ann
+ram_game_timer_display      = $07ec
+.else
 ram_game_timer_display      = $07f8
+.endif
+ram_ann_game_timer_digits   = $07ec
+ram_ann_game_level_end_apu_on = $07f6
 ram_digit_modifier         = $0134
 
 ram_vertical_flip_flag      = $0109
@@ -146,6 +153,7 @@ ram_vram_buffer2_offset   = $0340
 ram_vram_buffer2          = $0341
 ram_vram_buffer_addr_ctrl  = $0773
 ram_sprite0_hit_detect_flag  = $0722
+ram_ann_ppu_background_select = $077a
 ram_disable_screen_flag     = $0774
 ram_disable_intermediate   = $0769
 ram_color_rotate_offset     = $06d4
@@ -179,6 +187,14 @@ ram_secondary_hard_mode     = $06cc
 ram_world_select_number     = $076b
 ram_world_select_enable_flag = $07fc
 ram_continue_world         = $07fd
+
+ram_ann_course_number       = $075f
+ram_ann_hard_mode           = $07fb
+ram_fds_sprite0_irq_flag    = $077b
+ram_fds_background_pattern_bits = $077a
+ram_fds_disk_loader_task    = $07fc
+ram_fds_control_mirror      = $fa
+ram_fds_irq_mode            = $0101
 
 ram_current_player         = $0753
 ram_player_size            = $0754

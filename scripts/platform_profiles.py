@@ -188,7 +188,11 @@ def make_fds_template(image: bytes, profile: dict[str, Any]) -> bytes:
 
 
 def build_fds_image(
-    profile: dict[str, Any], template: bytes, payloads: dict[str, bytes]
+    profile: dict[str, Any],
+    template: bytes,
+    payloads: dict[str, bytes],
+    *,
+    strict: bool = True,
 ) -> bytes:
     if len(template) != int(profile["disk_size"]):
         raise ValueError(f"FDS template size mismatch for {profile['id']}")
@@ -202,7 +206,9 @@ def build_fds_image(
     for payload in profile["verified_payloads"]:
         name = payload["name"]
         data = payloads[name]
-        if len(data) != int(payload["size"]) or sha1(data) != payload["sha1"]:
+        if len(data) != int(payload["size"]):
+            raise ValueError(f"payload size mismatch for {profile['id']}: {name}")
+        if strict and sha1(data) != payload["sha1"]:
             raise ValueError(f"payload hash mismatch for {profile['id']}: {name}")
         position = 0
         for descriptor in payload["records"]:
@@ -218,13 +224,16 @@ def build_fds_image(
         if position != len(data):
             raise ValueError(f"payload record sizes do not cover {name}")
     result = bytes(image)
-    if sha1(result) != profile["disk_sha1"]:
+    if strict and sha1(result) != profile["disk_sha1"]:
         raise ValueError(f"FDS disk hash mismatch for {profile['id']}")
     return result
 
 
 def payload_paths(
-    profile: dict[str, Any], prg: Path | None, arguments: list[str]
+    profile: dict[str, Any],
+    prg: Path | None,
+    arguments: list[str],
+    payload_dir: Path | None = None,
 ) -> dict[str, Path]:
     paths: dict[str, Path] = {}
     if prg is not None:
@@ -239,6 +248,11 @@ def payload_paths(
         if name in paths:
             raise ValueError(f"duplicate payload argument: {name}")
         paths[name] = Path(value)
+    if payload_dir is not None:
+        for payload in profile["verified_payloads"]:
+            name = payload["name"]
+            if name not in paths:
+                paths[name] = payload_dir / f"{name}.bin"
     return paths
 
 
@@ -299,17 +313,26 @@ def main() -> int:
             if args.command == "split":
                 if args.reference is None:
                     raise ValueError("split requires a private platform reference")
-                template = make_fds_template(args.reference.read_bytes(), profile)
+                reference = args.reference.read_bytes()
+                payloads = extract_fds_payloads(reference, profile)
+                template = make_fds_template(reference, profile)
                 atomic_write(template_path, template)
+                primary = profile.get("primary_payload")
+                for name, data in payloads.items():
+                    if name != primary:
+                        atomic_write(profile_assets / "payloads" / f"{name}.bin", data)
                 print(f"[OK] Extracted private platform assets: {profile_assets}")
                 return 0
             if args.output is None:
                 raise ValueError("build and verify require an output path")
-            paths = payload_paths(profile, args.prg, args.payload)
+            paths = payload_paths(
+                profile, args.prg, args.payload, profile_assets / "payloads"
+            )
             image = build_fds_image(
                 profile,
                 template_path.read_bytes(),
                 {name: path.read_bytes() for name, path in paths.items()},
+                strict=args.command == "verify",
             )
         else:
             raise ValueError(

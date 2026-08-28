@@ -112,6 +112,11 @@ PLATFORM_SOURCE ?= $(PROJECT_DIR)src/revisions/fds_smb.asm
 PLATFORM_CFG ?= $(PROJECT_DIR)src/fds_prg.cfg
 PLATFORM_REFERENCE ?= $(PROJECT_DIR)Super Mario Brothers (Japan).fds
 PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.fds
+else ifeq ($(PLATFORM),ann_fds)
+PLATFORM_SOURCE ?= $(PROJECT_DIR)src/revisions/ann.asm
+PLATFORM_CFG ?= $(PROJECT_DIR)src/fds_prg.cfg
+PLATFORM_REFERENCE ?= $(PROJECT_DIR)All Night Nippon Super Mario Brothers (Japan) (Promotion Card).fds
+PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.fds
 else
 PLATFORM_SOURCE ?= $(PROJECT_DIR)src/platforms/$(PLATFORM).asm
 PLATFORM_CFG ?= $(NATIVE_CFG)

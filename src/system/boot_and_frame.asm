@@ -9,9 +9,57 @@
 ; Clobbers:
 ; A, X, Y
 vec_reset_handler:
-.if con_revision_profile <> con_revision_profile_fds_smb
-    SEI  ; pretty standard 6502 type init here
-.endif
+.if con_revision_profile = con_revision_profile_ann
+    NOP  ; retained ANN startup alignment bytes
+    NOP
+    NOP
+    LDA ram_ann_course_number
+    PHA
+    LDA #con_fds_control_io_mask+con_fds_control_read_mode+con_fds_control_transfer_reset+con_fds_control_motor_on
+    STA ram_fds_control_mirror
+    STA FDS_CONTROL
+    LDY #con_cold_boot_offset
+    LDX #$05
+bra_check_ann_warm_boot_state:
+    LDA ram_top_score_display,x
+    CMP #10
+    BCS bra_initialize_ann_after_boot_check
+    DEX
+    BPL bra_check_ann_warm_boot_state
+    LDA ram_warm_boot_validation
+    CMP #$a5
+    BNE bra_initialize_ann_after_boot_check
+    LDY #con_warm_boot_offset
+bra_initialize_ann_after_boot_check:
+    JSR sub_initialize_memory
+    STA SND_DELTA_REG+1
+    STA ram_oper_mode
+    STA ram_fds_disk_loader_task
+    PLA
+    STA ram_ann_course_number
+    LDA #$a5
+    STA ram_warm_boot_validation
+    STA ram_pseudo_random_bit_reg
+    LDA #%00001111
+    STA SND_MASTERCTRL_REG
+    LDA #%00000110
+    STA PPU_CTRL_REG2
+    JSR sub_move_all_sprites_offscreen
+    JSR sub_initialize_name_tables
+    INC ram_disable_screen_flag
+    LDA #con_fds_irq_mode_game
+    STA ram_fds_irq_mode
+    CLI
+    LDA ram_mirror_ppu_ctrl_reg1
+    ORA #%10000000
+    JSR sub_write_ppu_reg1
+loc_wait_forever_after_ann_reset:
+    LDA ram_temp_byte
+    JMP loc_wait_forever_after_ann_reset
+.else
+    .if con_revision_profile <> con_revision_profile_fds_smb
+        SEI  ; pretty standard 6502 type init here
+    .endif
     CLD
     LDA #%00010000  ; init PPU control register 1
     STA PPU_CTRL_REG1
@@ -31,20 +79,20 @@ bra_check_warm_boot_state:
     BCS bra_initialize_after_boot_check  ; if not, give up and proceed with cold boot
     DEX
     BPL bra_check_warm_boot_state
-.if con_revision_profile <> con_revision_profile_vs
-    LDA ram_warm_boot_validation  ; second checkpoint, check to see if
-    CMP #$a5  ; another location has a specific value
-    BNE bra_initialize_after_boot_check
-    LDY #con_warm_boot_offset  ; if passed both, load warm boot pointer
-.endif
+    .if con_revision_profile <> con_revision_profile_vs
+        LDA ram_warm_boot_validation  ; second checkpoint, check to see if
+        CMP #$a5  ; another location has a specific value
+        BNE bra_initialize_after_boot_check
+        LDY #con_warm_boot_offset  ; if passed both, load warm boot pointer
+    .endif
 bra_initialize_after_boot_check:
     JSR sub_initialize_memory  ; clear memory using pointer in Y
     STA SND_DELTA_REG+1  ; reset delta counter load register
     STA ram_oper_mode  ; reset primary mode of operation
     LDA #$a5  ; set warm boot flag
-.if con_revision_profile <> con_revision_profile_vs
-    STA ram_warm_boot_validation
-.endif
+    .if con_revision_profile <> con_revision_profile_vs
+        STA ram_warm_boot_validation
+    .endif
     STA ram_pseudo_random_bit_reg  ; set seed for pseudorandom register
     LDA #%00001111
     STA SND_MASTERCTRL_REG  ; enable all sound channels except dmc
@@ -53,84 +101,120 @@ bra_initialize_after_boot_check:
     JSR sub_move_all_sprites_offscreen
     JSR sub_initialize_name_tables  ; initialize both name tables
     INC ram_disable_screen_flag  ; set flag to disable screen output
-.if con_revision_profile = con_revision_profile_fds_smb
-    LDA #con_fds_control_io_mask+con_fds_control_read_mode+con_fds_control_transfer_reset+con_fds_control_motor_on
-    STA FDS_CONTROL
-.elseif con_revision_profile = con_revision_profile_vs
-    JSR sub_vs_select_low_chr_bank
-    LDA #$00
-    LDX #$00
+    .if con_revision_profile = con_revision_profile_fds_smb
+        LDA #con_fds_control_io_mask+con_fds_control_read_mode+con_fds_control_transfer_reset+con_fds_control_motor_on
+        STA FDS_CONTROL
+    .elseif con_revision_profile = con_revision_profile_vs
+        JSR sub_vs_select_low_chr_bank
+        LDA #$00
+        LDX #$00
 bra_clear_vs_ram_arenas:
-    STA ram_vs_arena1,x
-    STA ram_vs_arena0,x
-    INX
-    BNE bra_clear_vs_ram_arenas
-    LDA #con_vs_request_chr_high+con_vs_request_irq_release
-    STA VS_REQUEST
-    LDA #$1e
-    STA PPU_ADDRESS
-    LDA #$00
-    STA PPU_ADDRESS
-    LDA PPU_DATA  ; discard the buffered CHR read
-    LDY #<ram_vs_saved_data
+        STA ram_vs_arena1,x
+        STA ram_vs_arena0,x
+        INX
+        BNE bra_clear_vs_ram_arenas
+        LDA #con_vs_request_chr_high+con_vs_request_irq_release
+        STA VS_REQUEST
+        LDA #$1e
+        STA PPU_ADDRESS
+        LDA #$00
+        STA PPU_ADDRESS
+        LDA PPU_DATA  ; discard the buffered CHR read
+        LDY #<ram_vs_saved_data
 bra_load_vs_saved_data:
-    LDA PPU_DATA
-    STA ram_vs_arena0,y
-    INY
-    BNE bra_load_vs_saved_data
-    LDA #con_vs_request_irq_release
-    STA VS_REQUEST
-    LDY #$05
+        LDA PPU_DATA
+        STA ram_vs_arena0,y
+        INY
+        BNE bra_load_vs_saved_data
+        LDA #con_vs_request_irq_release
+        STA VS_REQUEST
+        LDY #$05
 bra_restore_vs_top_score:
-    LDA ram_vs_saved_top_score,y
-    STA ram_top_score_display,y
-    DEY
-    BPL bra_restore_vs_top_score
-    JSR sub_vs_read_dip_switches
-.endif
-.if con_revision_profile = con_revision_profile_fds_smb
-    CLI
-.endif
+        LDA ram_vs_saved_top_score,y
+        STA ram_top_score_display,y
+        DEY
+        BPL bra_restore_vs_top_score
+        JSR sub_vs_read_dip_switches
+    .endif
+    .if con_revision_profile = con_revision_profile_fds_smb
+        CLI
+    .endif
     LDA ram_mirror_ppu_ctrl_reg1
     ORA #%10000000  ; enable NMIs
     JSR sub_write_ppu_reg1
 loc_wait_forever_after_reset_failure:
     JMP loc_wait_forever_after_reset_failure  ; endless loop, need I say more?
+.endif
 
 ; -------------------------------------------------------------------------------------
 ; $00 - vram buffer address table low, also used for pseudorandom bit
 ; $01 - vram buffer address table high
 
-tbl_vram_buffer_addresses_low:
-.if con_revision_profile = con_revision_profile_vs
-    .byte $01, $a5, $c9, $ed, $11, $00, $41, $41, $4d, $35
-    .byte $3d, $45, $55, $69, $7d, $a9, $b2, $c6, $de, $f6
-    .byte $0c, $22, $36, $4a, $5b, $72, $8a, $a2, $00, $00
-    .byte $00, $e4, $e4, $e4, $e4, $e4, $e4, $e4, $dc
+.if con_revision_profile = con_revision_profile_ann
+tbl_vram_buffer_addresses:
+    .word ram_vram_buffer1
+    .word off_water_area_palette_packet
+    .word off_ground_area_palette_packet
+    .word off_underground_area_palette_packet
+    .word off_castle_area_palette_packet
+    .word off_ann_title_map_packet
+    .word ram_vram_buffer2
+    .word ram_vram_buffer2
+    .word off_bowser_palette_packet
+    .word off_day_snow_palette_packet
+    .word off_night_snow_palette_packet
+    .word off_mushroom_palette_packet
+    .word off_mario_thanks_message
+    .word off_mushroom_retainer_saved_message
+    .word off_ann_ending_attribute_packet
+    .word off_ann_ending_palette_packet
+    .word off_ann_mario_thanks_packet
+    .word off_ann_ending_message_1
+    .word off_ann_ending_message_2
+    .word off_ann_ending_message_3
+    .word off_ann_ending_message_4
+    .word off_ann_ending_message_5
+    .word off_ann_ending_message_6
+    .word off_ann_ending_message_7
+    .word off_ann_ending_message_8
+    .word off_ann_disk_error_text_packet
+    .word off_ann_disk_error_palette_packet
+    .word off_ann_throne_room_map
+    .word off_ann_title_cursor_packet
+    .word off_ann_toad_palette_common
+    .word off_ann_ending_palette_extension
 .else
-    .byte <ram_vram_buffer1, <off_water_area_palette_packet, <off_ground_area_palette_packet
-    .byte <off_underground_area_palette_packet, <off_castle_area_palette_packet, <ram_vram_buffer1_offset
-    .byte <ram_vram_buffer2, <ram_vram_buffer2, <off_bowser_palette_packet
-    .byte <off_day_snow_palette_packet, <off_night_snow_palette_packet, <off_mushroom_palette_packet
-    .byte <off_mario_thanks_message, <off_luigi_thanks_message, <off_mushroom_retainer_saved_message
-    .byte <off_princess_saved_message_1, <off_princess_saved_message_2, <off_world_select_message_1
-    .byte <off_world_select_message_2
-.endif
+tbl_vram_buffer_addresses_low:
+    .if con_revision_profile = con_revision_profile_vs
+        .byte $01, $a5, $c9, $ed, $11, $00, $41, $41, $4d, $35
+        .byte $3d, $45, $55, $69, $7d, $a9, $b2, $c6, $de, $f6
+        .byte $0c, $22, $36, $4a, $5b, $72, $8a, $a2, $00, $00
+        .byte $00, $e4, $e4, $e4, $e4, $e4, $e4, $e4, $dc
+    .else
+        .byte <ram_vram_buffer1, <off_water_area_palette_packet, <off_ground_area_palette_packet
+        .byte <off_underground_area_palette_packet, <off_castle_area_palette_packet, <ram_vram_buffer1_offset
+        .byte <ram_vram_buffer2, <ram_vram_buffer2, <off_bowser_palette_packet
+        .byte <off_day_snow_palette_packet, <off_night_snow_palette_packet, <off_mushroom_palette_packet
+        .byte <off_mario_thanks_message, <off_luigi_thanks_message, <off_mushroom_retainer_saved_message
+        .byte <off_princess_saved_message_1, <off_princess_saved_message_2, <off_world_select_message_1
+        .byte <off_world_select_message_2
+    .endif
 
 tbl_vram_buffer_addresses_high:
-.if con_revision_profile = con_revision_profile_vs
-    .byte $03, $8e, $8e, $8e, $8f, $03, $03, $03, $8f, $8f
-    .byte $8f, $8f, $8f, $8f, $8f, $8f, $8f, $8f, $8f, $8f
-    .byte $90, $90, $90, $90, $90, $90, $90, $90, $63, $60
-    .byte $60, $80, $80, $80, $80, $80, $80, $80, $80
-.else
-    .byte >ram_vram_buffer1, >off_water_area_palette_packet, >off_ground_area_palette_packet
-    .byte >off_underground_area_palette_packet, >off_castle_area_palette_packet, >ram_vram_buffer1_offset
-    .byte >ram_vram_buffer2, >ram_vram_buffer2, >off_bowser_palette_packet
-    .byte >off_day_snow_palette_packet, >off_night_snow_palette_packet, >off_mushroom_palette_packet
-    .byte >off_mario_thanks_message, >off_luigi_thanks_message, >off_mushroom_retainer_saved_message
-    .byte >off_princess_saved_message_1, >off_princess_saved_message_2, >off_world_select_message_1
-    .byte >off_world_select_message_2
+    .if con_revision_profile = con_revision_profile_vs
+        .byte $03, $8e, $8e, $8e, $8f, $03, $03, $03, $8f, $8f
+        .byte $8f, $8f, $8f, $8f, $8f, $8f, $8f, $8f, $8f, $8f
+        .byte $90, $90, $90, $90, $90, $90, $90, $90, $63, $60
+        .byte $60, $80, $80, $80, $80, $80, $80, $80, $80
+    .else
+        .byte >ram_vram_buffer1, >off_water_area_palette_packet, >off_ground_area_palette_packet
+        .byte >off_underground_area_palette_packet, >off_castle_area_palette_packet, >ram_vram_buffer1_offset
+        .byte >ram_vram_buffer2, >ram_vram_buffer2, >off_bowser_palette_packet
+        .byte >off_day_snow_palette_packet, >off_night_snow_palette_packet, >off_mushroom_palette_packet
+        .byte >off_mario_thanks_message, >off_luigi_thanks_message, >off_mushroom_retainer_saved_message
+        .byte >off_princess_saved_message_1, >off_princess_saved_message_2, >off_world_select_message_1
+        .byte >off_world_select_message_2
+    .endif
 .endif
 
 .if con_revision_profile = con_revision_profile_vs
@@ -160,10 +244,27 @@ vec_nmi_handler:
     CLI
 .endif
     LDA ram_mirror_ppu_ctrl_reg1  ; disable NMIs in mirror reg
+.if con_revision_profile = con_revision_profile_ann
+    AND #%01111110
+    STA ram_mirror_ppu_ctrl_reg1
+    STA PPU_CTRL_REG1
+    SEI
+    LDA ram_sprite0_hit_detect_flag
+    BEQ bra_skip_ann_split_timer
+    LDA #<con_fds_nmi_split_timer
+    STA FDS_TIMER_DATA_LO
+    LDA #>con_fds_nmi_split_timer
+    STA FDS_TIMER_DATA_HI
+    LDA #con_fds_timer_irq_enable
+    STA FDS_TIMER_CONTROL
+    INC ram_fds_sprite0_irq_flag
+bra_skip_ann_split_timer:
+.else
     AND #%01111111  ; save all other bits
     STA ram_mirror_ppu_ctrl_reg1
     AND #%01111110  ; alter name table address to be $2800
     STA PPU_CTRL_REG1  ; (essentially $2000) but save other bits
+.endif
     LDA ram_mirror_ppu_ctrl_reg2  ; disable OAM and background display by default
     AND #%11100110
     LDY ram_disable_screen_flag  ; get screen disable flag
@@ -180,11 +281,22 @@ bra_apply_rendering_mask:
     STA PPU_SPR_ADDR  ; reset spr-ram address register
     LDA #$02  ; perform spr-ram DMA access on $0200-$02ff
     STA SPR_DMA
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_vram_buffer_addr_ctrl
+    ASL
+    TAX
+    LDA tbl_vram_buffer_addresses,x
+    STA $00
+    INX
+    LDA tbl_vram_buffer_addresses,x
+    STA $01
+.else
     LDX ram_vram_buffer_addr_ctrl  ; load control for pointer to buffer contents
     LDA tbl_vram_buffer_addresses_low,x  ; set indirect at $00 to pointer
     STA $00
     LDA tbl_vram_buffer_addresses_high,x
     STA $01
+.endif
     JSR sub_update_screen  ; update screen with buffer contents
     LDY #$00
     LDX ram_vram_buffer_addr_ctrl  ; check for usage of $0341
@@ -199,6 +311,9 @@ bra_select_vram_buffer_offset:
     STA ram_vram_buffer_addr_ctrl  ; reinit address control to $0301
     LDA ram_mirror_ppu_ctrl_reg2  ; copy mirror of $2001 to register
     STA PPU_CTRL_REG2
+.if con_revision_profile = con_revision_profile_ann
+    CLI
+.endif
     JSR sub_sound_engine  ; play sound
 .if con_revision_profile = con_revision_profile_vs
     JSR sub_vs_process_coin_service
@@ -253,17 +368,42 @@ bra_rotate_pseudorandom_register:
     INX  ; increment to next byte
     DEY  ; decrement for loop
     BNE bra_rotate_pseudorandom_register
+.if con_revision_profile = con_revision_profile_ann
+    LDA ram_game_pause_status
+    LSR
+    BCS bra_finish_ann_mode_execution
+    LDA ram_sprite0_hit_detect_flag
+    BEQ bra_check_ann_course_limit
+    JSR sub_move_sprites_offscreen
+    JSR sub_sprite_shuffler
+bra_check_ann_course_limit:
+    LDA ram_ann_course_number
+    CMP #con_ann_course_number_cutoff
+    BCC bra_run_ann_operating_mode
+    JSR sub_advance_ann_game_after_course
+bra_run_ann_operating_mode:
+    JSR sub_oper_mode_execution_tree
+bra_finish_ann_mode_execution:
+    LDA ram_fds_sprite0_irq_flag
+    BNE bra_finish_ann_mode_execution
+    LDA PPU_STATUS
+    LDA ram_mirror_ppu_ctrl_reg1
+    ORA #%10000000
+    STA ram_mirror_ppu_ctrl_reg1
+    STA PPU_CTRL_REG1
+    RTI
+.else
     LDA ram_sprite0_hit_detect_flag  ; check for flag here
     BEQ bra_skip_sprite_0_synchronization
 bra_wait_for_sprite_0_clear:
     LDA PPU_STATUS  ; wait for sprite 0 flag to clear, which will
     AND #%01000000  ; not happen until vblank has ended
     BNE bra_wait_for_sprite_0_clear
-.if con_revision_profile <> con_revision_profile_vs
-    LDA ram_game_pause_status  ; if in pause mode, do not bother with sprites at all
-    LSR
-    BCS bra_wait_for_sprite_0_hit
-.endif
+    .if con_revision_profile <> con_revision_profile_vs
+        LDA ram_game_pause_status  ; if in pause mode, do not bother with sprites at all
+        LSR
+        BCS bra_wait_for_sprite_0_hit
+    .endif
     JSR sub_move_sprites_offscreen
     JSR sub_sprite_shuffler
 bra_wait_for_sprite_0_hit:
@@ -282,11 +422,11 @@ bra_skip_sprite_0_synchronization:
     LDA ram_mirror_ppu_ctrl_reg1  ; load saved mirror of $2000
     PHA
     STA PPU_CTRL_REG1
-.if con_revision_profile <> con_revision_profile_vs
-    LDA ram_game_pause_status  ; if in pause mode, do not perform operation mode stuff
-    LSR
-    BCS bra_finish_nmi_frame
-.endif
+    .if con_revision_profile <> con_revision_profile_vs
+        LDA ram_game_pause_status  ; if in pause mode, do not perform operation mode stuff
+        LSR
+        BCS bra_finish_nmi_frame
+    .endif
     JSR sub_oper_mode_execution_tree  ; otherwise do one of many, many possible subroutines
 bra_finish_nmi_frame:
     LDA PPU_STATUS  ; reset flip-flop
@@ -294,8 +434,53 @@ bra_finish_nmi_frame:
     ORA #%10000000  ; reactivate NMIs
     STA PPU_CTRL_REG1
     RTI  ; we are done until the next frame!
+.endif
 
 ; -------------------------------------------------------------------------------------
+
+.if con_revision_profile = con_revision_profile_ann
+vec_ann_irq_handler:
+    SEI
+    PHP
+    PHA
+    TXA
+    PHA
+    TYA
+    PHA
+    LDA FDS_MEDIA_STATUS
+    PHA
+    AND #con_fds_media_transfer
+    BNE bra_handle_ann_disk_transfer_irq
+    PLA
+    AND #con_fds_media_timer_irq
+    BEQ bra_finish_ann_irq
+    LDA ram_mirror_ppu_ctrl_reg1
+    AND #%11110111
+    ORA ram_fds_background_pattern_bits
+    STA ram_mirror_ppu_ctrl_reg1
+    STA PPU_CTRL_REG1
+    LDA #$00
+    STA FDS_TIMER_CONTROL
+    LDA ram_horizontal_scroll
+    STA PPU_SCROLL_REG
+    LDA ram_vertical_scroll
+    STA PPU_SCROLL_REG
+    LDA #$00
+    STA ram_fds_sprite0_irq_flag
+    JMP bra_finish_ann_irq
+bra_handle_ann_disk_transfer_irq:
+    PLA
+    JSR sub_fds_bios_delay_short
+bra_finish_ann_irq:
+    PLA
+    TAY
+    PLA
+    TAX
+    PLA
+    PLP
+    CLI
+    RTI
+.endif
 
 .if con_revision_profile = con_revision_profile_vs
 vec_irq_handler:
@@ -407,7 +592,11 @@ sub_oper_mode_execution_tree:
     LDA ram_oper_mode  ; this is the heart of the entire program,
     JSR sub_dispatch_inline_handler  ; most of what goes on starts here
 
+.if con_revision_profile = con_revision_profile_ann
+    .word handler_run_ann_disk_loader
+.else
     .word handler_run_title_screen_mode
+.endif
 .if con_revision_profile = con_revision_profile_vs
     .word handler_run_vs_player_select_mode
 .endif

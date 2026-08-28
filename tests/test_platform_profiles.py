@@ -15,6 +15,7 @@ from platform_profiles import (
     extract_fds_payloads,
     make_fds_template,
     parse_fds_side,
+    payload_paths,
     split_ines_reference,
 )
 
@@ -133,6 +134,30 @@ class FdsPlatformProfileTests(unittest.TestCase):
     def test_rejects_payload_substitution(self) -> None:
         with self.assertRaisesRegex(ValueError, "payload hash mismatch"):
             build_fds_image(self.profile, self.template, {"MAIN": b"ABCDF"})
+
+    def test_build_mode_accepts_reconstructed_payload_bytes(self) -> None:
+        candidate = build_fds_image(
+            self.profile,
+            self.template,
+            {"MAIN": b"ABCDF"},
+            strict=False,
+        )
+        self.assertNotEqual(candidate, self.image)
+
+    def test_resolves_auxiliary_payloads_from_private_assets(self) -> None:
+        profile = dict(self.profile)
+        profile["verified_payloads"] = [
+            *self.profile["verified_payloads"],
+            {"name": "DATA2", "size": 1, "sha1": "unused", "records": []},
+        ]
+        paths = payload_paths(
+            profile,
+            Path("main.bin"),
+            [],
+            Path("private") / "payloads",
+        )
+        self.assertEqual(paths["MAIN"], Path("main.bin"))
+        self.assertEqual(paths["DATA2"], Path("private") / "payloads" / "DATA2.bin")
 
     def test_rejects_malformed_fds_side(self) -> None:
         with self.assertRaisesRegex(ValueError, "file-data block"):

@@ -5,20 +5,32 @@
 
 ; status bar name table offset and length data
 tbl_status_bar_vram_address_and_length:
+.if con_revision_profile = con_revision_profile_ann
+    .byte $f1, $06  ; top score display on the ANN title screen
+.else
     .byte $f0, $06  ; top score display on title screen
+.endif
     .byte $62, $06  ; player score
+.if con_revision_profile <> con_revision_profile_ann
     .byte $62, $06
+.endif
 .if con_revision_profile = con_revision_profile_vs
     .byte $6d, $03  ; coin tally and its arcade multiplication sign
     .byte $6d, $03
 .else
     .byte $6d, $02  ; coin tally
-    .byte $6d, $02
+    .if con_revision_profile <> con_revision_profile_ann
+        .byte $6d, $02
+    .endif
 .endif
     .byte $7a, $03  ; game timer
 
 tbl_status_bar_digit_offsets:
+.if con_revision_profile = con_revision_profile_ann
+    .byte $06, $0c, $12, $18
+.else
     .byte $06, $0c, $12, $18, $1e, $24
+.endif
 
 sub_print_status_bar_numbers:
     STA $00  ; store player-specific offset
@@ -78,7 +90,9 @@ bra_exit_status_bar_number_output:
 
 sub_digits_math_routine:
     LDA ram_oper_mode  ; check mode of operation
+.if con_revision_profile <> con_revision_profile_ann
     CMP #con_mode_title_screen
+.endif
     BEQ bra_clear_digit_modifiers  ; if in title screen mode, branch to lock score
     LDX #$05
 bra_apply_digit_modifiers_loop:
@@ -115,8 +129,10 @@ bra_carry_decimal_digit:
 
 sub_update_top_score:
     LDX #$05  ; start with mario's score
+.if con_revision_profile <> con_revision_profile_ann
     JSR sub_top_score_check
     LDX #$0b  ; now do luigi's score
+.endif
 
 sub_top_score_check:
     LDY #$05  ; start with the lowest digit
