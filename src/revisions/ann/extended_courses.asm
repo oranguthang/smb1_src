@@ -1,10 +1,10 @@
 ; Standalone ANN NSMDATA4 verification entrypoint
 
-.include "profile_ids.inc"
+.include "../profile_ids.inc"
 
 con_revision_profile = con_revision_profile_ann
 
-.include "../memory/ram.inc"
+.include "../../memory/ram.inc"
 
 sub_ann_get_course_type = $c28c
 tbl_halfway_page_nibbles = $7088
@@ -19,17 +19,17 @@ tbl_vertical_pipe_metatiles = $7786
 .segment "OVERLAY"
 .org $c296
 
-.include "../platforms/ann/extended_course_loader.asm"
-.include "../platforms/ann/extended_course_tables.asm"
-.include "../platforms/ann/extended_life_down.asm"
+.include "../../platforms/ann/courses/extended/loader.asm"
+.include "../../platforms/ann/courses/extended/tables.asm"
+.include "../../platforms/ann/courses/extended/life_down.asm"
 
 ; Align the shared gameplay extensions with their supplemental-course addresses
     .res $ad, $ff
 
-.include "../platforms/ann/overlay_gameplay.asm"
+.include "../../platforms/ann/gameplay/overlay.asm"
 
 ; Original disk alignment before the first extended course stream
     .res $b7, $ff
 
-.include "../platforms/ann/extended_course_enemy_streams.asm"
-.include "../platforms/ann/extended_course_area_streams.asm"
+.include "../../platforms/ann/courses/extended/enemy_streams.asm"
+.include "../../platforms/ann/courses/extended/area_streams.asm"

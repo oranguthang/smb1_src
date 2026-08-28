@@ -63,11 +63,15 @@ branch shared with the Japanese SMB2. Its graphics, courses, character physics,
 ending, audio, and disk files are not a simple CHR replacement over cartridge
 SMB1.
 
+The revision entrypoints are collected under `src/revisions/ann/`. Platform
+modules under `src/platforms/ann/` follow the disk's functional ownership:
+disk loading, title flow, courses, gameplay, ending, audio, and rendering.
+
 The supplied
 `All Night Nippon Super Mario Brothers (Japan) (Promotion Card).fds` image is a
 raw 65,500-byte disk side without the optional 16-byte FDS file header. Its
 SHA-1 is `f30bdd3c556604d7eaa6d0f4864d5566e519b5d4`. The project-native
-`src/revisions/ann.asm` entrypoint and the three data-overlay entrypoints
+`src/revisions/ann/main.asm` entrypoint and the three data-overlay entrypoints
 reproduce all four program payloads exactly: the 32,768-byte `NSMMAIN` at SHA-1
 `8f07dfdda5829983a1deec8c82dd26e196826cd9`, the 3,584-byte `NSMDATA2` at
 `48447986778a9c39fc8cabf4e5494d99fab7e020`, the 3,346-byte `NSMDATA3` at

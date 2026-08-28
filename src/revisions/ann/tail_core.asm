@@ -1,11 +1,11 @@
 ; Standalone ANN tail-core verification entrypoint
 
-.include "profile_ids.inc"
+.include "../profile_ids.inc"
 
 con_revision_profile = con_revision_profile_ann
 
-.include "../memory/hardware.inc"
-.include "../memory/ram.inc"
+.include "../../memory/hardware.inc"
+.include "../../memory/ram.inc"
 
 sub_dispatch_inline_handler = $6d0f
 sub_move_all_sprites_offscreen = $628a
@@ -43,17 +43,17 @@ con_music_header_data_base = tbl_music_header_offsets
 .segment "PRG"
 .org $bfbf
 
-.include "../platforms/ann/disk_loader.asm"
-.include "../platforms/ann/game_over_and_physics.asm"
-.include "../platforms/ann/course_loader.asm"
-.include "../platforms/ann/course_tables.asm"
-.include "../platforms/ann/title_menu.asm"
-.include "../platforms/ann/title_setup.asm"
-.include "../platforms/ann/title_map.asm"
-.include "../platforms/ann/primary_course_enemy_streams.asm"
-.include "../platforms/ann/primary_course_area_streams.asm"
-.include "../platforms/ann/guest_chr_and_save.asm"
-.include "../audio/sound_effects.asm"
-.include "../audio/music_engine.asm"
-.include "../audio/music_data.asm"
-.include "../data/vectors.asm"
+.include "../../platforms/ann/disk/loader.asm"
+.include "../../platforms/ann/gameplay/game_over_and_physics.asm"
+.include "../../platforms/ann/courses/loader.asm"
+.include "../../platforms/ann/courses/tables.asm"
+.include "../../platforms/ann/title/menu.asm"
+.include "../../platforms/ann/title/setup.asm"
+.include "../../platforms/ann/title/map.asm"
+.include "../../platforms/ann/courses/primary/enemy_streams.asm"
+.include "../../platforms/ann/courses/primary/area_streams.asm"
+.include "../../platforms/ann/ending/guest_chr_and_save.asm"
+.include "../../audio/sound_effects.asm"
+.include "../../audio/music_engine.asm"
+.include "../../audio/music_data.asm"
+.include "../../data/vectors.asm"

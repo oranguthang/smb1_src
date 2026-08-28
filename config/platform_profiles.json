@@ -116,7 +116,7 @@
       "status": "supported",
       "format": "fds_raw_side",
       "reference_rom": "All Night Nippon Super Mario Brothers (Japan) (Promotion Card).fds",
-      "entrypoint": "src/revisions/ann.asm",
+      "entrypoint": "src/revisions/ann/main.asm",
       "linker_config": "src/fds_prg.cfg",
       "verification_boundary": "complete_fds_side",
       "verify_target": "make verify-platform PLATFORM=ann_fds",

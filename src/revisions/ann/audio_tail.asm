@@ -1,11 +1,11 @@
 ; Standalone ANN audio-tail verification entrypoint
 
-.include "profile_ids.inc"
+.include "../profile_ids.inc"
 
 con_revision_profile = con_revision_profile_ann
 
-.include "../memory/hardware.inc"
-.include "../memory/ram.inc"
+.include "../../memory/hardware.inc"
+.include "../../memory/ram.inc"
 
 con_sfx_extra_life = %01000000
 con_time_running_out_music = %01000000
@@ -20,6 +20,6 @@ con_music_header_data_base = tbl_music_header_offsets
 .segment "PRG"
 .org $d2e4
 
-.include "../audio/sound_effects.asm"
-.include "../audio/music_engine.asm"
-.include "../audio/music_data.asm"
+.include "../../audio/sound_effects.asm"
+.include "../../audio/music_engine.asm"
+.include "../../audio/music_data.asm"
