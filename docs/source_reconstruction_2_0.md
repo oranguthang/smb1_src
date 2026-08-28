@@ -66,5 +66,8 @@ semantic source, and the following `$BFBF-$E000` tail has this proven layout:
 The production entrypoint switches to this complete tail at `$BFBF` rather than
 mixing it with the larger SMB1 level bank. `NSMDATA2`, `NSMDATA3`, and
 `NSMDATA4` are separate project-native overlays with their own linker maps.
-Together the four exact payloads reconstruct the complete ANN disk side without
-retaining opaque program bytes or depending on an ignored reference build.
+Executable regions, loaders, and address-bearing tables remain semantic ASM.
+Private graphics and typed course streams are reproducibly extracted from the
+validated reference into ignored content packs, then included through explicit
+per-stream boundaries. Together the four exact payloads reconstruct the
+complete ANN disk side without retaining opaque executable code.

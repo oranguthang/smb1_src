@@ -74,16 +74,29 @@ payloads zeroed. `make verify-platform PLATFORM=ann_fds` then assembles each
 payload from reviewed semantic source, restores the corresponding FDS records,
 and compares the complete rebuilt disk side against the reference.
 
-`make split-platform-assets PLATFORM=ann_fds` also extracts the 384-byte guest
-CHR region embedded in `NSMMAIN` to the ignored
-`assets/generated/platforms/ann_fds/source/guest_chr.bin` file. The manifest
-records its payload offset, size, and SHA-1
-`8b1721dc53856c29637ca03f96b43eb104330ea3`; the authored bitmap bytes never
-enter Git. The corresponding 288-byte `NSMDATA2` guest CHR source is extracted
-as `guest_chr_data2.bin` at SHA-1
-`139bb17536ed774e1f4742087f2fe17212492897`. Tables, course streams, tile maps,
-code, and the initialized save record remain readable source rather than being
-hidden behind asset slices.
+`make split-platform-assets PLATFORM=ann_fds` also extracts private authored
+content into `assets/generated/platforms/ann_fds/source/`. The 384-byte
+`NSMMAIN` guest CHR region becomes `guest_chr.bin`, and the 288-byte
+`NSMDATA2` guest CHR region becomes `supplemental_guest_chr.bin`. Their respective
+SHA-1 values are `8b1721dc53856c29637ca03f96b43eb104330ea3` and
+`139bb17536ed774e1f4742087f2fe17212492897`.
+
+Four typed course packs use the same private extraction boundary:
+
+| Asset | Payload | Size | Purpose |
+| --- | --- | ---: | --- |
+| `supplemental_course_enemy_streams.bin` | `NSMDATA2` | 680 bytes | Supplemental enemy streams |
+| `supplemental_course_area_streams.bin` | `NSMDATA2` | 2,263 bytes | Supplemental area-object streams |
+| `extended_course_enemy_streams.bin` | `NSMDATA4` | 654 bytes | Extended-course enemy streams |
+| `extended_course_area_streams.bin` | `NSMDATA4` | 2,009 bytes | Extended-course area-object streams |
+
+The manifest validates every payload-relative range and SHA-1 before writing
+it. Git ignores the extracted bytes. ASM retains the semantic boundary label,
+offset, and protected capacity of every stream, while loaders, pointer tables,
+tile maps, executable code, and the initialized save record remain reviewed
+source. The streams retain the formats decoded by the Level Studio, providing
+a stable boundary for profile-aware editing without turning code into opaque
+binary data.
 
 This profile is supported at the complete-container identity boundary.
 `make validate-platform PLATFORM=ann_fds` verifies all four payloads and the

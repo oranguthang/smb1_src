@@ -41,15 +41,15 @@ ANN_TAIL_CORE_CFG ?= $(PROJECT_DIR)src/platforms/ann/tail_core.cfg
 ANN_AUDIO_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_audio_tail.asm
 ANN_AUDIO_CFG ?= $(PROJECT_DIR)src/platforms/ann/audio_tail.cfg
 ANN_AUDIO_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_audio
-ANN_DATA2_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_data2.asm
-ANN_DATA2_CFG ?= $(PROJECT_DIR)src/platforms/ann/data2.cfg
-ANN_DATA2_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_data2
-ANN_DATA3_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_data3.asm
-ANN_DATA3_CFG ?= $(PROJECT_DIR)src/platforms/ann/data3.cfg
-ANN_DATA3_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_data3
-ANN_DATA4_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_data4.asm
-ANN_DATA4_CFG ?= $(PROJECT_DIR)src/platforms/ann/data4.cfg
-ANN_DATA4_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_data4
+ANN_SUPPLEMENTAL_COURSES_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_supplemental_courses.asm
+ANN_SUPPLEMENTAL_COURSES_CFG ?= $(PROJECT_DIR)src/platforms/ann/supplemental_courses.cfg
+ANN_SUPPLEMENTAL_COURSES_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_supplemental_courses
+ANN_ENDING_AUDIO_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_ending_audio.asm
+ANN_ENDING_AUDIO_CFG ?= $(PROJECT_DIR)src/platforms/ann/ending_audio.cfg
+ANN_ENDING_AUDIO_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_ending_audio
+ANN_EXTENDED_COURSES_SOURCE ?= $(PROJECT_DIR)src/revisions/ann_extended_courses.asm
+ANN_EXTENDED_COURSES_CFG ?= $(PROJECT_DIR)src/platforms/ann/extended_courses.cfg
+ANN_EXTENDED_COURSES_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_extended_courses
 FIXED_VARIANT ?= five_lives
 FIXED_VARIANT_MANIFEST ?= $(PROJECT_DIR)config/fixed_layout_variants.json
 HACK_SOURCE ?= $(PROJECT_DIR)src/variants/five_lives.asm
@@ -135,9 +135,9 @@ PLATFORM_CFG ?= $(PROJECT_DIR)src/fds_prg.cfg
 PLATFORM_REFERENCE ?= $(PROJECT_DIR)All Night Nippon Super Mario Brothers (Japan) (Promotion Card).fds
 PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.fds
 PLATFORM_PAYLOAD_ARGS = \
-	--payload NSMDATA2=$(ANN_DATA2_BUILD_DIR)/data2.bin \
-	--payload NSMDATA3=$(ANN_DATA3_BUILD_DIR)/data3.bin \
-	--payload NSMDATA4=$(ANN_DATA4_BUILD_DIR)/data4.bin
+	--payload NSMDATA2=$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.bin \
+	--payload NSMDATA3=$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.bin \
+	--payload NSMDATA4=$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.bin
 else
 PLATFORM_SOURCE ?= $(PROJECT_DIR)src/platforms/$(PLATFORM).asm
 PLATFORM_CFG ?= $(NATIVE_CFG)
@@ -147,7 +147,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-data2 build-ann-data3 build-ann-data4 verify-ann-audio verify-ann-tail-core verify-ann-data2 verify-ann-data3 verify-ann-data4 symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check split check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -500,63 +500,63 @@ verify-ann-tail-core:
 		--start 0xBFBF \
 		--end 0xE000
 
-build-ann-payloads: build-ann-data2 build-ann-data3 build-ann-data4
+build-ann-payloads: build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses
 
-build-ann-data2:
+build-ann-supplemental-courses:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
-		--source "$(ANN_DATA2_SOURCE)" \
-		--config "$(ANN_DATA2_CFG)" \
-		--object "$(ANN_DATA2_BUILD_DIR)/data2.o" \
-		--output "$(ANN_DATA2_BUILD_DIR)/data2.bin" \
-		--labels "$(ANN_DATA2_BUILD_DIR)/data2.lbl" \
-		--map "$(ANN_DATA2_BUILD_DIR)/data2.map"
+		--source "$(ANN_SUPPLEMENTAL_COURSES_SOURCE)" \
+		--config "$(ANN_SUPPLEMENTAL_COURSES_CFG)" \
+		--object "$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.o" \
+		--output "$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.bin" \
+		--labels "$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.lbl" \
+		--map "$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.map"
 
-verify-ann-data2: build-ann-data2
+verify-ann-supplemental-courses: build-ann-supplemental-courses
 	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
 		--reference "$(ANN_REFERENCE)" \
-		--candidate "$(ANN_DATA2_BUILD_DIR)/data2.bin" \
+		--candidate "$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.bin" \
 		--payload NSMDATA2 \
 		--load-address 0xC470 \
 		--start 0xC470 \
 		--end 0xD270
 
-build-ann-data3:
+build-ann-ending-audio:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
-		--source "$(ANN_DATA3_SOURCE)" \
-		--config "$(ANN_DATA3_CFG)" \
-		--object "$(ANN_DATA3_BUILD_DIR)/data3.o" \
-		--output "$(ANN_DATA3_BUILD_DIR)/data3.bin" \
-		--labels "$(ANN_DATA3_BUILD_DIR)/data3.lbl" \
-		--map "$(ANN_DATA3_BUILD_DIR)/data3.map"
+		--source "$(ANN_ENDING_AUDIO_SOURCE)" \
+		--config "$(ANN_ENDING_AUDIO_CFG)" \
+		--object "$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.o" \
+		--output "$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.bin" \
+		--labels "$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.lbl" \
+		--map "$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.map"
 
-verify-ann-data3: build-ann-data3
+verify-ann-ending-audio: build-ann-ending-audio
 	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
 		--reference "$(ANN_REFERENCE)" \
-		--candidate "$(ANN_DATA3_BUILD_DIR)/data3.bin" \
+		--candidate "$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.bin" \
 		--payload NSMDATA3 \
 		--load-address 0xC5D0 \
 		--start 0xC5D0 \
 		--end 0xD2E2
 
-build-ann-data4:
+build-ann-extended-courses:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
-		--source "$(ANN_DATA4_SOURCE)" \
-		--config "$(ANN_DATA4_CFG)" \
-		--object "$(ANN_DATA4_BUILD_DIR)/data4.o" \
-		--output "$(ANN_DATA4_BUILD_DIR)/data4.bin" \
-		--labels "$(ANN_DATA4_BUILD_DIR)/data4.lbl" \
-		--map "$(ANN_DATA4_BUILD_DIR)/data4.map"
+		--source "$(ANN_EXTENDED_COURSES_SOURCE)" \
+		--config "$(ANN_EXTENDED_COURSES_CFG)" \
+		--object "$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.o" \
+		--output "$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.bin" \
+		--labels "$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.lbl" \
+		--map "$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.map"
 
-verify-ann-data4: build-ann-data4
+verify-ann-extended-courses: build-ann-extended-courses
 	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
 		--reference "$(ANN_REFERENCE)" \
-		--candidate "$(ANN_DATA4_BUILD_DIR)/data4.bin" \
+		--candidate "$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.bin" \
 		--payload NSMDATA4 \
 		--load-address 0xC296 \
 		--start 0xC296 \

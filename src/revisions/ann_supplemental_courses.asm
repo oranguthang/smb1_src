@@ -22,9 +22,9 @@ tbl_vertical_pipe_metatiles = $7786
 ; Original disk alignment before the first course stream
     .res $b7, $ff
 
-.include "../platforms/ann/course_data2_enemy.asm"
-.include "../platforms/ann/course_data2_area.asm"
-.include "../platforms/ann/guest_chr_data2.asm"
+.include "../platforms/ann/supplemental_course_enemy_streams.asm"
+.include "../platforms/ann/supplemental_course_area_streams.asm"
+.include "../platforms/ann/supplemental_guest_chr.asm"
 
 ; NSMDATA2 occupies the complete $C470-$D270 disk-file window
     .byte $ff

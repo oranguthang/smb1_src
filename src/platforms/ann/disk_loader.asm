@@ -2,9 +2,9 @@
 
 con_ann_course_5 = 4
 con_ann_disk_file_main = 0
-con_ann_disk_file_data2 = 1
-con_ann_disk_file_data3 = 2
-con_ann_disk_file_data4 = 3
+con_ann_disk_file_supplemental_courses = 1
+con_ann_disk_file_ending_audio = 2
+con_ann_disk_file_extended_courses = 3
 con_ann_disk_error_wrong_file_count = $40
 con_ann_disk_error_set = $01
 con_ann_disk_error_battery = $02
@@ -22,21 +22,21 @@ handler_run_ann_disk_loader:
     .word handler_run_screen_task
     .word handler_ann_title_init_1
     .word handler_ann_title_process
-    .word handler_ann_disk_loader_data4
+    .word handler_ann_extended_course_disk_task
 
-handler_ann_disk_loader_data4:
+handler_ann_extended_course_disk_task:
     LDA ram_fds_disk_loader_task
     JSR sub_dispatch_inline_handler
     .word handler_show_ann_disk_prompt
-    .word handler_load_ann_disk_data4
+    .word handler_load_ann_extended_courses
     .word handler_wait_for_ann_disk_eject
     .word handler_wait_for_ann_disk_insert
     .word handler_reset_ann_disk_loader
 
-handler_load_ann_disk_data4:
+handler_load_ann_extended_courses:
     LDA ram_ann_hard_mode
     BEQ :+
-    LDA #con_ann_disk_file_data4
+    LDA #con_ann_disk_file_extended_courses
     STA ram_ann_disk_file_id
     JSR sub_load_ann_disk_files
     BNE bra_handle_ann_disk_load_error
@@ -96,22 +96,22 @@ bra_finish_ann_main_disk_load:
     STA ram_ann_hard_mode
     JMP sub_advance_ann_disk_loader
 
-handler_ann_disk_loader_data2:
+handler_ann_supplemental_course_disk_task:
     LDA ram_fds_disk_loader_task
     JSR sub_dispatch_inline_handler
     .word handler_show_ann_disk_prompt
-    .word handler_load_ann_disk_data2
+    .word handler_load_ann_supplemental_courses
     .word handler_wait_for_ann_disk_eject
     .word handler_wait_for_ann_disk_insert
     .word handler_reset_ann_disk_loader
 
-handler_load_ann_disk_data2:
+handler_load_ann_supplemental_courses:
     LDA ram_ann_course_number
     CMP #con_ann_course_5
     BCC sub_advance_ann_disk_loader
     LDA ram_ann_disk_file_id
     BNE sub_advance_ann_disk_loader
-    LDA #con_ann_disk_file_data2
+    LDA #con_ann_disk_file_supplemental_courses
     STA ram_ann_disk_file_id
     JSR sub_load_ann_disk_files
     BNE bra_handle_ann_disk_load_error
@@ -140,13 +140,13 @@ handler_ann_victory_disk_data:
     LDA ram_fds_disk_loader_task
     JSR sub_dispatch_inline_handler
     .word handler_show_ann_disk_prompt
-    .word handler_load_ann_disk_data3
+    .word handler_load_ann_ending_audio
     .word handler_wait_for_ann_disk_eject
     .word handler_wait_for_ann_disk_insert
     .word handler_reset_ann_disk_loader
 
-handler_load_ann_disk_data3:
-    LDA #con_ann_disk_file_data3
+handler_load_ann_ending_audio:
+    LDA #con_ann_disk_file_ending_audio
     STA ram_ann_disk_file_id
     JSR sub_load_ann_disk_files
     BNE bra_handle_ann_disk_load_error
@@ -183,26 +183,26 @@ off_ann_current_disk_side:
 
 tbl_ann_disk_file_list_lo:
     .byte <tbl_ann_main_disk_files
-    .byte <tbl_ann_data2_disk_files
-    .byte <tbl_ann_data3_disk_files
-    .byte <tbl_ann_data4_disk_files
+    .byte <tbl_ann_supplemental_course_disk_files
+    .byte <tbl_ann_ending_audio_disk_files
+    .byte <tbl_ann_extended_course_disk_files
 
 tbl_ann_disk_file_list_hi:
     .byte >tbl_ann_main_disk_files
-    .byte >tbl_ann_data2_disk_files
-    .byte >tbl_ann_data3_disk_files
-    .byte >tbl_ann_data4_disk_files
+    .byte >tbl_ann_supplemental_course_disk_files
+    .byte >tbl_ann_ending_audio_disk_files
+    .byte >tbl_ann_extended_course_disk_files
 
 tbl_ann_main_disk_files:
     .byte $01, $05, $0f, $ff
 
-tbl_ann_data2_disk_files:
+tbl_ann_supplemental_course_disk_files:
     .byte $20, $ff
 
-tbl_ann_data3_disk_files:
+tbl_ann_ending_audio_disk_files:
     .byte $10, $30, $0f, $ff
 
-tbl_ann_data4_disk_files:
+tbl_ann_extended_course_disk_files:
     .byte $40, $ff
 
 tbl_ann_disk_file_counts:

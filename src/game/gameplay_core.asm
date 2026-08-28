@@ -15,7 +15,7 @@ handler_run_game_mode:
 .if con_revision_profile = con_revision_profile_vs
     .word handler_vs_initialize_game_core
 .elseif con_revision_profile = con_revision_profile_ann
-    .word handler_ann_disk_loader_data2
+    .word handler_ann_supplemental_course_disk_task
 .endif
     .word handler_initialize_area
 .if con_revision_profile = con_revision_profile_ann

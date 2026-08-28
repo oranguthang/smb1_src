@@ -19,11 +19,11 @@ tbl_vertical_pipe_metatiles = $7786
 .segment "OVERLAY"
 .org $c296
 
-.include "../platforms/ann/course_loader_data4.asm"
-.include "../platforms/ann/course_tables_data4.asm"
-.include "../platforms/ann/life_down_data4.asm"
+.include "../platforms/ann/extended_course_loader.asm"
+.include "../platforms/ann/extended_course_tables.asm"
+.include "../platforms/ann/extended_life_down.asm"
 
-; Align the shared gameplay extensions with their DATA2 addresses
+; Align the shared gameplay extensions with their supplemental-course addresses
     .res $ad, $ff
 
 .include "../platforms/ann/overlay_gameplay.asm"
@@ -31,5 +31,5 @@ tbl_vertical_pipe_metatiles = $7786
 ; Original disk alignment before the first extended course stream
     .res $b7, $ff
 
-.include "../platforms/ann/course_data4_enemy.asm"
-.include "../platforms/ann/course_data4_area.asm"
+.include "../platforms/ann/extended_course_enemy_streams.asm"
+.include "../platforms/ann/extended_course_area_streams.asm"

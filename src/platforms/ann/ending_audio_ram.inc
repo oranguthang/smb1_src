@@ -1,5 +1,5 @@
-.ifndef ANN_AUDIO_DATA3_RAM_INC
-ANN_AUDIO_DATA3_RAM_INC = 1
+.ifndef ANN_ENDING_AUDIO_RAM_INC
+ANN_ENDING_AUDIO_RAM_INC = 1
 
 zp_ann_fds_wave_id = $01
 zp_ann_fds_mod_offset = $02

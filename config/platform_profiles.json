@@ -151,11 +151,39 @@
           "sha1": "8b1721dc53856c29637ca03f96b43eb104330ea3"
         },
         {
-          "name": "guest_chr_data2",
+          "name": "supplemental_guest_chr",
           "payload": "NSMDATA2",
           "offset": 3295,
           "size": 288,
           "sha1": "139bb17536ed774e1f4742087f2fe17212492897"
+        },
+        {
+          "name": "supplemental_course_enemy_streams",
+          "payload": "NSMDATA2",
+          "offset": 352,
+          "size": 680,
+          "sha1": "45b3075279c15e331daa6baf26778e2d4adbfa75"
+        },
+        {
+          "name": "supplemental_course_area_streams",
+          "payload": "NSMDATA2",
+          "offset": 1032,
+          "size": 2263,
+          "sha1": "b2b8727f8dcab03e6974f8e88c4ed4965fcaadd5"
+        },
+        {
+          "name": "extended_course_enemy_streams",
+          "payload": "NSMDATA4",
+          "offset": 826,
+          "size": 654,
+          "sha1": "45af61d18a3d07f808f3e2e21caa8ec9be18a41e"
+        },
+        {
+          "name": "extended_course_area_streams",
+          "payload": "NSMDATA4",
+          "offset": 1480,
+          "size": 2009,
+          "sha1": "ac98ed793315cfdcd5f6059d66341a34faceb9d8"
         }
       ],
       "auxiliary_conversion": {
