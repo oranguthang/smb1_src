@@ -165,6 +165,10 @@ make check-studios
 make verify-revisions
 make validate-revisions
 
+# Extract private assets for every supported ROM and verify the complete matrix
+make split-all
+make verify-all
+
 # Extract private Vs. container assets once, then verify its full image and runtime
 make split-platform-assets PLATFORM=vs_smb
 make verify-platform PLATFORM=vs_smb

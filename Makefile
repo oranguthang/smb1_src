@@ -147,7 +147,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check split check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check split split-all check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -466,6 +466,19 @@ verify-platforms:
 	$(MAKE) verify-platform PLATFORM=fds_smb
 	$(MAKE) verify-platform PLATFORM=ann_fds
 
+verify-all:
+	$(PYTHON) "$(PROJECT_DIR)scripts/run_make_matrix.py" \
+		--project-dir "$(PROJECT_DIR)" \
+		--make "$(MAKE)" \
+		--title "ROM verification matrix" \
+		--step "verify" \
+		--step "verify-revision PROFILE=ju" \
+		--step "verify-revision PROFILE=pc10" \
+		--step "verify-revision PROFILE=pal" \
+		--step "verify-platform PLATFORM=vs_smb" \
+		--step "verify-platform PLATFORM=fds_smb" \
+		--step "verify-platform PLATFORM=ann_fds"
+
 verify-ann-audio:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
 		--source "$(ANN_AUDIO_SOURCE)" \
@@ -649,6 +662,18 @@ split:
 		--rom "$(ORIGINAL_ROM)" \
 		--manifest "$(ASSET_MANIFEST)" \
 		--output-dir "$(GENERATED_ASSET_DIR)"
+
+split-all:
+	$(PYTHON) "$(PROJECT_DIR)scripts/run_make_matrix.py" \
+		--project-dir "$(PROJECT_DIR)" \
+		--make "$(MAKE)" \
+		--title "ROM asset split matrix" \
+		--step "split" \
+		--step "split-revision-assets PROFILE=pc10" \
+		--step "split-revision-assets PROFILE=pal" \
+		--step "split-platform-assets PLATFORM=vs_smb" \
+		--step "split-platform-assets PLATFORM=fds_smb" \
+		--step "split-platform-assets PLATFORM=ann_fds"
 
 check-assets:
 	$(PYTHON) "$(PROJECT_DIR)scripts/check_assets.py" \
