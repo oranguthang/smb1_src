@@ -325,9 +325,12 @@ def area_pointer(name: str) -> int:
     return (AREA_TYPES.index(area_type_name) << 5) | area_index
 
 
-def first_world_context(name: str) -> tuple[int, int]:
+def first_world_context(
+    name: str,
+    routes: tuple[tuple[int, ...], ...] = WORLD_AREA_POINTERS,
+) -> tuple[int, int]:
     pointer = area_pointer(name)
-    for world, route in enumerate(WORLD_AREA_POINTERS):
+    for world, route in enumerate(routes):
         for slot, candidate in enumerate(route):
             if candidate & 0x7F == pointer:
                 return world, min(slot, 3)

@@ -10,9 +10,16 @@ from pathlib import Path
 from tkinter import messagebox
 from typing import Any
 
-from content_studio import load_configuration, resolve_entry
+from content_profiles import load_profiles, require_supported
+from content_studio import (
+    load_profile_chr,
+    load_named_payloads,
+    load_configuration,
+    merge_labels,
+    parse_named_paths,
+    resolve_profile_selection,
+)
 from content_studio_model import ArtifactDocument
-from data_formats import load_labels
 
 
 NES_RGB = (
@@ -31,16 +38,50 @@ def load_documents(
     formats: Path,
     studios: Path,
     labels_path: Path,
+    profiles_path: Path,
+    prg_path: Path,
+    chr_path: Path,
+    payload_arguments: list[str] | None,
+    payload_label_arguments: list[str] | None,
     workspace: Path,
     studio_id: str,
+    profile_id: str = "ju",
 ) -> tuple[dict[str, ArtifactDocument], dict[str, int]]:
     entries, profiles = load_configuration(formats, studios)
-    labels = load_labels(labels_path)
+    authoring_profile = require_supported(load_profiles(profiles_path), profile_id)
+    payload_paths = parse_named_paths(payload_arguments)
+    payload_label_paths = parse_named_paths(payload_label_arguments)
+    if set(payload_label_paths) - set(payload_paths):
+        raise ValueError("payload labels require a matching content payload")
+    labels = merge_labels(labels_path, payload_label_paths)
+    payloads = {
+        "prg": prg_path.read_bytes(),
+        "chr": load_profile_chr(chr_path, authoring_profile),
+    }
+    payloads.update(load_named_payloads(payload_paths, authoring_profile))
+    selection = [
+        (studio_id, entries[artifact_id])
+        for artifact_id in profiles[studio_id]["artifacts"]
+    ]
+    resolved_entries = {
+        entry["id"]: entry
+        for _studio, entry in resolve_profile_selection(
+            selection,
+            authoring_profile,
+            labels,
+            payloads,
+        )
+    }
     documents = {}
     for artifact_id in profiles[studio_id]["artifacts"]:
-        entry = resolve_entry(entries[artifact_id], labels)
+        entry = resolved_entries[artifact_id]
         path = workspace / studio_id / f"{artifact_id}.json"
-        documents[artifact_id] = ArtifactDocument.load(path, entry)
+        document = ArtifactDocument.load(path, entry)
+        if document.document.get("profile") != profile_id:
+            raise ValueError(
+                f"{artifact_id}: workspace profile must remain {profile_id!r}"
+            )
+        documents[artifact_id] = document
     return documents, labels
 
 
@@ -58,8 +99,14 @@ def validate_documents(documents: dict[str, ArtifactDocument]) -> tuple[int, int
     return used, capacity
 
 
-def run_make(project_root: Path, target: str, studio: str | None = None) -> None:
+def run_make(
+    project_root: Path,
+    target: str,
+    profile_id: str = "ju",
+    studio: str | None = None,
+) -> None:
     command = ["make", target]
+    command.append(f"CONTENT_PROFILE={profile_id}")
     if studio:
         command.append(f"STUDIO={studio}")
     subprocess.Popen(command, cwd=project_root)

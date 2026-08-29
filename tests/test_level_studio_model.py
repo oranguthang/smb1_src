@@ -33,6 +33,10 @@ class LevelStudioModelTests(unittest.TestCase):
         self.assertEqual(first_world_context("ground_6"), (0, 0))
         self.assertEqual(first_world_context("castle_6"), (7, 3))
 
+    def test_world_context_uses_the_selected_profile_routes(self) -> None:
+        routes = ((0x21, 0x25), (0x00,))
+        self.assertEqual(first_world_context("ground_6", routes), (0, 1))
+
     def test_world_pointer_name_uses_one_based_area_number(self) -> None:
         self.assertEqual(area_name(1, 5), "ground_6")
 

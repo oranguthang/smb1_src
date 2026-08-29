@@ -34,6 +34,7 @@ SEMANTIC_RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/evidence/runtime
 DATA_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/data_formats.json
 DATA_FORMAT_SUMMARY ?= $(PROJECT_DIR)build/data_formats.json
 CONTENT_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/content_formats.json
+CONTENT_PROFILE_MANIFEST ?= $(PROJECT_DIR)config/content_authoring_profiles.json
 RELEASE_MANIFEST ?= $(PROJECT_DIR)config/preservation_source_1_0.json
 SOURCE_2_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_2_0.json
 SOURCE_3_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_3_0.json
@@ -126,17 +127,36 @@ EXPANDED_ROM ?= $(EXPANDED_BUILD_DIR)/smb.nes
 EXPANDED_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_expanded_runtime.lua
 EXPANDED_RUNTIME_RESULT ?= $(EXPANDED_BUILD_DIR)/runtime.txt
 CONTENT_STUDIO_MANIFEST ?= $(PROJECT_DIR)config/content_studios.json
-CONTENT_WORKSPACE ?= $(PROJECT_DIR)content/workspace
-CONTENT_BUILD_DIR ?= $(PROJECT_DIR)build/content
+CONTENT_PROFILE ?= ju
+CONTENT_WORKSPACE ?= $(PROJECT_DIR)content/workspace/$(CONTENT_PROFILE)
+CONTENT_BUILD_DIR ?= $(PROJECT_DIR)build/content/$(CONTENT_PROFILE)
 CONTENT_PRG ?= $(CONTENT_BUILD_DIR)/smb.prg
 CONTENT_ROM ?= $(CONTENT_BUILD_DIR)/smb.nes
 CONTENT_REPORT ?= $(CONTENT_BUILD_DIR)/diff_report.json
+CONTENT_ROUNDTRIP_DIR ?= $(PROJECT_DIR)build/content_roundtrip/$(CONTENT_PROFILE)
+CONTENT_BASE_DIR ?= $(PROJECT_DIR)build/revisions/$(CONTENT_PROFILE)
+CONTENT_BASE_PRG ?= $(CONTENT_BASE_DIR)/smb.prg
+CONTENT_BASE_LABELS ?= $(CONTENT_BASE_DIR)/smb.lbl
+CONTENT_HEADER ?= $(GENERATED_HEADER)
+CONTENT_CHR ?= $(GENERATED_CHR)
+CONTENT_EXTRA ?= $(REVISION_ASSET_DIR)/$(CONTENT_PROFILE)/platform.extra
+CONTENT_EXTRA_ARG = $(if $(filter pc10,$(CONTENT_PROFILE)),--extra "$(CONTENT_EXTRA)",)
+CONTENT_LOAD_ADDRESS = 0x8000
+CONTENT_PREPARE_COMMAND = $(MAKE) build-revision PROFILE=$(CONTENT_PROFILE)
+CONTENT_CONTAINER_ARGS = --header "$(CONTENT_HEADER)" $(CONTENT_EXTRA_ARG)
+CONTENT_PAYLOAD_ARGS =
+STUDIO_CONTENT_PAYLOAD_ARGS =
 CONTENT_STUDIO_ARG := $(if $(STUDIO),--studio "$(STUDIO)",)
 STUDIO_COMMON_ARGS = \
 	--formats "$(CONTENT_FORMAT_MANIFEST)" \
 	--studios "$(CONTENT_STUDIO_MANIFEST)" \
+	--profiles "$(CONTENT_PROFILE_MANIFEST)" \
+	--profile "$(CONTENT_PROFILE)" \
 	--workspace "$(CONTENT_WORKSPACE)" \
-	--labels "$(NATIVE_LABELS)" \
+	--labels "$(CONTENT_BASE_LABELS)" \
+	--content-prg "$(CONTENT_BASE_PRG)" \
+	--content-chr "$(CONTENT_CHR)" \
+	$(STUDIO_CONTENT_PAYLOAD_ARGS) \
 	--project-root "$(PROJECT_DIR)"
 PROFILE ?= pc10
 REVISION_MANIFEST ?= $(PROJECT_DIR)config/revision_profiles.json
@@ -196,9 +216,51 @@ PLATFORM_REFERENCE ?= $(PROJECT_DIR)$(PLATFORM)
 PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.nes
 endif
 
+ifeq ($(CONTENT_PROFILE),fds_smb)
+CONTENT_BASE_DIR = $(PROJECT_DIR)build/platforms/fds_smb
+CONTENT_BASE_PRG = $(CONTENT_BASE_DIR)/smb.prg
+CONTENT_BASE_LABELS = $(CONTENT_BASE_DIR)/smb.lbl
+CONTENT_ROM = $(CONTENT_BUILD_DIR)/smb.fds
+CONTENT_LOAD_ADDRESS = 0x6000
+CONTENT_PREPARE_COMMAND = $(MAKE) build-platform PLATFORM=fds_smb
+CONTENT_CONTAINER_ARGS = --template "$(PLATFORM_ASSET_DIR)/fds_smb/template.fds"
+else ifeq ($(CONTENT_PROFILE),vs_smb)
+CONTENT_BASE_DIR = $(PROJECT_DIR)build/platforms/vs_smb
+CONTENT_BASE_PRG = $(CONTENT_BASE_DIR)/smb.prg
+CONTENT_BASE_LABELS = $(CONTENT_BASE_DIR)/smb.lbl
+CONTENT_HEADER = $(PLATFORM_ASSET_DIR)/vs_smb/header.bin
+CONTENT_CHR = $(PLATFORM_ASSET_DIR)/vs_smb/chr.bin
+CONTENT_ROM = $(CONTENT_BUILD_DIR)/smb.nes
+CONTENT_PREPARE_COMMAND = $(MAKE) build-platform PLATFORM=vs_smb
+CONTENT_CONTAINER_ARGS = --header "$(CONTENT_HEADER)"
+else ifeq ($(CONTENT_PROFILE),ann_fds)
+CONTENT_BASE_DIR = $(PROJECT_DIR)build/platforms/ann_fds
+CONTENT_BASE_PRG = $(CONTENT_BASE_DIR)/smb.prg
+CONTENT_BASE_LABELS = $(CONTENT_BASE_DIR)/smb.lbl
+CONTENT_CHR = $(PLATFORM_ASSET_DIR)/ann_fds/template.fds
+CONTENT_ROM = $(CONTENT_BUILD_DIR)/smb.fds
+CONTENT_LOAD_ADDRESS = 0x6000
+CONTENT_PREPARE_COMMAND = $(MAKE) build-platform PLATFORM=ann_fds
+CONTENT_CONTAINER_ARGS = --template "$(PLATFORM_ASSET_DIR)/ann_fds/template.fds"
+CONTENT_PAYLOAD_ARGS = \
+	--payload NSMDATA2=$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.bin \
+	--payload NSMDATA3=$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.bin \
+	--payload NSMDATA4=$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.bin \
+	--payload-labels NSMDATA2=$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.lbl \
+	--payload-labels NSMDATA3=$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.lbl \
+	--payload-labels NSMDATA4=$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.lbl
+STUDIO_CONTENT_PAYLOAD_ARGS = \
+	--content-payload NSMDATA2=$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.bin \
+	--content-payload NSMDATA3=$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.bin \
+	--content-payload NSMDATA4=$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.bin \
+	--content-payload-labels NSMDATA2=$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.lbl \
+	--content-payload-labels NSMDATA3=$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.lbl \
+	--content-payload-labels NSMDATA4=$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.lbl
+endif
+
 .DEFAULT_GOAL := build
 
-.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded prepare-content-profile init-content export-content validate-content build-content run-content check-studios check-content-profile check-content-profiles world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor list-content-profiles content-profile-audit split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -326,46 +388,65 @@ validate-expanded: verify-expanded
 		--lua "$(EXPANDED_RUNTIME_LUA)" \
 		--result "$(EXPANDED_RUNTIME_RESULT)"
 
-init-content: build-prg
+prepare-content-profile:
+	$(PYTHON) "$(PROJECT_DIR)scripts/content_profiles.py" check \
+		--manifest "$(CONTENT_PROFILE_MANIFEST)" \
+		--profile "$(CONTENT_PROFILE)" \
+		$(CONTENT_STUDIO_ARG)
+	$(CONTENT_PREPARE_COMMAND)
+
+init-content: prepare-content-profile
 	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" init \
 		--formats "$(CONTENT_FORMAT_MANIFEST)" \
 		--studios "$(CONTENT_STUDIO_MANIFEST)" \
-		--labels "$(NATIVE_LABELS)" \
-		--prg "$(NATIVE_PRG)" \
+		--profiles "$(CONTENT_PROFILE_MANIFEST)" \
+		--profile "$(CONTENT_PROFILE)" \
+		--labels "$(CONTENT_BASE_LABELS)" \
+		--prg "$(CONTENT_BASE_PRG)" \
 		--workspace "$(CONTENT_WORKSPACE)" \
-		--chr "$(GENERATED_CHR)" \
+		--chr "$(CONTENT_CHR)" \
+		$(CONTENT_PAYLOAD_ARGS) \
 		$(CONTENT_STUDIO_ARG)
 
-export-content: build-prg
+export-content: prepare-content-profile
 	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" export \
 		--formats "$(CONTENT_FORMAT_MANIFEST)" \
 		--studios "$(CONTENT_STUDIO_MANIFEST)" \
-		--labels "$(NATIVE_LABELS)" \
-		--prg "$(NATIVE_PRG)" \
+		--profiles "$(CONTENT_PROFILE_MANIFEST)" \
+		--profile "$(CONTENT_PROFILE)" \
+		--labels "$(CONTENT_BASE_LABELS)" \
+		--prg "$(CONTENT_BASE_PRG)" \
 		--workspace "$(CONTENT_WORKSPACE)" \
-		--chr "$(GENERATED_CHR)" \
+		--chr "$(CONTENT_CHR)" \
+		$(CONTENT_PAYLOAD_ARGS) \
 		$(CONTENT_STUDIO_ARG)
 
-validate-content: build-prg
+validate-content: prepare-content-profile
 	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" validate \
 		--formats "$(CONTENT_FORMAT_MANIFEST)" \
 		--studios "$(CONTENT_STUDIO_MANIFEST)" \
-		--labels "$(NATIVE_LABELS)" \
-		--prg "$(NATIVE_PRG)" \
+		--profiles "$(CONTENT_PROFILE_MANIFEST)" \
+		--profile "$(CONTENT_PROFILE)" \
+		--labels "$(CONTENT_BASE_LABELS)" \
+		--prg "$(CONTENT_BASE_PRG)" \
 		--workspace "$(CONTENT_WORKSPACE)" \
-		--chr "$(GENERATED_CHR)" \
+		--chr "$(CONTENT_CHR)" \
+		$(CONTENT_PAYLOAD_ARGS) \
 		--report "$(CONTENT_REPORT)" \
 		$(CONTENT_STUDIO_ARG)
 
-build-content: build
+build-content: prepare-content-profile
 	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" build \
 		--formats "$(CONTENT_FORMAT_MANIFEST)" \
 		--studios "$(CONTENT_STUDIO_MANIFEST)" \
-		--labels "$(NATIVE_LABELS)" \
-		--prg "$(NATIVE_PRG)" \
+		--profiles "$(CONTENT_PROFILE_MANIFEST)" \
+		--profile "$(CONTENT_PROFILE)" \
+		--labels "$(CONTENT_BASE_LABELS)" \
+		--prg "$(CONTENT_BASE_PRG)" \
 		--workspace "$(CONTENT_WORKSPACE)" \
-		--header "$(GENERATED_HEADER)" \
-		--chr "$(GENERATED_CHR)" \
+		--chr "$(CONTENT_CHR)" \
+		$(CONTENT_PAYLOAD_ARGS) \
+		$(CONTENT_CONTAINER_ARGS) \
 		--output-prg "$(CONTENT_PRG)" \
 		--output-rom "$(CONTENT_ROM)" \
 		--report "$(CONTENT_REPORT)" \
@@ -373,9 +454,30 @@ build-content: build
 
 check-studios: init-content
 	$(PYTHON) "$(PROJECT_DIR)scripts/world_studio.py" $(STUDIO_COMMON_ARGS) --check
-	$(PYTHON) "$(PROJECT_DIR)scripts/level_studio.py" $(STUDIO_COMMON_ARGS) --check
+	$(PYTHON) "$(PROJECT_DIR)scripts/level_studio.py" $(STUDIO_COMMON_ARGS) \
+		--content-image "$(CONTENT_ROM)" --check
 	$(PYTHON) "$(PROJECT_DIR)scripts/graphics_studio.py" $(STUDIO_COMMON_ARGS) --check
-	$(PYTHON) "$(PROJECT_DIR)scripts/sound_studio.py" $(STUDIO_COMMON_ARGS) --prg "$(NATIVE_PRG)" --check
+	$(PYTHON) "$(PROJECT_DIR)scripts/sound_studio.py" $(STUDIO_COMMON_ARGS) \
+		--prg "$(CONTENT_BASE_PRG)" --load-address "$(CONTENT_LOAD_ADDRESS)" --check
+
+check-content-profile:
+	$(MAKE) export-content \
+		CONTENT_PROFILE=$(CONTENT_PROFILE) \
+		CONTENT_WORKSPACE=$(CONTENT_ROUNDTRIP_DIR)/workspace
+	$(MAKE) check-studios \
+		CONTENT_PROFILE=$(CONTENT_PROFILE) \
+		CONTENT_WORKSPACE=$(CONTENT_ROUNDTRIP_DIR)/workspace
+	$(MAKE) build-content \
+		CONTENT_PROFILE=$(CONTENT_PROFILE) \
+		CONTENT_WORKSPACE=$(CONTENT_ROUNDTRIP_DIR)/workspace \
+		CONTENT_BUILD_DIR=$(CONTENT_ROUNDTRIP_DIR)/output
+
+check-content-profiles:
+	$(MAKE) check-content-profile CONTENT_PROFILE=ju
+	$(MAKE) check-content-profile CONTENT_PROFILE=pc10
+	$(MAKE) check-content-profile CONTENT_PROFILE=pal
+	$(MAKE) check-content-profile CONTENT_PROFILE=vs_smb
+	$(MAKE) check-content-profile CONTENT_PROFILE=fds_smb
 
 run-content: build-content
 	"$(FCEUX_EXE)" "$(CONTENT_ROM)"
@@ -385,9 +487,11 @@ world-studio:
 	$(PYTHON) "$(PROJECT_DIR)scripts/world_studio.py" $(STUDIO_COMMON_ARGS)
 
 level-studio:
+	$(MAKE) init-content STUDIO=world
 	$(MAKE) init-content STUDIO=level
 	$(MAKE) init-content STUDIO=graphics
-	$(PYTHON) "$(PROJECT_DIR)scripts/level_studio.py" $(STUDIO_COMMON_ARGS)
+	$(PYTHON) "$(PROJECT_DIR)scripts/level_studio.py" $(STUDIO_COMMON_ARGS) \
+		--content-image "$(CONTENT_ROM)"
 
 graphics-studio:
 	$(MAKE) init-content STUDIO=graphics
@@ -395,7 +499,8 @@ graphics-studio:
 
 sound-studio:
 	$(MAKE) init-content STUDIO=sound
-	$(PYTHON) "$(PROJECT_DIR)scripts/sound_studio.py" $(STUDIO_COMMON_ARGS) --prg "$(NATIVE_PRG)"
+	$(PYTHON) "$(PROJECT_DIR)scripts/sound_studio.py" $(STUDIO_COMMON_ARGS) \
+		--prg "$(CONTENT_BASE_PRG)" --load-address "$(CONTENT_LOAD_ADDRESS)"
 
 world-editor: world-studio
 level-editor: level-studio
@@ -712,6 +817,14 @@ source-3-audit:
 	$(PYTHON) "$(PROJECT_DIR)scripts/source_3_audit.py" \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(SOURCE_3_MANIFEST)"
+
+list-content-profiles:
+	$(PYTHON) "$(PROJECT_DIR)scripts/content_profiles.py" list \
+		--manifest "$(CONTENT_PROFILE_MANIFEST)"
+
+content-profile-audit:
+	$(PYTHON) "$(PROJECT_DIR)scripts/content_profiles.py" audit \
+		--manifest "$(CONTENT_PROFILE_MANIFEST)"
 
 semantic-evidence: audit-enemy-streams audit-unreachable-code trace-semantic-runtime
 

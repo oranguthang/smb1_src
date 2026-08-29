@@ -26,10 +26,13 @@ PHYSICS_HELP = {
 
 
 class WorldStudio(tk.Tk):
-    def __init__(self, documents: dict, project_root: Path) -> None:
+    def __init__(
+        self, documents: dict, project_root: Path, profile_id: str = "ju"
+    ) -> None:
         super().__init__()
         self.documents = documents
         self.project_root = project_root
+        self.profile_id = profile_id
         self.pointer_document = documents["world_area_pointers"]
         self.physics_document = documents["player_physics_profiles"]
         self.selection: tuple[int, int] | None = None
@@ -37,7 +40,7 @@ class WorldStudio(tk.Tk):
         self.area_index = tk.IntVar()
         self.alternate = tk.BooleanVar()
         self.status = tk.StringVar()
-        self.title("SMB1 World Studio")
+        self.title(f"SMB1 World Studio [{profile_id}]")
         self.geometry("1050x720")
         self.protocol("WM_DELETE_WINDOW", self.close)
         self.build_ui()
@@ -48,8 +51,13 @@ class WorldStudio(tk.Tk):
         toolbar.pack(fill="x")
         for text, command in (
             ("Undo routing", self.undo_routing), ("Undo physics", self.undo_physics),
-            ("Save", self.save), ("Build ROM", lambda: run_make(self.project_root, "build-content")),
-            ("Run FCEUX", lambda: run_make(self.project_root, "run-content")),
+            ("Save", self.save),
+            ("Build ROM", lambda: run_make(
+                self.project_root, "build-content", self.profile_id,
+            )),
+            ("Run FCEUX", lambda: run_make(
+                self.project_root, "run-content", self.profile_id,
+            )),
         ):
             ttk.Button(toolbar, text=text, command=command).pack(side="left", padx=2)
         notebook = ttk.Notebook(self)
@@ -133,7 +141,10 @@ class WorldStudio(tk.Tk):
                     pointer["area_index"] + 1, "yes" if pointer["alternate_bit"] else "no",
                 ))
         self.status.set("Unsaved edits" if dirty(self.documents) else "All world settings are saved")
-        self.title("SMB1 World Studio" + (" *" if dirty(self.documents) else ""))
+        self.title(
+            f"SMB1 World Studio [{self.profile_id}]"
+            + (" *" if dirty(self.documents) else "")
+        )
 
     def select_pointer(self, _event: object = None) -> None:
         if not self.tree.selection():
@@ -198,13 +209,31 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--formats", required=True, type=Path)
     parser.add_argument("--studios", required=True, type=Path)
+    parser.add_argument("--profiles", required=True, type=Path)
     parser.add_argument("--labels", required=True, type=Path)
+    parser.add_argument("--content-prg", required=True, type=Path)
+    parser.add_argument("--content-chr", required=True, type=Path)
+    parser.add_argument("--content-payload", action="append")
+    parser.add_argument("--content-payload-labels", action="append")
     parser.add_argument("--workspace", required=True, type=Path)
     parser.add_argument("--project-root", required=True, type=Path)
+    parser.add_argument("--profile", required=True)
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--smoke-ui", action="store_true")
     args = parser.parse_args()
-    documents, _labels = load_documents(args.formats, args.studios, args.labels, args.workspace, "world")
+    documents, _labels = load_documents(
+        args.formats,
+        args.studios,
+        args.labels,
+        args.profiles,
+        args.content_prg,
+        args.content_chr,
+        args.content_payload,
+        args.content_payload_labels,
+        args.workspace,
+        "world",
+        args.profile,
+    )
     for document in documents.values():
         document.validate()
     if args.check:
@@ -212,7 +241,7 @@ def main() -> int:
         profiles = documents["player_physics_profiles"].document["data"]["tables"]
         print(f"[OK] World Studio: {sum(len(world['areas']) for world in worlds)} routes and {len(profiles)} physics tables")
         return 0
-    application = WorldStudio(documents, args.project_root)
+    application = WorldStudio(documents, args.project_root, args.profile)
     if args.smoke_ui:
         application.update_idletasks()
         application.destroy()

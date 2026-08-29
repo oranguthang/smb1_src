@@ -14,11 +14,19 @@ from studio_common import change_document, dirty, guard, load_documents, run_mak
 
 
 class SoundStudio(tk.Tk):
-    def __init__(self, documents: dict, model: MusicBank, project_root: Path, preview: Path) -> None:
+    def __init__(
+        self,
+        documents: dict,
+        model: MusicBank,
+        project_root: Path,
+        preview: Path,
+        profile_id: str = "ju",
+    ) -> None:
         super().__init__()
         self.documents = documents
         self.model = model
         self.project_root = project_root
+        self.profile_id = profile_id
         self.preview_path = preview
         self.song_label = tk.StringVar(value=model.header_labels[0])
         self.channel_name = tk.StringVar()
@@ -32,7 +40,7 @@ class SoundStudio(tk.Tk):
         self.current_composition = self.compositions[0]
         self.current_song = self.current_composition["patterns"][0]
         self.current_channel = self.current_song["channels"][0]
-        self.title("SMB1 Sound Studio")
+        self.title(f"SMB1 Sound Studio [{profile_id}]")
         self.geometry("1240x790")
         self.protocol("WM_DELETE_WINDOW", self.close)
         self.build_ui()
@@ -53,8 +61,12 @@ class SoundStudio(tk.Tk):
             ("Preview pattern", self.preview_pattern),
             ("Preview full song", self.preview_composition),
             ("Undo", self.undo), ("Save", self.save),
-            ("Build ROM", lambda: run_make(self.project_root, "build-content")),
-            ("Run FCEUX", lambda: run_make(self.project_root, "run-content")),
+            ("Build ROM", lambda: run_make(
+                self.project_root, "build-content", self.profile_id,
+            )),
+            ("Run FCEUX", lambda: run_make(
+                self.project_root, "run-content", self.profile_id,
+            )),
         ):
             ttk.Button(toolbar, text=text, command=command).pack(side="left", padx=2)
         notebook = ttk.Notebook(self)
@@ -193,7 +205,10 @@ class SoundStudio(tk.Tk):
             f"{len(self.current_channel['bytes'])} bytes, "
             f"{total} frames | {'unsaved edits' if dirty(self.documents) else 'saved'}"
         )
-        self.title("SMB1 Sound Studio" + (" *" if dirty(self.documents) else ""))
+        self.title(
+            f"SMB1 Sound Studio [{self.profile_id}]"
+            + (" *" if dirty(self.documents) else "")
+        )
 
     def draw_roll(self) -> None:
         self.roll.delete("all")
@@ -318,15 +333,39 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--formats", required=True, type=Path)
     parser.add_argument("--studios", required=True, type=Path)
+    parser.add_argument("--profiles", required=True, type=Path)
     parser.add_argument("--labels", required=True, type=Path)
+    parser.add_argument("--content-prg", required=True, type=Path)
+    parser.add_argument("--content-chr", required=True, type=Path)
+    parser.add_argument("--content-payload", action="append")
+    parser.add_argument("--content-payload-labels", action="append")
     parser.add_argument("--workspace", required=True, type=Path)
     parser.add_argument("--project-root", required=True, type=Path)
+    parser.add_argument("--profile", required=True)
     parser.add_argument("--prg", required=True, type=Path)
+    parser.add_argument("--load-address", type=lambda value: int(value, 0), default=0x8000)
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--smoke-ui", action="store_true")
     args = parser.parse_args()
-    documents, labels = load_documents(args.formats, args.studios, args.labels, args.workspace, "sound")
-    model = MusicBank(documents["music_bank"], labels, args.prg.read_bytes())
+    documents, labels = load_documents(
+        args.formats,
+        args.studios,
+        args.labels,
+        args.profiles,
+        args.content_prg,
+        args.content_chr,
+        args.content_payload,
+        args.content_payload_labels,
+        args.workspace,
+        "sound",
+        args.profile,
+    )
+    model = MusicBank(
+        documents["music_bank"],
+        labels,
+        args.prg.read_bytes(),
+        load_address=args.load_address,
+    )
     songs = model.songs()
     compositions = model.compositions()
     for document in documents.values():
@@ -338,7 +377,9 @@ def main() -> int:
         )
         return 0
     preview = args.workspace / "sound" / "preview.wav"
-    application = SoundStudio(documents, model, args.project_root, preview)
+    application = SoundStudio(
+        documents, model, args.project_root, preview, args.profile
+    )
     if args.smoke_ui:
         application.update_idletasks()
         application.destroy()

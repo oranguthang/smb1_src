@@ -4,12 +4,37 @@ The authoring workflow provides four purpose-built, dependency-free Tkinter
 programs. They use the same tested binary codecs as the command-line build and
 store local work beneath the ignored `content/workspace/` directory.
 
+Source Reconstruction 3.0 introduces a manifest-owned compatibility matrix at
+`config/content_authoring_profiles.json`. Run `make list-content-profiles` to
+inspect Studio availability and `make content-profile-audit` to validate the
+contract. JU, PC10, PAL, Vs. SMB, and FDS SMB1 support all four Studios through
+isolated profile workspaces, labels, stream capacities, program images, and
+container builders. ANN now has an exact multi-payload FDS composition
+contract, but remains unavailable until its normal and extended level banks
+receive distinct editable artifact contracts. A planned profile is not
+selectable merely because its program happens to share labels or bytes with JU.
+
+Select a supported profile with `CONTENT_PROFILE`:
+
+```bash
+make level-studio CONTENT_PROFILE=pal
+make sound-studio CONTENT_PROFILE=pc10
+make level-studio CONTENT_PROFILE=vs_smb
+make graphics-studio CONTENT_PROFILE=fds_smb
+make build-content CONTENT_PROFILE=ju
+```
+
+Each Studio displays the selected profile in its title and forwards it to Build
+ROM, Run FCEUX, and Level Studio playtest actions. Workspace documents carry a
+protected profile identifier, preventing a PAL document from being applied to a
+JU or PC10 build.
+
 | Command | What it edits |
 | --- | --- |
 | `make world-studio` | All 36 world-to-area routes and nine player physics tables |
-| `make level-studio` | All 34 area headers, terrain-object streams, enemies, entrances, and page controls |
+| `make level-studio` | Every selected-profile area header, terrain-object stream, enemy stream, entrance, and page control |
 | `make graphics-studio` | 512 CHR tiles, 101 metatiles, 26 player frames, eight palette packets, and fixed-length UI text |
-| `make sound-studio` | Fourteen logical compositions, all 22 vanilla headers and 75 active channel views plus the swim/stomp volume envelope |
+| `make sound-studio` | Fourteen logical compositions, every selected-profile header and active channel view, plus the swim/stomp volume envelope |
 
 The programs are semantic editors rather than generic JSON inspectors. Level
 Studio reconstructs every area from the authored headers and object streams,
@@ -68,6 +93,11 @@ the user's emulator configuration. **Stop** closes only the editor-owned
 emulator process and returns to the map. Set `FCEUX_EXE` when the executable is
 not available at the default sibling path
 `../fceux_automation/vc/x64/Release/fceux64.exe`.
+FDS playtesting allows a longer boot interval than cartridge profiles because
+the BIOS must load the program and CHR records before the normal title task is
+ready. Vs. playtesting uses its distinct arcade mode tree: title readiness is
+task 4, operating mode 2 is gameplay, and gameplay readiness is task 4. These
+values belong to the profile manifest rather than the shared Lua workflow.
 
 Run `make init-content` before editing. It creates only missing workspace files,
 so opening a studio never overwrites earlier local work. Run
@@ -84,15 +114,35 @@ and make malformed edits fail before a ROM is written.
 
 Run `make validate-content` to validate protected metadata, canonical codec
 values, fixed capacities, CHR size, and every edited artifact. Run
-`make build-content` to create `build/content/smb.nes`, or `make run-content` to
-build it and open it in the configured FCEUX executable. The source tree and
-preservation outputs are never modified. A machine-readable byte-difference
-report is written beside the content build.
+`make build-content` to create `build/content/<profile>/smb.nes` for cartridge
+profiles or `build/content/fds_smb/smb.fds` for FDS SMB1, or
+`make run-content` to build it and open it in the configured FCEUX executable.
+The source tree and preservation outputs are never modified. A machine-readable
+byte-difference report is written beside the content build. PC10 composition
+retains its private 8 KiB trailing payload; PAL uses its own 1,522-byte authored
+music range and exact regional program data. FDS SMB1 resolves authored ranges
+against its `$6000` program load address. Its builder verifies an ignored,
+zeroed private disk template, writes the 32 KiB `SMMAIN` program into file IDs 3
+and 4, and writes the editable 8 KiB CHR into file ID 2. The template, retained
+CHR, and completed 65,500-byte disk side each have independent manifest hashes.
+Vs. composition retains its exact 16-byte header, 32 KiB source-built PRG, and
+16 KiB CHR. Graphics Studio edits only the first 8 KiB pattern-table bank. The
+second bank holds the arcade level data: Level Studio derives all 39 area and 39
+enemy stream boundaries from the selected PRG's pointer tables, then writes the
+encoded streams back into that bank without exposing code as binary content.
+World and Sound Studios use the Vs.-specific routing and 27 emitted music
+headers. A zero-edit build reproduces the complete 49,168-byte image exactly.
 
 `make check-studios` initializes missing local files and checks all four models
 without opening windows. The lower-level init, export, validate, and build
 commands accept `STUDIO=world`, `STUDIO=level`, `STUDIO=graphics`, or
 `STUDIO=sound`.
+
+`make check-content-profiles` performs an isolated export, constructs all four
+Studio models, and rebuilds JU, PC10, PAL, Vs. SMB, and FDS SMB1 with zero edits. It
+rejects any image whose size or SHA-1 differs from the selected profile
+baseline. Its temporary workspaces live under `build/content_roundtrip/` and
+never overwrite local authoring work.
 
 The ignored `references/` directory may contain local research checkouts. The
 editors were implemented independently from the documented SMB1 formats. No

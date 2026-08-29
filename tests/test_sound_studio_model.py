@@ -15,6 +15,7 @@ from sound_studio_model import (  # noqa: E402
     MusicBank,
     NTSC_FRAME_RATE,
     apu_mix,
+    available_header_labels,
     decode_periods,
     timer_frequency,
 )
@@ -43,10 +44,32 @@ def synthetic_bank(values: list[int]) -> MusicBank:
 
 
 class SoundStudioModelTests(unittest.TestCase):
+    def test_prg_lookup_uses_selected_profile_load_address(self) -> None:
+        model = MusicBank.__new__(MusicBank)
+        model.labels = {"data": 0x6002}
+        model.prg = b"ABCDE"
+        model.load_address = 0x6000
+        self.assertEqual(model._prg_bytes("data", 2), b"CD")
+
+    def test_header_list_uses_only_selected_profile_symbols(self) -> None:
+        labels = {
+            "off_music_header_game_over": 0x9004,
+            "off_music_header_star_cloud": 0x9000,
+        }
+        self.assertEqual(
+            available_header_labels(labels),
+            ["off_music_header_star_cloud", "off_music_header_game_over"],
+        )
+
     def test_period_table_uses_engine_high_low_byte_order(self) -> None:
         self.assertEqual(decode_periods(bytes([0x00, 0x88, 0x02, 0xA6])), [0x0088, 0x02A6])
         self.assertAlmostEqual(timer_frequency(0x0088), 816.5, delta=0.5)
         self.assertEqual(timer_frequency(0), 0.0)
+
+    def test_period_lookup_accepts_profile_defined_odd_byte_offset(self) -> None:
+        model = synthetic_bank([])
+        model.period_bytes = bytes([0x00, 0x88, 0x02, 0xA6])
+        self.assertEqual(model._period(0x01), 0x8802)
 
     def test_rest_timer_is_silent_and_secondary_channel_is_clipped(self) -> None:
         model = synthetic_bank([0x80, 0x04, 0x06, 0x00, 0x80, 0x06, 0x06, 0x06])

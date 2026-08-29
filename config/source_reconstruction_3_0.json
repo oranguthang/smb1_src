@@ -13,8 +13,8 @@
     {"id": "revision_relocation", "status": "complete"},
     {"id": "platform_relocation", "status": "complete"},
     {"id": "platform_interfaces", "status": "complete"},
-    {"id": "semantic_runtime_evidence", "status": "in-progress"},
-    {"id": "profile_aware_authoring", "status": "planned"},
+    {"id": "semantic_runtime_evidence", "status": "complete"},
+    {"id": "profile_aware_authoring", "status": "in-progress"},
     {"id": "later_engine_feasibility", "status": "planned"},
     {"id": "source_reconstruction_3_0", "status": "planned"}
   ],
@@ -61,6 +61,13 @@
     "runtime_scenarios": ["time-up-clear", "unreachable-code-longplay", "timer-tick-sfx", "coin-sfx"],
     "resolved_unknowns": ["CODE-002", "CODE-003", "DATA-001", "RAM-001", "SND-001", "SND-002"]
   },
+  "authoring": {
+    "profile_manifest": "config/content_authoring_profiles.json",
+    "default_profile": "ju",
+    "studio_ids": ["world", "level", "graphics", "sound"],
+    "supported_profiles": ["ju", "pc10", "pal", "vs_smb", "fds_smb"],
+    "planned_profiles": ["ann_fds"]
+  },
   "required_documents": [
     "docs/preservation_source_1_0.md",
     "docs/source_reconstruction_2_0.md",
@@ -86,6 +93,9 @@
     "audit-enemy-streams",
     "audit-unreachable-code",
     "trace-semantic-runtime",
-    "validate-semantic-runtime"
+    "validate-semantic-runtime",
+    "content-profile-audit",
+    "list-content-profiles",
+    "check-content-profiles"
   ]
 }

@@ -1,0 +1,212 @@
+{
+  "schema_version": 1,
+  "default_profile": "ju",
+  "studio_ids": ["world", "level", "graphics", "sound"],
+  "profiles": [
+    {
+      "id": "ju",
+      "name": "Super Mario Bros. (Japan, USA)",
+      "status": "supported",
+      "baseline": {
+        "kind": "revision",
+        "profile": "ju",
+        "load_address": "0x8000",
+        "payload": "prg"
+      },
+      "workspace": "content/workspace/ju",
+      "output": "build/content/ju",
+      "image_size": 40976,
+      "image_sha1": "ea343f4e445a9050d4b4fbac2c77d0693b1d0922",
+      "studios": {
+        "world": "supported",
+        "level": "supported",
+        "graphics": "supported",
+        "sound": "supported"
+      },
+      "blockers": []
+    },
+    {
+      "id": "pc10",
+      "name": "Super Mario Bros. (PlayChoice-10 container)",
+      "status": "supported",
+      "baseline": {
+        "kind": "revision",
+        "profile": "pc10",
+        "load_address": "0x8000",
+        "payload": "prg"
+      },
+      "workspace": "content/workspace/pc10",
+      "output": "build/content/pc10",
+      "image_size": 49168,
+      "image_sha1": "d48d2c65fda380217ead73ffa6a46cae62939194",
+      "studios": {
+        "world": "supported",
+        "level": "supported",
+        "graphics": "supported",
+        "sound": "supported"
+      },
+      "blockers": []
+    },
+    {
+      "id": "pal",
+      "name": "Super Mario Bros. (Europe, Rev A)",
+      "status": "supported",
+      "baseline": {
+        "kind": "revision",
+        "profile": "pal",
+        "load_address": "0x8000",
+        "payload": "prg"
+      },
+      "workspace": "content/workspace/pal",
+      "output": "build/content/pal",
+      "image_size": 40976,
+      "image_sha1": "ab30029efec6ccfc5d65dfda7fbc6e6489a80805",
+      "studios": {
+        "world": "supported",
+        "level": "supported",
+        "graphics": "supported",
+        "sound": "supported"
+      },
+      "blockers": []
+    },
+    {
+      "id": "vs_smb",
+      "name": "Vs. Super Mario Bros.",
+      "status": "supported",
+      "baseline": {
+        "kind": "platform",
+        "profile": "vs_smb",
+        "load_address": "0x8000",
+        "payload": "prg"
+      },
+      "workspace": "content/workspace/vs_smb",
+      "output": "build/content/vs_smb",
+      "image_size": 49168,
+      "image_sha1": "3546486ba461536545daf9f27c9bcf275fc162da",
+      "container": "ines",
+      "header_sha1": "218f56c3299525c56d49bfd23f511fcae7185818",
+      "chr_sha1": "19385a81d2abea3ad6ff6b0d220390950ac9d2ee",
+      "chr_layout": {
+        "source_size": 16384,
+        "editable_offset": 0,
+        "editable_size": 8192
+      },
+      "playtest": {
+        "boot_task": 4,
+        "game_mode": 2,
+        "ready_task": 4,
+        "boot_frames": 600,
+        "ready_frames": 600
+      },
+      "artifact_overrides": {
+        "world_area_pointers": {
+          "start": "tbl_vs_area_pointers",
+          "end": "tbl_vs_enemy_data_offsets_by_area_type"
+        },
+        "enemy_object_streams": {
+          "payload": "chr",
+          "bank_offset": 8192,
+          "pointer_table": "tbl_enemy_data_ptr",
+          "groups": [
+            ["castle", 8], ["ground", 24], ["underground", 3], ["water", 4]
+          ]
+        },
+        "area_object_streams": {
+          "payload": "chr",
+          "bank_offset": 8192,
+          "pointer_table": "tbl_area_object_data_ptr",
+          "groups": [
+            ["water", 4], ["ground", 24], ["underground", 3], ["castle", 8]
+          ]
+        }
+      },
+      "studios": {
+        "world": "supported",
+        "level": "supported",
+        "graphics": "supported",
+        "sound": "supported"
+      },
+      "blockers": []
+    },
+    {
+      "id": "fds_smb",
+      "name": "Super Mario Bros. Famicom Disk System reissue",
+      "status": "supported",
+      "baseline": {
+        "kind": "platform",
+        "profile": "fds_smb",
+        "load_address": "0x6000",
+        "payload": "SMMAIN"
+      },
+      "workspace": "content/workspace/fds_smb",
+      "output": "build/content/fds_smb",
+      "image_size": 65500,
+      "image_sha1": "383ad8e3890a95de9595f0a6087648f51177da13",
+      "container": "fds",
+      "template": "assets/generated/platforms/fds_smb/template.fds",
+      "template_sha1": "1dac51ec971c9aae48b7ef7b67e74fb80c1d1b78",
+      "program_record_ids": [3, 4],
+      "chr_record_ids": [2],
+      "chr_sha1": "394badaf0b0bdd0ea279a1bca89a9d9ddc00b1b5",
+      "playtest": {"boot_task": 3, "boot_frames": 1800},
+      "studios": {
+        "world": "supported",
+        "level": "supported",
+        "graphics": "supported",
+        "sound": "supported"
+      },
+      "blockers": []
+    },
+    {
+      "id": "ann_fds",
+      "name": "All Night Nippon Super Mario Bros.",
+      "status": "planned",
+      "baseline": {
+        "kind": "platform",
+        "profile": "ann_fds",
+        "load_address": "0x6000",
+        "payload": "NSMMAIN"
+      },
+      "workspace": "content/workspace/ann_fds",
+      "output": "build/content/ann_fds",
+      "image_size": 65500,
+      "image_sha1": "f30bdd3c556604d7eaa6d0f4864d5566e519b5d4",
+      "container": "fds",
+      "template": "assets/generated/platforms/ann_fds/template.fds",
+      "template_sha1": "f9cc1120a7ca847763406572edc7aaa9212b0183",
+      "program_payloads": [
+        {"payload": "prg", "record_ids": [5]},
+        {"payload": "NSMDATA2", "record_ids": [32]},
+        {"payload": "NSMDATA3", "record_ids": [48]},
+        {"payload": "NSMDATA4", "record_ids": [64]}
+      ],
+      "payloads": {
+        "NSMDATA2": {
+          "load_address": "0xc470",
+          "size": 3584,
+          "sha1": "48447986778a9c39fc8cabf4e5494d99fab7e020"
+        },
+        "NSMDATA3": {
+          "load_address": "0xc5d0",
+          "size": 3346,
+          "sha1": "8941894b39a959aab87338728919a8b475e4f691"
+        },
+        "NSMDATA4": {
+          "load_address": "0xc296",
+          "size": 3568,
+          "sha1": "eec327d5ebde3891439971986ae23afeefbdd1a7"
+        }
+      },
+      "chr_source": "fds_records",
+      "chr_record_ids": [1],
+      "chr_sha1": "d286c6490183760d0f8da2099dd42e386b8b95ed",
+      "studios": {
+        "world": "planned",
+        "level": "planned",
+        "graphics": "planned",
+        "sound": "planned"
+      },
+      "blockers": ["Model primary, supplemental, and extended content as separate fixed payloads"]
+    }
+  ]
+}

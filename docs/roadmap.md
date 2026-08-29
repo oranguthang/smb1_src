@@ -662,6 +662,25 @@ area-header `$08` square-2 offset store is overwritten with zero before any
 playback read. Together these experiments resolve the final registered semantic
 unknowns without changing the frozen 1.0 runtime manifest.
 
+The semantic/runtime milestone is complete: every registered unknown now has a
+documented resolution, and its aggregate static or emulator evidence is pinned
+by `make semantic-evidence`. Profile-aware authoring is the active milestone.
+Its first contract records all six build profiles, the four-Studio compatibility
+matrix, isolated workspace/output roots, and explicit blockers for profiles
+that cannot yet round-trip edited content safely.
+
+The authoring matrix accepts JU, PC10, PAL, Vs. SMB, and FDS SMB1. All four Studios
+consume the selected build's labels and fixed capacities, PC10 retains its
+trailing container payload, and PAL music follows the engine's byte-offset
+period lookup. FDS ranges use the `$6000` load base; its source-built `SMMAIN`
+and editable CHR are composed into hash-checked private-template records. Vs.
+keeps graphics in the first half of its 16 KiB CHR and resolves all 78 arcade
+level streams in the second half through source-built PRG pointer tables. Its
+World and Sound models use the arcade-specific routes and headers, while point
+playtesting selects the distinct Vs. game mode and task tree. An isolated
+aggregate gate reconstructs each unmodified image and checks its exact size and
+SHA-1. ANN remains deliberately planned.
+
 The detailed sequence, fixed-layout constraints, and release boundaries are in
 `docs/source_reconstruction_3_0.md`. The final 3.0 milestone remains planned
 until every accepted addition has aggregate static, build, round-trip, and

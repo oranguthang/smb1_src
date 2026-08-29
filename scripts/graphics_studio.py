@@ -23,11 +23,18 @@ TEXT_CHAR_TO_TILE.update({" ": 0x24, "-": 0x28, "!": 0x2B, "x": 0x29})
 
 
 class GraphicsStudio(tk.Tk):
-    def __init__(self, documents: dict, chr_document: ChrDocument, project_root: Path) -> None:
+    def __init__(
+        self,
+        documents: dict,
+        chr_document: ChrDocument,
+        project_root: Path,
+        profile_id: str = "ju",
+    ) -> None:
         super().__init__()
         self.documents = documents
         self.chr_document = chr_document
         self.project_root = project_root
+        self.profile_id = profile_id
         self.tile_index = tk.IntVar(value=256)
         self.bank = tk.IntVar(value=1)
         self.ink = tk.IntVar(value=1)
@@ -39,7 +46,7 @@ class GraphicsStudio(tk.Tk):
         self.text_value = tk.StringVar()
         self.status = tk.StringVar()
         self.stroke = False
-        self.title("SMB1 Graphics Studio")
+        self.title(f"SMB1 Graphics Studio [{profile_id}]")
         self.geometry("1320x830")
         self.minsize(1050, 690)
         self.protocol("WM_DELETE_WINDOW", self.close)
@@ -51,8 +58,13 @@ class GraphicsStudio(tk.Tk):
         toolbar.pack(fill="x")
         for text, command in (
             ("Undo CHR", self.undo_chr), ("Restore tile", self.restore_tile),
-            ("Save all", self.save), ("Build ROM", lambda: run_make(self.project_root, "build-content")),
-            ("Run FCEUX", lambda: run_make(self.project_root, "run-content")),
+            ("Save all", self.save),
+            ("Build ROM", lambda: run_make(
+                self.project_root, "build-content", self.profile_id,
+            )),
+            ("Run FCEUX", lambda: run_make(
+                self.project_root, "run-content", self.profile_id,
+            )),
         ):
             ttk.Button(toolbar, text=text, command=command).pack(side="left", padx=2)
         notebook = ttk.Notebook(self)
@@ -211,7 +223,10 @@ class GraphicsStudio(tk.Tk):
         self.load_text()
         changed = dirty(self.documents) or self.chr_document.dirty
         self.status.set(f"Tile ${self.tile_index.get():03X} | palette {self.palette_name.get()} | {'unsaved edits' if changed else 'saved'}")
-        self.title("SMB1 Graphics Studio" + (" *" if changed else ""))
+        self.title(
+            f"SMB1 Graphics Studio [{self.profile_id}]"
+            + (" *" if changed else "")
+        )
 
     def change_bank(self) -> None:
         self.tile_index.set(self.bank.get() * 256)
@@ -431,13 +446,31 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--formats", required=True, type=Path)
     parser.add_argument("--studios", required=True, type=Path)
+    parser.add_argument("--profiles", required=True, type=Path)
     parser.add_argument("--labels", required=True, type=Path)
+    parser.add_argument("--content-prg", required=True, type=Path)
+    parser.add_argument("--content-chr", required=True, type=Path)
+    parser.add_argument("--content-payload", action="append")
+    parser.add_argument("--content-payload-labels", action="append")
     parser.add_argument("--workspace", required=True, type=Path)
     parser.add_argument("--project-root", required=True, type=Path)
+    parser.add_argument("--profile", required=True)
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--smoke-ui", action="store_true")
     args = parser.parse_args()
-    documents, _labels = load_documents(args.formats, args.studios, args.labels, args.workspace, "graphics")
+    documents, _labels = load_documents(
+        args.formats,
+        args.studios,
+        args.labels,
+        args.profiles,
+        args.content_prg,
+        args.content_chr,
+        args.content_payload,
+        args.content_payload_labels,
+        args.workspace,
+        "graphics",
+        args.profile,
+    )
     chr_path = args.workspace / "graphics" / "smb.chr"
     chr_document = ChrDocument(chr_path.read_bytes(), chr_path)
     for document in documents.values():
@@ -447,7 +480,9 @@ def main() -> int:
         frames = documents["player_animation_tiles"].document["data"]["frames"]
         print(f"[OK] Graphics Studio: 512 CHR tiles, {len(metatiles)} metatiles, and {len(frames)} player frames")
         return 0
-    application = GraphicsStudio(documents, chr_document, args.project_root)
+    application = GraphicsStudio(
+        documents, chr_document, args.project_root, args.profile
+    )
     if args.smoke_ui:
         application.update_idletasks()
         application.destroy()

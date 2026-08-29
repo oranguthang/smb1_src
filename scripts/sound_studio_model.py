@@ -83,6 +83,14 @@ COMPOSITION_SPECS = (
 )
 
 
+def available_header_labels(labels: dict[str, int]) -> list[str]:
+    """Return only music headers emitted by the selected build profile."""
+    return sorted(
+        (label for label in HEADER_NAMES if label in labels),
+        key=labels.__getitem__,
+    )
+
+
 def decode_periods(raw: bytes) -> list[int]:
     """Decode the engine's high-byte, low-byte APU timer pairs."""
     if len(raw) % 2:
@@ -159,17 +167,25 @@ def midi_name(frequency: float) -> str:
 
 
 class MusicBank:
-    def __init__(self, document: ArtifactDocument, labels: dict[str, int], prg: bytes) -> None:
+    def __init__(
+        self,
+        document: ArtifactDocument,
+        labels: dict[str, int],
+        prg: bytes,
+        load_address: int = 0x8000,
+    ) -> None:
         self.document = document
         self.labels = labels
         self.prg = prg
+        self.load_address = load_address
         self.base = labels["tbl_music_header_offsets"]
         self.end = labels["tbl_music_note_periods"]
         self.stream_addresses = sorted(
             {address for name, address in labels.items() if name.startswith("off_music_stream_")}
         )
-        self.header_labels = sorted(HEADER_NAMES, key=labels.__getitem__)
-        self.periods = self._periods()
+        self.header_labels = available_header_labels(labels)
+        self.period_bytes = self._prg_bytes("tbl_music_note_periods", 0x66)
+        self.periods = decode_periods(self.period_bytes)
         self.lengths = self._lengths()
         self.envelope_bytes = self._prg_bytes("tbl_castle_clear_music_envelope", 53)
         self.header_by_offset = {
@@ -192,7 +208,7 @@ class MusicBank:
             self.values[index] = value
 
     def _prg_bytes(self, label: str, length: int) -> bytes:
-        offset = self.labels[label] - 0x8000
+        offset = self.labels[label] - self.load_address
         return self.prg[offset:offset + length]
 
     def _periods(self) -> list[int]:
@@ -209,20 +225,19 @@ class MusicBank:
         return self.lengths[table_index]
 
     def _frequency(self, note_byte: int, triangle: bool = False) -> float:
-        table_offset = note_byte & 0x7F
-        if table_offset % 2:
-            raise ValueError(f"Music note offset ${table_offset:02X} must be even")
-        period_index = table_offset // 2
-        if period_index >= len(self.periods):
-            raise ValueError(f"Music note offset ${table_offset:02X} is outside the period table")
-        return timer_frequency(self.periods[period_index], triangle)
+        return timer_frequency(self._period(note_byte), triangle)
 
     def _period(self, note_byte: int) -> int:
         table_offset = note_byte & 0x7F
-        if table_offset % 2:
-            raise ValueError(f"Music note offset ${table_offset:02X} must be even")
+        period_bytes = getattr(self, "period_bytes", None)
+        if period_bytes is not None:
+            if table_offset + 1 >= len(period_bytes):
+                raise ValueError(
+                    f"Music note offset ${table_offset:02X} is outside the period table"
+                )
+            return (period_bytes[table_offset] << 8) | period_bytes[table_offset + 1]
         period_index = table_offset // 2
-        if period_index >= len(self.periods):
+        if table_offset % 2 or period_index >= len(self.periods):
             raise ValueError(f"Music note offset ${table_offset:02X} is outside the period table")
         return self.periods[period_index]
 

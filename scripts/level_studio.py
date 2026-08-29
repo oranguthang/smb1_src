@@ -11,9 +11,11 @@ from pathlib import Path
 from tkinter import messagebox, ttk
 
 from content_studio_model import ChrDocument
+from content_profiles import load_profiles, require_supported
 from embedded_fceux import EmbeddedFceux
 from level_studio_model import (
     NONVISUAL_ENEMY_IDS,
+    WORLD_AREA_POINTERS,
     LevelDocument,
     LevelVisuals,
     area_pointer,
@@ -44,12 +46,30 @@ class LevelStudio(tk.Tk):
         documents: dict,
         visuals: LevelVisuals,
         project_root: Path,
+        profile_id: str = "ju",
+        content_image: Path | None = None,
+        world_routes: tuple[tuple[int, ...], ...] | None = None,
+        playtest_boot_task: int = 3,
+        playtest_game_mode: int = 1,
+        playtest_ready_task: int = 3,
+        playtest_boot_frames: int = 600,
+        playtest_ready_frames: int = 600,
     ) -> None:
         super().__init__()
         self.model = model
         self.documents = documents
         self.visuals = visuals
         self.project_root = project_root
+        self.profile_id = profile_id
+        self.content_image = content_image or (
+            project_root / "build" / "content" / profile_id / "smb.nes"
+        )
+        self.world_routes = world_routes or WORLD_AREA_POINTERS
+        self.playtest_boot_task = playtest_boot_task
+        self.playtest_game_mode = playtest_game_mode
+        self.playtest_ready_task = playtest_ready_task
+        self.playtest_boot_frames = playtest_boot_frames
+        self.playtest_ready_frames = playtest_ready_frames
         initial_area = "ground_6" if "ground_6" in model.names else model.names[0]
         self.area_name = tk.StringVar(value=initial_area)
         self.preview_theme = tk.StringVar(
@@ -66,7 +86,9 @@ class LevelStudio(tk.Tk):
         self.mario_column, self.mario_row = player_entrance_preview_position(
             initial_entrance,
         )
-        default_world, default_level = first_world_context(self.area_name.get())
+        default_world, default_level = first_world_context(
+            self.area_name.get(), self.world_routes
+        )
         self.playtest_world = tk.IntVar(value=default_world + 1)
         self.playtest_level = tk.IntVar(value=default_level + 1)
         self.field_vars = {
@@ -74,7 +96,7 @@ class LevelStudio(tk.Tk):
             ("column", "row", "object_control", "page_advance", "hard_mode", "kind",
              "entrance_world", "entrance_page")
         }
-        self.title("SMB1 Level Studio")
+        self.title(f"SMB1 Level Studio [{profile_id}]")
         self.geometry("1320x790")
         self.minsize(980, 620)
         self.protocol("WM_DELETE_WINDOW", self.close)
@@ -105,7 +127,10 @@ class LevelStudio(tk.Tk):
         for text, command in (
             ("Add object", self.add_object), ("Add enemy", self.add_enemy),
             ("Delete selected", self.delete_selected), ("Undo", self.undo),
-            ("Save", self.save), ("Build ROM", lambda: run_make(self.project_root, "build-content")),
+            ("Save", self.save),
+            ("Build ROM", lambda: run_make(
+                self.project_root, "build-content", self.profile_id,
+            )),
             ("Place Mario", self.arm_mario_placement),
             ("Play", self.playtest), ("Stop", self.stop_playtest),
         ):
@@ -226,7 +251,9 @@ class LevelStudio(tk.Tk):
             self.preview_theme.set(default_preview_theme(
                 self.area_name.get(), self.model.area(self.area_name.get()),
             ))
-            default_world, default_level = first_world_context(self.area_name.get())
+            default_world, default_level = first_world_context(
+                self.area_name.get(), self.world_routes
+            )
             self.playtest_world.set(default_world + 1)
             self.playtest_level.set(default_level + 1)
         finally:
@@ -260,7 +287,10 @@ class LevelStudio(tk.Tk):
             f"enemies {used_enemies}/{enemy_stream['capacity_bytes']} bytes | "
             f"{'unsaved edits' if dirty(self.documents) else 'saved'}"
         )
-        self.title("SMB1 Level Studio" + (" *" if dirty(self.documents) else ""))
+        self.title(
+            f"SMB1 Level Studio [{self.profile_id}]"
+            + (" *" if dirty(self.documents) else "")
+        )
 
     def draw_canvas(self, objects: list[dict], enemies: list[dict]) -> None:
         self.canvas.delete("all")
@@ -559,7 +589,7 @@ class LevelStudio(tk.Tk):
     def _playtest(self) -> None:
         save_documents(self.documents)
         result = subprocess.run(
-            ["make", "build-content"],
+            ["make", "build-content", f"CONTENT_PROFILE={self.profile_id}"],
             cwd=self.project_root,
             check=False,
         )
@@ -569,7 +599,6 @@ class LevelStudio(tk.Tk):
             "FCEUX_EXE",
             self.project_root / "../fceux_automation/vc/x64/Release/fceux64.exe",
         ))
-        rom = self.project_root / "build/content/smb.nes"
         lua = self.project_root / "scripts/workflow/level_point_playtest.lua"
         page = self.mario_column // 16
         environment = {
@@ -580,9 +609,14 @@ class LevelStudio(tk.Tk):
             "SMB1_PLAYTEST_X": str((self.mario_column % 16) * 16),
             "SMB1_PLAYTEST_Y": str(max(32, min(239, (self.mario_row + 1) * 16))),
             "SMB1_PLAYTEST_THEME": self.preview_theme.get().lower(),
+            "SMB1_PLAYTEST_BOOT_TASK": str(self.playtest_boot_task),
+            "SMB1_PLAYTEST_GAME_MODE": str(self.playtest_game_mode),
+            "SMB1_PLAYTEST_READY_TASK": str(self.playtest_ready_task),
+            "SMB1_PLAYTEST_BOOT_FRAMES": str(self.playtest_boot_frames),
+            "SMB1_PLAYTEST_READY_FRAMES": str(self.playtest_ready_frames),
         }
         self.view_notebook.select(1)
-        self.emulator.start(executable, rom, lua, environment)
+        self.emulator.start(executable, self.content_image, lua, environment)
 
     def stop_playtest(self) -> None:
         self.emulator.stop()
@@ -723,18 +757,60 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--formats", required=True, type=Path)
     parser.add_argument("--studios", required=True, type=Path)
+    parser.add_argument("--profiles", required=True, type=Path)
     parser.add_argument("--labels", required=True, type=Path)
+    parser.add_argument("--content-prg", required=True, type=Path)
+    parser.add_argument("--content-chr", required=True, type=Path)
+    parser.add_argument("--content-payload", action="append")
+    parser.add_argument("--content-payload-labels", action="append")
     parser.add_argument("--workspace", required=True, type=Path)
     parser.add_argument("--project-root", required=True, type=Path)
+    parser.add_argument("--profile", required=True)
+    parser.add_argument("--content-image", required=True, type=Path)
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--smoke-ui", action="store_true")
     parser.add_argument(
         "--smoke-playtest", nargs="?", const="Day", choices=("Day", "Night"),
     )
     args = parser.parse_args()
-    documents, _labels = load_documents(args.formats, args.studios, args.labels, args.workspace, "level")
+    documents, _labels = load_documents(
+        args.formats,
+        args.studios,
+        args.labels,
+        args.profiles,
+        args.content_prg,
+        args.content_chr,
+        args.content_payload,
+        args.content_payload_labels,
+        args.workspace,
+        "level",
+        args.profile,
+    )
     graphics_documents, _labels = load_documents(
-        args.formats, args.studios, args.labels, args.workspace, "graphics",
+        args.formats,
+        args.studios,
+        args.labels,
+        args.profiles,
+        args.content_prg,
+        args.content_chr,
+        args.content_payload,
+        args.content_payload_labels,
+        args.workspace,
+        "graphics",
+        args.profile,
+    )
+    world_documents, _labels = load_documents(
+        args.formats,
+        args.studios,
+        args.labels,
+        args.profiles,
+        args.content_prg,
+        args.content_chr,
+        args.content_payload,
+        args.content_payload_labels,
+        args.workspace,
+        "world",
+        args.profile,
     )
     chr_document = ChrDocument(
         (args.workspace / "graphics" / "smb.chr").read_bytes(),
@@ -747,6 +823,17 @@ def main() -> int:
         graphics_documents["player_animation_tiles"].document["data"]["frames"],
     )
     model = LevelDocument(documents["area_object_streams"], documents["enemy_object_streams"])
+    world_routes = tuple(
+        tuple(
+            (0x80 if pointer["alternate_bit"] else 0)
+            | (int(pointer["area_type"]) << 5)
+            | int(pointer["area_index"])
+            for pointer in world["areas"]
+        )
+        for world in world_documents["world_area_pointers"].document["data"]["worlds"]
+    )
+    authoring_profile = require_supported(load_profiles(args.profiles), args.profile)
+    playtest = authoring_profile.get("playtest", {})
     for name in model.names:
         positioned_area_objects(model.area(name))
         positioned_enemy_objects(model.enemies(name))
@@ -755,13 +842,26 @@ def main() -> int:
             document.validate()
         print(f"[OK] Level Studio: {len(model.names)} areas are editable")
         return 0
-    application = LevelStudio(model, documents, visuals, args.project_root)
+    application = LevelStudio(
+        model,
+        documents,
+        visuals,
+        args.project_root,
+        args.profile,
+        args.content_image,
+        world_routes,
+        int(playtest.get("boot_task", 3)),
+        int(playtest.get("game_mode", 1)),
+        int(playtest.get("ready_task", 3)),
+        int(playtest.get("boot_frames", 600)),
+        int(playtest.get("ready_frames", 600)),
+    )
     if args.smoke_ui:
         application.update_idletasks()
         application.destroy()
         print("[OK] Level Studio widgets constructed")
     elif args.smoke_playtest is not None:
-        outcome = {"embedded": False}
+        outcome = {"embedded": False, "result": "pending"}
         expected_background = "22" if args.smoke_playtest == "Day" else "0f"
         result_path = args.project_root.resolve() / "build" / "level_playtest_smoke.txt"
         result_path.parent.mkdir(parents=True, exist_ok=True)
@@ -770,7 +870,7 @@ def main() -> int:
         application.preview_theme.set(args.smoke_playtest)
         application.change_theme()
 
-        def finish_smoke_test(attempts: int = 150) -> None:
+        def finish_smoke_test(attempts: int = 300) -> None:
             result = result_path.read_text(encoding="utf-8").strip()
             if (
                 application.emulator.window
@@ -778,6 +878,10 @@ def main() -> int:
                 and f"background={expected_background}" in result
             ):
                 outcome["embedded"] = True
+                application.stop_playtest()
+                application.destroy()
+            elif result != "pending":
+                outcome["result"] = result
                 application.stop_playtest()
                 application.destroy()
             elif attempts:
@@ -792,7 +896,8 @@ def main() -> int:
         os.environ.pop("SMB1_PLAYTEST_RESULT", None)
         if not outcome["embedded"]:
             raise RuntimeError(
-                f"FCEUX {args.smoke_playtest} playtest did not reach the expected state",
+                f"FCEUX {args.smoke_playtest} playtest did not reach the expected state: "
+                f"{outcome['result']}",
             )
         print(
             f"[OK] FCEUX {args.smoke_playtest} playtest reached the expected palette, "

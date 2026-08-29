@@ -14,12 +14,18 @@ local level = setting("SMB1_PLAYTEST_LEVEL", 0, 3)
 local page = setting("SMB1_PLAYTEST_PAGE", 0, 31)
 local player_x = setting("SMB1_PLAYTEST_X", 0, 255)
 local player_y = setting("SMB1_PLAYTEST_Y", 32, 239)
+local boot_task = setting("SMB1_PLAYTEST_BOOT_TASK", 0, 255)
+local game_mode = setting("SMB1_PLAYTEST_GAME_MODE", 0, 255)
+local ready_task = setting("SMB1_PLAYTEST_READY_TASK", 0, 255)
+local boot_frames = setting("SMB1_PLAYTEST_BOOT_FRAMES", 1, 3600)
+local ready_frames = setting("SMB1_PLAYTEST_READY_FRAMES", 1, 3600)
 local theme = os.getenv("SMB1_PLAYTEST_THEME") or "day"
 if theme ~= "day" and theme ~= "night" then
     error("SMB1_PLAYTEST_THEME must be day or night")
 end
 
 local ram = {
+    frame_counter = 0x0009,
     game_engine_subroutine = 0x000e,
     player_page = 0x006d,
     player_x = 0x0086,
@@ -36,9 +42,34 @@ local ram = {
     alternate_entrance = 0x0752,
     player_size = 0x0754,
     player_status = 0x0756,
+    screen_routine_task = 0x073c,
+    sprite0_hit_detect_flag = 0x0722,
     operating_mode = 0x0770,
     operating_mode_task = 0x0772,
+    vram_buffer_addr_ctrl = 0x0773,
+    disable_screen_flag = 0x0774,
+    mirror_ppu_ctrl_reg1 = 0x0778,
+    mirror_ppu_ctrl_reg2 = 0x0779,
 }
+
+local transitions = {}
+
+local function record_transition(frame)
+    local state = string.format(
+        "%d:%d/%d/%d/%d/%d/%d",
+        frame,
+        memory.readbyte(ram.operating_mode),
+        memory.readbyte(ram.operating_mode_task),
+        memory.readbyte(ram.game_engine_subroutine),
+        memory.readbyte(ram.screen_routine_task),
+        memory.readbyte(ram.sprite0_hit_detect_flag),
+        memory.readbyte(ram.disable_screen_flag)
+    )
+    local previous = transitions[#transitions]
+    if previous == nil or string.match(previous, ":(.+)$") ~= string.match(state, ":(.+)$") then
+        transitions[#transitions + 1] = state
+    end
+end
 
 local function write_result(status)
     local result_path = os.getenv("SMB1_PLAYTEST_RESULT")
@@ -47,7 +78,7 @@ local function write_result(status)
     end
     local result = assert(io.open(result_path, "w"))
     result:write(string.format(
-        "status=%s area=%02x world=%d level=%d page=%d x=%d y=%d mode=%d task=%d engine=%d background=%02x\n",
+        "status=%s area=%02x world=%d level=%d page=%d x=%d y=%d mode=%d task=%d engine=%d screen=%d sprite0=%d disable=%d vram=%d ppu1=%02x ppu2=%02x frame=%d background=%02x pc=%04x\n",
         status,
         memory.readbyte(ram.area_pointer),
         memory.readbyte(ram.world),
@@ -58,16 +89,27 @@ local function write_result(status)
         memory.readbyte(ram.operating_mode),
         memory.readbyte(ram.operating_mode_task),
         memory.readbyte(ram.game_engine_subroutine),
-        ppu.readbyte(0x3f00)
+        memory.readbyte(ram.screen_routine_task),
+        memory.readbyte(ram.sprite0_hit_detect_flag),
+        memory.readbyte(ram.disable_screen_flag),
+        memory.readbyte(ram.vram_buffer_addr_ctrl),
+        memory.readbyte(ram.mirror_ppu_ctrl_reg1),
+        memory.readbyte(ram.mirror_ppu_ctrl_reg2),
+        memory.readbyte(ram.frame_counter),
+        ppu.readbyte(0x3f00),
+        memory.getregister("pc")
     ))
+    result:write("trace=frame:mode/task/engine/screen/sprite0/disable ")
+    result:write(table.concat(transitions, ","))
+    result:write("\n")
     result:close()
 end
 
 local boot_ready = false
-for _frame = 1, 600 do
+for _frame = 1, boot_frames do
     emu.frameadvance()
     if memory.readbyte(ram.operating_mode) == 0
-            and memory.readbyte(ram.operating_mode_task) == 3 then
+            and memory.readbyte(ram.operating_mode_task) == boot_task then
         boot_ready = true
         break
     end
@@ -92,13 +134,14 @@ memory.writebyte(ram.alternate_entrance, 1)
 memory.writebyte(ram.player_size, 1)
 memory.writebyte(ram.player_status, 0)
 memory.writebyte(ram.operating_mode_task, 0)
-memory.writebyte(ram.operating_mode, 1)
+memory.writebyte(ram.operating_mode, game_mode)
 
 local ready = false
-for _frame = 1, 600 do
+for _frame = 1, ready_frames do
     emu.frameadvance()
-    if memory.readbyte(ram.operating_mode) == 1
-            and memory.readbyte(ram.operating_mode_task) == 3
+    record_transition(_frame)
+    if memory.readbyte(ram.operating_mode) == game_mode
+            and memory.readbyte(ram.operating_mode_task) == ready_task
             and memory.readbyte(ram.game_engine_subroutine) >= 7 then
         ready = true
         break

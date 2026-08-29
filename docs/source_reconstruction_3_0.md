@@ -119,3 +119,47 @@ tick and coin begin from an identical cleared effect state, with exact register
 writes, counters, second-tone reachability, and release frames pinned by the
 scenario manifest. The complete longplay also proves that the residual `$08`
 area-header offset is reset to zero before any square-2 stream read.
+
+## Profile-Aware Authoring Contract
+
+`config/content_authoring_profiles.json` is the Source 3.0 compatibility
+boundary for the four Studios. It records all six selected game-build profiles,
+their program load addresses and payload identities, isolated workspace and
+output roots, and the availability of World, Level, Graphics, and Sound Studio.
+Run `make list-content-profiles` for the current matrix and
+`make content-profile-audit` to validate it.
+
+JU, PC10, PAL, Vs. SMB, and FDS SMB1 now support every Studio through profile-specific
+labels, fixed capacities, workspaces, and output images. PC10 preserves its
+trailing 8 KiB container data; PAL uses its distinct level, physics, and
+1,522-byte music range. The Sound Studio reads only headers emitted by the
+selected build and models note-table operands as byte offsets, matching PAL's
+valid odd offsets and the FDS `$6000` program load address.
+
+FDS authoring keeps the disk container boundary explicit. The builder checks an
+ignored, zeroed private template, fills program records 3 and 4 with source-built
+`SMMAIN`, and fills CHR record 2 with the editable pattern table. Independent
+hashes protect the template, original CHR, and complete disk side. The Level
+Studio receives the profile's actual `.fds` output path for point playtesting.
+
+Vs. authoring preserves its asymmetric 16 KiB CHR layout. Graphics Studio owns
+only the first 8 KiB bank. The second bank contains 39 area streams and 39 enemy
+streams whose addresses are selected through PRG pointer tables. The profile
+resolver reads those tables from the source-built PRG, orders streams by their
+physical CHR positions, recognizes the original shared-terminator case, and
+keeps every fixed capacity stable. World routing and all 27 emitted music
+headers come from the Vs. build. The Level Studio playtest also selects the
+arcade-specific game mode and task numbers instead of assuming the console mode
+tree.
+
+`make check-content-profiles` exports disposable workspaces, constructs every
+headless Studio model, and rebuilds all five accepted images. A zero-edit build
+must match the manifest-owned image size and SHA-1. ANN remains planned with an
+explicit blocker until its normal and extended content layouts are modeled.
+The shared authoring layer already validates named supplemental payloads by
+load address, size, and SHA-1; merges their linker labels; extracts CHR from the
+private FDS template; and composes `NSMMAIN`, `NSMDATA2`, `NSMDATA3`, and
+`NSMDATA4` into their original records. A zero-edit infrastructure probe
+reconstructs the exact ANN disk SHA-1, but this container proof does not make
+canonical level capacities safe for ANN. Keeping the profile planned prevents
+the selector from applying those capacities to its overlay-based layout.

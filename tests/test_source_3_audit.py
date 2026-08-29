@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
+import json
 from pathlib import Path
 
 
@@ -10,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from source_3_audit import (
     EXPECTED_MILESTONES,
     validate_milestones,
+    validate_authoring_contract,
     validate_resolved_unknowns,
     validate_roadmap,
     validate_scenario_ids,
@@ -60,6 +63,30 @@ class Source3AuditTests(unittest.TestCase):
 """
         self.assertEqual(validate_resolved_unknowns(text, ["DATA-001"]), [])
         self.assertTrue(validate_resolved_unknowns(text, ["RAM-001"]))
+
+    def test_authoring_contract_rejects_manifest_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = {
+                "schema_version": 1,
+                "default_profile": "ju",
+                "studio_ids": ["world", "level", "graphics", "sound"],
+                "profiles": [],
+            }
+            (root / "profiles.json").write_text(
+                json.dumps(manifest), encoding="utf-8"
+            )
+            errors = validate_authoring_contract(
+                root,
+                {
+                    "profile_manifest": "profiles.json",
+                    "default_profile": "ju",
+                    "studio_ids": ["world", "level", "graphics", "sound"],
+                    "supported_profiles": ["ju"],
+                    "planned_profiles": [],
+                },
+            )
+            self.assertTrue(errors)
 
 
 if __name__ == "__main__":

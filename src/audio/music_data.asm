@@ -8,9 +8,11 @@ con_music_length_offset_e = $28
 con_music_length_offset_victory = $18
 
 tbl_castle_clear_music_envelope = *
+    .export tbl_castle_clear_music_envelope
     .byte $98, $99, $9a, $9b
 
 tbl_area_music_envelope_values = *
+    .export tbl_area_music_envelope_values
     .byte $90, $94, $94, $95, $95, $96, $97, $97, $98
 .else
 con_music_length_offset_d = $18

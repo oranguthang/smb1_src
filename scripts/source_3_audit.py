@@ -10,6 +10,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from content_profiles import validate_profiles
+
 
 EXPECTED_MILESTONES = [
     "relocation_architecture",
@@ -116,6 +118,39 @@ def validate_resolved_unknowns(text: str, expected: list[str]) -> list[str]:
     return errors
 
 
+def validate_authoring_contract(
+    project_root: Path, contract: dict[str, Any]
+) -> list[str]:
+    relative = contract.get("profile_manifest", "")
+    path = project_root / relative
+    if not path.is_file():
+        return ["Source 3.0 content authoring profile manifest is missing"]
+    document = load_json(path)
+    errors = validate_profiles(document)
+    if errors:
+        return [f"content authoring contract: {error}" for error in errors]
+
+    if document["default_profile"] != contract.get("default_profile"):
+        errors.append("Source 3.0 default content authoring profile differs")
+    if document["studio_ids"] != contract.get("studio_ids"):
+        errors.append("Source 3.0 content authoring studio list differs")
+    supported = [
+        profile["id"]
+        for profile in document["profiles"]
+        if profile["status"] == "supported"
+    ]
+    planned = [
+        profile["id"]
+        for profile in document["profiles"]
+        if profile["status"] == "planned"
+    ]
+    if supported != contract.get("supported_profiles"):
+        errors.append("Source 3.0 supported content profile list differs")
+    if planned != contract.get("planned_profiles"):
+        errors.append("Source 3.0 planned content profile list differs")
+    return errors
+
+
 def validate_source_3(project_root: Path, manifest_path: Path) -> list[str]:
     release = load_json(manifest_path)
     errors: list[str] = []
@@ -207,6 +242,7 @@ def validate_source_3(project_root: Path, manifest_path: Path) -> list[str]:
             semantic.get("resolved_unknowns", []),
         )
     )
+    errors.extend(validate_authoring_contract(project_root, release.get("authoring", {})))
 
     for relative in release["required_documents"]:
         if not (project_root / relative).is_file():
