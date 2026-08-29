@@ -9,9 +9,9 @@
   },
   "milestones": [
     {"id": "relocation_architecture", "status": "complete"},
-    {"id": "canonical_relocation", "status": "in-progress"},
-    {"id": "revision_relocation", "status": "planned"},
-    {"id": "platform_relocation", "status": "planned"},
+    {"id": "canonical_relocation", "status": "complete"},
+    {"id": "revision_relocation", "status": "complete"},
+    {"id": "platform_relocation", "status": "in-progress"},
     {"id": "platform_interfaces", "status": "planned"},
     {"id": "semantic_runtime_evidence", "status": "planned"},
     {"id": "profile_aware_authoring", "status": "planned"},
@@ -19,6 +19,16 @@
     {"id": "source_reconstruction_3_0", "status": "planned"}
   ],
   "relocation": {
+    "manifests": [
+      "config/relocation/ju.json",
+      "config/relocation/pc10.json",
+      "config/relocation/pal.json"
+    ],
+    "platform_manifests": [
+      "config/relocation/vs_smb.json",
+      "config/relocation/fds_smb.json",
+      "config/relocation/ann_fds.json"
+    ],
     "first_profile": "ju",
     "cpu_range": {"start": "0x8000", "end": "0xffff"},
     "fixed_audio": {"start": "0xf2d0", "end": "0xfeff"},
@@ -37,7 +47,7 @@
         "start": "0xfefd",
         "end": "0xfeff",
         "bytes": "ffffff",
-        "status": "requires-evidence",
+        "status": "decoder-and-runtime-proven",
         "insertions": 3
       }
     ],
@@ -48,11 +58,22 @@
     "docs/preservation_source_1_0.md",
     "docs/source_reconstruction_2_0.md",
     "docs/source_reconstruction_3_0.md",
+    "docs/relocation_testing.md",
     "docs/roadmap.md"
   ],
   "required_stable_targets": [
     "verify",
     "source-2-release-audit",
     "source-2-check"
+  ],
+  "required_development_targets": [
+    "source-3-audit",
+    "test-relocation",
+    "test-relocation-revisions",
+    "test-platform-relocations",
+    "test-ann-main-relocation",
+    "validate-relocation",
+    "validate-relocation-revisions",
+    "validate-relocation-platforms"
   ]
 }

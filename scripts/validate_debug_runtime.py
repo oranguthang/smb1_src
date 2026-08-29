@@ -42,6 +42,7 @@ def main() -> int:
     parser.add_argument("--summary", required=True, type=Path)
     parser.add_argument("--lua", required=True, type=Path)
     parser.add_argument("--result", required=True, type=Path)
+    parser.add_argument("--pal", action="store_true")
     args = parser.parse_args()
 
     required = (args.fceux, args.rom, args.summary, args.lua)
@@ -58,12 +59,16 @@ def main() -> int:
     )
     command = [
         str(args.fceux.resolve()),
+    ]
+    if args.pal:
+        command.extend(["-pal", "1"])
+    command.extend([
         "-lua", str(args.lua.resolve()),
         "-max-frames", "180",
         "-turbo", "1",
         "-nothrottle", "1",
         str(args.rom.resolve()),
-    ]
+    ])
     subprocess.run(command, check=True, env=environment, cwd=args.rom.parent)
     if not args.result.is_file():
         raise SystemExit(f"[ERROR] Debug runtime result not found: {args.result}")

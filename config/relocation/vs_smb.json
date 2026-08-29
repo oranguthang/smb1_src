@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "id": "vs_smb_nrom",
+  "profile_id": 3,
+  "source": "src/main.asm",
+  "linker_config": "config/linker/relocation/vs_nrom256_prg_only.cfg",
+  "generated_root": "build/relocation/vs_smb",
+  "cpu_base": "0x8000",
+  "container": {
+    "kind": "platform",
+    "manifest": "config/platform_profiles.json",
+    "profile": "vs_smb",
+    "output_name": "smb.nes"
+  },
+  "vectors": {
+    "start": "0xfffa",
+    "targets": ["vec_nmi_handler", "vec_reset_handler", "vec_irq_handler"]
+  },
+  "music_padding_override": {
+    "original_statement": "    .incbin con_music_data_asset, $58d, $04a",
+    "replacement_statement": "    .incbin con_music_data_asset, $58d, $045"
+  },
+  "regions": [
+    {
+      "id": "program",
+      "start": "0x8000",
+      "end": "0xfeff",
+      "absorbed_range": {"start": "0xfefb", "end": "0xfeff"},
+      "absorbed_bytes": "ffffffffff",
+      "source_override": "src/audio/music_streams.asm",
+      "evidence": {
+        "song": "off_music_header_vs_game_over",
+        "decoded_end": "0xfefb",
+        "fixed_tail": "tbl_music_note_periods"
+      },
+      "insertions": [
+        {"id": "program_origin", "before": ".include \"system/boot_and_frame.asm\""},
+        {"id": "after_screen_renderer", "after": ".include \"rendering/screens.asm\""},
+        {"id": "after_terrain_parser", "after": ".include \"game/level/terrain_objects.asm\""},
+        {"id": "after_goal_runtime", "after": ".include \"game/enemies/bowser_and_goals.asm\""},
+        {"id": "before_audio", "after": ".include \"rendering/positioning.asm\""}
+      ]
+    }
+  ],
+  "fixed_ranges": [
+    {"start": "0xff00", "end": "0xfff9", "meaning": "Synthesis tables"}
+  ],
+  "minimum_shifted_labels": 1800,
+  "runtime_ignored_addresses": ["0x6603"]
+}

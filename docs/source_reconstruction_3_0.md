@@ -14,10 +14,10 @@ test cannot be copied literally. The source already identifies six unused bytes
 at `$F2CA..$F2CF`, immediately before the sound engine. They provide the first
 relocation budget while the audio region remains fixed at `$F2D0`.
 
-The canonical music block also ends with three candidate `$FF` bytes before the
-fixed note-period table at `$FF00`. They provide a second, audio-only budget
-only after the tested music decoder and emulator observation prove that no
-supported playback path reads them as music data.
+The canonical music block also ends with three `$FF` bytes before the fixed
+note-period table at `$FF00`. The tested music decoder proves that all three
+channels finish by `$FEFD`, and the complete runtime suite observes no execution
+of their replacement probes. They provide the second, audio-only budget.
 
 The relocation candidate must insert one non-executed `$EA` byte at each of six
 reviewed game/module boundaries and three audio boundaries. Success requires
@@ -27,8 +27,8 @@ all of the following:
 - labels in each shifted region move by the exact cumulative insertion count;
 - absolute and indirect source references follow their semantic labels;
 - the audio region remains fixed while the first six insertions are absorbed;
-- the `$FF00..$FFFF` synthesis tables and vectors remain fixed while the three
-  audio insertions are absorbed;
+- the `$FF00..$FFF9` synthesis tables remain byte-identical and the vector
+  slots remain fixed while their operands follow relocated handlers;
 - every insertion address is observed and never executed during the complete
   deterministic runtime suite;
 - the normal source contains no relocation conditionals or probe bytes;
@@ -82,3 +82,14 @@ expanded-layout ADR must be written instead.
 The development manifest is `config/source_reconstruction_3_0.json`. During
 development, `make source-3-audit` validates the release boundary and milestone
 state without pretending that the final 3.0 acceptance gate already exists.
+Run `make test-relocation` to generate, build, and statically validate the
+canonical candidate under `build/relocation/`. `make validate-relocation` also
+generates candidate debugger symbols and runs all deterministic scenarios with
+execution traps on every inserted byte.
+
+The cartridge revision matrix is complete. The accepted platform matrix now
+covers Vs. SMB and FDS SMB with profile-specific decoded padding, container
+composition, debug artifacts, focused runtime states, and execute traps. ANN
+`NSMMAIN` has a static relocation candidate, but its three dynamically loaded
+payloads expose a fixed cross-payload ABI and keep the platform milestone in
+progress. See `docs/relocation_testing.md` for the exact boundary and commands.

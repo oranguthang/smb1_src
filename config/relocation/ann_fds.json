@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "ann_nsmain_program",
+  "profile_id": 5,
+  "source": "src/main.asm",
+  "preamble_includes": ["platforms/ann/constants.inc"],
+  "linker_config": "config/linker/relocation/ann_main_prg.cfg",
+  "generated_root": "build/relocation/ann_fds",
+  "cpu_base": "0x6000",
+  "container": {
+    "kind": "platform",
+    "manifest": "config/platform_profiles.json",
+    "profile": "ann_fds",
+    "output_name": "smb.fds"
+  },
+  "vectors": {
+    "start": "0xdffa",
+    "targets": ["vec_nmi_handler", "vec_reset_handler", "vec_ann_irq_handler"]
+  },
+  "game_padding_override": {
+    "source": "src/platforms/ann/ending/guest_chr_and_save.asm",
+    "include_path": "platforms/ann/ending/guest_chr_and_save.asm",
+    "original_statement": "    .res 37, $ff",
+    "replacement_statement": "    .res 31, $ff\n.assert * = $d2e3, error, \"ANN main relocation budget differs\"\n.segment \"FIXED_TAIL\""
+  },
+  "regions": [
+    {
+      "id": "program",
+      "start": "0x6000",
+      "end": "0xd2e2",
+      "absorbed_range": {"start": "0xd2dd", "end": "0xd2e2"},
+      "absorbed_bytes": "ffffffffffff",
+      "source_override": "src/platforms/ann/ending/guest_chr_and_save.asm",
+      "insertions": [
+        {"id": "program_origin", "before": ".include \"system/boot_and_frame.asm\""},
+        {"id": "second_origin_probe", "before": ".include \"system/boot_and_frame.asm\""},
+        {"id": "third_origin_probe", "before": ".include \"system/boot_and_frame.asm\""},
+        {"id": "fourth_origin_probe", "before": ".include \"system/boot_and_frame.asm\""},
+        {"id": "fifth_origin_probe", "before": ".include \"system/boot_and_frame.asm\""},
+        {"id": "sixth_origin_probe", "before": ".include \"system/boot_and_frame.asm\""}
+      ]
+    }
+  ],
+  "fixed_ranges": [
+    {"start": "0xd2e3", "end": "0xdff9", "meaning": "Save byte and audio ABI"}
+  ],
+  "minimum_shifted_labels": 1800,
+  "unsupported_regions": [
+    {
+      "id": "ann_audio",
+      "reason": "NSMMAIN audio ends exactly at the fixed note table and has no independently proven relocation capacity"
+    },
+    {
+      "id": "ann_overlays",
+      "reason": "NSMDATA2, NSMDATA3, and NSMDATA4 are separate load-address layouts and require dedicated proofs"
+    }
+  ]
+}

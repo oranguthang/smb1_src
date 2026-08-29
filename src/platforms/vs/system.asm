@@ -274,7 +274,7 @@ off_vs_push_button_packet:
 off_vs_clear_push_button_packet:
     .byte $20, $ea, $4b, $24, $00
 
-loc_vs_title_exit = $82fe
+loc_vs_title_exit = loc_vs_start_or_continue_game
 
 handler_vs_player_select_update:
     JSR sub_vs_select_low_chr_bank
@@ -406,7 +406,7 @@ bra_exit_vs_super_players:
     INC ram_oper_mode_task
     RTS
 
-loc_vs_title_recycle = $82ef
+loc_vs_title_recycle = loc_vs_reset_title
 
 handler_vs_title_tick:
     LDA #$00

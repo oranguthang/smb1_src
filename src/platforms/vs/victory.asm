@@ -1,8 +1,8 @@
 ; Vs. Super Mario Bros. castle-victory extensions
 
-sub_vs_tally_timer_score = $d260
-sub_vs_render_parade_actor = $e7da
-sub_vs_award_castle_end_stats = $d279
+sub_vs_tally_timer_score = handler_award_game_timer_points + $0b
+sub_vs_render_parade_actor = sub_render_enemy_graphics
+sub_vs_award_castle_end_stats = loc_award_end_area_points
 bra_exit_world_completion = bra_exit_vs_victory_parade
 handler_print_victory_messages = handler_vs_print_victory_messages
 bra_advance_victory_mode_task = bra_advance_vs_victory_mode_task

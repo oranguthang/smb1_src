@@ -10,7 +10,11 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from validate_platform_runtime import validate_fds_bios
+from validate_platform_runtime import (
+    load_forbidden_addresses,
+    load_ignored_addresses,
+    validate_fds_bios,
+)
 
 
 class PlatformRuntimeTests(unittest.TestCase):
@@ -46,6 +50,27 @@ class PlatformRuntimeTests(unittest.TestCase):
         other.write_bytes(b"bios")
         with self.assertRaisesRegex(ValueError, "expects its FDS BIOS"):
             validate_fds_bios(self.fceux, other, self.runtime)
+
+    def test_optional_relocation_probes_are_loaded(self) -> None:
+        manifest = self.directory / "relocation.json"
+        manifest.write_text(
+            '{"forbidden_execute_addresses":["0x8000","0xdefe"]}',
+            encoding="utf-8",
+        )
+        self.assertEqual(
+            load_forbidden_addresses(manifest),
+            ["0x8000", "0xdefe"],
+        )
+        self.assertEqual(load_forbidden_addresses(None), [])
+
+    def test_optional_transient_runtime_addresses_are_loaded(self) -> None:
+        manifest = self.directory / "relocation.json"
+        manifest.write_text(
+            '{"runtime_ignored_addresses":["0x6603"]}',
+            encoding="utf-8",
+        )
+        self.assertEqual(load_ignored_addresses(manifest), {"0x6603"})
+        self.assertEqual(load_ignored_addresses(None), set())
 
 
 if __name__ == "__main__":

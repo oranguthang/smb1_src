@@ -138,7 +138,11 @@ def write_fceux_nl(debug_path: Path, rom_path: Path, output_dir: Path) -> tuple[
 
 
 def validate_debug_artifacts(
-    debug_path: Path, map_path: Path, labels_path: Path, rom_path: Path
+    debug_path: Path,
+    map_path: Path,
+    labels_path: Path,
+    rom_path: Path,
+    non_ines_container: bool = False,
 ) -> dict[str, int]:
     counts: dict[str, int] = defaultdict(int)
     segment_offsets: dict[str, int] = {}
@@ -162,10 +166,17 @@ def validate_debug_artifacts(
     if counts["sym"] == 0:
         raise ValueError("Debug file lacks symbols")
     rom = rom_path.read_bytes()
-    if len(rom) < 16 or rom[:4] != b"NES\x1a":
+    if not rom:
+        raise ValueError(f"Debugger image is empty: {rom_path}")
+    if not non_ines_container and (len(rom) < 16 or rom[:4] != b"NES\x1a"):
         raise ValueError(f"Debugger ROM is not valid iNES: {rom_path}")
-    if segment_offsets.get("PRG") != 16 or segment_offsets.get("VECTORS") != 16 + 0x7FFA:
+    if not non_ines_container and (
+        segment_offsets.get("PRG") != 16
+        or segment_offsets.get("VECTORS") != 16 + 0x7FFA
+    ):
         raise ValueError(f"Unexpected debugger segment offsets: {segment_offsets}")
+    if non_ines_container and not {"PRG", "VECTORS"} <= segment_offsets.keys():
+        raise ValueError(f"Debugger lacks program segment offsets: {segment_offsets}")
     map_text = map_path.read_text(encoding="utf-8")
     if "PRG" not in map_text or "VECTORS" not in map_text:
         raise ValueError("Map file lacks PRG or VECTORS segments")
@@ -251,9 +262,16 @@ def main() -> int:
     parser.add_argument("--breakpoints", required=True, type=Path)
     parser.add_argument("--watches", required=True, type=Path)
     parser.add_argument("--summary", type=Path)
+    parser.add_argument("--non-ines-container", action="store_true")
     args = parser.parse_args()
 
-    counts = validate_debug_artifacts(args.debug, args.map, args.labels, args.rom)
+    counts = validate_debug_artifacts(
+        args.debug,
+        args.map,
+        args.labels,
+        args.rom,
+        non_ines_container=args.non_ines_container,
+    )
     rom_nl, ram_nl = write_fceux_nl(args.debug, args.rom, args.fceux_output_dir)
     summary = {
         "debug_file": str(args.debug),

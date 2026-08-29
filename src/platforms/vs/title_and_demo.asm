@@ -1,9 +1,9 @@
 ; Vs. Super Mario Bros. title flow and attract-mode input script
 
-sub_vs_game_initialize_0 = $9651
-handler_vs_background_process = $8748
-sub_vs_game_initialize_1 = $96ff
-sub_vs_game_core = $ad6e
+sub_vs_game_initialize_0 = handler_initialize_vs_game
+handler_vs_background_process = handler_run_screen_task
+sub_vs_game_initialize_1 = handler_primary_vs_game_setup
+sub_vs_game_core = sub_game_core_routine
 sub_draw_mushroom_icon = $ffff
 handler_run_title_screen_mode = handler_run_vs_title_screen_mode
 tbl_world_select_vram_template = tbl_vs_world_select_vram_template

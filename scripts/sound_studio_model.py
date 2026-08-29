@@ -36,6 +36,10 @@ DUTY_SEQUENCES = (
 
 
 HEADER_NAMES = {
+    "off_music_header_vs_star_a": "Vs. Starman A",
+    "off_music_header_vs_star_b": "Vs. Starman B",
+    "off_music_header_vs_star_c": "Vs. Starman C",
+    "off_music_header_vs_star_d": "Vs. Starman D",
     "off_music_header_time_running_out": "Hurry Up!",
     "off_music_header_star_cloud": "Starman / Coin Heaven",
     "off_music_header_end_of_level": "Course Clear",
@@ -44,6 +48,7 @@ HEADER_NAMES = {
     "off_music_header_silence": "Silence",
     "off_music_header_castle": "Castle",
     "off_music_header_victory": "Princess Rescued",
+    "off_music_header_vs_game_over": "Vs. Game Over",
     "off_music_header_game_over": "Game Over",
     "off_music_header_water": "Underwater",
     "off_music_header_castle_clear": "Castle Clear",

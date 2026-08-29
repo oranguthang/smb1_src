@@ -35,6 +35,50 @@ CONTENT_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/content_formats.json
 RELEASE_MANIFEST ?= $(PROJECT_DIR)config/preservation_source_1_0.json
 SOURCE_2_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_2_0.json
 SOURCE_3_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_3_0.json
+RELOCATION_PROFILE ?= ju
+RELOCATION_MANIFEST ?= $(PROJECT_DIR)config/relocation/$(RELOCATION_PROFILE).json
+RELOCATION_BUILD_DIR ?= $(PROJECT_DIR)build/relocation/$(RELOCATION_PROFILE)/candidate
+RELOCATION_BASE_DIR ?= $(PROJECT_DIR)build/revisions/$(RELOCATION_PROFILE)
+RELOCATION_BASE_PRG ?= $(RELOCATION_BASE_DIR)/smb.prg
+RELOCATION_BASE_LABELS ?= $(RELOCATION_BASE_DIR)/smb.lbl
+RELOCATION_BASE_DEBUG ?= $(RELOCATION_BASE_DIR)/smb.dbg
+RELOCATION_PRG ?= $(RELOCATION_BUILD_DIR)/smb.prg
+RELOCATION_LABELS ?= $(RELOCATION_BUILD_DIR)/smb.lbl
+RELOCATION_MAP ?= $(RELOCATION_BUILD_DIR)/smb.map
+RELOCATION_DEBUG ?= $(RELOCATION_BUILD_DIR)/smb.dbg
+RELOCATION_ROM ?= $(RELOCATION_BUILD_DIR)/smb.nes
+RELOCATION_SCENARIOS ?= $(RELOCATION_BUILD_DIR)/runtime_scenarios.json
+RELOCATION_DEBUG_SUMMARY ?= $(RELOCATION_BUILD_DIR)/debug_symbols.json
+RELOCATION_DEBUG_RESULT ?= $(RELOCATION_BUILD_DIR)/debug_symbols_runtime.txt
+RELOCATION_TRACE_DIR ?= $(PROJECT_DIR)build/relocation/$(RELOCATION_PROFILE)/runtime
+RELOCATION_REVISION_RESULT ?= $(RELOCATION_BUILD_DIR)/revision_runtime.txt
+RELOCATION_PLATFORM_RESULT ?= $(RELOCATION_BUILD_DIR)/platform_runtime.txt
+RELOCATION_PAL_ARG := $(if $(filter pal,$(RELOCATION_PROFILE)),--pal,)
+RELOCATION_DEBUG_CONTAINER_ARG := $(if $(filter fds_smb ann_fds,$(RELOCATION_PROFILE)),--non-ines-container,)
+ifeq ($(RELOCATION_PROFILE),pc10)
+RELOCATION_REFERENCE ?= $(PROJECT_DIR)Super Mario Bros. (PC10).nes
+RELOCATION_VERIFY_TARGET = verify-revision PROFILE=pc10
+else ifeq ($(RELOCATION_PROFILE),pal)
+RELOCATION_REFERENCE ?= $(PROJECT_DIR)Super Mario Bros. (E) (REV0) [!p].nes
+RELOCATION_VERIFY_TARGET = verify-revision PROFILE=pal
+else ifeq ($(RELOCATION_PROFILE),vs_smb)
+RELOCATION_BASE_DIR = $(PROJECT_DIR)build/platforms/vs_smb
+RELOCATION_REFERENCE ?= $(PROJECT_DIR)VS. Super Mario Bros. (VS).nes
+RELOCATION_VERIFY_TARGET = verify-platform PLATFORM=vs_smb
+else ifeq ($(RELOCATION_PROFILE),fds_smb)
+RELOCATION_BASE_DIR = $(PROJECT_DIR)build/platforms/fds_smb
+RELOCATION_REFERENCE ?= $(PROJECT_DIR)Super Mario Brothers (Japan).fds
+RELOCATION_ROM = $(RELOCATION_BUILD_DIR)/smb.fds
+RELOCATION_VERIFY_TARGET = verify-platform PLATFORM=fds_smb
+else ifeq ($(RELOCATION_PROFILE),ann_fds)
+RELOCATION_BASE_DIR = $(PROJECT_DIR)build/platforms/ann_fds
+RELOCATION_REFERENCE ?= $(PROJECT_DIR)All Night Nippon Super Mario Brothers (Japan) (Promotion Card).fds
+RELOCATION_ROM = $(RELOCATION_BUILD_DIR)/smb.fds
+RELOCATION_VERIFY_TARGET = verify-platform PLATFORM=ann_fds
+else
+RELOCATION_REFERENCE ?= $(ORIGINAL_ROM)
+RELOCATION_VERIFY_TARGET = verify-revision PROFILE=ju
+endif
 ANN_REFERENCE ?= $(PROJECT_DIR)All Night Nippon Super Mario Brothers (Japan) (Promotion Card).fds
 ANN_TAIL_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_tail
 ANN_TAIL_CORE_SOURCE ?= $(PROJECT_DIR)src/revisions/ann/tail_core.asm
@@ -148,7 +192,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit split split-all check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -662,6 +706,112 @@ source-3-audit:
 	$(PYTHON) "$(PROJECT_DIR)scripts/source_3_audit.py" \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(SOURCE_3_MANIFEST)"
+
+test-relocation:
+	$(MAKE) $(RELOCATION_VERIFY_TARGET)
+	$(PYTHON) "$(PROJECT_DIR)scripts/relocation_test.py" \
+		--project-root "$(PROJECT_DIR)" \
+		--manifest "$(RELOCATION_MANIFEST)" \
+		--base-prg "$(RELOCATION_BASE_PRG)" \
+		--base-labels "$(RELOCATION_BASE_LABELS)" \
+		--base-debug "$(RELOCATION_BASE_DEBUG)" \
+		--original-rom "$(RELOCATION_REFERENCE)"
+
+test-relocation-revisions:
+	$(MAKE) test-relocation RELOCATION_PROFILE=ju
+	$(MAKE) test-relocation RELOCATION_PROFILE=pc10
+	$(MAKE) test-relocation RELOCATION_PROFILE=pal
+
+test-platform-relocations:
+	$(MAKE) test-relocation RELOCATION_PROFILE=vs_smb
+	$(MAKE) test-relocation RELOCATION_PROFILE=fds_smb
+
+test-ann-main-relocation:
+	$(MAKE) test-relocation RELOCATION_PROFILE=ann_fds
+
+validate-relocation: test-relocation
+	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \
+		--debug "$(RELOCATION_DEBUG)" \
+		--map "$(RELOCATION_MAP)" \
+		--labels "$(RELOCATION_LABELS)" \
+		--rom "$(RELOCATION_ROM)" \
+		--fceux-output-dir "$(RELOCATION_BUILD_DIR)" \
+		--breakpoints "$(DEBUG_BREAKPOINTS)" \
+		--watches "$(DEBUG_WATCHES)" \
+		--summary "$(RELOCATION_DEBUG_SUMMARY)"
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_debug_runtime.py" \
+		--fceux "$(FCEUX_EXE)" \
+		--rom "$(RELOCATION_ROM)" \
+		--summary "$(RELOCATION_DEBUG_SUMMARY)" \
+		--lua "$(DEBUG_RUNTIME_LUA)" \
+		--result "$(RELOCATION_DEBUG_RESULT)"
+	$(PYTHON) "$(PROJECT_DIR)scripts/run_runtime_scenarios.py" \
+		--fceux "$(FCEUX_EXE)" \
+		--rom "$(RELOCATION_ROM)" \
+		--movie "$(RUNTIME_MOVIE)" \
+		--lua "$(RUNTIME_TRACE_LUA)" \
+		--scenarios "$(RELOCATION_SCENARIOS)" \
+		--output-dir "$(RELOCATION_TRACE_DIR)"
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_runtime_scenarios.py" \
+		--scenarios "$(RELOCATION_SCENARIOS)" \
+		--trace-dir "$(RELOCATION_TRACE_DIR)"
+
+validate-revision-relocation: test-relocation
+	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \
+		--debug "$(RELOCATION_DEBUG)" \
+		--map "$(RELOCATION_MAP)" \
+		--labels "$(RELOCATION_LABELS)" \
+		--rom "$(RELOCATION_ROM)" \
+		--fceux-output-dir "$(RELOCATION_BUILD_DIR)" \
+		--breakpoints "$(DEBUG_BREAKPOINTS)" \
+		--watches "$(DEBUG_WATCHES)" \
+		--summary "$(RELOCATION_DEBUG_SUMMARY)"
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_debug_runtime.py" \
+		--fceux "$(FCEUX_EXE)" \
+		--rom "$(RELOCATION_ROM)" \
+		--summary "$(RELOCATION_DEBUG_SUMMARY)" \
+		--lua "$(DEBUG_RUNTIME_LUA)" \
+		--result "$(RELOCATION_DEBUG_RESULT)" \
+		$(RELOCATION_PAL_ARG)
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_revision_runtime.py" \
+		--manifest "$(REVISION_MANIFEST)" \
+		--profile "$(RELOCATION_PROFILE)" \
+		--fceux "$(FCEUX_EXE)" \
+		--rom "$(RELOCATION_ROM)" \
+		--movie "$(RUNTIME_MOVIE)" \
+		--lua "$(EXPANDED_RUNTIME_LUA)" \
+		--result "$(RELOCATION_REVISION_RESULT)" \
+		--forbidden-manifest "$(RELOCATION_SCENARIOS)"
+
+validate-platform-relocation: test-relocation
+	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \
+		--debug "$(RELOCATION_DEBUG)" \
+		--map "$(RELOCATION_MAP)" \
+		--labels "$(RELOCATION_LABELS)" \
+		--rom "$(RELOCATION_ROM)" \
+		--fceux-output-dir "$(RELOCATION_BUILD_DIR)" \
+		--breakpoints "$(DEBUG_BREAKPOINTS)" \
+		--watches "$(DEBUG_WATCHES)" \
+		--summary "$(RELOCATION_DEBUG_SUMMARY)" \
+		$(RELOCATION_DEBUG_CONTAINER_ARG)
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_platform_runtime.py" \
+		--manifest "$(PLATFORM_MANIFEST)" \
+		--profile "$(RELOCATION_PROFILE)" \
+		--fceux "$(FCEUX_EXE)" \
+		--fds-bios "$(FDS_BIOS)" \
+		--image "$(RELOCATION_ROM)" \
+		--lua "$(PLATFORM_RUNTIME_LUA)" \
+		--result "$(RELOCATION_PLATFORM_RESULT)" \
+		--forbidden-manifest "$(RELOCATION_SCENARIOS)"
+
+validate-relocation-revisions:
+	$(MAKE) validate-relocation RELOCATION_PROFILE=ju
+	$(MAKE) validate-relocation RELOCATION_PROFILE=pc10
+	$(MAKE) validate-revision-relocation RELOCATION_PROFILE=pal
+
+validate-relocation-platforms:
+	$(MAKE) validate-platform-relocation RELOCATION_PROFILE=vs_smb
+	$(MAKE) validate-platform-relocation RELOCATION_PROFILE=fds_smb
 
 split:
 	$(PYTHON) "$(PROJECT_DIR)scripts/split_assets.py" \

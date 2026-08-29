@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "id": "pc10_nrom",
+  "profile_id": 1,
+  "source": "src/main.asm",
+  "linker_config": "config/linker/relocation/nrom256_prg_only.cfg",
+  "generated_root": "build/relocation/pc10",
+  "cpu_base": "0x8000",
+  "container": {
+    "kind": "revision",
+    "manifest": "config/revision_profiles.json",
+    "profile": "pc10"
+  },
+  "vectors": {
+    "start": "0xfffa",
+    "targets": ["vec_nmi_handler", "vec_reset_handler", "0xfff0"]
+  },
+  "game_padding_override": {
+    "source": "src/rendering/positioning.asm",
+    "include_path": "rendering/positioning.asm",
+    "original_statement": "    .byte $ff, $ff, $ff, $ff, $ff, $ff",
+    "replacement_statement": "    .assert * = $f2d0, error, \"game relocation budget differs\""
+  },
+  "music_padding_override": {
+    "original_statement": "con_music_victory_size = $038",
+    "replacement_statement": "con_music_victory_size = $035"
+  },
+  "regions": [
+    {
+      "id": "game_and_rendering",
+      "start": "0x8000",
+      "end": "0xf2cf",
+      "absorbed_range": {"start": "0xf2ca", "end": "0xf2cf"},
+      "absorbed_bytes": "ffffffffffff",
+      "source_override": "src/rendering/positioning.asm",
+      "insertions": [
+        {"id": "game_origin", "before": ".include \"system/boot_and_frame.asm\""},
+        {"id": "after_frame_system", "after": ".include \"system/boot_and_frame.asm\""},
+        {"id": "after_screen_renderer", "after": ".include \"rendering/screens.asm\""},
+        {"id": "after_terrain_parser", "after": ".include \"game/level/terrain_objects.asm\""},
+        {"id": "after_block_runtime", "after": ".include \"game/objects/blocks.asm\""},
+        {"id": "after_goal_runtime", "after": ".include \"game/enemies/bowser_and_goals.asm\""}
+      ]
+    },
+    {
+      "id": "audio",
+      "start": "0xf2d0",
+      "end": "0xfeff",
+      "absorbed_range": {"start": "0xfefd", "end": "0xfeff"},
+      "absorbed_bytes": "ffffff",
+      "source_override": "src/audio/music_streams.asm",
+      "evidence": {
+        "song": "off_music_header_victory",
+        "decoded_end": "0xfefd",
+        "fixed_tail": "tbl_music_note_periods"
+      },
+      "insertions": [
+        {"id": "audio_origin", "before": ".include \"audio/sound_effects.asm\""},
+        {"id": "after_sound_effects", "after": ".include \"audio/sound_effects.asm\""},
+        {"id": "after_music_engine", "after": ".include \"audio/music_engine.asm\""}
+      ]
+    }
+  ],
+  "fixed_ranges": [
+    {"start": "0xff00", "end": "0xfff9", "meaning": "Synthesis tables"}
+  ],
+  "minimum_shifted_labels": 1800,
+  "runtime_scenarios": "scenarios/runtime_scenarios.json"
+}

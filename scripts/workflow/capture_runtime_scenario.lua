@@ -117,6 +117,16 @@ end)
 output:write("frame,event,detail,mode,task,player_state,player_status,page,x,y,x_speed,y_speed,coins,lives,world,area\n")
 emit("trace_start", scenario)
 
+local forbidden_execute = os.getenv("SMB_RUNTIME_FORBID_EXECUTE")
+if forbidden_execute ~= nil and forbidden_execute ~= "" then
+    for token in string.gmatch(forbidden_execute, "[^,]+") do
+        local probe_address = assert(tonumber(string.gsub(token, "^0x", ""), 16))
+        memory.registerexecute(probe_address, function()
+            emit("forbidden_execute", string.format("%04X", probe_address))
+        end)
+    end
+end
+
 local previous_x = byte(ram.x)
 local previous_page = byte(ram.page)
 local controlled_patch_applied = false

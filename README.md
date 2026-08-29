@@ -40,6 +40,7 @@ This repository contains:
 - **docs/preservation_source_1_0.md** - Stable release scope and evidence boundary
 - **docs/source_reconstruction_2_0.md** - Aggregate 2.0 scope and acceptance gate
 - **docs/source_reconstruction_3_0.md** - Active 3.0 milestones and boundaries
+- **docs/relocation_testing.md** - Generated address-shift and runtime proof
 - **CONTRIBUTING.md** - Safe source, data, evidence, and verification workflow
 
 ## Project Structure
@@ -147,6 +148,16 @@ make source-2-check
 
 # Audit the active Source Reconstruction 3.0 boundary and milestone state
 make source-3-audit
+
+# Build and statically validate the generated canonical relocation candidate
+make test-relocation
+
+# Run debugger and complete runtime evidence against the relocation candidate
+make validate-relocation
+
+# Build and validate the JU, PlayChoice-10, and PAL relocation matrix
+make test-relocation-revisions
+make validate-relocation-revisions
 
 # Build and validate the isolated fixed-layout demonstrator
 make validate-hack

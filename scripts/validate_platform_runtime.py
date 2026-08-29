@@ -13,6 +13,26 @@ from pathlib import Path
 from platform_profiles import load_profile
 
 
+def load_forbidden_addresses(path: Path | None) -> list[str]:
+    if path is None:
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+    return [
+        str(address)
+        for address in document.get("forbidden_execute_addresses", [])
+    ]
+
+
+def load_ignored_addresses(path: Path | None) -> set[str]:
+    if path is None:
+        return set()
+    document = json.loads(path.read_text(encoding="utf-8"))
+    return {
+        str(address).lower()
+        for address in document.get("runtime_ignored_addresses", [])
+    }
+
+
 def validate_fds_bios(
     fceux: Path,
     bios: Path | None,
@@ -49,6 +69,7 @@ def main() -> int:
     parser.add_argument("--image", required=True, type=Path)
     parser.add_argument("--lua", required=True, type=Path)
     parser.add_argument("--result", required=True, type=Path)
+    parser.add_argument("--forbidden-manifest", type=Path)
     parser.add_argument("--capture", action="store_true")
     args = parser.parse_args()
     for path in (args.fceux, args.image, args.lua):
@@ -65,14 +86,23 @@ def main() -> int:
     args.result.parent.mkdir(parents=True, exist_ok=True)
     args.result.unlink(missing_ok=True)
     environment = os.environ.copy()
+    ignored = load_ignored_addresses(args.forbidden_manifest)
+    expected_ram = {
+        address: value
+        for address, value in runtime["expected_ram"].items()
+        if address.lower() not in ignored
+    }
     environment.update(
         SMB_PLATFORM_FRAME=str(int(runtime["frame"])),
         SMB_PLATFORM_EXPECTED=json.dumps(
-            runtime["expected_ram"], separators=(",", ":")
+            expected_ram, separators=(",", ":")
         ),
         SMB_PLATFORM_RESULT=args.result.resolve().as_posix(),
         SMB_PLATFORM_CAPTURE="1" if args.capture else "0",
     )
+    forbidden = load_forbidden_addresses(args.forbidden_manifest)
+    if forbidden:
+        environment["SMB_RUNTIME_FORBID_EXECUTE"] = ",".join(forbidden)
     command = [
         str(args.fceux.resolve()),
         "-lua",

@@ -57,6 +57,11 @@ def main() -> int:
             SMB_RUNTIME_SCENARIO=scenario["id"],
             SMB_RUNTIME_MAX_FRAMES=str(scenario["max_frames"]),
         )
+        forbidden = document.get("forbidden_execute_addresses", [])
+        if forbidden:
+            environment["SMB_RUNTIME_FORBID_EXECUTE"] = ",".join(
+                str(address) for address in forbidden
+            )
         command = [
             str(args.fceux.resolve()),
             "-playmovie", str(args.movie.resolve()),

@@ -71,6 +71,17 @@ def validate_final_state(scenario: dict[str, object], rows: list[dict[str, str]]
             )
 
 
+def validate_forbidden_execution(
+    scenario: dict[str, object],
+    rows: list[dict[str, str]],
+) -> None:
+    executed = [row["detail"] for row in rows if row["event"] == "forbidden_execute"]
+    if executed:
+        raise ValueError(
+            f"Forbidden execution in {scenario['id']}: {', '.join(executed)}"
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scenarios", required=True, type=Path)
@@ -83,6 +94,7 @@ def main() -> int:
         validate_events(scenario, rows)
         validate_patches(scenario, rows)
         validate_final_state(scenario, rows)
+        validate_forbidden_execution(scenario, rows)
         print(f"[OK] {scenario['id']}: {scenario['method']}")
     print(f"[OK] All {len(document['scenarios'])} runtime scenarios passed")
     return 0

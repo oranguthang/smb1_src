@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from validate_runtime_scenarios import (  # noqa: E402
     validate_events,
     validate_final_state,
+    validate_forbidden_execution,
     validate_patches,
 )
 
@@ -33,6 +34,12 @@ class RuntimeScenarioTests(unittest.TestCase):
         rows = [{"event": "controlled_patch", "detail": "0010:00>01:unexpected"}]
         with self.assertRaisesRegex(ValueError, "patch scope differs"):
             validate_patches(scenario, rows)
+
+    def test_forbidden_probe_execution_is_rejected(self) -> None:
+        scenario = {"id": "relocation"}
+        rows = [{"event": "forbidden_execute", "detail": "F2D0"}]
+        with self.assertRaisesRegex(ValueError, "Forbidden execution"):
+            validate_forbidden_execution(scenario, rows)
 
 
 if __name__ == "__main__":

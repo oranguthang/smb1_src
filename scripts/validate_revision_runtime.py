@@ -12,6 +12,13 @@ from pathlib import Path
 from revision_profiles import load_profile
 
 
+def load_forbidden_addresses(path: Path | None) -> list[str]:
+    if path is None:
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+    return [str(address) for address in document.get("forbidden_execute_addresses", [])]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", required=True, type=Path)
@@ -21,6 +28,7 @@ def main() -> int:
     parser.add_argument("--movie", required=True, type=Path)
     parser.add_argument("--lua", required=True, type=Path)
     parser.add_argument("--result", required=True, type=Path)
+    parser.add_argument("--forbidden-manifest", type=Path)
     args = parser.parse_args()
     for path in (args.fceux, args.rom, args.movie, args.lua):
         if not path.is_file():
@@ -36,6 +44,9 @@ def main() -> int:
         SMB_EXPANDED_EXPECTED=json.dumps(runtime["expected_ram"], separators=(",", ":")),
         SMB_EXPANDED_RESULT=args.result.resolve().as_posix(),
     )
+    forbidden = load_forbidden_addresses(args.forbidden_manifest)
+    if forbidden:
+        environment["SMB_RUNTIME_FORBID_EXECUTE"] = ",".join(forbidden)
     command = [
         str(args.fceux.resolve()),
     ]

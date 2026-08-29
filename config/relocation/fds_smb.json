@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "fds_smb_program",
+  "profile_id": 4,
+  "source": "src/main.asm",
+  "linker_config": "config/linker/relocation/fds_prg.cfg",
+  "generated_root": "build/relocation/fds_smb",
+  "cpu_base": "0x6000",
+  "container": {
+    "kind": "platform",
+    "manifest": "config/platform_profiles.json",
+    "profile": "fds_smb",
+    "output_name": "smb.fds"
+  },
+  "vectors": {
+    "start": "0xdffa",
+    "targets": ["vec_nmi_handler", "vec_reset_handler", "0xfff0"]
+  },
+  "music_padding_override": {
+    "original_statement": "con_music_victory_size = $038",
+    "replacement_statement": "con_music_victory_size = $035"
+  },
+  "regions": [
+    {
+      "id": "program",
+      "start": "0x6000",
+      "end": "0xdeff",
+      "absorbed_range": {"start": "0xdefd", "end": "0xdeff"},
+      "absorbed_bytes": "ffffff",
+      "source_override": "src/audio/music_streams.asm",
+      "evidence": {
+        "song": "off_music_header_victory",
+        "decoded_end": "0xdefd",
+        "fixed_tail": "tbl_music_note_periods"
+      },
+      "insertions": [
+        {"id": "program_origin", "before": ".include \"system/boot_and_frame.asm\""},
+        {"id": "after_terrain_parser", "after": ".include \"game/level/terrain_objects.asm\""},
+        {"id": "before_audio", "after": ".include \"rendering/positioning.asm\""}
+      ]
+    }
+  ],
+  "fixed_ranges": [
+    {"start": "0xdf00", "end": "0xdff9", "meaning": "Synthesis tables"}
+  ],
+  "minimum_shifted_labels": 1800
+}

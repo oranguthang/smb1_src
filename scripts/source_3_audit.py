@@ -142,7 +142,7 @@ def validate_source_3(project_root: Path, manifest_path: Path) -> list[str]:
     budgets = relocation.get("relocation_budgets", [])
     expected_budgets = [
         ("game_and_rendering", "source-declared-unused", 6),
-        ("audio", "requires-evidence", 3),
+        ("audio", "decoder-and-runtime-proven", 3),
     ]
     actual_budgets = [
         (item.get("id"), item.get("status"), item.get("insertions"))
@@ -162,6 +162,23 @@ def validate_source_3(project_root: Path, manifest_path: Path) -> list[str]:
             rf"^{re.escape(target_name)}\s*:", makefile, re.MULTILINE
         ) is None:
             errors.append(f"required stable Make target is missing: {target_name}")
+    relocation_manifests = relocation.get("manifests", [])
+    if len(relocation_manifests) != 3 or any(
+        not (project_root / relative).is_file()
+        for relative in relocation_manifests
+    ):
+        errors.append("revision relocation manifest matrix is incomplete")
+    platform_manifests = relocation.get("platform_manifests", [])
+    if len(platform_manifests) != 3 or any(
+        not (project_root / relative).is_file()
+        for relative in platform_manifests
+    ):
+        errors.append("platform relocation manifest matrix is incomplete")
+    for target_name in release["required_development_targets"]:
+        if re.search(
+            rf"^{re.escape(target_name)}\s*:", makefile, re.MULTILINE
+        ) is None:
+            errors.append(f"required development Make target is missing: {target_name}")
     errors.extend(
         validate_roadmap(
             (project_root / "docs" / "roadmap.md").read_text(encoding="utf-8"),
