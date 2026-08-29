@@ -11,9 +11,9 @@
     {"id": "relocation_architecture", "status": "complete"},
     {"id": "canonical_relocation", "status": "complete"},
     {"id": "revision_relocation", "status": "complete"},
-    {"id": "platform_relocation", "status": "in-progress"},
-    {"id": "platform_interfaces", "status": "planned"},
-    {"id": "semantic_runtime_evidence", "status": "planned"},
+    {"id": "platform_relocation", "status": "complete"},
+    {"id": "platform_interfaces", "status": "complete"},
+    {"id": "semantic_runtime_evidence", "status": "in-progress"},
     {"id": "profile_aware_authoring", "status": "planned"},
     {"id": "later_engine_feasibility", "status": "planned"},
     {"id": "source_reconstruction_3_0", "status": "planned"}

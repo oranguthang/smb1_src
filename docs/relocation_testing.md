@@ -102,6 +102,7 @@ make validate-relocation-platforms
 | --- | ---: | ---: | --- | --- |
 | Vs. SMB | 5 | 2,107 | Synthesis tables at `$FF00` | Focused arcade startup state and execute traps |
 | FDS SMB | 3 | 1,999 | Synthesis tables at `$DF00` | Focused disk startup state and execute traps |
+| ANN | 6 | 1,839 | Save byte and audio at `$D2E3` | Focused title state and execute traps across all program payloads |
 
 Vs. SMB consumes only `$FEFB..$FEFF`, after its distinct game-over stream is
 decoded through the exclusive end `$FEFB`. The proof exposed absolute aliases
@@ -116,11 +117,12 @@ at `$DEFD..$DEFF` in its `$6000..$DFFF` load window. Candidate construction
 replaces only the verified `SMMAIN` disk-file records and preserves all other
 bytes of the reference disk side.
 
-ANN is not part of the accepted platform matrix yet. `make
-test-ann-main-relocation` proves that a six-byte origin shift moves 1,839 labels
-inside `NSMMAIN` while the initialized save byte and `$D2E3..$DFF9` audio ABI
-remain fixed. Its runtime gate intentionally remains unaccepted: `NSMDATA2`,
-`NSMDATA3`, and `NSMDATA4` call back into `NSMMAIN` through fixed addresses.
-The next platform-interface milestone must either pin those ABI entry points
-or relocate all four payloads together; copying the original overlays into a
-shifted main image is not a valid proof.
+ANN moves 1,839 labels inside `NSMMAIN` through a six-byte origin shift while
+the initialized save byte and `$D2E3..$DFF9` audio ABI remain fixed. Its
+two-phase build derives 26 imported addresses from candidate debug labels,
+rebuilds `NSMDATA2`, `NSMDATA3`, and `NSMDATA4` at their original load
+addresses, and replaces all four program payloads in the candidate FDS. The
+generated interface also verifies every baseline address before accepting the
+candidate. Main-resident title and portrait aliases follow semantic labels;
+addresses belonging to dynamically loaded payloads remain fixed by design.
+The focused FCEUX title gate passes with execute traps on every inserted byte.

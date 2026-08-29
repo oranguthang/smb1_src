@@ -7,8 +7,7 @@ con_revision_profile = con_revision_profile_ann
 .include "../../memory/hardware.inc"
 .include "../../memory/ram.inc"
 .include "../../platforms/ann/audio/ram.inc"
-
-sub_handle_square_2_sound_effect = $d591
+.include "main_interface.inc"
 
 .p02
 

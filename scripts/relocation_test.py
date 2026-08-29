@@ -175,6 +175,7 @@ def run_build(
         "rom": output_root / manifest["container"].get("output_name", "smb.nes"),
         "scenarios": output_root / "runtime_scenarios.json",
         "summary": output_root / "relocation_summary.json",
+        "payload_interface": output_root / "payload_interface.json",
     }
     command = [
         sys.executable,
@@ -194,6 +195,33 @@ def run_build(
     container = manifest["container"]
     candidate_prg = outputs["prg"].read_bytes()
     reference = original_rom.read_bytes()
+    relocated_payloads: dict[str, bytes] = {}
+    interface_exports: dict[str, int] = {}
+    if manifest.get("payload_interface"):
+        relocated_payloads, interface_exports = build_relocated_payloads(
+            project_root,
+            manifest,
+            output_root,
+            debug_labels(outputs["debug"]),
+        )
+        outputs["payload_interface"].write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "exports": {
+                        name: f"0x{address:04x}"
+                        for name, address in interface_exports.items()
+                    },
+                    "payloads": {
+                        name: {"size": len(data), "sha1": sha1(data)}
+                        for name, data in relocated_payloads.items()
+                    },
+                },
+                indent=2,
+            ) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
     if container["kind"] == "revision":
         profile = load_profile(
             rooted(project_root, container["manifest"]),
@@ -211,24 +239,9 @@ def run_build(
             candidate = header + candidate_prg + chr_data
         else:
             validate_fds_reference(reference, profile)
-            records = parse_fds_side(reference)
-            payload = next(
-                item
-                for item in profile["verified_payloads"]
-                if item["name"] == profile["primary_payload"]
-            )
-            if len(candidate_prg) != int(payload["size"]):
-                fail("relocated FDS primary payload size differs")
-            candidate_data = bytearray(reference)
-            position = 0
-            for descriptor in payload["records"]:
-                record = find_fds_record(records, descriptor)
-                part = candidate_prg[position:position + record.size]
-                candidate_data[
-                    record.data_offset:record.data_offset + record.size
-                ] = part
-                position += record.size
-            candidate = bytes(candidate_data)
+            payloads = {profile["primary_payload"]: candidate_prg}
+            payloads.update(relocated_payloads)
+            candidate = replace_fds_payloads(reference, profile, payloads)
     outputs["rom"].write_bytes(candidate)
     return outputs
 
@@ -236,6 +249,115 @@ def run_build(
 def debug_labels(path: Path) -> dict[str, int]:
     text = path.read_text(encoding="utf-8")
     return {name: int(value, 16) for name, value in SYMBOL_PATTERN.findall(text)}
+
+
+def resolve_payload_interface(
+    contract: dict[str, Any],
+    labels: dict[str, int],
+) -> dict[str, int]:
+    resolved: dict[str, int] = {}
+    for export in contract["exports"]:
+        name = export["name"]
+        label = export["label"]
+        if name in resolved:
+            fail(f"duplicate payload interface export: {name}")
+        if label not in labels:
+            fail(f"candidate debug data lacks payload interface label {label}")
+        address = labels[label] + int(export.get("addend", 0))
+        if not 0 <= address <= 0xFFFF:
+            fail(f"payload interface export {name} is outside the CPU address space")
+        resolved[name] = address
+    return resolved
+
+
+def write_payload_interface(
+    path: Path,
+    contract: dict[str, Any],
+    exports: dict[str, int],
+) -> None:
+    guard = contract["guard"]
+    lines = [
+        "; Generated from relocated NSMMAIN debug labels",
+        "",
+        f".ifndef {guard}",
+        f"{guard} = 1",
+        "",
+    ]
+    lines.extend(f"{name} = ${address:04x}" for name, address in exports.items())
+    lines.extend(["", ".endif", ""])
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+
+
+def build_relocated_payloads(
+    project_root: Path,
+    manifest: dict[str, Any],
+    output_root: Path,
+    labels: dict[str, int],
+) -> tuple[dict[str, bytes], dict[str, int]]:
+    contract = manifest.get("payload_interface")
+    if not contract:
+        return {}, {}
+    generated_root = rooted(project_root, manifest["generated_root"]) / "generated"
+    interface_path = generated_root / "interface" / "main_interface.inc"
+    exports = resolve_payload_interface(contract, labels)
+    write_payload_interface(interface_path, contract, exports)
+    payload_data: dict[str, bytes] = {}
+    for payload in contract["payloads"]:
+        name = payload["name"]
+        wrapper = interface_path.parent / f"{name.lower()}.asm"
+        source = Path(payload["source"])
+        source_include = source.relative_to("src").as_posix()
+        wrapper.write_text(
+            '.include "main_interface.inc"\n'
+            f'.include "{source_include}"\n',
+            encoding="utf-8",
+            newline="\n",
+        )
+        stem = name.lower()
+        output = output_root / f"{stem}.bin"
+        command = [
+            sys.executable,
+            str(project_root / "scripts" / "build_asm_range.py"),
+            "--source", str(wrapper),
+            "--config", str(rooted(project_root, payload["linker_config"])),
+            "--object", str(output_root / f"{stem}.o"),
+            "--output", str(output),
+            "--labels", str(output_root / f"{stem}.lbl"),
+            "--map", str(output_root / f"{stem}.map"),
+        ]
+        subprocess.run(command, cwd=project_root, check=True)
+        payload_data[name] = output.read_bytes()
+    return payload_data, exports
+
+
+def replace_fds_payloads(
+    reference: bytes,
+    profile: dict[str, Any],
+    payload_data: dict[str, bytes],
+) -> bytes:
+    records = parse_fds_side(reference)
+    descriptors = {
+        item["name"]: item for item in profile["verified_payloads"]
+    }
+    candidate = bytearray(reference)
+    for name, data in payload_data.items():
+        if name not in descriptors:
+            fail(f"relocated FDS payload is absent from the platform profile: {name}")
+        payload = descriptors[name]
+        if len(data) != int(payload["size"]):
+            fail(f"relocated FDS payload {name} size differs")
+        position = 0
+        for descriptor in payload["records"]:
+            record = find_fds_record(records, descriptor)
+            part = data[position:position + record.size]
+            if len(part) != record.size:
+                fail(f"relocated FDS payload {name} does not fill its records")
+            candidate[record.data_offset:record.data_offset + record.size] = part
+            position += record.size
+        if position != len(data):
+            fail(f"relocated FDS payload {name} exceeds its records")
+    return bytes(candidate)
 
 
 def music_bank(labels: dict[str, int], prg: bytes, cpu_base: int) -> MusicBank:
@@ -363,6 +485,30 @@ def verify_layout(
     candidate_labels = debug_labels(outputs["debug"])
     label_file = load_labels(base_labels_path)
     music_evidence = verify_music_padding(manifest, label_file, base_prg, cpu_base)
+    payload_interface_evidence = None
+    interface_contract = manifest.get("payload_interface")
+    if interface_contract:
+        baseline_exports = resolve_payload_interface(interface_contract, base_labels)
+        candidate_exports = resolve_payload_interface(
+            interface_contract, candidate_labels
+        )
+        for export in interface_contract["exports"]:
+            name = export["name"]
+            expected = number(export["baseline"])
+            if baseline_exports[name] != expected:
+                fail(
+                    f"payload interface baseline {name} resolves to "
+                    f"${baseline_exports[name]:04X}, expected ${expected:04X}"
+                )
+        payload_interface_evidence = json.loads(
+            outputs["payload_interface"].read_text(encoding="utf-8")
+        )
+        expected_exports = {
+            name: f"0x{address:04x}"
+            for name, address in candidate_exports.items()
+        }
+        if payload_interface_evidence["exports"] != expected_exports:
+            fail("generated payload interface differs from candidate labels")
 
     vectors_contract = manifest["vectors"]
     vector_start = number(vectors_contract["start"])
@@ -457,6 +603,7 @@ def verify_layout(
         "fixed_ranges": manifest["fixed_ranges"],
         "vectors": [f"0x{address:04x}" for address in vectors],
         "music_evidence": music_evidence,
+        "payload_interface": payload_interface_evidence,
     }
     outputs["summary"].write_text(
         json.dumps(summary, indent=2) + "\n",

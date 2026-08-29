@@ -11,8 +11,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from relocation_test import (  # noqa: E402
     insert_probe,
     prepare_generated_source,
+    replace_fds_payloads,
+    resolve_payload_interface,
     verify_absorbed_bytes,
+    write_payload_interface,
 )
+from platform_profiles import FdsFileRecord  # noqa: E402
 
 
 class RelocationTestTests(unittest.TestCase):
@@ -86,6 +90,73 @@ class RelocationTestTests(unittest.TestCase):
         verify_absorbed_bytes(manifest, bytes.fromhex("00ffffff"))
         with self.assertRaisesRegex(ValueError, "absorbed bytes differ"):
             verify_absorbed_bytes(manifest, bytes.fromhex("00ff00ff"))
+
+    def test_payload_interface_resolves_semantic_labels_and_addends(self) -> None:
+        contract = {
+            "guard": "TEST_INTERFACE_INC",
+            "exports": [
+                {"name": "handler_entry", "label": "handler_entry"},
+                {"name": "off_vector_high", "label": "off_vector", "addend": 1},
+            ],
+        }
+        exports = resolve_payload_interface(
+            contract,
+            {"handler_entry": 0x8123, "off_vector": 0x80FE},
+        )
+        self.assertEqual(exports, {"handler_entry": 0x8123, "off_vector_high": 0x80FF})
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "main_interface.inc"
+            write_payload_interface(path, contract, exports)
+            self.assertEqual(
+                path.read_text(encoding="utf-8"),
+                "; Generated from relocated NSMMAIN debug labels\n\n"
+                ".ifndef TEST_INTERFACE_INC\n"
+                "TEST_INTERFACE_INC = 1\n\n"
+                "handler_entry = $8123\n"
+                "off_vector_high = $80ff\n\n"
+                ".endif\n",
+            )
+
+    def test_fds_composition_replaces_each_declared_payload(self) -> None:
+        reference = bytes(range(32))
+        profile = {
+            "verified_payloads": [
+                {
+                    "name": "MAIN",
+                    "size": 4,
+                    "records": [
+                        {"file_id": 1, "load_address": 0x6000, "size": 4, "file_type": 0}
+                    ],
+                },
+                {
+                    "name": "OVERLAY",
+                    "size": 3,
+                    "records": [
+                        {"file_id": 2, "load_address": 0xC000, "size": 3, "file_type": 0}
+                    ],
+                },
+            ],
+        }
+        records = [
+            FdsFileRecord(0, 1, b"MAIN    ", 0x6000, 4, 0, 0, 4),
+            FdsFileRecord(1, 2, b"OVERLAY ", 0xC000, 3, 0, 8, 12),
+        ]
+        import relocation_test
+
+        original_parser = relocation_test.parse_fds_side
+        try:
+            relocation_test.parse_fds_side = lambda _image: records
+            candidate = replace_fds_payloads(
+                reference,
+                profile,
+                {"MAIN": b"main", "OVERLAY": b"new"},
+            )
+        finally:
+            relocation_test.parse_fds_side = original_parser
+        self.assertEqual(candidate[4:8], b"main")
+        self.assertEqual(candidate[12:15], b"new")
+        self.assertEqual(candidate[:4], reference[:4])
+        self.assertEqual(candidate[8:12], reference[8:12])
 
 
 if __name__ == "__main__":

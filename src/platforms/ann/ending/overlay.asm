@@ -2,8 +2,15 @@
 
 handler_ann_ending_background:
     LDA ram_screen_routine_task
-    JSR $6d0f
-    .byte $7d, $65, $2e, $66, $36, $66, $e6, $c5, $a6, $65, $c6, $65, $f2, $c5, $fb, $c5
+    JSR sub_dispatch_inline_handler
+    .word handler_initialize_screen_step
+    .word handler_write_top_status_line
+    .word handler_write_bottom_status_line
+    .word handler_ann_show_throne_room
+    .word handler_select_area_palette
+    .word handler_prepare_background_and_player_colors
+    .word handler_ann_load_ending_palette
+    .word handler_ann_show_princess
 
 handler_ann_show_throne_room:
     LDA #$1b
@@ -22,11 +29,11 @@ handler_ann_load_ending_palette:
 
 handler_ann_show_princess:
     LDA #$a2
-    JSR $6e0b
+    JSR sub_print_status_bar_numbers
     LDA #$cc
-    STA $6121
+    STA off_ann_nmi_sound_handler_high
     LDA #$b1
-    STA $6120
+    STA off_ann_nmi_sound_handler_low
     LDA #$01
     STA ram_area_music_queue
     LDA #$00
@@ -91,7 +98,7 @@ handler_ann_convert_extra_lives:
     DEC ram_onscreen_player_info
     LDA #$01
     STA $0135
-    JSR $9f74
+    JSR sub_ann_award_end_area_points
     LDA ram_ann_fds_music_current
     BNE $c68f
     LDA #$01
@@ -176,8 +183,12 @@ handler_ann_render_ending_guests:
 
 handler_ann_save_ending:
     LDA ram_fds_disk_loader_task
-    JSR $6d0f
-    .byte $29, $c1, $4f, $c7, $3c, $c1, $4e, $c1, $56, $c1
+    JSR sub_dispatch_inline_handler
+    .word handler_show_ann_disk_prompt
+    .word handler_ann_write_save
+    .word handler_wait_for_ann_disk_eject
+    .word handler_wait_for_ann_disk_insert
+    .word handler_reset_ann_disk_loader
 
 tbl_ann_save_file_header:
     .byte $0f, $53, $4d, $32, $53, $41, $56, $45, $20, $e3, $d2, $01, $00, $00, $e3, $d2
@@ -186,22 +197,23 @@ tbl_ann_save_file_header:
 handler_ann_write_save:
     LDA #$07
     JSR $e239
-    .byte $e8, $c0, $3e, $c7
+    .word tbl_ann_disk_header_id
+    .word tbl_ann_save_file_header
     BEQ loc_ann_finish_save
     INC ram_fds_disk_loader_task
-    JMP $c198
+    JMP handler_print_ann_disk_error
 
 loc_ann_finish_save:
     LDA #$d2
-    STA $6121
+    STA off_ann_nmi_sound_handler_high
     LDA #$e5
-    STA $6120
+    STA off_ann_nmi_sound_handler_low
     LDA #$00
     STA ram_fds_disk_loader_task
     STA ram_oper_mode_task
     LDA #$00
     STA ram_oper_mode
-    JMP $bfbf
+    JMP handler_run_ann_disk_loader
 
 tbl_ann_guest_sprite_offsets:
     .byte $50, $b0, $e0, $68, $98, $c8
@@ -226,7 +238,7 @@ sub_ann_render_ending_guest_sprites:
     BEQ $c7ad
     DEC ram_off_scr_hidden1_up_flag
     RTS
-    JSR $628d
+    JSR sub_move_sprites_offscreen
     LDX ram_off_scr_halfway_page
     CPX #$07
     BEQ $c7c8

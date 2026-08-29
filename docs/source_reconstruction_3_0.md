@@ -87,9 +87,11 @@ canonical candidate under `build/relocation/`. `make validate-relocation` also
 generates candidate debugger symbols and runs all deterministic scenarios with
 execution traps on every inserted byte.
 
-The cartridge revision matrix is complete. The accepted platform matrix now
-covers Vs. SMB and FDS SMB with profile-specific decoded padding, container
-composition, debug artifacts, focused runtime states, and execute traps. ANN
-`NSMMAIN` has a static relocation candidate, but its three dynamically loaded
-payloads expose a fixed cross-payload ABI and keep the platform milestone in
-progress. See `docs/relocation_testing.md` for the exact boundary and commands.
+The cartridge revision and platform relocation matrices are complete. Vs. SMB,
+FDS SMB, and ANN use profile-specific capacity contracts, container composition,
+debug artifacts, focused runtime states, and execute traps. ANN additionally
+builds relocated `NSMMAIN` first, generates its imported-symbol interface from
+candidate debug labels, rebuilds `NSMDATA2`, `NSMDATA3`, and `NSMDATA4`, and
+composes all four payloads into one candidate disk side. The overlay load
+addresses remain fixed; their calls and pointers back into `NSMMAIN` follow the
+candidate. See `docs/relocation_testing.md` for the exact boundary and commands.

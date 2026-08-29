@@ -1,8 +1,10 @@
 .ifndef ANN_CONSTANTS_INC
 ANN_CONSTANTS_INC = 1
 
+; Title packet resident in NSMMAIN before an interchangeable payload is loaded
+off_ann_title_map_packet = off_ann_title_map
+
 ; Packets supplied by the interchangeable ANN disk payloads
-off_ann_title_map_packet = $c5e6
 off_ann_ending_attribute_packet = $c88d
 off_ann_ending_palette_packet = $c896
 off_ann_mario_thanks_packet = $c8aa
@@ -62,7 +64,7 @@ off_ann_supplemental_area_water_2_vs = $d06d
 off_ann_supplemental_area_water_4_smb2 = $d136
 
 ; Entry point reconstructed with the later-engine game-over module
-sub_advance_ann_game_after_course = $7109
+sub_advance_ann_game_after_course = sub_terminate_game
 con_ann_course_number_cutoff = 8
 con_ann_final_course_number = 7
 con_ann_victory_disk_data_task = 5
@@ -108,8 +110,6 @@ handler_ann_victory_lives_draw = $c6f7
 handler_ann_victory_toad = $c713
 handler_ann_victory_disk_save = $c72e
 handler_ann_set_ending_player_name = $c86f
-handler_ann_title_cursor = $c531
-handler_ann_title_score = $c548
 handler_ann_draw_flipped_vertical_pipe_a = $c470
 handler_ann_draw_flipped_vertical_pipe_b = $c475
 handler_ann_piranha_plant_b = $c4c0
@@ -117,25 +117,30 @@ sub_ann_hard_mode_spring = $c4fe
 sub_ann_hard_mode_render_spring = $c50c
 sub_ann_initialize_life_down_extension = $c3b7
 
-off_ann_player_palette = $65be
-off_ann_title_player_name = $66ed
-off_ann_thanks_player_name = $6cdc
-off_ann_player_physics_parameters = $7fe4
-off_ann_player_friction_shift_opcode = $8145
+; Title handlers resident in NSMMAIN before an interchangeable payload is loaded
+handler_ann_title_cursor = handler_ann_title_cursor_background
+handler_ann_title_score = handler_ann_title_score_background
 
-off_ann_toad_graphics_1 = $d13e
-off_ann_toad_graphics_2 = $d19e
-off_ann_toad_graphics_3 = $d1fe
-off_ann_toad_graphics_4 = $d25e
-off_ann_toad_graphics_5 = $d14f
-off_ann_toad_graphics_6 = $d1af
-off_ann_toad_graphics_7 = $d20f
+off_ann_player_palette = tbl_player_palette_colors
+off_ann_title_player_name = off_ann_game_text_packets + 3
+off_ann_thanks_player_name = off_mario_thanks_message + 13
+off_ann_player_physics_parameters = tbl_jump_gravity
+off_ann_player_friction_shift_opcode = bra_return_from_player_physics - 6
+
+; Guest portrait slices resident in NSMMAIN
+off_ann_toad_graphics_1 = off_ann_guest_portrait_chr_1
+off_ann_toad_graphics_2 = off_ann_guest_portrait_chr_2
+off_ann_toad_graphics_3 = off_ann_guest_portrait_chr_3
+off_ann_toad_graphics_4 = off_ann_guest_portrait_chr_4
+off_ann_toad_graphics_5 = off_ann_guest_portrait_chr_1 + $11
+off_ann_toad_graphics_6 = off_ann_guest_portrait_chr_2 + $11
+off_ann_toad_graphics_7 = off_ann_guest_portrait_chr_3 + $11
 
 con_ann_toad_chr_address = $0cd0
 con_ann_guest_chr_address = $07a0
 con_ann_guest_letter_chr_address = $0ee0
 con_ann_toad_palette_vram_index = 29
-sub_ann_tally_timer_score = $9f5b
+sub_ann_tally_timer_score = handler_award_game_timer_points + $0b
 sub_ann_bounce_player_from_enemy = loc_bounce_player_from_enemy
 sub_draw_ann_warp_text = handler_draw_ann_warp_text
 sub_load_area_pointer = sub_ann_load_course

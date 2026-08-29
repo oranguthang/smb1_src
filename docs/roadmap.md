@@ -620,6 +620,11 @@ and ANN layouts. A profile without independently proven capacity is reported as
 unsupported; matching addresses or bytes are never treated as sufficient
 cross-profile evidence.
 
+The platform relocation matrix now accepts all three official platform
+profiles. ANN uses a generated `NSMMAIN` import interface to rebuild its three
+dynamically loaded payloads before composing and exercising the relocated disk
+image; the original payload load addresses remain visible and fixed.
+
 Later milestones consolidate only genuinely shared platform interfaces,
 resolve high-value semantic unknowns with deeper runtime evidence, and extend
 the four Studios with manifest-selected profile content. Japanese SMB2 / The

@@ -725,6 +725,7 @@ test-relocation-revisions:
 test-platform-relocations:
 	$(MAKE) test-relocation RELOCATION_PROFILE=vs_smb
 	$(MAKE) test-relocation RELOCATION_PROFILE=fds_smb
+	$(MAKE) test-relocation RELOCATION_PROFILE=ann_fds
 
 test-ann-main-relocation:
 	$(MAKE) test-relocation RELOCATION_PROFILE=ann_fds
@@ -812,6 +813,7 @@ validate-relocation-revisions:
 validate-relocation-platforms:
 	$(MAKE) validate-platform-relocation RELOCATION_PROFILE=vs_smb
 	$(MAKE) validate-platform-relocation RELOCATION_PROFILE=fds_smb
+	$(MAKE) validate-platform-relocation RELOCATION_PROFILE=ann_fds
 
 split:
 	$(PYTHON) "$(PROJECT_DIR)scripts/split_assets.py" \

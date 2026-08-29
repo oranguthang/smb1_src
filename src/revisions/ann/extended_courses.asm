@@ -5,14 +5,7 @@
 con_revision_profile = con_revision_profile_ann
 
 .include "../../memory/ram.inc"
-
-sub_ann_get_course_type = $c28c
-tbl_halfway_page_nibbles = $7088
-sub_get_pipe_height = $77c9
-sub_initialize_ann_pipe_piranha_plant = $77da
-sub_find_empty_enemy_slot = $77f9
-sub_render_under_part = $7a2e
-tbl_vertical_pipe_metatiles = $7786
+.include "main_interface.inc"
 
 .p02
 
