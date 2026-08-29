@@ -259,7 +259,7 @@ ram_alt_spr_data_offset     = $06ec
 ram_bubble_spr_data_offset  = $06ee
 ram_f_ball_spr_data_offset   = $06f1
 ram_misc_spr_data_offset    = $06f3
-ram_spr_data_offset_ctrl    = $03ee
+ram_block_object_slot       = $03ee
 
 ram_player_state          = $1d
 ram_enemy_state           = $1e

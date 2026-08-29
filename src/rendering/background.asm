@@ -284,7 +284,7 @@ sub_advance_primary_vram_buffer_offset:
     JMP loc_store_primary_vram_buffer_offset  ; branch to store as new vram buffer offset
 
 sub_put_block_metatile:
-    STX $00  ; store control bit from ram_spr_data_offset_ctrl
+    STX $00  ; preserve the selected block object slot
     STY $01  ; store vram buffer offset for next byte
     ASL
     ASL  ; multiply A by four and use as X

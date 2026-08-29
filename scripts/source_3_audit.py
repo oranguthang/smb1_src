@@ -94,6 +94,28 @@ def validate_roadmap(text: str, status: str) -> list[str]:
     return errors
 
 
+def validate_scenario_ids(
+    document: dict[str, Any], expected: list[str]
+) -> list[str]:
+    actual = [scenario.get("id") for scenario in document.get("scenarios", [])]
+    if actual != expected:
+        return ["Source 3.0 semantic runtime scenario list differs"]
+    return []
+
+
+def validate_resolved_unknowns(text: str, expected: list[str]) -> list[str]:
+    errors: list[str] = []
+    for identifier in expected:
+        match = re.search(
+            rf"^### {re.escape(identifier)}\b.*?(?=^### |\Z)",
+            text,
+            re.MULTILINE | re.DOTALL,
+        )
+        if match is None or "- **Status:** Resolved" not in match.group(0):
+            errors.append(f"semantic evidence unknown is not resolved: {identifier}")
+    return errors
+
+
 def validate_source_3(project_root: Path, manifest_path: Path) -> list[str]:
     release = load_json(manifest_path)
     errors: list[str] = []
@@ -152,6 +174,39 @@ def validate_source_3(project_root: Path, manifest_path: Path) -> list[str]:
         errors.append("canonical relocation budgets differ or lack evidence")
     if relocation.get("maximum_insertions") != 9:
         errors.append("canonical relocation insertion budget differs")
+
+    semantic = release.get("semantic_evidence", {})
+    enemy_manifest = project_root / semantic.get("enemy_stream_manifest", "")
+    unreachable_manifest = project_root / semantic.get(
+        "unreachable_code_manifest", ""
+    )
+    runtime_manifest = project_root / semantic.get("runtime_manifest", "")
+    if not enemy_manifest.is_file():
+        errors.append("Source 3.0 enemy-stream evidence manifest is missing")
+    if not unreachable_manifest.is_file():
+        errors.append("Source 3.0 unreachable-code evidence manifest is missing")
+    if not runtime_manifest.is_file():
+        errors.append("Source 3.0 semantic runtime manifest is missing")
+    else:
+        errors.extend(
+            validate_scenario_ids(
+                load_json(runtime_manifest),
+                semantic.get("runtime_scenarios", []),
+            )
+        )
+    preservation = load_json(
+        project_root / "config" / "preservation_source_1_0.json"
+    )
+    stable_runtime = load_json(project_root / "scenarios" / "runtime_scenarios.json")
+    stable_scenario_count = preservation["evidence"]["runtime_scenarios"]
+    if len(stable_runtime.get("scenarios", [])) != stable_scenario_count:
+        errors.append("Preservation Source 1.0 runtime scenario count changed")
+    errors.extend(
+        validate_resolved_unknowns(
+            (project_root / "docs" / "unknowns.md").read_text(encoding="utf-8"),
+            semantic.get("resolved_unknowns", []),
+        )
+    )
 
     for relative in release["required_documents"]:
         if not (project_root / relative).is_file():

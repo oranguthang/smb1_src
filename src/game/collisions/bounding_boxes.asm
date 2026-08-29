@@ -271,7 +271,7 @@ sub_check_enemy_block_buffer:
     PLA  ; pull A from stack and jump elsewhere
     JMP loc_run_block_buffer_collision
 
-; !(UNKNOWN) CODE-003 - intended caller and background-collision role
+; !(UNUSED) CODE-003 - no source/raw-address reference and no fallthrough path
 unused_misc_object_background_collision_setup:
     TXA
     CLC  ; supposedly used once to set offset for

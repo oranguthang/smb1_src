@@ -632,6 +632,36 @@ Lost Levels receives a feasibility study, not a promised shared-source profile.
 If its later engine would make the SMB1 source incoherent, it remains a separate
 reconstruction.
 
+Semantic evidence begins with a manifest-owned enemy-stream audit. It covers
+all 235 streams and 3,530 records across supported cartridge, Vs., FDS, and ANN
+layouts, resolving the residual `$2E` range check without inferring behavior
+from the canonical ROM alone.
+
+The first focused 3.0 runtime experiment resolves the embedded TIME UP clear
+packet. A controlled timer expiration reaches the ordinary death and
+intermediate-screen paths, observes the packet read, and records seven blank
+tile writes to the exact TIME UP nametable range. These later scenarios use a
+separate manifest so the twelve-scenario Preservation Source 1.0 evidence
+contract remains unchanged.
+
+Residual-code evidence now has a manifest-owned reachability audit. It combines
+ca65 reference metadata, a complete PRG address scan, predecessor control-flow
+bytes, and a full-game execute trap. The first result resolves the orphaned
+miscellaneous-object background-collision entry while retaining its bytes and
+explicitly unknown historical intent.
+
+The sprite-data control at `$03EE` is now documented as the alternating
+block-object slot selector. Static access analysis and exact runtime event
+details connect its zero/one value to the two block records, their shuffled OAM
+regions, vine origins, and alternate floating-score rendering.
+
+The audio evidence isolates timer tick and coin requests from an identical
+square-2 state. Exact APU writes and counters prove that only the longer coin
+effect reaches its second-tone branch. The same aggregate trace proves that the
+area-header `$08` square-2 offset store is overwritten with zero before any
+playback read. Together these experiments resolve the final registered semantic
+unknowns without changing the frozen 1.0 runtime manifest.
+
 The detailed sequence, fixed-layout constraints, and release boundaries are in
 `docs/source_reconstruction_3_0.md`. The final 3.0 milestone remains planned
 until every accepted addition has aggregate static, build, round-trip, and

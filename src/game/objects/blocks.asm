@@ -11,14 +11,14 @@ tbl_block_y_position_adders:
 sub_player_head_collision:
     PHA  ; store metatile number to stack
     LDA #$11  ; load unbreakable block object state by default
-    LDX ram_spr_data_offset_ctrl  ; load offset control bit here
+    LDX ram_block_object_slot  ; select one of the two block object slots
     LDY ram_player_size  ; check player's size
     BNE bra_store_bumped_block_state  ; if small, branch
     LDA #$12  ; otherwise load breakable block object state
 bra_store_bumped_block_state:
     STA ram_block_state,x  ; store into block object buffer
     JSR sub_destroy_block_metatile  ; store blank metatile in vram buffer to write to name table
-    LDX ram_spr_data_offset_ctrl  ; load offset control bit
+    LDX ram_block_object_slot  ; restore the selected block object slot
     LDA $02  ; get vertical high nybble offset used in block buffer routine
     STA ram_block_orig_y_pos,x  ; set as vertical coordinate for block object
     TAY
@@ -91,9 +91,9 @@ bra_set_bumped_block_y_position:
 bra_bump_unbreakable_block:
     JSR sub_bump_block  ; execute code for unbreakable brick or question block
 loc_toggle_block_object_slot:
-    LDA ram_spr_data_offset_ctrl  ; invert control bit used by block objects
-    EOR #$01  ; and floatey numbers
-    STA ram_spr_data_offset_ctrl
+    LDA ram_block_object_slot  ; alternate block object and shared OAM slots
+    EOR #$01
+    STA ram_block_object_slot
     RTS  ; leave!
 
 ; --------------------------------
@@ -177,7 +177,7 @@ loc_store_block_power_up_type:
 
 handler_release_vine_from_block:
     LDX #$05  ; load last slot for enemy object buffer
-    LDY ram_spr_data_offset_ctrl  ; get control bit
+    LDY ram_block_object_slot  ; copy position from the selected block object
     JSR sub_setup_vine  ; set up vine object
 
 bra_exit_block_content_check:
@@ -228,13 +228,13 @@ sub_brick_shatter:
     LDA #$05
     STA ram_digit_modifier+5  ; set digit modifier to give player 50 points
     JSR sub_add_to_score  ; do sub to update the score
-    LDX ram_spr_data_offset_ctrl  ; load control bit and leave
+    LDX ram_block_object_slot  ; restore the selected block object slot and leave
     RTS
 
 ; --------------------------------
 
 sub_check_top_of_block:
-    LDX ram_spr_data_offset_ctrl  ; load control bit
+    LDX ram_block_object_slot  ; restore the selected block object slot
     LDY $02  ; get vertical high nybble offset used in block buffer
     BEQ bra_exit_top_of_block_check  ; branch to leave if set to zero, because we're at the top
     TYA  ; otherwise set to A
@@ -248,7 +248,7 @@ sub_check_top_of_block:
     LDA #$00
     STA ($06),y  ; otherwise put blank metatile where coin was
     JSR sub_remove_coin_axe  ; write blank metatile to vram buffer
-    LDX ram_spr_data_offset_ctrl  ; get control bit
+    LDX ram_block_object_slot  ; restore the selected block object slot
     JSR sub_setup_jump_coin  ; create jumping coin object and update coin variables
 bra_exit_top_of_block_check:
     RTS  ; leave!

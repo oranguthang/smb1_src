@@ -60,6 +60,14 @@ object-slot index at the access site.
 | `ram_jumpspring_anim_ctrl` | `$070E` | handler_draw_jumpspring animation state that gates ordinary integration |
 | `ram_climb_side_timer` | `$0789` | Delay before changing sides of a vine |
 
+## Object and OAM Allocation
+
+| Symbol | Address | Role |
+| --- | ---: | --- |
+| `ram_block_object_slot` | `$03EE` | Alternating zero/one selector for block state, position, and shared OAM arrays |
+| `ram_block_spr_data_offset` | `$06EC` | Two shuffled OAM offsets assigned to the block object slots |
+| `ram_alt_spr_data_offset` | `$06EC` | Semantic alias for fireball explosions and floating scores reusing those OAM regions |
+
 These roles are `!(OBS)` observations from direct reads, writes, and arithmetic
 in the movement and collision modules. Broader RAM documentation will extend
 this registry during milestone 5.

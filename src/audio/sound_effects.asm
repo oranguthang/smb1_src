@@ -386,7 +386,7 @@ bra_store_coin_or_timer_sound_registers:
 
 loc_continue_coin_or_timer_sound:
     LDA ram_squ2_sfx_len_counter  ; check for time to play second tone yet
-    CMP #$30  ; !(WHY?) SND-001 - timer tick shares this path
+    CMP #$30  ; !(OBS) SND-001 - only the longer coin sound reaches this count
     BNE bra_decrement_coin_or_timer_sound
 .if con_revision_profile = con_revision_profile_pal
     LDA #$4e

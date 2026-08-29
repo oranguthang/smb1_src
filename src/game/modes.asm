@@ -626,8 +626,8 @@ bra_check_tall_enemy_collision_shape:
     CMP #$02  ; if enemy state defeated or otherwise
     BCS bra_update_floating_score_position  ; $02 or greater, branch beyond this part
 bra_use_alternate_score_oam_offset:
-    LDX ram_spr_data_offset_ctrl  ; !(UNKNOWN) RAM-001 - exact allocation role
-    LDY ram_alt_spr_data_offset,x  ; get alternate OAM data offset
+    LDX ram_block_object_slot  ; !(OBS) RAM-001 - select one of two shared block OAM regions
+    LDY ram_alt_spr_data_offset,x  ; use it for a score that cannot reuse enemy OAM
     LDX ram_object_offset  ; get enemy object offset again
 bra_update_floating_score_position:
     LDA ram_floatey_num_y_pos,x  ; get vertical coordinate for

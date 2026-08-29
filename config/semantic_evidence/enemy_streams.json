@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "forbidden_object_ids": ["0x2e"],
+  "expected_totals": {"streams": 235, "records": 3530},
+  "artifacts": [
+    {
+      "id": "ju",
+      "kind": "labeled_streams",
+      "binary": "build/revisions/ju/smb.prg",
+      "labels": "build/revisions/ju/smb.lbl",
+      "load_address": "0x8000",
+      "label_pattern": "^off_(?:castle|ground|underground|water)_area_[0-9]+_enemies$",
+      "expected_streams": 34,
+      "expected_records": 502
+    },
+    {
+      "id": "pc10",
+      "kind": "labeled_streams",
+      "binary": "build/revisions/pc10/smb.prg",
+      "labels": "build/revisions/pc10/smb.lbl",
+      "load_address": "0x8000",
+      "label_pattern": "^off_(?:castle|ground|underground|water)_area_[0-9]+_enemies$",
+      "expected_streams": 34,
+      "expected_records": 502
+    },
+    {
+      "id": "pal",
+      "kind": "labeled_streams",
+      "binary": "build/revisions/pal/smb.prg",
+      "labels": "build/revisions/pal/smb.lbl",
+      "load_address": "0x8000",
+      "label_pattern": "^off_(?:castle|ground|underground|water)_area_[0-9]+_enemies$",
+      "expected_streams": 34,
+      "expected_records": 502
+    },
+    {
+      "id": "fds_smb",
+      "kind": "labeled_streams",
+      "binary": "build/platforms/fds_smb/smb.prg",
+      "labels": "build/platforms/fds_smb/smb.lbl",
+      "load_address": "0x6000",
+      "label_pattern": "^off_(?:castle|ground|underground|water)_area_[0-9]+_enemies$",
+      "expected_streams": 34,
+      "expected_records": 502
+    },
+    {
+      "id": "vs_smb",
+      "kind": "pointer_table",
+      "binary": "assets/generated/platforms/vs_smb/chr.bin",
+      "data_offset": "0x2000",
+      "pointer_binary": "build/platforms/vs_smb/smb.prg",
+      "labels": "build/platforms/vs_smb/smb.lbl",
+      "pointer_load_address": "0x8000",
+      "pointer_label": "tbl_enemy_data_ptr",
+      "pointer_count": 39,
+      "expected_streams": 39,
+      "expected_records": 639
+    },
+    {
+      "id": "ann_primary",
+      "kind": "labeled_streams",
+      "binary": "build/platforms/ann_fds/smb.prg",
+      "labels": "build/platforms/ann_fds/smb.lbl",
+      "load_address": "0x6000",
+      "label_pattern": "^off_ann_enemy_(?:castle|overworld|underground|water)_[0-9]+$",
+      "expected_streams": 20,
+      "expected_records": 263
+    },
+    {
+      "id": "ann_supplemental",
+      "kind": "labeled_streams",
+      "binary": "build/platforms/ann_supplemental_courses/payload.bin",
+      "labels": "build/platforms/ann_supplemental_courses/payload.lbl",
+      "load_address": "0xc470",
+      "label_pattern": "^off_ann_supplemental_enemy_",
+      "expected_streams": 21,
+      "expected_records": 316
+    },
+    {
+      "id": "ann_extended",
+      "kind": "labeled_streams",
+      "binary": "build/platforms/ann_extended_courses/payload.bin",
+      "labels": "build/platforms/ann_extended_courses/payload.lbl",
+      "load_address": "0xc296",
+      "label_pattern": "^off_ann_extended_enemy_",
+      "expected_streams": 19,
+      "expected_records": 304
+    }
+  ]
+}

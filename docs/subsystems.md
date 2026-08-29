@@ -54,8 +54,9 @@ is appended to a VRAM update buffer. The HUD uses decimal digit arrays in RAM;
 score operations update those arrays first and emit display packets separately.
 
 Palette rotation, block replacement, bridge removal, messages, and status output
-all use the same buffered PPU ownership. `DATA-001` records the unresolved
-identity of one short screen packet.
+all use the same buffered PPU ownership. The world/lives packet ends by clearing
+the seven-tile TIME UP message at `$220C`; `DATA-001` records the static packet
+decode and controlled runtime observation.
 
 ## Area and Enemy Streams
 
@@ -69,8 +70,9 @@ Enemy streams are also page-relative. `sub_enemies_and_loops_core` compares the
 next encoded position with the current screen window, handles page changes and
 loop commands, finds a free enemy slot, and dispatches initialization by enemy
 ID. The source keeps area streams and enemy streams as explicit byte data so
-their encoded order remains reviewable. `CODE-002` tracks one residual range
-check whose original purpose is not established.
+their encoded order remains reviewable. The complete cross-profile stream audit
+proves the residual `CODE-002` power-up comparison unreachable for all accepted
+content while preserving its original bytes.
 
 ## Gameplay Objects and Transactions
 
@@ -113,8 +115,9 @@ Collision work is layered:
 
 Bounding boxes are derived from size-control tables, then clipped or adjusted by
 offscreen state. Collision routines update gameplay state; renderer modules only
-consume the resulting state. `CODE-003` tracks a residual miscellaneous-object
-entry whose original caller is not yet proven.
+consume the resulting state. `CODE-003` proves the preserved miscellaneous-object
+background-collision entry has no symbolic, raw-address, or fallthrough path in
+the canonical program.
 
 ## Sprite Composition and OAM
 
@@ -129,7 +132,9 @@ always hiding the same actor. Sprite zero is reserved for the status/playfield
 split. NMI performs DMA before the next frame's mode logic, so gameplay prepares
 the OAM image consumed on the following interrupt.
 
-`RAM-001` tracks the exact title/demo role of one sprite-offset control field.
+`RAM-001` identifies `ram_block_object_slot` as the alternating selector for two
+block-object records and their shared shuffled OAM regions. Fireball explosions
+and floating scores deliberately reuse those regions through a semantic alias.
 
 ## Sound Effects and Music
 
@@ -143,8 +148,14 @@ control events, then write APU shadow/output registers. Event music can replace
 area music and later restore or restart it according to buffer state. Pause has
 its own short tone sequence and suppresses normal progression where required.
 
-`SND-001` records an unexplained shared timer-tick path. `SND-002` records a
-possibly residual square-2 offset store that requires runtime observation.
+Timer tick and coin intentionally share the square-2 setup and continuation
+path. Their counters select different lifetimes: the six-frame timer tick exits
+before the `$30` comparison can match, while the longer coin effect reaches
+`$30`, changes pitch, and releases the channel after 53 frames.
+
+The area-music header search briefly stores `$08` in the square-2 stream offset,
+then overwrites it with zero before the first playback read. The preserved store
+is residual behavior rather than a delayed channel offset.
 
 ## Fixed Data and Vectors
 

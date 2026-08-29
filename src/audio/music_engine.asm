@@ -108,7 +108,7 @@ loc_restart_area_music:
 
 bra_find_area_music_header:
     LDY #$08  ; load Y for offset of area music
-    STY ram_music_offset_square2  ; !(WHY?) SND-002 - possibly observable residual store
+    STY ram_music_offset_square2  ; !(UNUSED) SND-002 - overwritten before the first offset read
 
 bra_find_event_music_header:
     INY  ; increment Y pointer based on previously loaded queue contents

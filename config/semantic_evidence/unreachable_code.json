@@ -1,0 +1,18 @@
+{
+  "format": 1,
+  "profile": "ju",
+  "entries": [
+    {
+      "id": "CODE-003",
+      "label": "unused_misc_object_background_collision_setup",
+      "expected_address": "$E392",
+      "expected_symbol_references": 0,
+      "expected_address_occurrences": 0,
+      "predecessor_terminator": {
+        "address": "$E38F",
+        "bytes": "4ca5e3",
+        "instruction": "JMP $E3A5"
+      }
+    }
+  ]
+}

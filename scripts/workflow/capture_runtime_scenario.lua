@@ -39,6 +39,15 @@ local ram = {
     power_type = symbol("ram_power_up_type"),
     timer_control = symbol("ram_timer_control"),
     event_music = symbol("ram_event_music_buffer"),
+    game_timer_ctrl = symbol("ram_game_timer_ctrl_timer"),
+    game_timer = symbol("ram_game_timer_display"),
+    game_timer_expired = symbol("ram_game_timer_expired_flag"),
+    block_slot = symbol("ram_block_object_slot"),
+    block_oam = symbol("ram_alt_spr_data_offset"),
+    square2_queue = symbol("ram_square2_sound_queue"),
+    square2_buffer = symbol("ram_square2_sound_buffer"),
+    square2_length = symbol("ram_squ2_sfx_len_counter"),
+    music_offset_square2 = symbol("ram_music_offset_square2"),
 }
 
 local function byte(address)
@@ -46,6 +55,9 @@ local function byte(address)
 end
 
 local seen = {}
+local controlled_patch_applied = false
+local time_up_transition_seen = false
+local sfx_probe_active = false
 local function emit(event, detail)
     output:write(string.format(
         "%d,%s,%s,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X,%02X\n",
@@ -82,6 +94,8 @@ local hooks = {
     {"handler_side_exit_pipe_entry", "pipe_exit"},
     {"handler_player_death", "death"},
     {"handler_player_lose_life", "life_lost"},
+    {"sub_get_misc_bound_box", "misc_bound_box"},
+    {"sub_process_hammer_object", "hammer_object"},
 }
 
 for _, hook in ipairs(hooks) do
@@ -91,6 +105,81 @@ for _, hook in ipairs(hooks) do
         emit_once(event, routine)
     end)
 end
+
+memory.registerexecute(symbol("handler_display_time_up_screen"), function()
+    if byte(ram.game_timer_expired) ~= 0 then
+        time_up_transition_seen = true
+        emit_once("time_up_screen", "handler_display_time_up_screen")
+    end
+end)
+
+memory.registerexecute(symbol("sub_player_head_collision"), function()
+    local slot = byte(ram.block_slot)
+    emit_once("block_slot_select", string.format("slot=%d:oam=%02X", slot, byte(ram.block_oam + slot)))
+end)
+
+memory.registerexecute(symbol("loc_toggle_block_object_slot"), function()
+    local slot = byte(ram.block_slot)
+    emit_once("block_slot_toggle", string.format("%d>%d", slot, slot == 0 and 1 or 0))
+end)
+
+memory.registerexecute(symbol("bra_use_alternate_score_oam_offset"), function()
+    local slot = byte(ram.block_slot)
+    emit_once("alternate_oam_select", string.format("slot=%d:oam=%02X", slot, byte(ram.block_oam + slot)))
+end)
+
+memory.registerexecute(symbol("loc_continue_coin_or_timer_sound"), function()
+    if sfx_probe_active then
+        local counter = byte(ram.square2_length)
+        emit_once("coin_or_timer_continue", string.format("counter=%02X", counter))
+        if counter == 0x30 then
+            emit_once("coin_second_tone", "counter=30")
+        end
+    end
+end)
+
+memory.registerexecute(symbol("loc_clear_square_2_sound_buffer"), function()
+    if sfx_probe_active then
+        emit_once("square2_sfx_end", "counter=00")
+    end
+end)
+
+local square2_start_writes = {}
+memory.registerwrite(0x4004, 4, function(address, size, value)
+    if sfx_probe_active and not seen["square2_start_registers"] then
+        square2_start_writes[address] = value
+        if square2_start_writes[0x4004] ~= nil
+            and square2_start_writes[0x4005] ~= nil
+            and square2_start_writes[0x4006] ~= nil
+            and square2_start_writes[0x4007] ~= nil then
+            emit_once("square2_start_registers", string.format(
+                "4004=%02X;4005=%02X;4006=%02X;4007=%02X",
+                square2_start_writes[0x4004], square2_start_writes[0x4005],
+                square2_start_writes[0x4006], square2_start_writes[0x4007]))
+        end
+    end
+end)
+
+local music_residual_write_expected = false
+local music_offset_pending = false
+memory.registerexecute(symbol("bra_find_area_music_header"), function()
+    music_residual_write_expected = true
+end)
+memory.registerwrite(ram.music_offset_square2, function(address, size, value)
+    if music_residual_write_expected and value == 0x08 then
+        music_residual_write_expected = false
+        music_offset_pending = true
+        emit_once("music_offset_residual_write", "08")
+    elseif music_offset_pending and value == 0x00 then
+        emit_once("music_offset_immediate_reset", "08>00")
+        music_offset_pending = false
+    end
+end)
+memory.registerread(ram.music_offset_square2, function()
+    if music_offset_pending then
+        emit_once("music_offset_early_read", "value_observed_before_reset")
+    end
+end)
 
 memory.registerexecute(symbol("sub_game_core_routine"), function()
     if byte(ram.mode) == 1 and byte(ram.task) == 3
@@ -114,6 +203,45 @@ memory.registerexecute(symbol("sub_flagpole_routine"), function()
     end
 end)
 
+local time_up_clear_packet = symbol("off_world_lives_display_packet") + 0x16
+memory.registerread(time_up_clear_packet, 4, function()
+    if time_up_transition_seen then
+        emit_once("time_up_clear_packet_read", "off_time_up_clear_packet")
+    end
+end)
+
+local ppu_address_high = nil
+local ppu_address = nil
+local time_up_clear_tiles = {}
+memory.registerread(0x2002, function()
+    ppu_address_high = nil
+end)
+memory.registerwrite(0x2006, function(address, size, value)
+    if ppu_address_high == nil then
+        ppu_address_high = value
+    else
+        ppu_address = ppu_address_high * 0x100 + value
+        ppu_address_high = nil
+    end
+end)
+memory.registerwrite(0x2007, function(address, size, value)
+    if ppu_address ~= nil and time_up_transition_seen then
+        if ppu_address >= 0x220c and ppu_address <= 0x2212 then
+            time_up_clear_tiles[ppu_address - 0x220c + 1] = value
+            if #time_up_clear_tiles == 7 then
+                local all_blank = true
+                for _, tile in ipairs(time_up_clear_tiles) do
+                    all_blank = all_blank and tile == 0x24
+                end
+                if all_blank then
+                    emit_once("time_up_clear_vram", "220C-2212:24")
+                end
+            end
+        end
+        ppu_address = (ppu_address + 1) % 0x4000
+    end
+end)
+
 output:write("frame,event,detail,mode,task,player_state,player_status,page,x,y,x_speed,y_speed,coins,lives,world,area\n")
 emit("trace_start", scenario)
 
@@ -129,7 +257,6 @@ end
 
 local previous_x = byte(ram.x)
 local previous_page = byte(ram.page)
-local controlled_patch_applied = false
 while emu.framecount() < max_frames do
     emu.frameadvance()
     if not controlled_patch_applied and emu.framecount() >= 250 then
@@ -150,6 +277,24 @@ while emu.framecount() < max_frames do
             patch(ram.timer_control, 0x00, "allow_death_motion")
             patch(ram.player_y_high, 0x06, "cross_death_boundary")
             patch(ram.event_music, 0x00, "complete_death_music_gate")
+            controlled_patch_applied = true
+        elseif scenario == "time-up-clear" then
+            patch(ram.game_timer, 0x00, "expire_game_timer_hundreds")
+            patch(ram.game_timer + 1, 0x00, "expire_game_timer_tens")
+            patch(ram.game_timer + 2, 0x00, "expire_game_timer_ones")
+            patch(ram.game_timer_ctrl, 0x00, "allow_game_timer_tick")
+            controlled_patch_applied = true
+        elseif scenario == "timer-tick-sfx" then
+            patch(ram.square2_buffer, 0x00, "clear_square2_sfx_buffer")
+            patch(ram.square2_length, 0x00, "clear_square2_sfx_length")
+            patch(ram.square2_queue, 0x10, "queue_timer_tick")
+            sfx_probe_active = true
+            controlled_patch_applied = true
+        elseif scenario == "coin-sfx" then
+            patch(ram.square2_buffer, 0x00, "clear_square2_sfx_buffer")
+            patch(ram.square2_length, 0x00, "clear_square2_sfx_length")
+            patch(ram.square2_queue, 0x01, "queue_coin")
+            sfx_probe_active = true
             controlled_patch_applied = true
         end
     end

@@ -482,7 +482,8 @@ off_world_lives_display_packet:
     .byte $29, $24, $24, $24, $24  ; lives display
     .byte $21, $4b, $09, $20, $18  ; "WORLD  - " used on lives display
     .byte $1b, $15, $0d, $24, $24, $28, $24
-    .byte $22, $0c, $47, $24  ; !(ASSUME) DATA-001 - possible TIME UP clear packet
+off_time_up_clear_packet = off_world_lives_display_packet + $16
+    .byte $22, $0c, $47, $24  ; !(OBS) DATA-001 - repeat seven blank tiles at VRAM $220c
     .byte $23, $dc, $01, $ba  ; attribute table data for crown if more than 9 lives
     .byte $ff
 

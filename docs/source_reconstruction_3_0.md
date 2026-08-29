@@ -95,3 +95,27 @@ candidate debug labels, rebuilds `NSMDATA2`, `NSMDATA3`, and `NSMDATA4`, and
 composes all four payloads into one candidate disk side. The overlay load
 addresses remain fixed; their calls and pointers back into `NSMMAIN` follow the
 candidate. See `docs/relocation_testing.md` for the exact boundary and commands.
+
+Semantic evidence is also isolated from the frozen 1.0 runtime manifest.
+`make semantic-evidence` audits every supported enemy stream and runs the
+focused 3.0 emulator scenarios. The first two resolved claims prove that no
+accepted stream selects the residual `$2E` power-up comparison and that the
+four-byte packet embedded in the world/lives display clears the preceding
+seven-tile TIME UP message.
+
+The same aggregate gate proves selected residual code unreachable without
+equating limited runtime coverage with absence. `make audit-unreachable-code`
+requires zero symbolic and raw-address references plus a terminating predecessor
+path; the complete movie then supplies an independent execute trap while active
+miscellaneous objects and hammers are observed.
+
+Runtime evidence also replaces the misleading generic sprite-offset name at
+`$03EE` with `ram_block_object_slot`. Its only dedicated writer alternates zero
+and one after block transactions, and the trace pins both the selected shuffled
+OAM region and a later floating-score reuse of that region.
+
+Two isolated square-2 experiments resolve the remaining audio unknowns. Timer
+tick and coin begin from an identical cleared effect state, with exact register
+writes, counters, second-tone reachability, and release frames pinned by the
+scenario manifest. The complete longplay also proves that the residual `$08`
+area-header offset is reset to zero before any square-2 stream read.

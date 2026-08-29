@@ -41,6 +41,21 @@ def validate_events(scenario: dict[str, object], rows: list[dict[str, str]]) -> 
             )
 
 
+def validate_event_details(
+    scenario: dict[str, object], rows: list[dict[str, str]]
+) -> None:
+    observed: dict[str, str] = {}
+    for row in rows:
+        observed.setdefault(row["event"], row["detail"])
+    expected = scenario.get("expected_event_details", {})
+    for event, detail in expected.items():  # type: ignore[union-attr]
+        if observed.get(event) != detail:
+            raise ValueError(
+                f"Unexpected {event} detail for {scenario['id']}: "
+                f"expected={detail}, observed={observed.get(event)}"
+            )
+
+
 def validate_patches(scenario: dict[str, object], rows: list[dict[str, str]]) -> None:
     declared = {
         (str(patch["address"])[1:].upper(), str(patch["reason"]))
@@ -82,6 +97,17 @@ def validate_forbidden_execution(
         )
 
 
+def validate_forbidden_events(
+    scenario: dict[str, object], rows: list[dict[str, str]]
+) -> None:
+    forbidden = set(scenario.get("forbidden_events", []))  # type: ignore[arg-type]
+    observed = sorted({row["event"] for row in rows} & forbidden)
+    if observed:
+        raise ValueError(
+            f"Forbidden semantic event in {scenario['id']}: {', '.join(observed)}"
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--scenarios", required=True, type=Path)
@@ -92,9 +118,11 @@ def main() -> int:
     for scenario in document["scenarios"]:
         rows = load_trace(args.trace_dir / f"{scenario['id']}.csv")
         validate_events(scenario, rows)
+        validate_event_details(scenario, rows)
         validate_patches(scenario, rows)
         validate_final_state(scenario, rows)
         validate_forbidden_execution(scenario, rows)
+        validate_forbidden_events(scenario, rows)
         print(f"[OK] {scenario['id']}: {scenario['method']}")
     print(f"[OK] All {len(document['scenarios'])} runtime scenarios passed")
     return 0

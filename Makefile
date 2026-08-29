@@ -29,12 +29,18 @@ RUNTIME_MOVIE ?= $(PROJECT_DIR)movies/smb1_any_percent.fm2
 RUNTIME_SCENARIOS ?= $(PROJECT_DIR)scenarios/runtime_scenarios.json
 RUNTIME_TRACE_LUA ?= $(PROJECT_DIR)scripts/workflow/capture_runtime_scenario.lua
 RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/runtime
+SEMANTIC_RUNTIME_SCENARIOS ?= $(PROJECT_DIR)scenarios/semantic_runtime_scenarios.json
+SEMANTIC_RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/evidence/runtime
 DATA_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/data_formats.json
 DATA_FORMAT_SUMMARY ?= $(PROJECT_DIR)build/data_formats.json
 CONTENT_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/content_formats.json
 RELEASE_MANIFEST ?= $(PROJECT_DIR)config/preservation_source_1_0.json
 SOURCE_2_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_2_0.json
 SOURCE_3_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_3_0.json
+ENEMY_STREAM_EVIDENCE_MANIFEST ?= $(PROJECT_DIR)config/semantic_evidence/enemy_streams.json
+ENEMY_STREAM_EVIDENCE_REPORT ?= $(PROJECT_DIR)build/evidence/enemy_streams.json
+UNREACHABLE_CODE_EVIDENCE_MANIFEST ?= $(PROJECT_DIR)config/semantic_evidence/unreachable_code.json
+UNREACHABLE_CODE_EVIDENCE_REPORT ?= $(PROJECT_DIR)build/evidence/unreachable_code.json
 RELOCATION_PROFILE ?= ju
 RELOCATION_MANIFEST ?= $(PROJECT_DIR)config/relocation/$(RELOCATION_PROFILE).json
 RELOCATION_BUILD_DIR ?= $(PROJECT_DIR)build/relocation/$(RELOCATION_PROFILE)/candidate
@@ -192,7 +198,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded init-content export-content validate-content build-content run-content check-studios world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -706,6 +712,42 @@ source-3-audit:
 	$(PYTHON) "$(PROJECT_DIR)scripts/source_3_audit.py" \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(SOURCE_3_MANIFEST)"
+
+semantic-evidence: audit-enemy-streams audit-unreachable-code trace-semantic-runtime
+
+trace-semantic-runtime: symbols
+	$(PYTHON) "$(PROJECT_DIR)scripts/run_runtime_scenarios.py" \
+		--fceux "$(FCEUX_EXE)" \
+		--rom "$(NATIVE_ROM)" \
+		--movie "$(RUNTIME_MOVIE)" \
+		--lua "$(RUNTIME_TRACE_LUA)" \
+		--scenarios "$(SEMANTIC_RUNTIME_SCENARIOS)" \
+		--output-dir "$(SEMANTIC_RUNTIME_TRACE_DIR)"
+	$(MAKE) validate-semantic-runtime
+
+validate-semantic-runtime:
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_runtime_scenarios.py" \
+		--scenarios "$(SEMANTIC_RUNTIME_SCENARIOS)" \
+		--trace-dir "$(SEMANTIC_RUNTIME_TRACE_DIR)"
+
+audit-unreachable-code: verify
+	$(PYTHON) "$(PROJECT_DIR)scripts/audit_unreachable_code.py" \
+		--manifest "$(UNREACHABLE_CODE_EVIDENCE_MANIFEST)" \
+		--debug "$(NATIVE_DEBUG)" \
+		--prg "$(NATIVE_PRG)" \
+		--output "$(UNREACHABLE_CODE_EVIDENCE_REPORT)"
+
+audit-enemy-streams:
+	$(MAKE) verify-revision PROFILE=ju
+	$(MAKE) verify-revision PROFILE=pc10
+	$(MAKE) verify-revision PROFILE=pal
+	$(MAKE) verify-platform PLATFORM=vs_smb
+	$(MAKE) verify-platform PLATFORM=fds_smb
+	$(MAKE) verify-platform PLATFORM=ann_fds
+	$(PYTHON) "$(PROJECT_DIR)scripts/audit_enemy_streams.py" \
+		--project-root "$(PROJECT_DIR)" \
+		--manifest "$(ENEMY_STREAM_EVIDENCE_MANIFEST)" \
+		--output "$(ENEMY_STREAM_EVIDENCE_REPORT)"
 
 test-relocation:
 	$(MAKE) $(RELOCATION_VERIFY_TARGET)

@@ -149,10 +149,10 @@ bra_enforce_enemy_slot_limit:
     BCC bra_compute_enemy_spawn_boundary  ; if not at end of buffer, branch
     INY
     request_vs_low_chr_bank
-    LDA (ram_enemy_data),y  ; check for specific value here
-    AND #%00111111  ; !(WHY?) CODE-002 - residual object-range check
-    CMP #$2e
-    BEQ bra_compute_enemy_spawn_boundary  ; but it has the effect of keeping enemies out of
+    LDA (ram_enemy_data),y
+    AND #%00111111
+    CMP #con_power_up_object  ; !(UNUSED) CODE-002 - absent from every supported enemy stream
+    BEQ bra_compute_enemy_spawn_boundary
     RTS  ; the sixth slot
 
 bra_compute_enemy_spawn_boundary:

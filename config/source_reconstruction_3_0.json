@@ -54,6 +54,13 @@
     "maximum_insertions": 9,
     "generated_output_root": "build/relocation"
   },
+  "semantic_evidence": {
+    "enemy_stream_manifest": "config/semantic_evidence/enemy_streams.json",
+    "unreachable_code_manifest": "config/semantic_evidence/unreachable_code.json",
+    "runtime_manifest": "scenarios/semantic_runtime_scenarios.json",
+    "runtime_scenarios": ["time-up-clear", "unreachable-code-longplay", "timer-tick-sfx", "coin-sfx"],
+    "resolved_unknowns": ["CODE-002", "CODE-003", "DATA-001", "RAM-001", "SND-001", "SND-002"]
+  },
   "required_documents": [
     "docs/preservation_source_1_0.md",
     "docs/source_reconstruction_2_0.md",
@@ -74,6 +81,11 @@
     "test-ann-main-relocation",
     "validate-relocation",
     "validate-relocation-revisions",
-    "validate-relocation-platforms"
+    "validate-relocation-platforms",
+    "semantic-evidence",
+    "audit-enemy-streams",
+    "audit-unreachable-code",
+    "trace-semantic-runtime",
+    "validate-semantic-runtime"
   ]
 }

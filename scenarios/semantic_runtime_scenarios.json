@@ -1,0 +1,96 @@
+{
+  "format": 1,
+  "rom_sha1": "ea343f4e445a9050d4b4fbac2c77d0693b1d0922",
+  "movie": "movies/smb1_any_percent.fm2",
+  "movie_sha1": "fbbb675af9b85146015713b8ca5c488d6c0053ab",
+  "movie_source": "https://tasvideos.org/UserFiles/Info/68410246126700593",
+  "movie_author": "DJ Incendration",
+  "forbidden_execute_addresses": ["E392"],
+  "scenarios": [
+    {
+      "id": "time-up-clear",
+      "method": "controlled game-timer expiration and intermediate-screen transition",
+      "max_frames": 750,
+      "patches": [
+        {"address": "$07F8", "symbol": "ram_game_timer_display", "index": 0, "reason": "expire_game_timer_hundreds"},
+        {"address": "$07F9", "symbol": "ram_game_timer_display", "index": 1, "reason": "expire_game_timer_tens"},
+        {"address": "$07FA", "symbol": "ram_game_timer_display", "index": 2, "reason": "expire_game_timer_ones"},
+        {"address": "$0787", "symbol": "ram_game_timer_ctrl_timer", "index": 0, "reason": "allow_game_timer_tick"}
+      ],
+      "expected_events": {
+        "death": 252,
+        "life_lost": 459,
+        "time_up_screen": 466,
+        "time_up_clear_packet_read": 597,
+        "time_up_clear_vram": 598
+      },
+      "expected_final": {"mode": "01", "task": "01", "lives": "01"}
+    },
+    {
+      "id": "unreachable-code-longplay",
+      "method": "natural full-game playback with residual-entry execute trap",
+      "max_frames": 17862,
+      "patches": [],
+      "expected_events": {
+        "misc_bound_box": 304,
+        "block_slot_select": 304,
+        "block_slot_toggle": 304,
+        "alternate_oam_select": 8953,
+        "hammer_object": 13477,
+        "music_offset_residual_write": 37,
+        "music_offset_immediate_reset": 37
+      },
+      "expected_event_details": {
+        "block_slot_select": "slot=0:oam=A0",
+        "block_slot_toggle": "0>1",
+        "alternate_oam_select": "slot=0:oam=A0"
+      },
+      "forbidden_events": ["music_offset_early_read"],
+      "expected_final": {"mode": "01", "task": "03", "world": "07", "area": "03"}
+    },
+    {
+      "id": "timer-tick-sfx",
+      "method": "controlled isolated square-2 timer-tick request",
+      "max_frames": 280,
+      "patches": [
+        {"address": "$00F2", "symbol": "ram_square2_sound_buffer", "index": 0, "reason": "clear_square2_sfx_buffer"},
+        {"address": "$07BD", "symbol": "ram_squ2_sfx_len_counter", "index": 0, "reason": "clear_square2_sfx_length"},
+        {"address": "$00FE", "symbol": "ram_square2_sound_queue", "index": 0, "reason": "queue_timer_tick"}
+      ],
+      "expected_events": {
+        "square2_start_registers": 251,
+        "coin_or_timer_continue": 251,
+        "square2_sfx_end": 256
+      },
+      "expected_event_details": {
+        "square2_start_registers": "4004=98;4005=7F;4006=71;4007=08",
+        "coin_or_timer_continue": "counter=06",
+        "square2_sfx_end": "counter=00"
+      },
+      "forbidden_events": ["coin_second_tone", "music_offset_early_read"]
+    },
+    {
+      "id": "coin-sfx",
+      "method": "controlled isolated square-2 coin request",
+      "max_frames": 320,
+      "patches": [
+        {"address": "$00F2", "symbol": "ram_square2_sound_buffer", "index": 0, "reason": "clear_square2_sfx_buffer"},
+        {"address": "$07BD", "symbol": "ram_squ2_sfx_len_counter", "index": 0, "reason": "clear_square2_sfx_length"},
+        {"address": "$00FE", "symbol": "ram_square2_sound_queue", "index": 0, "reason": "queue_coin"}
+      ],
+      "expected_events": {
+        "square2_start_registers": 251,
+        "coin_or_timer_continue": 251,
+        "coin_second_tone": 256,
+        "square2_sfx_end": 303
+      },
+      "expected_event_details": {
+        "square2_start_registers": "4004=8D;4005=7F;4006=71;4007=08",
+        "coin_or_timer_continue": "counter=35",
+        "coin_second_tone": "counter=30",
+        "square2_sfx_end": "counter=00"
+      },
+      "forbidden_events": ["music_offset_early_read"]
+    }
+  ]
+}
