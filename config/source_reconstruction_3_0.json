@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "release": "Source Reconstruction 3.0",
+  "status": "development",
+  "predecessor": {
+    "manifest": "config/source_reconstruction_2_0.json",
+    "tag": "source-reconstruction-2.0",
+    "commit": "aaeb33466e40683d06dbdf907c346409d10d92bb"
+  },
+  "milestones": [
+    {"id": "relocation_architecture", "status": "complete"},
+    {"id": "canonical_relocation", "status": "in-progress"},
+    {"id": "revision_relocation", "status": "planned"},
+    {"id": "platform_relocation", "status": "planned"},
+    {"id": "platform_interfaces", "status": "planned"},
+    {"id": "semantic_runtime_evidence", "status": "planned"},
+    {"id": "profile_aware_authoring", "status": "planned"},
+    {"id": "later_engine_feasibility", "status": "planned"},
+    {"id": "source_reconstruction_3_0", "status": "planned"}
+  ],
+  "relocation": {
+    "first_profile": "ju",
+    "cpu_range": {"start": "0x8000", "end": "0xffff"},
+    "fixed_audio": {"start": "0xf2d0", "end": "0xfeff"},
+    "fixed_tail": {"start": "0xff00", "end": "0xffff"},
+    "relocation_budgets": [
+      {
+        "id": "game_and_rendering",
+        "start": "0xf2ca",
+        "end": "0xf2cf",
+        "bytes": "ffffffffffff",
+        "status": "source-declared-unused",
+        "insertions": 6
+      },
+      {
+        "id": "audio",
+        "start": "0xfefd",
+        "end": "0xfeff",
+        "bytes": "ffffff",
+        "status": "requires-evidence",
+        "insertions": 3
+      }
+    ],
+    "maximum_insertions": 9,
+    "generated_output_root": "build/relocation"
+  },
+  "required_documents": [
+    "docs/preservation_source_1_0.md",
+    "docs/source_reconstruction_2_0.md",
+    "docs/source_reconstruction_3_0.md",
+    "docs/roadmap.md"
+  ],
+  "required_stable_targets": [
+    "verify",
+    "source-2-release-audit",
+    "source-2-check"
+  ]
+}

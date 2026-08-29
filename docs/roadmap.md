@@ -604,24 +604,33 @@ Exit criterion: every required profile has a shared-source build, the strongest
 stable byte-identity boundary available for its container, an appropriate
 runtime gate, and inclusion in `make source-2-check`.
 
-### 15. Source Reconstruction 3.0 - Future
+### 15. Source Reconstruction 3.0 - In Progress
 
-Source Reconstruction 3.0 is reserved for semantic consolidation and broader
-authoring after the complete SMB1-family matrix is stable. Candidate work is:
+Source Reconstruction 3.0 begins with a mechanical relocation proof while the
+tagged Source Reconstruction 2.0 contract remains immutable. SMB fills its
+complete 32 KiB NROM window, so the first experiment has two deliberately
+narrow budgets: six source-declared unused bytes before the audio engine and
+three candidate music-tail bytes that require independent decoder evidence.
+Generated probe sources and outputs stay outside normal source and preservation
+builds.
 
-- replacing dense platform conditionals with reviewed platform modules and
-  interfaces;
-- resolving remaining unknown routines, RAM fields, formats, and engine
-  differences introduced by the Vs. and FDS branches;
-- extending the studios to variant-specific levels, graphics, text, sound,
-  disk files, and CHR-RAM resources;
-- deeper behavior tests beyond startup and focused smoke scenarios;
-- additional mapper and ROM-hack architectures that do not belong in the 2.0
-  compatibility contract.
+After the canonical JU/NROM proof, relocation support progresses through
+regional cartridge revisions and then through separately reviewed Vs., FDS,
+and ANN layouts. A profile without independently proven capacity is reported as
+unsupported; matching addresses or bytes are never treated as sufficient
+cross-profile evidence.
 
-Japanese SMB2 / The Lost Levels may be evaluated for 3.0 after All Night Nippon
-is integrated. It is not promised: if the later engine cannot remain a coherent
-shared source, it should become a separate reconstruction project.
+Later milestones consolidate only genuinely shared platform interfaces,
+resolve high-value semantic unknowns with deeper runtime evidence, and extend
+the four Studios with manifest-selected profile content. Japanese SMB2 / The
+Lost Levels receives a feasibility study, not a promised shared-source profile.
+If its later engine would make the SMB1 source incoherent, it remains a separate
+reconstruction.
+
+The detailed sequence, fixed-layout constraints, and release boundaries are in
+`docs/source_reconstruction_3_0.md`. The final 3.0 milestone remains planned
+until every accepted addition has aggregate static, build, round-trip, and
+runtime acceptance gates.
 
 ## Permanent Project Invariants
 

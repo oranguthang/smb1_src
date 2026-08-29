@@ -13,6 +13,11 @@ The immutable `source-reconstruction-1.0` tag preserves the original release
 contract. Source Reconstruction 2.0 keeps every 1.0 acceptance gate and layers
 its profile, authoring, expansion, and runtime contracts on top.
 
+Source Reconstruction 3.0 is under development on a separate roadmap branch.
+Its first objective is a mechanically checked relocation proof; it does not
+change the stable 2.0 tag or default byte-identical build contract. See
+[`docs/source_reconstruction_3_0.md`](docs/source_reconstruction_3_0.md).
+
 ## Overview
 
 This repository contains:
@@ -34,6 +39,7 @@ This repository contains:
 - **docs/provenance/label_renames.json** - Original-to-current symbol map
 - **docs/preservation_source_1_0.md** - Stable release scope and evidence boundary
 - **docs/source_reconstruction_2_0.md** - Aggregate 2.0 scope and acceptance gate
+- **docs/source_reconstruction_3_0.md** - Active 3.0 milestones and boundaries
 - **CONTRIBUTING.md** - Safe source, data, evidence, and verification workflow
 
 ## Project Structure
@@ -138,6 +144,9 @@ make release-check
 
 # Run Preservation Source 1.0 plus every Source Reconstruction 2.0 gate
 make source-2-check
+
+# Audit the active Source Reconstruction 3.0 boundary and milestone state
+make source-3-audit
 
 # Build and validate the isolated fixed-layout demonstrator
 make validate-hack
