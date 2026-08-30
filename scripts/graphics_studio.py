@@ -8,9 +8,10 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, ttk
 
+from content_profiles import load_profiles, require_supported
 from content_studio_model import ChrDocument, smb_tile_text
 from studio_common import (
-    NES_RGB, change_document, dirty, draw_tile, guard, load_documents,
+    change_document, dirty, draw_tile, guard, load_documents, profile_rgb,
     run_make, save_documents, studio_game_name,
 )
 
@@ -29,12 +30,14 @@ class GraphicsStudio(tk.Tk):
         chr_document: ChrDocument,
         project_root: Path,
         profile_id: str = "ju",
+        rgb: tuple[str, ...] | None = None,
     ) -> None:
         super().__init__()
         self.documents = documents
         self.chr_document = chr_document
         self.project_root = project_root
         self.profile_id = profile_id
+        self.rgb = rgb or profile_rgb({})
         self.tile_index = tk.IntVar(value=256)
         self.bank = tk.IntVar(value=1)
         self.ink = tk.IntVar(value=1)
@@ -114,7 +117,7 @@ class GraphicsStudio(tk.Tk):
         for index in range(4):
             button = tk.Radiobutton(palette, text=str(index), variable=self.ink, value=index,
                                     indicatoron=False, width=7, height=2)
-            button.configure(bg=NES_RGB[self.preview_palette()[index]])
+            button.configure(bg=self.rgb[self.preview_palette()[index]])
             button.pack(side="left", padx=3)
 
     def build_metatile_tab(self, parent: ttk.Frame) -> None:
@@ -266,7 +269,10 @@ class GraphicsStudio(tk.Tk):
         base = self.bank.get() * 256
         for relative in range(256):
             x, y = (relative % 16) * tile_size, (relative // 16) * tile_size
-            draw_tile(self.bank_canvas, self.chr_document.tiles, base + relative, x, y, size, palette)
+            draw_tile(
+                self.bank_canvas, self.chr_document.tiles, base + relative,
+                x, y, size, palette, self.rgb,
+            )
             if base + relative == self.tile_index.get():
                 self.bank_canvas.create_rectangle(x, y, x + tile_size, y + tile_size, outline="#ffe066", width=2)
         self.bank_canvas.configure(scrollregion=(0, 0, tile_size * 16, tile_size * 16))
@@ -287,7 +293,7 @@ class GraphicsStudio(tk.Tk):
         pixels = self.chr_document.tiles[self.tile_index.get()]
         for row in range(8):
             for column in range(8):
-                color = NES_RGB[palette[pixels[row][column]]]
+                color = self.rgb[palette[pixels[row][column]]]
                 self.pixel_canvas.create_rectangle(column * 48, row * 48, (column + 1) * 48,
                                                    (row + 1) * 48, fill=color, outline="#333")
         self.tile_label.configure(text=f"Tile ${self.tile_index.get():03X}" +
@@ -344,7 +350,8 @@ class GraphicsStudio(tk.Tk):
         palette = values[group_index * 4:group_index * 4 + 4]
         for index, variable in enumerate(self.metatile_vars):
             draw_tile(self.metatile_canvas, self.chr_document.tiles, 256 + int(variable.get()),
-                      (index % 2) * 192, (index // 2) * 192, 24, palette)
+                      (index % 2) * 192, (index // 2) * 192, 24, palette,
+                      self.rgb)
 
     def apply_metatile(self) -> None:
         document = self.documents["all_metatiles"]
@@ -382,7 +389,8 @@ class GraphicsStudio(tk.Tk):
             tile = int(variable.get())
             if tile != 0xFC:
                 draw_tile(self.sprite_canvas, self.chr_document.tiles, tile,
-                          64 + (index % 2) * 96, 55 + (index // 2) * 96, 12, palette)
+                          64 + (index % 2) * 96, 55 + (index // 2) * 96,
+                          12, palette, self.rgb)
 
     def apply_frame(self) -> None:
         document = self.documents["player_animation_tiles"]
@@ -400,12 +408,12 @@ class GraphicsStudio(tk.Tk):
         values = self.current_palette_values()
         for index, button in enumerate(self.palette_buttons):
             value = values[index]
-            button.configure(bg=NES_RGB[value], text=f"${value:02X}")
+            button.configure(bg=self.rgb[value], text=f"${value:02X}")
 
     def choose_color(self, slot: int) -> None:
         picker = tk.Toplevel(self)
         picker.title("Choose NES color")
-        for value, color in enumerate(NES_RGB):
+        for value, color in enumerate(self.rgb):
             tk.Button(picker, bg=color, text=f"{value:02X}", width=4, height=2,
                       command=lambda selected=value: self.set_color(slot, selected, picker)).grid(
                           row=value // 8, column=value % 8
@@ -499,6 +507,7 @@ def main() -> int:
     )
     chr_path = args.workspace / "graphics" / "smb.chr"
     chr_document = ChrDocument(chr_path.read_bytes(), chr_path)
+    authoring_profile = require_supported(load_profiles(args.profiles), args.profile)
     for document in documents.values():
         document.validate()
     if args.check:
@@ -507,7 +516,8 @@ def main() -> int:
         print(f"[OK] Graphics Studio: 512 CHR tiles, {len(metatiles)} metatiles, and {len(frames)} player frames")
         return 0
     application = GraphicsStudio(
-        documents, chr_document, args.project_root, args.profile
+        documents, chr_document, args.project_root, args.profile,
+        profile_rgb(authoring_profile),
     )
     if args.smoke_ui:
         application.update_idletasks()

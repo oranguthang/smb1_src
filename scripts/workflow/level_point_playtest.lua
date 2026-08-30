@@ -23,6 +23,8 @@ local theme = os.getenv("SMB1_PLAYTEST_THEME") or "day"
 if theme ~= "day" and theme ~= "night" then
     error("SMB1_PLAYTEST_THEME must be day or night")
 end
+local day_color = setting("SMB1_PLAYTEST_DAY_COLOR", 0, 63)
+local night_color = setting("SMB1_PLAYTEST_NIGHT_COLOR", 0, 63)
 local loader = os.getenv("SMB1_PLAYTEST_LOADER") or "direct"
 if loader ~= "direct"
         and loader ~= "ann_extended"
@@ -254,7 +256,7 @@ memory.writebyte(ram.player_y, player_y)
 memory.readbyte(0x2002)
 memory.writebyte(0x2006, 0x3f)
 memory.writebyte(0x2006, 0x00)
-memory.writebyte(0x2007, theme == "day" and 0x22 or 0x0f)
+memory.writebyte(0x2007, theme == "day" and day_color or night_color)
 
 write_result("ready")
 

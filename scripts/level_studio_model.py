@@ -72,10 +72,6 @@ PLAYER_STARTING_Y_POSITIONS = (0x00, 0x20, 0xB0, 0x50, 0x00, 0x00, 0xB0, 0xB0)
 BRICK_METATILES = (0x22, 0x51, 0x52, 0x52, 0x88)
 SOLID_METATILES = (0x69, 0x61, 0x61, 0x62)
 COIN_METATILES = (0xC3, 0xC2, 0xC2, 0xC2)
-BLOCK_METATILES = (
-    0xC1, 0xC0, 0x5F, 0x60, 0x55, 0x56, 0x57,
-    0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E,
-)
 CASTLE_STRUCTURE_METATILES = (
     0x00, 0x45, 0x45, 0x45, 0x00,
     0x00, 0x48, 0x47, 0x46, 0x00,
@@ -160,12 +156,55 @@ ENEMY_PALETTE_ROWS = (
     1, 2, 1, 1, 2, 3, 2, 2, 1, 1, 2, 2, 2,
 )
 
-STATIC_OBJECTS = (
-    "question block (power-up)", "question block (coin)", "hidden block (coin)",
-    "hidden block (1-up)", "brick (power-up)", "brick (vine)", "brick (star)",
-    "brick (coins)", "brick (1-up)", "sideways pipe", "used block", "springboard",
-    "reverse L pipe", "flagpole", "Bowser bridge", "nothing",
-)
+SMALL_OBJECT_TABLES = {
+    "smb1": (
+        ("question block (power-up)", (0xC1,), (0xC1,)),
+        ("question block (coin)", (0xC0,), (0xC0,)),
+        ("hidden block (coin)", (0x5F,), (0x5F,)),
+        ("hidden block (1-up)", (0x60,), (0x60,)),
+        ("brick (power-up)", (0x55,), (0x5A,)),
+        ("brick (vine)", (0x56,), (0x5B,)),
+        ("brick (star)", (0x57,), (0x5C,)),
+        ("brick (coins)", (0x58,), (0x5D,)),
+        ("brick (1-up)", (0x59,), (0x5E,)),
+        ("sideways pipe", (0x6B, 0x6C), (0x6B, 0x6C)),
+        ("used block", (0xC4,), (0xC4,)),
+        ("springboard", (0x67, 0x68), (0x67, 0x68)),
+    ),
+    "ann": (
+        ("question block (power-up)", (0xC1,), (0xC1,)),
+        ("question block (coin)", (0xC0,), (0xC0,)),
+        ("hidden block (coin)", (0x5E,), (0x5E,)),
+        ("hidden block (1-up)", (0x5F,), (0x5F,)),
+        ("question block (power-up variant)", (0x60,), (0x60,)),
+        ("brick (power-up)", (0x54,), (0x59,)),
+        ("brick (vine)", (0x55,), (0x5A,)),
+        ("brick (star)", (0x56,), (0x5B,)),
+        ("brick (coins)", (0x57,), (0x5C,)),
+        ("brick (1-up)", (0x58,), (0x5D,)),
+        ("sideways pipe", (0x6C, 0x6D), (0x6C, 0x6D)),
+        ("used block", (0xC4,), (0xC4,)),
+        ("springboard", (0x67, 0x68), (0x67, 0x68)),
+    ),
+    "smb2": (
+        ("question block (power-up)", (0xC1,), (0xC1,)),
+        ("question block (poison mushroom)", (0xC2,), (0xC2,)),
+        ("question block (coin)", (0xC0,), (0xC0,)),
+        ("hidden block (coin)", (0x5E,), (0x5E,)),
+        ("hidden block (1-up)", (0x5F,), (0x5F,)),
+        ("question block (poison mushroom)", (0x60,), (0x60,)),
+        ("question block (power-up variant)", (0x61,), (0x61,)),
+        ("brick (power-up)", (0x52,), (0x58,)),
+        ("brick (poison mushroom)", (0x53,), (0x59,)),
+        ("brick (vine)", (0x54,), (0x5A,)),
+        ("brick (star)", (0x55,), (0x5B,)),
+        ("brick (coins)", (0x56,), (0x5C,)),
+        ("brick (1-up)", (0x57,), (0x5D,)),
+        ("sideways pipe", (0x6D, 0x6E), (0x6D, 0x6E)),
+        ("used block", (0xC5,), (0xC5,)),
+        ("springboard", (0x68, 0x69), (0x68, 0x69)),
+    ),
+}
 
 EXTENDED_OBJECTS = (
     "platform", "row of bricks", "row of blocks", "row of coins",
@@ -182,6 +221,76 @@ ROW_D_OBJECTS = (
     "warp scroll stop", "scroll stop", "scroll stop", "Cheep-Cheep generator",
     "Bullet Bill generator", "stop generator", "area loop",
 )
+
+
+@dataclass(frozen=True)
+class LevelRendering:
+    terrain_metatiles: tuple[int, ...] = TERRAIN_METATILES
+    foreground_scenery_metatiles: tuple[int, ...] = FOREGROUND_SCENERY_METATILES
+    brick_metatiles: tuple[int, ...] = BRICK_METATILES
+    solid_metatiles: tuple[int, ...] = SOLID_METATILES
+    coin_metatiles: tuple[int, ...] = COIN_METATILES
+    side_pipe_top_metatiles: tuple[int, ...] = (0x1C, 0x1D, 0x1E, 0x15)
+    side_pipe_bottom_metatiles: tuple[int, ...] = (0x1F, 0x20, 0x21, 0x15)
+    castle_special_metatiles: tuple[int, ...] = (0xC5, 0x0C, 0x89)
+    secondary_ledge_metatiles: tuple[int, ...] = (0x19, 0x1A, 0x1B)
+    secondary_ledge_support_metatiles: tuple[int, ...] = (0x4F, 0x50)
+    cannon_metatiles: tuple[int, ...] = (0x64, 0x65, 0x66)
+    bridge_metatile: int = 0x63
+    flagpole_metatiles: tuple[int, ...] = (0x24, 0x25, 0x61)
+    staircase_metatile: int = 0x61
+    residual_flag_metatile: int = 0x6D
+    upside_down_pipes: bool = False
+    small_object_table: str = "smb1"
+
+
+def resolve_level_rendering(values: dict[str, Any] | None = None) -> LevelRendering:
+    """Resolve profile-owned renderer tables over the original SMB1 defaults."""
+    values = values or {}
+
+    def table(name: str, default: tuple[int, ...]) -> tuple[int, ...]:
+        return tuple(
+            int(value, 0) if isinstance(value, str) else int(value)
+            for value in values.get(name, default)
+        )
+
+    def scalar(name: str, default: int) -> int:
+        value = values.get(name, default)
+        return int(value, 0) if isinstance(value, str) else int(value)
+
+    return LevelRendering(
+        terrain_metatiles=table("terrain_metatiles", TERRAIN_METATILES),
+        foreground_scenery_metatiles=table(
+            "foreground_scenery_metatiles", FOREGROUND_SCENERY_METATILES,
+        ),
+        brick_metatiles=table("brick_metatiles", BRICK_METATILES),
+        solid_metatiles=table("solid_metatiles", SOLID_METATILES),
+        coin_metatiles=table("coin_metatiles", COIN_METATILES),
+        side_pipe_top_metatiles=table(
+            "side_pipe_top_metatiles", (0x1C, 0x1D, 0x1E, 0x15),
+        ),
+        side_pipe_bottom_metatiles=table(
+            "side_pipe_bottom_metatiles", (0x1F, 0x20, 0x21, 0x15),
+        ),
+        castle_special_metatiles=table(
+            "castle_special_metatiles", (0xC5, 0x0C, 0x89),
+        ),
+        secondary_ledge_metatiles=table(
+            "secondary_ledge_metatiles", (0x19, 0x1A, 0x1B),
+        ),
+        secondary_ledge_support_metatiles=table(
+            "secondary_ledge_support_metatiles", (0x4F, 0x50),
+        ),
+        cannon_metatiles=table("cannon_metatiles", (0x64, 0x65, 0x66)),
+        bridge_metatile=scalar("bridge_metatile", 0x63),
+        flagpole_metatiles=table(
+            "flagpole_metatiles", (0x24, 0x25, 0x61),
+        ),
+        staircase_metatile=scalar("staircase_metatile", 0x61),
+        residual_flag_metatile=scalar("residual_flag_metatile", 0x6D),
+        upside_down_pipes=bool(values.get("upside_down_pipes", False)),
+        small_object_table=str(values.get("small_object_table", "smb1")),
+    )
 
 ENEMY_NAMES = {
     0x00: "green Koopa", 0x01: "red Koopa", 0x02: "Buzzy Beetle",
@@ -213,6 +322,7 @@ class LevelScene:
 
     metatiles: tuple[tuple[int, ...], ...]
     enemies: tuple[dict[str, Any], ...]
+    spawned_actors: tuple[dict[str, Any], ...]
     width: int
 
 
@@ -225,11 +335,15 @@ class LevelVisuals:
         metatiles: list[list[int]],
         palette_blocks: list[dict[str, Any]],
         player_frames: list[list[int]],
+        metatile_group_starts: tuple[int, ...] = METATILE_GROUP_STARTS,
+        metatile_group_sizes: tuple[int, ...] = METATILE_GROUP_SIZES,
     ) -> None:
         self.tiles = tiles
         self.metatiles = metatiles
         self.palette_blocks = palette_blocks
         self.player_frames = player_frames
+        self.metatile_group_starts = metatile_group_starts
+        self.metatile_group_sizes = metatile_group_sizes
 
     def palette(self, area_type: str) -> tuple[int, ...]:
         block = next(item for item in self.palette_blocks if item["name"] == area_type)
@@ -241,9 +355,9 @@ class LevelVisuals:
 
     def metatile_record(self, value: int) -> tuple[int, int, int, int]:
         group = (value >> 6) & 3
-        if value & 0x3F >= METATILE_GROUP_SIZES[group]:
+        if value & 0x3F >= self.metatile_group_sizes[group]:
             return (0x24, 0x24, 0x24, 0x24)
-        index = METATILE_GROUP_STARTS[group] + (value & 0x3F)
+        index = self.metatile_group_starts[group] + (value & 0x3F)
         if not 0 <= index < len(self.metatiles):
             return (0x24, 0x24, 0x24, 0x24)
         return tuple(int(tile) for tile in self.metatiles[index])
@@ -267,6 +381,8 @@ class LevelVisuals:
             return ()
         if identifier == 0x35:
             return ENEMY_GRAPHICS_TILES[0xA2:0xA8]
+        if identifier == 0x32:
+            return ENEMY_GRAPHICS_TILES[0xF0:0xF6]
         if not 0 <= identifier < len(ENEMY_GRAPHICS_OFFSETS):
             return ()
         offset = ENEMY_GRAPHICS_OFFSETS[identifier]
@@ -287,8 +403,17 @@ class LevelVisuals:
             return False, True, False, True, False, True
         if identifier == 0x11:
             return True, True, True, True, False, True
+        if identifier == 0x32:
+            return False, True, False, True, False, True
         if 0 <= identifier <= 0x12:
             return True, True, True, True, True, True
+        return ()
+
+    @staticmethod
+    def enemy_vertical_flips(identifier: int) -> tuple[bool, ...]:
+        """Return the OAM vertical flips used by special enemy assemblies."""
+        if identifier == 0x32:
+            return False, False, True, True, True, True
         return ()
 
     @staticmethod
@@ -352,12 +477,15 @@ def player_entrance_preview_position(entrance_control: int) -> tuple[int, int]:
     return 2, visible_y // 16
 
 
-def describe_area_object(row: int, control: int) -> str:
+def describe_area_object(
+    row: int, control: int, small_object_table: str = "smb1",
+) -> str:
     if row <= 0x0B:
         subcommand = (control >> 4) & 0x07
         value = control & 0x0F
         if subcommand == 0:
-            return STATIC_OBJECTS[value]
+            table = SMALL_OBJECT_TABLES[small_object_table]
+            return table[value][0] if value < len(table) else f"small object ${value:02X}"
         return f"{EXTENDED_OBJECTS[subcommand - 1]} x{value + 1}"
     if row == 0x0C:
         return f"{ROW_C_OBJECTS[(control >> 4) & 0x07]} x{(control & 0x0F) + 1}"
@@ -371,7 +499,9 @@ def describe_area_object(row: int, control: int) -> str:
     return f"special object ${control:02X}"
 
 
-def positioned_area_objects(stream: dict[str, Any]) -> list[dict[str, Any]]:
+def positioned_area_objects(
+    stream: dict[str, Any], small_object_table: str = "smb1",
+) -> list[dict[str, Any]]:
     page = 0
     result = []
     for index, item in enumerate(stream["data"]["objects"]):
@@ -385,7 +515,9 @@ def positioned_area_objects(stream: dict[str, Any]) -> list[dict[str, Any]]:
             "index": index,
             "page": page,
             "x": page * 16 + int(item["column"]),
-            "description": describe_area_object(int(item["row"]), control),
+            "description": describe_area_object(
+                int(item["row"]), control, small_object_table,
+            ),
         })
     return result
 
@@ -483,9 +615,13 @@ def object_width(item: dict[str, Any]) -> int:
             return 1
         if identifier == 2:
             return 5
+        if identifier == 3:
+            return (control & 0x0F) + 1
         if identifier == 4:
             return 4
-        return (control & 0x0F) + 1
+        if identifier == 5:
+            return 1
+        return 2
     return 1
 
 
@@ -494,9 +630,10 @@ def render_level_scene(
     area_stream: dict[str, Any],
     enemy_stream: dict[str, Any],
     world: int = 0,
+    rendering: LevelRendering = LevelRendering(),
 ) -> LevelScene:
     """Reconstruct scenery, terrain, and common objects from vanilla parser data."""
-    objects = positioned_area_objects(area_stream)
+    objects = positioned_area_objects(area_stream, rendering.small_object_table)
     enemies = positioned_enemy_objects(enemy_stream)
     max_column = max(
         [32]
@@ -519,7 +656,16 @@ def render_level_scene(
             modifiers.setdefault(int(item["x"]), []).append(item)
 
     for column in range(width):
-        values = _base_column(column, area_type, world, foreground, background, terrain, cloud)
+        values = _base_column(
+            column,
+            area_type,
+            world,
+            foreground,
+            background,
+            terrain,
+            cloud,
+            rendering,
+        )
         grid.append(values)
         for modifier in modifiers.get(column, ()):
             control = int(modifier["object_control"])
@@ -531,10 +677,31 @@ def render_level_scene(
                 background = (control >> 4) & 3
 
     for item in objects:
-        _render_area_object(grid, item, area_type, cloud, 0 if cloud else area_style)
+        _render_area_object(
+            grid, item, area_type, cloud, 0 if cloud else area_style, rendering,
+        )
+    spawned_actors = tuple(
+        {
+            "kind": "spawned",
+            "x": int(item["x"]),
+            "row": int(item["row"]),
+            "preview_y": int(item["row"]) * 16,
+            "object_or_page": 0x32,
+            "description": "springboard",
+        }
+        for item in objects
+        if int(item["row"]) <= 0x0B
+        and not int(item["object_control"]) & 0x70
+        and (int(item["object_control"]) & 0x0F)
+        < len(SMALL_OBJECT_TABLES[rendering.small_object_table])
+        and SMALL_OBJECT_TABLES[rendering.small_object_table][
+            int(item["object_control"]) & 0x0F
+        ][0] == "springboard"
+    )
     return LevelScene(
         metatiles=tuple(tuple(column) for column in grid),
         enemies=tuple(item for item in enemies if item["kind"] == "enemy"),
+        spawned_actors=spawned_actors,
         width=width,
     )
 
@@ -547,6 +714,7 @@ def _base_column(
     background: int,
     terrain: int,
     cloud: bool,
+    rendering: LevelRendering,
 ) -> list[int]:
     values = [0] * 13
     if background:
@@ -566,10 +734,14 @@ def _base_column(
     if foreground:
         offset = FOREGROUND_SCENERY_OFFSETS[foreground - 1]
         for row in range(13):
-            value = FOREGROUND_SCENERY_METATILES[offset + row]
+            value = rendering.foreground_scenery_metatiles[offset + row]
             if value:
                 values[row] = value
-    terrain_value = 0x62 if area_type == 0 and world == 7 else TERRAIN_METATILES[area_type]
+    terrain_value = (
+        rendering.terrain_metatiles[3]
+        if area_type == 0 and world == 7
+        else rendering.terrain_metatiles[area_type]
+    )
     if cloud:
         terrain_value = 0x88
     masks = TERRAIN_RENDER_MASKS[terrain]
@@ -578,7 +750,11 @@ def _base_column(
         if cloud and row >= 8:
             byte &= 0x08
         if byte & (1 << bit):
-            values[row] = 0x54 if area_type == 2 and row >= 11 else terrain_value
+            values[row] = (
+                rendering.terrain_metatiles[1]
+                if area_type == 2 and row >= 11
+                else terrain_value
+            )
     return values
 
 
@@ -598,6 +774,7 @@ def _render_area_object(
     area_type: int,
     cloud: bool,
     area_style: int,
+    rendering: LevelRendering,
 ) -> None:
     column = int(item["x"])
     row = int(item["row"])
@@ -606,70 +783,85 @@ def _render_area_object(
     identifier = (control >> 4) & 7
     if row <= 0x0B:
         if identifier == 0:
-            _render_small_object(grid, column, row, value, area_type)
+            _render_small_object(
+                grid, column, row, value, area_type, rendering.small_object_table,
+            )
         elif identifier == 1:
-            _render_area_style_object(grid, column, row, value, area_style)
+            _render_area_style_object(
+                grid, column, row, value, area_style, rendering,
+            )
         elif identifier in {2, 3, 4}:
             if identifier == 2:
-                metatile = BRICK_METATILES[4 if cloud else area_type]
+                metatile = rendering.brick_metatiles[4 if cloud else area_type]
             elif identifier == 3:
-                metatile = SOLID_METATILES[area_type]
+                metatile = rendering.solid_metatiles[area_type]
             else:
-                metatile = COIN_METATILES[area_type]
+                metatile = rendering.coin_metatiles[area_type]
             for offset in range(value + 1):
                 _write(grid, column + offset, row, metatile)
         elif identifier in {5, 6}:
-            metatile = BRICK_METATILES[area_type] if identifier == 5 else SOLID_METATILES[area_type]
+            metatile = (
+                rendering.brick_metatiles[area_type]
+                if identifier == 5
+                else rendering.solid_metatiles[area_type]
+            )
             _fill_down(grid, column, row, value, metatile)
         else:
             _render_vertical_pipe(grid, column, row, value)
     elif row == 0x0C:
-        _render_row_c_object(grid, column, identifier, value, area_type)
+        _render_row_c_object(
+            grid, column, identifier, value, area_type, rendering,
+        )
     elif row == 0x0D and control & 0x40:
-        _render_row_d_object(grid, column, control & 0x3F)
+        _render_row_d_object(grid, column, control & 0x3F, rendering)
     elif row == 0x0F:
-        _render_row_f_object(grid, column, identifier, value)
+        _render_row_f_object(
+            grid, column, identifier, value, int(item["page"]), rendering,
+        )
 
 
 def _render_small_object(
-    grid: list[list[int]], column: int, row: int, identifier: int, area_type: int,
+    grid: list[list[int]],
+    column: int,
+    row: int,
+    identifier: int,
+    area_type: int,
+    table_id: str,
 ) -> None:
-    if identifier <= 3:
-        metatile = BLOCK_METATILES[identifier]
-    elif identifier <= 8:
-        metatile = BLOCK_METATILES[identifier + (0 if area_type == 1 else 5)]
-    elif identifier == 9:
-        _write(grid, column, row, 0x6B)
-        _write(grid, column, row + 1, 0x6C)
+    table = SMALL_OBJECT_TABLES[table_id]
+    if identifier >= len(table):
         return
-    elif identifier == 10:
-        metatile = 0xC4
-    elif identifier == 11:
-        _write(grid, column, row, 0x67)
-        _write(grid, column, row + 1, 0x68)
-        return
-    else:
-        return
-    _write(grid, column, row, metatile)
+    metatiles = table[identifier][1 if area_type == 1 else 2]
+    for offset, metatile in enumerate(metatiles):
+        _write(grid, column, row + offset, metatile)
 
 
 def _render_area_style_object(
-    grid: list[list[int]], column: int, row: int, length: int, style: int,
+    grid: list[list[int]],
+    column: int,
+    row: int,
+    length: int,
+    style: int,
+    rendering: LevelRendering,
 ) -> None:
     if style == 1:
+        start, middle, end = rendering.secondary_ledge_metatiles
         for offset in range(length + 1):
-            tile = 0x19 if offset == 0 else 0x1B if offset == length else 0x1A
+            tile = start if offset == 0 else end if offset == length else middle
             _write(grid, column + offset, row, tile)
-        center = column + length // 2
-        _write(grid, center, row + 1, 0x4F)
-        _fill_down(grid, center, row + 2, 12, 0x50)
+        if rendering.secondary_ledge_support_metatiles:
+            top, body = rendering.secondary_ledge_support_metatiles
+            center = column + (length + 1) // 2
+            _write(grid, center, row + 1, top)
+            _fill_down(grid, center, row + 2, 12, body)
         return
     if style == 2:
-        _write(grid, column, row, 0x64)
+        top, middle, bottom = rendering.cannon_metatiles
+        _write(grid, column, row, top)
         if length:
-            _write(grid, column, row + 1, 0x65)
+            _write(grid, column, row + 1, middle)
         if length > 1:
-            _fill_down(grid, column, row + 2, length - 2, 0x66)
+            _fill_down(grid, column, row + 2, length - 2, bottom)
         return
     for offset in range(length + 1):
         tile = 0x16 if offset == 0 else 0x18 if offset == length else 0x17
@@ -687,7 +879,12 @@ def _render_vertical_pipe(grid: list[list[int]], column: int, row: int, height: 
 
 
 def _render_row_c_object(
-    grid: list[list[int]], column: int, identifier: int, length: int, area_type: int,
+    grid: list[list[int]],
+    column: int,
+    identifier: int,
+    length: int,
+    area_type: int,
+    rendering: LevelRendering,
 ) -> None:
     count = length + 1
     if identifier == 0:
@@ -702,7 +899,7 @@ def _render_row_c_object(
         row = (6, 7, 9)[identifier - 2]
         for x in range(column, column + count):
             _write(grid, x, row, 0x0B)
-            _fill_down(grid, x, row + 1, 12, 0x63)
+            _fill_down(grid, x, row + 1, 12, rendering.bridge_metatile)
     elif identifier == 5:
         for x in range(column, column + count):
             _write(grid, x, 10, 0x86)
@@ -713,10 +910,15 @@ def _render_row_c_object(
             _write(grid, x, row, 0xC0)
 
 
-def _render_row_d_object(grid: list[list[int]], column: int, identifier: int) -> None:
+def _render_row_d_object(
+    grid: list[list[int]],
+    column: int,
+    identifier: int,
+    rendering: LevelRendering,
+) -> None:
     if identifier == 0:
-        top = (0x1C, 0x1D, 0x1E, 0x15)
-        bottom = (0x1F, 0x20, 0x21, 0x15)
+        top = rendering.side_pipe_top_metatiles
+        bottom = rendering.side_pipe_bottom_metatiles
         for offset in range(4):
             _write(grid, column + offset, 9, top[offset])
             _write(grid, column + offset, 10, bottom[offset])
@@ -725,19 +927,26 @@ def _render_row_d_object(grid: list[list[int]], column: int, identifier: int) ->
         _write(grid, column + 3, 7, 0x11)
         _write(grid, column + 3, 8, 0x15)
     elif identifier == 1:
-        _write(grid, column, 0, 0x24)
+        ball, shaft, base = rendering.flagpole_metatiles
+        _write(grid, column, 0, ball)
         for row in range(1, 10):
-            _write(grid, column, row, 0x25)
-        _write(grid, column, 10, 0x61)
+            _write(grid, column, row, shaft)
+        _write(grid, column, 10, base)
     elif identifier in {2, 3, 4}:
-        row, tile = ((6, 0xC5), (7, 0x0C), (8, 0x89))[identifier - 2]
+        row = (6, 7, 8)[identifier - 2]
+        tile = rendering.castle_special_metatiles[identifier - 2]
         count = 13 if identifier == 4 else 1
         for offset in range(count):
             _write(grid, column + offset, row, tile)
 
 
 def _render_row_f_object(
-    grid: list[list[int]], column: int, identifier: int, length: int,
+    grid: list[list[int]],
+    column: int,
+    identifier: int,
+    length: int,
+    page: int,
+    rendering: LevelRendering,
 ) -> None:
     if identifier == 0:
         _fill_down(grid, column, 0, 12, 0x40)
@@ -751,26 +960,89 @@ def _render_row_f_object(
             for row in range(starting_row, 11):
                 table_index = table_column + (row - starting_row) * 5
                 _write(grid, column + x_offset, row, CASTLE_STRUCTURE_METATILES[table_index])
+        if page:
+            _write(grid, column + 3, 10, 0x50)
+            if starting_row == 0:
+                _write(grid, column + 1, 10, 0x50)
     elif identifier == 3:
         heights = (7, 7, 6, 5, 4, 3, 2, 1, 0)
         rows = (3, 3, 4, 5, 6, 7, 8, 9, 10)
         for offset in range(min(length + 1, len(rows))):
             index = 8 - offset
-            _fill_down(grid, column + offset, rows[index], heights[index], 0x61)
+            _fill_down(
+                grid,
+                column + offset,
+                rows[index],
+                heights[index],
+                rendering.staircase_metatile,
+            )
     elif identifier == 4:
-        for offset in range(4):
-            _write(grid, column + offset, 8, (0x15, 0x15, 0x1D, 0x1C)[offset])
-            _write(grid, column + offset, 9, (0x15, 0x15, 0x20, 0x1F)[offset])
+        shaft_bottom = max(0, length - 2)
+        mouth_top = shaft_bottom + 1
+        for row in range(shaft_bottom + 1):
+            _write(grid, column + 2, row, 0x14)
+            _write(grid, column + 3, row, 0x15)
+        for offset, metatile in enumerate(rendering.side_pipe_top_metatiles):
+            _write(grid, column + offset, mouth_top, metatile)
+        for offset, metatile in enumerate(rendering.side_pipe_bottom_metatiles):
+            _write(grid, column + offset, mouth_top + 1, metatile)
+    elif identifier == 5:
+        _fill_down(
+            grid, column, 2, length, rendering.residual_flag_metatile,
+        )
+    elif identifier in {6, 7} and rendering.upside_down_pipes:
+        start_row = 1 if identifier == 6 else 4
+        body_count = max(1, length & 7)
+        for offset in range(body_count):
+            _write(grid, column, start_row + offset, 0x14)
+            _write(grid, column + 1, start_row + offset, 0x15)
+        mouth_row = start_row + body_count
+        _write(grid, column, mouth_row, 0x10)
+        _write(grid, column + 1, mouth_row, 0x11)
 
 
 class LevelDocument:
-    def __init__(self, area_document: ArtifactDocument, enemy_document: ArtifactDocument) -> None:
+    def __init__(
+        self,
+        area_document: ArtifactDocument,
+        enemy_document: ArtifactDocument,
+        unused_names: tuple[str, ...] | list[str] = (),
+    ) -> None:
         self.area_document = area_document
         self.enemy_document = enemy_document
+        self.unused_names = frozenset(unused_names)
+        known_names = set(self.names)
+        unknown = self.unused_names - known_names
+        if unknown:
+            raise ValueError(
+                f"Unknown unused Level Studio areas: {', '.join(sorted(unknown))}"
+            )
 
     @property
     def names(self) -> list[str]:
         return [stream["name"] for stream in self.area_document.document["data"]["streams"]]
+
+    @property
+    def display_names(self) -> list[str]:
+        return [self.display_name(name) for name in self.names]
+
+    def display_name(self, name: str) -> str:
+        return f"{name} [unused]" if self.is_unused(name) else name
+
+    def name_from_display(self, display_name: str) -> str:
+        matches = [
+            name for name in self.names if self.display_name(name) == display_name
+        ]
+        if len(matches) != 1:
+            raise ValueError(f"Unknown Level Studio area: {display_name}")
+        return matches[0]
+
+    def is_unused(self, name: str) -> bool:
+        return name in self.unused_names
+
+    def require_editable(self, name: str) -> None:
+        if self.is_unused(name):
+            raise ValueError(f"{name} is an unused pointer-table slot")
 
     def stream(self, document: ArtifactDocument, name: str) -> dict[str, Any]:
         return next(item for item in document.document["data"]["streams"] if item["name"] == name)
@@ -785,6 +1057,7 @@ class LevelDocument:
         document._remember()
 
     def add_area_object(self, name: str) -> int:
+        self.require_editable(name)
         stream = self.area(name)
         self.remember(self.area_document)
         stream["data"]["objects"].append({
@@ -793,6 +1066,7 @@ class LevelDocument:
         return len(stream["data"]["objects"]) - 1
 
     def add_enemy(self, name: str) -> int:
+        self.require_editable(name)
         stream = self.enemies(name)
         self.remember(self.enemy_document)
         stream["data"]["records"].append({
@@ -802,6 +1076,7 @@ class LevelDocument:
         return len(stream["data"]["records"]) - 1
 
     def delete(self, name: str, kind: str, index: int) -> None:
+        self.require_editable(name)
         document = self.area_document if kind == "object" else self.enemy_document
         stream = self.area(name) if kind == "object" else self.enemies(name)
         key = "objects" if kind == "object" else "records"

@@ -12,8 +12,11 @@ from tkinter import messagebox, ttk
 
 from content_studio_model import ChrDocument
 from content_profiles import load_profiles, require_supported
+from emulator_image import prepare_emulator_image
 from embedded_fceux import EmbeddedFceux
 from level_studio_model import (
+    METATILE_GROUP_SIZES,
+    METATILE_GROUP_STARTS,
     NONVISUAL_ENEMY_IDS,
     WORLD_AREA_POINTERS,
     LevelDocument,
@@ -29,17 +32,17 @@ from level_studio_model import (
     positioned_area_objects,
     positioned_enemy_objects,
     render_level_scene,
+    resolve_level_rendering,
 )
 from studio_common import (
-    NES_RGB, dirty, guard, load_documents, run_make, save_documents,
-    studio_game_name,
+    dirty, guard, load_documents, profile_ppu_color, profile_rgb, run_make,
+    save_documents, studio_game_name,
 )
 
 
 CELL = 32
 ROWS = 13
 PIXEL_SCALE = CELL // 16
-DAY_BACKGROUND_RGB = "#5D96FF"
 
 
 class LevelStudio(tk.Tk):
@@ -58,6 +61,7 @@ class LevelStudio(tk.Tk):
         playtest_boot_frames: int = 600,
         playtest_ready_frames: int = 600,
         level_banks: list[dict] | None = None,
+        authoring_profile: dict | None = None,
     ) -> None:
         super().__init__()
         self.level_banks = level_banks or [{
@@ -74,6 +78,17 @@ class LevelStudio(tk.Tk):
         self.visuals = visuals
         self.project_root = project_root
         self.profile_id = profile_id
+        self.authoring_profile = authoring_profile or {}
+        self.level_rendering = resolve_level_rendering(
+            self.authoring_profile.get("level_rendering")
+        )
+        self.rgb = profile_rgb(self.authoring_profile)
+        self.day_background = profile_ppu_color(
+            self.authoring_profile, "day_background", 0x22,
+        )
+        self.night_background = profile_ppu_color(
+            self.authoring_profile, "night_background", 0x0F,
+        )
         self.content_image = content_image or (
             project_root / "build" / "content" / profile_id / "smb.nes"
         )
@@ -85,6 +100,7 @@ class LevelStudio(tk.Tk):
         self.playtest_ready_frames = playtest_ready_frames
         initial_area = "ground_6" if "ground_6" in model.names else model.names[0]
         self.area_name = tk.StringVar(value=initial_area)
+        self.area_choice = tk.StringVar(value=model.display_name(initial_area))
         self.preview_theme = tk.StringVar(
             value=default_preview_theme(initial_area, model.area(initial_area)),
         )
@@ -134,11 +150,13 @@ class LevelStudio(tk.Tk):
             bank_box.bind("<<ComboboxSelected>>", self.select_course_bank)
         ttk.Label(toolbar, text="Area").pack(side="left")
         self.area_box = ttk.Combobox(
-            toolbar, textvariable=self.area_name, values=self.model.names,
+            toolbar,
+            textvariable=self.area_choice,
+            values=self.model.display_names,
             state="readonly", width=22,
         )
         self.area_box.pack(side="left", padx=5)
-        self.area_name.trace_add("write", self.select_area_from_control)
+        self.area_box.bind("<<ComboboxSelected>>", self.select_area_from_control)
         ttk.Label(toolbar, text="Lighting").pack(side="left", padx=(5, 2))
         theme_box = ttk.Combobox(
             toolbar,
@@ -149,6 +167,7 @@ class LevelStudio(tk.Tk):
         )
         theme_box.pack(side="left", padx=(0, 5))
         self.preview_theme.trace_add("write", self.change_theme_from_control)
+        self.area_action_buttons: dict[str, ttk.Button] = {}
         for text, command in (
             ("Add object", self.add_object), ("Add enemy", self.add_enemy),
             ("Delete selected", self.delete_selected), ("Undo", self.undo),
@@ -159,7 +178,13 @@ class LevelStudio(tk.Tk):
             ("Place Mario", self.arm_mario_placement),
             ("Play", self.playtest), ("Stop", self.stop_playtest),
         ):
-            ttk.Button(toolbar, text=text, command=command).pack(side="left", padx=2)
+            button = ttk.Button(toolbar, text=text, command=command)
+            button.pack(side="left", padx=2)
+            if text in {
+                "Add object", "Add enemy", "Delete selected", "Undo",
+                "Place Mario", "Play",
+            }:
+                self.area_action_buttons[text] = button
         ttk.Label(toolbar, text="World").pack(side="left", padx=(10, 2))
         self.world_spinbox = ttk.Spinbox(
             toolbar, from_=1, to=8, textvariable=self.playtest_world, width=3,
@@ -177,6 +202,7 @@ class LevelStudio(tk.Tk):
         header = ttk.LabelFrame(self, text="Area header", padding=6)
         header.pack(fill="x", padx=7)
         self.header_vars = {}
+        self.header_spins: list[ttk.Spinbox] = []
         header_fields = (
             ("timer_setting", "Timer", 0, 3), ("entrance_control", "Entrance Y", 0, 7),
             ("foreground_or_color", "Foreground/color", 0, 7), ("area_style", "Platform style", 0, 3),
@@ -197,6 +223,7 @@ class LevelStudio(tk.Tk):
             spin.grid(row=0, column=column * 2 + 1, padx=(0, 8))
             spin.bind("<Return>", lambda _event: self.apply_header())
             spin.bind("<FocusOut>", lambda _event: self.apply_header())
+            self.header_spins.append(spin)
 
         body = ttk.Panedwindow(self, orient="horizontal")
         body.pack(fill="both", expand=True, padx=7, pady=7)
@@ -264,8 +291,11 @@ class LevelStudio(tk.Tk):
         tree.pack(fill="both", expand=True)
         return tree
 
-    def select_area_from_control(self, *_args: str) -> None:
+    def select_area_from_control(self, _event: object = None) -> None:
         if not self.syncing_controls:
+            self.area_name.set(
+                self.model.name_from_display(self.area_choice.get())
+            )
             self.select_area()
 
     def select_course_bank(self, _event: object = None) -> None:
@@ -273,7 +303,7 @@ class LevelStudio(tk.Tk):
         self.model = bank["model"]
         self.world_routes = bank["world_routes"]
         self.world_spinbox.configure(to=len(self.world_routes))
-        self.area_box.configure(values=self.model.names)
+        self.area_box.configure(values=self.model.display_names)
         initial_area = (
             "ground_6" if "ground_6" in self.model.names else self.model.names[0]
         )
@@ -281,6 +311,7 @@ class LevelStudio(tk.Tk):
         self.syncing_controls = True
         try:
             self.area_name.set(initial_area)
+            self.area_choice.set(self.model.display_name(initial_area))
             self.preview_theme.set(default_preview_theme(
                 initial_area, self.model.area(initial_area)
             ))
@@ -312,20 +343,24 @@ class LevelStudio(tk.Tk):
 
     def select_area(self) -> None:
         self.selection = None
+        name = self.area_name.get()
+        self.area_choice.set(self.model.display_name(name))
         self.syncing_controls = True
         try:
-            self.preview_theme.set(default_preview_theme(
-                self.area_name.get(), self.model.area(self.area_name.get()),
-            ))
+            if not self.model.is_unused(name):
+                self.preview_theme.set(default_preview_theme(
+                    name, self.model.area(name),
+                ))
             default_world, default_level = first_world_context(
-                self.area_name.get(), self.world_routes
+                name, self.world_routes
             )
             self.playtest_world.set(default_world + 1)
             self.playtest_level.set(default_level + 1)
         finally:
             self.syncing_controls = False
         self.update_route_limits()
-        self.reset_mario_to_entrance()
+        if not self.model.is_unused(name):
+            self.reset_mario_to_entrance()
         self.refresh()
 
     def change_theme(self) -> None:
@@ -334,8 +369,43 @@ class LevelStudio(tk.Tk):
 
     def refresh(self) -> None:
         name = self.area_name.get()
+        unused = self.model.is_unused(name)
+        self.set_area_controls_enabled(not unused)
+        if unused:
+            self.selection = None
+            self.object_tree.delete(*self.object_tree.get_children())
+            self.enemy_tree.delete(*self.enemy_tree.get_children())
+            for variable in self.header_vars.values():
+                variable.set(0)
+            for variable in self.field_vars.values():
+                variable.set("")
+            self.canvas.delete("all")
+            self.canvas.configure(scrollregion=(0, 0, 760, ROWS * CELL))
+            self.canvas.create_text(
+                380,
+                ROWS * CELL // 2,
+                text=(
+                    f"{name} [unused]\n\n"
+                    "Reserved pointer-table slot\n"
+                    "No area header or playable course data"
+                ),
+                fill="#dce8f2",
+                font=("TkDefaultFont", 16, "bold"),
+                justify="center",
+            )
+            self.status.set(
+                f"{name} [unused]: preserved for byte-identical reconstruction; "
+                "editing and playtesting are disabled"
+            )
+            self.title(
+                f"{self.game_name} Level Studio "
+                f"[{self.profile_id}/{self.course_bank.get()}]"
+            )
+            return
         area = self.model.area(name)
-        objects = positioned_area_objects(area)
+        objects = positioned_area_objects(
+            area, self.level_rendering.small_object_table,
+        )
         enemies = positioned_enemy_objects(self.model.enemies(name))
         for key, variable in self.header_vars.items():
             variable.set(area["data"]["header"][key])
@@ -359,6 +429,13 @@ class LevelStudio(tk.Tk):
             + (" *" if dirty(self.documents) else "")
         )
 
+    def set_area_controls_enabled(self, enabled: bool) -> None:
+        state = ["!disabled"] if enabled else ["disabled"]
+        for spin in self.header_spins:
+            spin.state(state)
+        for button in self.area_action_buttons.values():
+            button.state(state)
+
     def draw_canvas(self, objects: list[dict], enemies: list[dict]) -> None:
         self.canvas.delete("all")
         name = self.area_name.get()
@@ -367,6 +444,7 @@ class LevelStudio(tk.Tk):
             self.model.area(name),
             self.model.enemies(name),
             int(self.playtest_world.get()) - 1,
+            self.level_rendering,
         )
         width = scene.width * CELL
         area_type = name.rpartition("_")[0]
@@ -410,6 +488,16 @@ class LevelStudio(tk.Tk):
                     tags=(tag,),
                 )
             self.draw_badge(x, y, str(item["index"]), "#9d2c20", tag)
+        for index, item in enumerate(scene.spawned_actors):
+            x = int(item["x"]) * CELL
+            identifier = int(item["object_or_page"])
+            self.draw_enemy_preview(
+                item,
+                x,
+                identifier,
+                f"spawned:{index}",
+                area_type,
+            )
         mario_x = self.mario_column * CELL
         mario_y = self.mario_row * CELL
         self.draw_sprite(
@@ -427,7 +515,12 @@ class LevelStudio(tk.Tk):
         if key in self.metatile_images:
             return self.metatile_images[key]
         palette_values = self.visuals.palette(area_type)
-        background_color = DAY_BACKGROUND_RGB if self.preview_theme.get() == "Day" else "#000000"
+        background_value = (
+            self.day_background
+            if self.preview_theme.get() == "Day"
+            else self.night_background
+        )
+        background_color = self.rgb[background_value]
         palette_group = (value >> 6) & 3
         palette = palette_values[palette_group * 4:palette_group * 4 + 4]
         record = self.visuals.display_metatile_record(value)
@@ -438,7 +531,7 @@ class LevelStudio(tk.Tk):
                 for metatile_column in range(2):
                     tile = record[metatile_row * 2 + metatile_column]
                     colors.extend(
-                        background_color if pixel == 0 else NES_RGB[palette[pixel] & 0x3F]
+                        background_color if pixel == 0 else self.rgb[palette[pixel] & 0x3F]
                         for pixel in self.visuals.tiles[0x100 + tile][pixel_row]
                     )
                 rows.append(colors)
@@ -456,6 +549,7 @@ class LevelStudio(tk.Tk):
         y: int,
         tag: str,
         horizontal_flips: tuple[bool, ...] = (),
+        vertical_flips: tuple[bool, ...] = (),
         columns: int = 2,
         palette_override: tuple[int, ...] = (),
     ) -> None:
@@ -476,12 +570,16 @@ class LevelStudio(tk.Tk):
                     flip_horizontally = (
                         index < len(horizontal_flips) and horizontal_flips[index]
                     )
+                    flip_vertically = (
+                        index < len(vertical_flips) and vertical_flips[index]
+                    )
                     display_column = 7 - pixel_column if flip_horizontally else pixel_column
+                    display_row = 7 - pixel_row if flip_vertically else pixel_row
                     left = tile_x + display_column * PIXEL_SCALE
-                    top = tile_y + pixel_row * PIXEL_SCALE
+                    top = tile_y + display_row * PIXEL_SCALE
                     self.canvas.create_rectangle(
                         left, top, left + PIXEL_SCALE, top + PIXEL_SCALE,
-                        fill=NES_RGB[colors[pixel] & 0x3F], outline="", tags=(tag,),
+                        fill=self.rgb[colors[pixel] & 0x3F], outline="", tags=(tag,),
                     )
 
     def draw_enemy_preview(
@@ -508,7 +606,9 @@ class LevelStudio(tk.Tk):
             width = (count - 1) * 24 * PIXEL_SCALE + CELL
             return y, width, CELL * 3 // 2
 
-        y = enemy_preview_y(int(item["row"]), identifier) * PIXEL_SCALE
+        y = int(
+            item.get("preview_y", enemy_preview_y(int(item["row"]), identifier))
+        ) * PIXEL_SCALE
         if identifier == 0x2D:
             front, rear = self.visuals.bowser_tiles()
             flips = (True,) * 6
@@ -547,6 +647,7 @@ class LevelStudio(tk.Tk):
                 y,
                 tag,
                 horizontal_flips=self.visuals.enemy_horizontal_flips(identifier),
+                vertical_flips=self.visuals.enemy_vertical_flips(identifier),
             )
             return y, CELL, CELL * 3 // 2
 
@@ -618,6 +719,8 @@ class LevelStudio(tk.Tk):
         self.canvas.create_text(x + width / 2, y + 8, text=text, fill="white", tags=(tag,))
 
     def canvas_click(self, event: tk.Event) -> None:
+        if self.model.is_unused(self.area_name.get()):
+            return
         if self.place_mario_mode:
             self.place_mario(event)
             return
@@ -630,17 +733,22 @@ class LevelStudio(tk.Tk):
                     return
 
     def arm_mario_placement(self) -> None:
+        self.model.require_editable(self.area_name.get())
         self.place_mario_mode = True
         self.status.set("Click the map to place Mario; right-click also places him directly")
         self.canvas.configure(cursor="crosshair")
 
     def reset_mario_to_entrance(self) -> None:
+        if self.model.is_unused(self.area_name.get()):
+            return
         header = self.model.area(self.area_name.get())["data"]["header"]
         self.mario_column, self.mario_row = player_entrance_preview_position(
             int(header["entrance_control"]),
         )
 
     def place_mario(self, event: tk.Event) -> None:
+        if self.model.is_unused(self.area_name.get()):
+            return
         self.mario_column = max(0, int(self.canvas.canvasx(event.x)) // CELL)
         self.mario_row = max(
             1,
@@ -654,6 +762,7 @@ class LevelStudio(tk.Tk):
         guard("Level Studio", self._playtest)
 
     def _playtest(self) -> None:
+        self.model.require_editable(self.area_name.get())
         bank_playtest = self.bank_by_id[self.course_bank.get()].get("playtest", True)
         if bank_playtest is False:
             raise ValueError(
@@ -682,6 +791,8 @@ class LevelStudio(tk.Tk):
             "SMB1_PLAYTEST_X": str((self.mario_column % 16) * 16),
             "SMB1_PLAYTEST_Y": str(max(32, min(239, (self.mario_row + 1) * 16))),
             "SMB1_PLAYTEST_THEME": self.preview_theme.get().lower(),
+            "SMB1_PLAYTEST_DAY_COLOR": str(self.day_background),
+            "SMB1_PLAYTEST_NIGHT_COLOR": str(self.night_background),
             "SMB1_PLAYTEST_BOOT_TASK": str(self.playtest_boot_task),
             "SMB1_PLAYTEST_GAME_MODE": str(self.playtest_game_mode),
             "SMB1_PLAYTEST_READY_TASK": str(self.playtest_ready_task),
@@ -693,8 +804,15 @@ class LevelStudio(tk.Tk):
                 else "direct"
             ),
         }
+        emulator_image = prepare_emulator_image(
+            self.content_image,
+            self.content_image.with_name(
+                f"{self.content_image.stem}.playtest{self.content_image.suffix}"
+            ),
+            self.authoring_profile,
+        )
         self.view_notebook.select(1)
-        self.emulator.start(executable, self.content_image, lua, environment)
+        self.emulator.start(executable, emulator_image, lua, environment)
 
     def stop_playtest(self) -> None:
         self.emulator.stop()
@@ -732,6 +850,7 @@ class LevelStudio(tk.Tk):
         return int(text[1:], 16) if text.startswith("$") else int(text, 0)
 
     def apply_header(self) -> None:
+        self.model.require_editable(self.area_name.get())
         area = self.model.area(self.area_name.get())
         replacement = {name: int(variable.get()) for name, variable in self.header_vars.items()}
         if replacement != area["data"]["header"]:
@@ -746,6 +865,7 @@ class LevelStudio(tk.Tk):
             guard("Level Studio", self.refresh)
 
     def apply_record(self) -> None:
+        self.model.require_editable(self.area_name.get())
         if self.selection is None:
             return
         kind, index = self.selection
@@ -896,13 +1016,26 @@ def main() -> int:
         (args.workspace / "graphics" / "smb.chr").read_bytes(),
         args.workspace / "graphics" / "smb.chr",
     )
+    authoring_profile = require_supported(load_profiles(args.profiles), args.profile)
+    level_rendering = authoring_profile.get("level_rendering", {})
+    metatile_group_starts = tuple(
+        int(value) for value in level_rendering.get(
+            "metatile_group_starts", METATILE_GROUP_STARTS
+        )
+    )
+    metatile_group_sizes = tuple(
+        int(value) for value in level_rendering.get(
+            "metatile_group_sizes", METATILE_GROUP_SIZES
+        )
+    )
     visuals = LevelVisuals(
         chr_document.tiles,
         graphics_documents["all_metatiles"].document["data"]["metatiles"],
         graphics_documents["area_palette_packets"].document["data"]["blocks"],
         graphics_documents["player_animation_tiles"].document["data"]["frames"],
+        metatile_group_starts,
+        metatile_group_sizes,
     )
-    authoring_profile = require_supported(load_profiles(args.profiles), args.profile)
     bank_contracts = authoring_profile.get("studio_banks", {}).get("level")
 
     def routes(artifact_id: str) -> tuple[tuple[int, ...], ...]:
@@ -921,7 +1054,9 @@ def main() -> int:
             {
                 **bank,
                 "model": LevelDocument(
-                    documents[bank["areas"]], documents[bank["enemies"]]
+                    documents[bank["areas"]],
+                    documents[bank["enemies"]],
+                    bank.get("unused_areas", []),
                 ),
                 "world_routes": routes(bank["routes"]),
             }
@@ -940,17 +1075,31 @@ def main() -> int:
     model = level_banks[0]["model"]
     world_routes = level_banks[0]["world_routes"]
     playtest = authoring_profile.get("playtest", {})
+    resolved_level_rendering = resolve_level_rendering(level_rendering)
     for bank in level_banks:
         for name in bank["model"].names:
-            positioned_area_objects(bank["model"].area(name))
+            if bank["model"].is_unused(name):
+                continue
+            positioned_area_objects(
+                bank["model"].area(name),
+                resolved_level_rendering.small_object_table,
+            )
             positioned_enemy_objects(bank["model"].enemies(name))
+            render_level_scene(
+                name,
+                bank["model"].area(name),
+                bank["model"].enemies(name),
+                rendering=resolved_level_rendering,
+            )
     if args.check:
         for document in documents.values():
             document.validate()
         print(
             f"[OK] Level Studio: "
-            f"{sum(len(bank['model'].names) for bank in level_banks)} areas "
-            f"across {len(level_banks)} course set(s) are editable"
+            f"{sum(len(bank['model'].names) - len(bank['model'].unused_names) for bank in level_banks)} areas "
+            f"are editable and "
+            f"{sum(len(bank['model'].unused_names) for bank in level_banks)} unused slots "
+            f"are identified across {len(level_banks)} course set(s)"
         )
         return 0
     application = LevelStudio(
@@ -967,6 +1116,7 @@ def main() -> int:
         int(playtest.get("boot_frames", 600)),
         int(playtest.get("ready_frames", 600)),
         level_banks,
+        authoring_profile,
     )
     if args.course_bank is not None:
         if args.course_bank not in application.bank_by_id:
@@ -977,6 +1127,7 @@ def main() -> int:
         if args.area not in application.model.names:
             raise ValueError(f"Unknown Level Studio area: {args.area}")
         application.area_name.set(args.area)
+        application.area_choice.set(application.model.display_name(args.area))
         application.select_area()
     if args.smoke_ui:
         application.update_idletasks()
@@ -984,7 +1135,15 @@ def main() -> int:
         print("[OK] Level Studio widgets constructed")
     elif args.smoke_playtest is not None:
         outcome = {"embedded": False, "result": "pending"}
-        expected_background = "22" if args.smoke_playtest == "Day" else "0f"
+        color_name = (
+            "day_background"
+            if args.smoke_playtest == "Day"
+            else "night_background"
+        )
+        color_default = 0x22 if args.smoke_playtest == "Day" else 0x0F
+        expected_background = (
+            f"{profile_ppu_color(authoring_profile, color_name, color_default):02x}"
+        )
         result_path = args.project_root.resolve() / "build" / "level_playtest_smoke.txt"
         result_path.parent.mkdir(parents=True, exist_ok=True)
         result_path.write_text("pending\n", encoding="utf-8")

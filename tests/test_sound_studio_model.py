@@ -44,6 +44,30 @@ def synthetic_bank(values: list[int]) -> MusicBank:
 
 
 class SoundStudioModelTests(unittest.TestCase):
+    def test_princess_composition_requires_the_victory_header(self) -> None:
+        model = MusicBank.__new__(MusicBank)
+        model.song_from_pointer = lambda index: {
+            "label": (
+                "off_music_header_victory"
+                if index == 2 else "off_music_header_ground_part_1"
+            )
+        }
+        self.assertIn(
+            "Princess Rescued",
+            [composition["name"] for composition in model.compositions()],
+        )
+
+        model.song_from_pointer = lambda index: {
+            "label": (
+                "off_music_header_game_over"
+                if index == 2 else "off_music_header_ground_part_1"
+            )
+        }
+        self.assertNotIn(
+            "Princess Rescued",
+            [composition["name"] for composition in model.compositions()],
+        )
+
     def test_prg_lookup_uses_selected_profile_load_address(self) -> None:
         model = MusicBank.__new__(MusicBank)
         model.labels = {"data": 0x6002}

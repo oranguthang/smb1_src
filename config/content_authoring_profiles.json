@@ -91,6 +91,12 @@
         "editable_offset": 0,
         "editable_size": 8192
       },
+      "ppu": {
+        "model": "rp2c04_0004",
+        "nes2_vs_ppu_id": 5,
+        "day_background": "0x1a",
+        "night_background": "0x14"
+      },
       "playtest": {
         "boot_task": 4,
         "game_mode": 2,
@@ -226,6 +232,14 @@
       "chr_source": "fds_records",
       "chr_record_ids": [1],
       "chr_sha1": "d286c6490183760d0f8da2099dd42e386b8b95ed",
+      "level_rendering": {
+        "metatile_group_starts": [0, 39, 86, 96],
+        "metatile_group_sizes": [39, 47, 10, 6],
+        "terrain_metatiles": ["0x69", "0x6a", "0x52", "0x62"],
+        "residual_flag_metatile": "0x6e",
+        "upside_down_pipes": true,
+        "small_object_table": "ann"
+      },
       "studio_artifacts": {
         "world": [
           "world_area_pointers",
@@ -400,6 +414,34 @@
       "chr_source": "fds_records",
       "chr_record_ids": [1],
       "chr_sha1": "f5ec342a44c909d99d46ae311a4b77ed00e645eb",
+      "level_rendering": {
+        "metatile_group_starts": [0, 36, 84, 97],
+        "metatile_group_sizes": [36, 48, 13, 7],
+        "terrain_metatiles": ["0x6a", "0x6b", "0x50", "0x63"],
+        "foreground_scenery_metatiles": [
+          "0x86", "0x87", "0x87", "0x87", "0x87", "0x87", "0x87",
+          "0x87", "0x87", "0x87", "0x87", "0x6a", "0x6a",
+          "0x00", "0x00", "0x00", "0x00", "0x00", "0x45", "0x47",
+          "0x47", "0x47", "0x47", "0x47", "0x00", "0x00",
+          "0x00", "0x00", "0x00", "0x00", "0x00", "0x00", "0x00",
+          "0x00", "0x00", "0x00", "0x00", "0x86", "0x87"
+        ],
+        "brick_metatiles": ["0x1f", "0x4f", "0x50", "0x50", "0x88"],
+        "solid_metatiles": ["0x6a", "0x62", "0x62", "0x63"],
+        "coin_metatiles": ["0xc4", "0xc3", "0xc3", "0xc3"],
+        "side_pipe_top_metatiles": ["0x19", "0x1a", "0x1b", "0x15"],
+        "side_pipe_bottom_metatiles": ["0x1c", "0x1d", "0x1e", "0x15"],
+        "castle_special_metatiles": ["0xc6", "0x0c", "0x89"],
+        "secondary_ledge_metatiles": ["0x8a", "0x8b", "0x8c"],
+        "secondary_ledge_support_metatiles": [],
+        "cannon_metatiles": ["0x65", "0x66", "0x67"],
+        "bridge_metatile": "0x64",
+        "flagpole_metatiles": ["0x21", "0x22", "0x62"],
+        "staircase_metatile": "0x62",
+        "residual_flag_metatile": "0x6f",
+        "upside_down_pipes": true,
+        "small_object_table": "smb2"
+      },
       "studio_artifacts": {
         "world": [
           "world_area_pointers",
@@ -437,6 +479,7 @@
             "areas": "area_object_streams",
             "enemies": "enemy_object_streams",
             "routes": "world_area_pointers",
+            "unused_areas": ["ground_24", "ground_26", "ground_27"],
             "playtest": {"loader": "smb2_normal"}
           },
           {

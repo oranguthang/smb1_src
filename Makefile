@@ -168,6 +168,7 @@ CONTENT_CHR ?= $(GENERATED_CHR)
 CONTENT_EXTRA ?= $(REVISION_ASSET_DIR)/$(CONTENT_PROFILE)/platform.extra
 CONTENT_EXTRA_ARG = $(if $(filter pc10,$(CONTENT_PROFILE)),--extra "$(CONTENT_EXTRA)",)
 LEVEL_STUDIO_ARGS ?=
+CONTENT_RUN_ROM = $(if $(filter vs_smb,$(CONTENT_PROFILE)),$(CONTENT_BUILD_DIR)/smb.playtest.nes,$(CONTENT_ROM))
 PLAYTEST_BANK ?=
 PLAYTEST_BANK_ARG = $(if $(PLAYTEST_BANK),--course-bank $(PLAYTEST_BANK),)
 PLAYTEST_AREA ?=
@@ -531,7 +532,12 @@ check-content-profiles:
 	$(MAKE) check-content-profile CONTENT_PROFILE=smb2_jp_fds
 
 run-content: build-content
-	"$(FCEUX_EXE)" "$(CONTENT_ROM)"
+	$(PYTHON) "$(PROJECT_DIR)scripts/emulator_image.py" \
+		--profiles "$(CONTENT_PROFILE_MANIFEST)" \
+		--profile "$(CONTENT_PROFILE)" \
+		--input "$(CONTENT_ROM)" \
+		--output "$(CONTENT_RUN_ROM)"
+	"$(FCEUX_EXE)" "$(CONTENT_RUN_ROM)"
 
 world-studio:
 	$(MAKE) init-content STUDIO=world

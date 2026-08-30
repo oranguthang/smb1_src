@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from ann_sound_studio_model import (  # noqa: E402
     AnnFdsMusicBank,
+    FDS_ENDING_SYMBOLS,
     _resolve_boundary,
     fds_wave_frequency,
 )
@@ -47,6 +48,16 @@ def synthetic_bank() -> AnnFdsMusicBank:
 
 
 class AnnFdsSoundStudioModelTests(unittest.TestCase):
+    def test_ending_bank_names_the_complete_princess_music(self) -> None:
+        self.assertEqual(
+            FDS_ENDING_SYMBOLS["ann_fds_music_bank"]["composition"],
+            "Princess Rescued (complete ending)",
+        )
+        self.assertEqual(
+            FDS_ENDING_SYMBOLS["smb2_fds_music_bank"]["composition"],
+            "Princess Rescued (complete ending)",
+        )
+
     def test_symbolic_artifact_boundary_uses_build_label(self) -> None:
         self.assertEqual(_resolve_boundary("ending_data_end", {"ending_data_end": 0xCDEF}), 0xCDEF)
 

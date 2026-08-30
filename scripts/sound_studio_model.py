@@ -415,14 +415,20 @@ class MusicBank:
         )
 
     def compositions(self) -> list[dict[str, Any]]:
-        return [
-            {
+        compositions = []
+        for name, indexes in COMPOSITION_SPECS:
+            patterns = [self.song_from_pointer(index) for index in indexes]
+            if name == "Princess Rescued" and not any(
+                pattern["label"] == "off_music_header_victory"
+                for pattern in patterns
+            ):
+                continue
+            compositions.append({
                 "name": name,
                 "pointer_indexes": indexes,
-                "patterns": [self.song_from_pointer(index) for index in indexes],
-            }
-            for name, indexes in COMPOSITION_SPECS
-        ]
+                "patterns": patterns,
+            })
+        return compositions
 
     def describe_byte(self, channel: str, byte: int, length_offset: int, length_adder: int = 0) -> str:
         song = {"length_offset": length_offset, "length_adder": length_adder}

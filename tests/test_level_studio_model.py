@@ -3,11 +3,13 @@ from __future__ import annotations
 import sys
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from level_studio_model import (  # noqa: E402
+    LevelDocument,
     LevelVisuals,
     area_pointer,
     area_name,
@@ -21,10 +23,37 @@ from level_studio_model import (  # noqa: E402
     positioned_area_objects,
     positioned_enemy_objects,
     render_level_scene,
+    resolve_level_rendering,
 )
 
 
 class LevelStudioModelTests(unittest.TestCase):
+    def test_unused_area_names_are_explicit_and_not_editable(self) -> None:
+        area_document = SimpleNamespace(document={"data": {"streams": [
+            {"name": "ground_1"}, {"name": "ground_24"},
+        ]}})
+        enemy_document = SimpleNamespace(document={"data": {"streams": [
+            {"name": "ground_1"}, {"name": "ground_24"},
+        ]}})
+        model = LevelDocument(
+            area_document, enemy_document, ["ground_24"],
+        )
+        self.assertEqual(
+            model.display_names, ["ground_1", "ground_24 [unused]"]
+        )
+        self.assertEqual(
+            model.name_from_display("ground_24 [unused]"), "ground_24"
+        )
+        with self.assertRaisesRegex(ValueError, "unused pointer-table slot"):
+            model.require_editable("ground_24")
+
+    def test_unused_area_contract_rejects_unknown_names(self) -> None:
+        document = SimpleNamespace(document={"data": {"streams": [
+            {"name": "ground_1"},
+        ]}})
+        with self.assertRaisesRegex(ValueError, "Unknown unused"):
+            LevelDocument(document, document, ["ground_24"])
+
     def test_area_names_map_to_runtime_pointer_bytes(self) -> None:
         self.assertEqual(area_pointer("water_1"), 0x00)
         self.assertEqual(area_pointer("ground_6"), 0x25)
@@ -114,6 +143,148 @@ class LevelStudioModelTests(unittest.TestCase):
         self.assertEqual(scene.metatiles[10][11:13], (0x54, 0x54))
         self.assertEqual(scene.enemies[0]["description"], "Goomba")
 
+    def test_scene_accepts_the_ann_ground_metatile(self) -> None:
+        area = {"data": {
+            "header": {
+                "timer_setting": 1, "entrance_control": 2,
+                "foreground_or_color": 0, "area_style": 0,
+                "background_scenery": 0, "terrain_control": 1,
+            },
+            "objects": [],
+        }}
+        scene = render_level_scene(
+            "ground_6",
+            area,
+            {"data": {"records": []}},
+            rendering=resolve_level_rendering({
+                "terrain_metatiles": (0x69, 0x6A, 0x52, 0x62),
+            }),
+        )
+        self.assertEqual(scene.metatiles[0][11:13], (0x6A, 0x6A))
+
+    def test_ann_small_object_table_renders_the_water_exit_pipe(self) -> None:
+        area = {"data": {
+            "header": {
+                "timer_setting": 1, "entrance_control": 2,
+                "foreground_or_color": 0, "area_style": 0,
+                "background_scenery": 0, "terrain_control": 0,
+            },
+            "objects": [{
+                "column": 4, "row": 5, "page_advance": False,
+                "object_control": 0x0A,
+            }],
+        }}
+        rendering = resolve_level_rendering({"small_object_table": "ann"})
+        scene = render_level_scene(
+            "water_1", area, {"data": {"records": []}}, rendering=rendering,
+        )
+        self.assertEqual(scene.metatiles[4][5:7], (0x6C, 0x6D))
+        self.assertEqual(
+            positioned_area_objects(area, "ann")[0]["description"],
+            "sideways pipe",
+        )
+
+    def test_smb2_small_object_table_uses_its_shifted_pipe_and_blocks(self) -> None:
+        area = {"data": {
+            "header": {
+                "timer_setting": 1, "entrance_control": 2,
+                "foreground_or_color": 0, "area_style": 0,
+                "background_scenery": 0, "terrain_control": 0,
+            },
+            "objects": [
+                {"column": 2, "row": 5, "page_advance": False,
+                 "object_control": 0x0D},
+                {"column": 3, "row": 5, "page_advance": False,
+                 "object_control": 0x01},
+            ],
+        }}
+        rendering = resolve_level_rendering({"small_object_table": "smb2"})
+        scene = render_level_scene(
+            "water_1", area, {"data": {"records": []}}, rendering=rendering,
+        )
+        self.assertEqual(scene.metatiles[2][5:7], (0x6D, 0x6E))
+        self.assertEqual(scene.metatiles[3][5], 0xC2)
+
+    def test_smb2_secondary_ledge_uses_cloud_metatiles_without_a_stem(self) -> None:
+        area = {"data": {
+            "header": {
+                "timer_setting": 1, "entrance_control": 2,
+                "foreground_or_color": 0, "area_style": 1,
+                "background_scenery": 0, "terrain_control": 0,
+            },
+            "objects": [{
+                "column": 2, "row": 5, "page_advance": False,
+                "object_control": 0x13,
+            }],
+        }}
+        rendering = resolve_level_rendering({
+            "secondary_ledge_metatiles": (0x8A, 0x8B, 0x8C),
+            "secondary_ledge_support_metatiles": (),
+        })
+        scene = render_level_scene(
+            "ground_22", area, {"data": {"records": []}}, rendering=rendering,
+        )
+        self.assertEqual(
+            [scene.metatiles[column][5] for column in range(2, 6)],
+            [0x8A, 0x8B, 0x8B, 0x8C],
+        )
+        self.assertEqual(scene.metatiles[4][6], 0)
+
+    def test_springboard_area_object_adds_its_runtime_sprite(self) -> None:
+        area = {"data": {
+            "header": {
+                "timer_setting": 1, "entrance_control": 2,
+                "foreground_or_color": 0, "area_style": 0,
+                "background_scenery": 0, "terrain_control": 0,
+            },
+            "objects": [{
+                "column": 5, "row": 9, "page_advance": False,
+                "object_control": 0x0F,
+            }],
+        }}
+        rendering = resolve_level_rendering({"small_object_table": "smb2"})
+        scene = render_level_scene(
+            "ground_22", area, {"data": {"records": []}}, rendering=rendering,
+        )
+        self.assertEqual(scene.metatiles[5][9:11], (0x68, 0x69))
+        self.assertEqual(len(scene.spawned_actors), 1)
+        self.assertEqual(scene.spawned_actors[0]["object_or_page"], 0x32)
+        self.assertEqual(scene.spawned_actors[0]["preview_y"], 9 * 16)
+
+    def test_smb2_special_objects_use_the_later_engine_metatiles(self) -> None:
+        area = {"data": {
+            "header": {
+                "timer_setting": 1, "entrance_control": 2,
+                "foreground_or_color": 0, "area_style": 0,
+                "background_scenery": 0, "terrain_control": 0,
+            },
+            "objects": [
+                {"column": 0, "row": 12, "page_advance": False,
+                 "object_control": 0x20},
+                {"column": 2, "row": 13, "page_advance": False,
+                 "object_control": 0x41},
+                {"column": 4, "row": 15, "page_advance": False,
+                 "object_control": 0x31},
+                {"column": 8, "row": 15, "page_advance": False,
+                 "object_control": 0x61},
+            ],
+        }}
+        rendering = resolve_level_rendering({
+            "bridge_metatile": 0x64,
+            "flagpole_metatiles": (0x21, 0x22, 0x62),
+            "staircase_metatile": 0x62,
+            "upside_down_pipes": True,
+        })
+        scene = render_level_scene(
+            "ground_22", area, {"data": {"records": []}}, rendering=rendering,
+        )
+        self.assertEqual(scene.metatiles[0][7], 0x64)
+        self.assertEqual(scene.metatiles[2][0:2], (0x21, 0x22))
+        self.assertEqual(scene.metatiles[2][10], 0x62)
+        self.assertEqual(scene.metatiles[4][10], 0x62)
+        self.assertEqual(scene.metatiles[8][1:3], (0x14, 0x10))
+        self.assertEqual(scene.metatiles[9][1:3], (0x15, 0x11))
+
     def test_scene_reconstructs_the_five_column_castle_structure(self) -> None:
         area = {"data": {
             "header": {
@@ -130,6 +301,23 @@ class LevelStudioModelTests(unittest.TestCase):
         scene = render_level_scene("ground_6", area, enemies)
         self.assertEqual([scene.metatiles[x][0] for x in range(5)], [0, 0x45, 0x45, 0x45, 0])
         self.assertEqual([scene.metatiles[x][1] for x in range(5)], [0, 0x46, 0x47, 0x48, 0])
+
+    def test_castle_structure_places_its_page_stop_block(self) -> None:
+        area = {"data": {
+            "header": {
+                "timer_setting": 1, "entrance_control": 2,
+                "foreground_or_color": 0, "area_style": 0,
+                "background_scenery": 0, "terrain_control": 0,
+            },
+            "objects": [{
+                "column": 0, "row": 15, "page_advance": True,
+                "object_control": 0x26,
+            }],
+        }}
+        scene = render_level_scene(
+            "ground_22", area, {"data": {"records": []}},
+        )
+        self.assertEqual(scene.metatiles[19][10], 0x50)
 
     def test_scene_reconstructs_intro_pipe_and_balance_rope(self) -> None:
         area = {"data": {
@@ -148,6 +336,59 @@ class LevelStudioModelTests(unittest.TestCase):
         self.assertEqual([scene.metatiles[x][10] for x in range(4)], [0x1F, 0x20, 0x21, 0x15])
         self.assertEqual(scene.metatiles[5][1:5], (0x40, 0x40, 0x40, 0x40))
         self.assertEqual(scene.metatiles[5][5], 0x44)
+
+    def test_scene_reconstructs_the_left_facing_underground_exit_pipe(self) -> None:
+        area = {"data": {
+            "header": {
+                "timer_setting": 1, "entrance_control": 2,
+                "foreground_or_color": 0, "area_style": 0,
+                "background_scenery": 0, "terrain_control": 0,
+            },
+            "objects": [{
+                "column": 4, "row": 15, "page_advance": False,
+                "object_control": 0x47,
+            }],
+        }}
+        scene = render_level_scene(
+            "underground_1", area, {"data": {"records": []}}
+        )
+        self.assertEqual(scene.metatiles[6][:6], (0x14,) * 6)
+        self.assertEqual(scene.metatiles[7][:6], (0x15,) * 6)
+        self.assertEqual(
+            [scene.metatiles[column][6] for column in range(4, 8)],
+            [0x1C, 0x1D, 0x1E, 0x15],
+        )
+        self.assertEqual(
+            [scene.metatiles[column][7] for column in range(4, 8)],
+            [0x1F, 0x20, 0x21, 0x15],
+        )
+
+    def test_smb2_exit_pipe_uses_the_later_engine_metatile_table(self) -> None:
+        area = {"data": {
+            "header": {
+                "timer_setting": 1, "entrance_control": 2,
+                "foreground_or_color": 0, "area_style": 0,
+                "background_scenery": 0, "terrain_control": 0,
+            },
+            "objects": [{
+                "column": 4, "row": 15, "page_advance": False,
+                "object_control": 0x47,
+            }],
+        }}
+        rendering = resolve_level_rendering({
+            "side_pipe_top_metatiles": (0x19, 0x1A, 0x1B, 0x15),
+            "side_pipe_bottom_metatiles": (0x1C, 0x1D, 0x1E, 0x15),
+        })
+        scene = render_level_scene(
+            "underground_1",
+            area,
+            {"data": {"records": []}},
+            rendering=rendering,
+        )
+        self.assertEqual(
+            [scene.metatiles[column][6] for column in range(4, 8)],
+            [0x19, 0x1A, 0x1B, 0x15],
+        )
 
     def test_visual_data_resolves_metatile_groups_and_sprite_frames(self) -> None:
         records = [[index] * 4 for index in range(101)]
@@ -182,6 +423,18 @@ class LevelStudioModelTests(unittest.TestCase):
             (True, True, True, True, False, True),
         )
         self.assertEqual(visuals.enemy_tiles(0x15), ())
+        self.assertEqual(
+            visuals.enemy_tiles(0x32),
+            (0xF2, 0xF2, 0xF3, 0xF3, 0xF2, 0xF2),
+        )
+        self.assertEqual(
+            visuals.enemy_horizontal_flips(0x32),
+            (False, True, False, True, False, True),
+        )
+        self.assertEqual(
+            visuals.enemy_vertical_flips(0x32),
+            (False, False, True, True, True, True),
+        )
         self.assertEqual(visuals.enemy_tiles(0x35), (0xCD, 0xCD, 0xCE, 0xCE, 0xCF, 0xCF))
         self.assertEqual(visuals.enemy_palette(0x35), 2)
         self.assertEqual(visuals.special_palette("bowser"), (0x0F, 0x1A, 0x30, 0x27))
@@ -192,6 +445,19 @@ class LevelStudioModelTests(unittest.TestCase):
                 (0xC4, 0xC3, 0xC6, 0xC5, 0xC8, 0xC7),
             ),
         )
+
+    def test_visual_data_accepts_the_ann_metatile_group_layout(self) -> None:
+        records = [[index] * 4 for index in range(102)]
+        visuals = LevelVisuals(
+            [],
+            records,
+            [],
+            [],
+            metatile_group_starts=(0, 39, 86, 96),
+            metatile_group_sizes=(39, 47, 10, 6),
+        )
+        self.assertEqual(visuals.metatile_record(0x80), (86, 86, 86, 86))
+        self.assertEqual(visuals.metatile_record(0xC0), (96, 96, 96, 96))
 
     def test_preview_theme_follows_vanilla_background_color(self) -> None:
         header = {"data": {"header": {"foreground_or_color": 0}}}

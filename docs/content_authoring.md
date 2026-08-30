@@ -33,6 +33,14 @@ ROM, Run FCEUX, and Level Studio playtest actions. Workspace documents carry a
 protected profile identifier, preventing a PAL document from being applied to a
 JU or PC10 build.
 
+Vs. Super Mario Bros. uses the RP2C04-0004 arcade PPU rather than the ordinary
+NES color wiring. Level and Graphics Studio therefore use FCEUX's hardware RGB
+table for its palette-RAM indices and the revision's `$1a`/`$14` day/night
+background values. Edited playtests receive an explicit NES 2.0 Vs.-PPU header because an
+emulator can no longer identify the hardware from the original ROM hash after a
+content byte changes. This launch-only image is written as `smb.playtest.nes`;
+the canonical content build retains the original byte-identical header.
+
 | Command | What it edits |
 | --- | --- |
 | `make world-studio` | All 36 world-to-area routes and nine player physics tables |
@@ -78,13 +86,30 @@ the actual SMB1 pattern-table convention: sprite tiles occupy the first 4 KiB
 and background tiles the second 4 KiB. Its eight editable area-palette packets
 retain stable labels over the shared console/FDS or Vs.-specific ignored pack.
 The 101 editable 2x2 metatiles use the shared graphics pack; the ANN build
-selects its 102-record later-engine counterpart without changing renderer
-pointers.
+selects its 102-record later-engine counterpart with profile-owned group
+boundaries. Its profile also supplies the later engine's `$6a` normal-ground
+metatile and shifted small-object dispatch table, so clouds, question blocks,
+terrain, item bricks, and the `$0a` two-metatile water pipe use the same records
+as the game.
+The SMB2 profile likewise selects its own 36/48/13/7 metatile groups and
+later-engine terrain, block, castle, bridge, flagpole, staircase, ledge, cannon,
+and pipe tables. Its shifted `$0d` water pipe is therefore decoded independently
+of both SMB1 and ANN. Level previews also reproduce the runtime spring sprite,
+castle stop blocks, and the late-FDS upside-down pipes rather than showing only
+their static background records.
 Sound Studio decodes notes, rests,
 duration changes, and noise beats, draws a piano roll, and renders either one
 pattern or a complete logical composition. The complete overworld preview
 follows the original 33-pattern schedule instead of treating its internal parts
 as separate songs.
+ANN and SMB2 keep their complete princess-rescue music in the separate
+**FDS ending** bank. The main APU bank does not advertise a victory composition
+when its corresponding event pointer is deliberately reused for game-over
+music.
+SMB2's `ground_24`, `ground_26`, and `ground_27` pointer-table slots contain no
+area header or playable course data. Level Studio retains them for exact source
+preservation, labels them `[unused]`, and prevents editing or playtesting them
+instead of interpreting adjacent overlay bytes as level objects.
 Preview synthesis uses the APU's four-bit channel levels, 15-bit noise shift
 register and hardware length-counter gates, nonlinear pulse/TND transfer curves,
 and the console's two high-pass and one low-pass output filters rather than

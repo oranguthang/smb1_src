@@ -141,6 +141,102 @@ def validate_profiles(document: dict[str, Any]) -> list[str]:
                 ):
                     errors.append(f"invalid CHR layout: {identifier}")
 
+        ppu = profile.get("ppu")
+        if ppu is not None:
+            try:
+                day_background = int(str(ppu["day_background"]), 0)
+                night_background = int(str(ppu["night_background"]), 0)
+            except (KeyError, TypeError, ValueError):
+                errors.append(f"invalid PPU contract: {identifier}")
+            else:
+                if not (
+                    isinstance(ppu, dict)
+                    and set(ppu) == {
+                        "model", "nes2_vs_ppu_id",
+                        "day_background", "night_background",
+                    }
+                    and ppu["model"] == "rp2c04_0004"
+                    and isinstance(ppu["nes2_vs_ppu_id"], int)
+                    and 0 <= ppu["nes2_vs_ppu_id"] <= 0x0F
+                    and 0 <= day_background <= 0x3F
+                    and 0 <= night_background <= 0x3F
+                ):
+                    errors.append(f"invalid PPU contract: {identifier}")
+
+        level_rendering = profile.get("level_rendering")
+        if level_rendering is not None:
+            try:
+                starts = tuple(level_rendering["metatile_group_starts"])
+                sizes = tuple(level_rendering["metatile_group_sizes"])
+                terrain = tuple(
+                    int(value, 0) if isinstance(value, str) else int(value)
+                    for value in level_rendering["terrain_metatiles"]
+                )
+            except (KeyError, TypeError, ValueError):
+                errors.append(f"invalid level rendering layout: {identifier}")
+            else:
+                valid_layout = (
+                    len(starts) == len(sizes) == len(terrain) == 4
+                    and all(isinstance(value, int) for value in starts + sizes)
+                    and all(value > 0 for value in sizes)
+                    and all(0 <= value <= 0xFF for value in terrain)
+                )
+                if valid_layout:
+                    contiguous_starts = tuple(
+                        sum(sizes[:index]) for index in range(len(sizes))
+                    )
+                    valid_layout = starts == contiguous_starts
+                table_lengths = {
+                    "foreground_scenery_metatiles": {39},
+                    "brick_metatiles": {5},
+                    "solid_metatiles": {4},
+                    "coin_metatiles": {4},
+                    "side_pipe_top_metatiles": {4},
+                    "side_pipe_bottom_metatiles": {4},
+                    "castle_special_metatiles": {3},
+                    "secondary_ledge_metatiles": {3},
+                    "secondary_ledge_support_metatiles": {0, 2},
+                    "cannon_metatiles": {3},
+                    "flagpole_metatiles": {3},
+                }
+                for field, expected_lengths in table_lengths.items():
+                    if field not in level_rendering:
+                        continue
+                    try:
+                        table = tuple(
+                            int(value, 0) if isinstance(value, str) else int(value)
+                            for value in level_rendering[field]
+                        )
+                    except (TypeError, ValueError):
+                        valid_layout = False
+                    else:
+                        valid_layout = valid_layout and (
+                            len(table) in expected_lengths
+                            and all(0 <= value <= 0xFF for value in table)
+                        )
+                for field in (
+                    "bridge_metatile",
+                    "staircase_metatile",
+                    "residual_flag_metatile",
+                ):
+                    if field not in level_rendering:
+                        continue
+                    try:
+                        value = level_rendering[field]
+                        value = int(value, 0) if isinstance(value, str) else int(value)
+                    except (TypeError, ValueError):
+                        valid_layout = False
+                    else:
+                        valid_layout = valid_layout and 0 <= value <= 0xFF
+                valid_layout = valid_layout and isinstance(
+                    level_rendering.get("upside_down_pipes", False), bool
+                )
+                valid_layout = valid_layout and level_rendering.get(
+                    "small_object_table", "smb1"
+                ) in {"smb1", "ann", "smb2"}
+                if not valid_layout:
+                    errors.append(f"invalid level rendering layout: {identifier}")
+
         payloads = profile.get("payloads", {})
         if not isinstance(payloads, dict):
             errors.append(f"invalid payload contracts: {identifier}")
@@ -223,6 +319,19 @@ def validate_profiles(document: dict[str, Any]) -> list[str]:
                     continue
                 if studio_id == "level":
                     for bank in banks:
+                        unused_areas = bank.get("unused_areas", [])
+                        if (
+                            not isinstance(unused_areas, list)
+                            or any(
+                                not isinstance(name, str) or not name
+                                for name in unused_areas
+                            )
+                            or len(set(unused_areas)) != len(unused_areas)
+                        ):
+                            errors.append(
+                                f"invalid unused-area contract: "
+                                f"{identifier}/{bank.get('id')}"
+                            )
                         bank_playtest = bank.get("playtest", True)
                         if isinstance(bank_playtest, bool):
                             continue

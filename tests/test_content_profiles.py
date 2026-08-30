@@ -71,6 +71,34 @@ class ContentProfileTests(unittest.TestCase):
         )
         self.assertEqual(profile["chr_source"], "fds_records")
 
+    def test_ann_profile_declares_its_level_rendering_layout(self) -> None:
+        rendering = profile_by_id(self.document, "ann_fds")["level_rendering"]
+        self.assertEqual(rendering["metatile_group_starts"], [0, 39, 86, 96])
+        self.assertEqual(rendering["metatile_group_sizes"], [39, 47, 10, 6])
+        self.assertEqual(rendering["terrain_metatiles"][1], "0x6a")
+        self.assertEqual(rendering["residual_flag_metatile"], "0x6e")
+        self.assertTrue(rendering["upside_down_pipes"])
+        self.assertEqual(rendering["small_object_table"], "ann")
+
+    def test_level_rendering_groups_must_be_contiguous(self) -> None:
+        document = copy.deepcopy(self.document)
+        rendering = profile_by_id(document, "ann_fds")["level_rendering"]
+        rendering["metatile_group_starts"][2] = 85
+        self.assertIn(
+            "invalid level rendering layout: ann_fds",
+            validate_profiles(document),
+        )
+
+    def test_level_rendering_rejects_unknown_small_object_table(self) -> None:
+        document = copy.deepcopy(self.document)
+        profile_by_id(document, "ann_fds")["level_rendering"][
+            "small_object_table"
+        ] = "late_fds"
+        self.assertIn(
+            "invalid level rendering layout: ann_fds",
+            validate_profiles(document),
+        )
+
     def test_fds_program_mapping_requires_known_unique_payloads(self) -> None:
         document = copy.deepcopy(self.document)
         profile = profile_by_id(document, "ann_fds")
@@ -113,11 +141,46 @@ class ContentProfileTests(unittest.TestCase):
             [bank["id"] for bank in profile["studio_banks"]["level"]],
             ["normal", "hard"],
         )
+        self.assertEqual(
+            profile["studio_banks"]["level"][0]["unused_areas"],
+            ["ground_24", "ground_26", "ground_27"],
+        )
         for studio in self.document["studio_ids"]:
             self.assertEqual(
                 require_supported(self.document, "smb2_jp_fds", studio)["id"],
                 "smb2_jp_fds",
             )
+
+    def test_only_smb2_declares_unused_level_slots(self) -> None:
+        declarations = {
+            profile["id"]: [
+                name
+                for bank in profile.get("studio_banks", {}).get("level", [])
+                for name in bank.get("unused_areas", [])
+            ]
+            for profile in self.document["profiles"]
+        }
+        self.assertEqual(
+            {profile: names for profile, names in declarations.items() if names},
+            {
+                "smb2_jp_fds": [
+                    "ground_24", "ground_26", "ground_27",
+                ],
+            },
+        )
+
+    def test_smb2_profile_declares_its_later_engine_rendering_tables(self) -> None:
+        rendering = profile_by_id(self.document, "smb2_jp_fds")["level_rendering"]
+        self.assertEqual(rendering["metatile_group_starts"], [0, 36, 84, 97])
+        self.assertEqual(rendering["metatile_group_sizes"], [36, 48, 13, 7])
+        self.assertEqual(rendering["small_object_table"], "smb2")
+        self.assertEqual(rendering["side_pipe_top_metatiles"][0], "0x19")
+        self.assertEqual(
+            rendering["secondary_ledge_metatiles"], ["0x8a", "0x8b", "0x8c"]
+        )
+        self.assertEqual(rendering["secondary_ledge_support_metatiles"], [])
+        self.assertEqual(rendering["flagpole_metatiles"], ["0x21", "0x22", "0x62"])
+        self.assertTrue(rendering["upside_down_pipes"])
 
     def test_level_bank_rejects_an_unknown_playtest_loader(self) -> None:
         document = copy.deepcopy(self.document)
@@ -125,6 +188,15 @@ class ContentProfileTests(unittest.TestCase):
         bank["playtest"] = {"loader": "guess"}
         self.assertIn(
             "invalid bank playtest contract: ann_fds/extended",
+            validate_profiles(document),
+        )
+
+    def test_level_bank_rejects_duplicate_unused_areas(self) -> None:
+        document = copy.deepcopy(self.document)
+        bank = profile_by_id(document, "smb2_jp_fds")["studio_banks"]["level"][0]
+        bank["unused_areas"] = ["ground_24", "ground_24"]
+        self.assertIn(
+            "invalid unused-area contract: smb2_jp_fds/normal",
             validate_profiles(document),
         )
 
@@ -147,6 +219,11 @@ class ContentProfileTests(unittest.TestCase):
         document = copy.deepcopy(self.document)
         profile_by_id(document, "vs_smb")["chr_layout"]["editable_size"] = 16385
         self.assertIn("invalid CHR layout: vs_smb", validate_profiles(document))
+
+    def test_vs_profile_requires_a_valid_ppu_contract(self) -> None:
+        document = copy.deepcopy(self.document)
+        profile_by_id(document, "vs_smb")["ppu"]["nes2_vs_ppu_id"] = 16
+        self.assertIn("invalid PPU contract: vs_smb", validate_profiles(document))
 
     def test_vs_external_stream_override_requires_a_chr_bank(self) -> None:
         document = copy.deepcopy(self.document)

@@ -33,6 +33,40 @@ NES_RGB = (
     "#e9e681", "#cef481", "#b6fb9a", "#a9fac3", "#a9f0f4", "#b8b8b8", "#000000", "#000000",
 )
 
+# RP2C04-0004 RGB values from FCEUX's hardware palette table.
+RP2C04_0004_RGB = (
+    "#8a7100", "#000000", "#00828a", "#f3be3c",
+    "#000000", "#000000", "#24188e", "#cb4d0c",
+    "#bebebe", "#000000", "#4ddf49", "#000000",
+    "#ffbeb2", "#ffdbaa", "#00aa00", "#000000",
+    "#ff75b6", "#000000", "#2038ef", "#000000",
+    "#000000", "#000000", "#000000", "#ff7561",
+    "#000000", "#000000", "#5d96ff", "#009600",
+    "#000000", "#000000", "#aaf3be", "#3cbeff",
+    "#aa0010", "#005100", "#7d0800", "#0000aa",
+    "#8200f3", "#000000", "#757575", "#e70059",
+    "#183c5d", "#000000", "#0071ef", "#000000",
+    "#000000", "#ffe7a2", "#000000", "#000000",
+    "#000000", "#000000", "#412c00", "#db2800",
+    "#000000", "#000000", "#ffffff", "#9efff3",
+    "#000000", "#ff9a38", "#000000", "#aae7ff",
+    "#82d310", "#000000", "#ffffff", "#004500",
+)
+
+
+def profile_rgb(profile: dict[str, Any]) -> tuple[str, ...]:
+    model = profile.get("ppu", {}).get("model", "nes")
+    if model == "nes":
+        return NES_RGB
+    if model == "rp2c04_0004":
+        return RP2C04_0004_RGB
+    raise ValueError(f"Unsupported Studio PPU palette model: {model}")
+
+
+def profile_ppu_color(profile: dict[str, Any], name: str, default: int) -> int:
+    value = profile.get("ppu", {}).get(name, default)
+    return value if isinstance(value, int) else int(value, 0)
+
 
 def studio_game_name(profile_id: str) -> str:
     return "SMB2" if profile_id == "smb2_jp_fds" else "SMB1"
@@ -140,6 +174,7 @@ def draw_tile(
     y: int,
     scale: int,
     palette: list[int],
+    rgb: tuple[str, ...] = NES_RGB,
 ) -> None:
     for row, values in enumerate(tile_pixels(tiles, tile)):
         for column, value in enumerate(values):
@@ -148,7 +183,7 @@ def draw_tile(
                 y + row * scale,
                 x + (column + 1) * scale,
                 y + (row + 1) * scale,
-                fill=NES_RGB[palette[value] & 0x3F],
+                fill=rgb[palette[value] & 0x3F],
                 outline="",
             )
 

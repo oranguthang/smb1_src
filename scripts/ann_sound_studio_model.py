@@ -44,7 +44,7 @@ FDS_ENDING_SYMBOLS = {
         "wave_notes": "tbl_ann_fds_wave_notes",
         "wave_a_volumes": "tbl_ann_fds_wave_a_volumes",
         "wave_offsets": "tbl_ann_fds_wave_offsets",
-        "composition": "ANN ending suite",
+        "composition": "Princess Rescued (complete ending)",
         "pattern_prefix": "ann_fds_pattern_",
     },
     "smb2_fds_music_bank": {
@@ -55,7 +55,7 @@ FDS_ENDING_SYMBOLS = {
         "wave_notes": "tbl_smb2_data3_fds_freq_lookup_tbl",
         "wave_a_volumes": "off_smb2_data3_volume_envelope_data_1",
         "wave_offsets": "tbl_smb2_data3_waveform_header_offsets",
-        "composition": "SMB2 ending suite",
+        "composition": "Princess Rescued (complete ending)",
         "pattern_prefix": "smb2_fds_pattern_",
     },
 }
