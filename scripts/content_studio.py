@@ -127,19 +127,26 @@ def atomic_write_bytes(path: Path, value: bytes) -> None:
         temporary.unlink(missing_ok=True)
 
 
-def load_format_manifest(path: Path) -> dict[str, Any]:
-    document = json.loads(path.read_text(encoding="utf-8"))
+def load_format_manifest(
+    path: Path,
+    ancestors: frozenset[Path] = frozenset(),
+) -> dict[str, Any]:
+    resolved_path = path.resolve()
+    if resolved_path in ancestors:
+        raise ValueError(f"cyclic content format manifest: {path}")
+    document = json.loads(resolved_path.read_text(encoding="utf-8"))
     if document.get("format") != 1:
         raise ValueError("unsupported content format manifest schema")
     if "base_manifest" not in document:
         return document
-    base_path = path.parent / document["base_manifest"]
-    base = json.loads(base_path.read_text(encoding="utf-8"))
-    if base.get("format") != 1:
-        raise ValueError("unsupported base data format manifest schema")
+    base_path = resolved_path.parent / document["base_manifest"]
+    base = load_format_manifest(base_path, ancestors | {resolved_path})
     excluded = set(document.get("excluded_artifacts", []))
     artifacts = [entry for entry in base["artifacts"] if entry["id"] not in excluded]
     artifacts.extend(document.get("artifacts", []))
+    identifiers = [entry["id"] for entry in artifacts]
+    if len(identifiers) != len(set(identifiers)):
+        raise ValueError("content format manifest defines duplicate artifacts")
     return {"format": 1, "artifacts": artifacts}
 
 
@@ -168,6 +175,7 @@ def selected_entries(
     entries: dict[str, dict[str, Any]],
     profiles: dict[str, dict[str, Any]],
     selected: list[str] | None,
+    artifact_selection: dict[str, list[str]] | None = None,
 ) -> list[tuple[str, dict[str, Any]]]:
     studio_ids = selected or list(profiles)
     unknown = set(studio_ids) - set(profiles)
@@ -176,7 +184,16 @@ def selected_entries(
     result: list[tuple[str, dict[str, Any]]] = []
     seen: set[str] = set()
     for studio_id in studio_ids:
-        for artifact_id in profiles[studio_id]["artifacts"]:
+        artifact_ids = (artifact_selection or {}).get(
+            studio_id, profiles[studio_id]["artifacts"]
+        )
+        unknown_artifacts = set(artifact_ids) - set(entries)
+        if unknown_artifacts:
+            raise ValueError(
+                f"content profile references unknown artifacts: "
+                f"{sorted(unknown_artifacts)}"
+            )
+        for artifact_id in artifact_ids:
             if artifact_id not in seen:
                 result.append((studio_id, entries[artifact_id]))
                 seen.add(artifact_id)
@@ -259,6 +276,104 @@ def group_names(groups: list[list[Any]]) -> list[str]:
     return names
 
 
+def payload_load_address(profile: dict[str, Any], payload_id: str) -> int:
+    if payload_id == "prg":
+        return int(profile["baseline"]["load_address"], 0)
+    if payload_id == "chr":
+        return 0
+    contract = profile.get("payloads", {}).get(payload_id)
+    if not isinstance(contract, dict) or "load_address" not in contract:
+        raise ValueError(f"missing payload contract: {payload_id}")
+    return int(str(contract["load_address"]), 0)
+
+
+def resolve_pointer_streams(
+    entry: dict[str, Any],
+    override: dict[str, Any],
+    profile: dict[str, Any],
+    labels: dict[str, int],
+    payloads: dict[str, bytes],
+) -> dict[str, Any]:
+    names = group_names(override["groups"])
+    owner_values = override.get("pointer_payloads")
+    if owner_values is None:
+        map_id = override.get("pointer_payload_map")
+        owner_values = profile.get("stream_payload_maps", {}).get(map_id)
+        if owner_values is None:
+            raise ValueError(f"missing stream payload map: {map_id}")
+    owners = [str(value) for value in owner_values]
+    if len(owners) != len(names):
+        raise ValueError(f"pointer payload count differs: {entry['id']}")
+    pointer_payload = str(override.get("pointer_payload", "prg"))
+    if pointer_payload not in payloads:
+        raise ValueError(f"content payload is unavailable: {pointer_payload}")
+    table_address = labels.get(override["pointer_table"])
+    if table_address is None:
+        raise ValueError(f"missing external pointer table: {override['pointer_table']}")
+    table_data = payloads[pointer_payload]
+    table_offset = table_address - payload_load_address(profile, pointer_payload)
+    table_end = table_offset + len(names) * 2
+    if not 0 <= table_offset < table_end <= len(table_data):
+        raise ValueError(f"external pointer table is outside payload: {entry['id']}")
+    pointers = [
+        table_data[table_offset + index * 2]
+        | (table_data[table_offset + index * 2 + 1] << 8)
+        for index in range(len(names))
+    ]
+    skipped = {int(value) for value in override.get("skip_pointer_indices", [])}
+    if any(not 0 <= index < len(names) for index in skipped):
+        raise ValueError(f"invalid skipped stream index: {entry['id']}")
+    slices = []
+    streams = []
+    boundaries = [0]
+    seen: set[tuple[str, int, int]] = set()
+    for index, (name, owner, address) in enumerate(zip(names, owners, pointers)):
+        if index in skipped:
+            continue
+        if owner not in payloads:
+            raise ValueError(f"content payload is unavailable: {owner}")
+        owner_data = payloads[owner]
+        owner_load_address = payload_load_address(profile, owner)
+        start = address - owner_load_address
+        if not 0 <= start < len(owner_data):
+            raise ValueError(
+                f"external stream is outside {owner}: {entry['id']}/{name}"
+            )
+        end = stream_end(
+            owner_data,
+            start,
+            entry["stream_codec"],
+            len(owner_data) - 1,
+        ) + 1
+        key = (owner, start, end)
+        if key in seen and not override.get("allow_shared_pointers", False):
+            raise ValueError(f"external stream pointers are not unique: {entry['id']}")
+        seen.add(key)
+        capacity = end - start
+        slices.append({
+            "name": name,
+            "payload": owner,
+            "start": start,
+            "end": end,
+            "load_address": owner_load_address,
+        })
+        streams.append({"name": name, "capacity": capacity})
+        boundaries.append(boundaries[-1] + capacity)
+    resolved = dict(entry)
+    resolved.update({
+        "_payload": "virtual",
+        "_load_address": 0,
+        "_stream_slices": slices,
+        "start": 0,
+        "end": boundaries[-1],
+        "stream_names": [item["name"] for item in slices],
+        "stream_boundaries": boundaries,
+        "streams": streams,
+        "source": f"{profile['id']} via {override['pointer_table']}",
+    })
+    return resolved
+
+
 def resolve_profile_selection(
     selection: list[tuple[str, dict[str, Any]]],
     profile: dict[str, Any],
@@ -267,29 +382,31 @@ def resolve_profile_selection(
 ) -> list[tuple[str, dict[str, Any]]]:
     overrides = profile.get("artifact_overrides", {})
     load_address = int(profile["baseline"]["load_address"], 0)
-    payload_contracts = profile.get("payloads", {})
     resolved_selection = []
     for studio_id, original in selection:
         entry = dict(original)
         override = overrides.get(entry["id"], {})
+        control_fields = {
+            "pointer_table", "pointer_payload", "pointer_payloads",
+            "pointer_payload_map", "groups",
+            "bank_offset", "skip_pointer_indices", "allow_shared_pointers",
+        }
         entry.update({
             key: value for key, value in override.items()
-            if key not in {"pointer_table", "groups", "bank_offset"}
+            if key not in control_fields
         })
+        if "pointer_payloads" in override or "pointer_payload_map" in override:
+            resolved_selection.append((
+                studio_id,
+                resolve_pointer_streams(entry, override, profile, labels, payloads),
+            ))
+            continue
         payload_id = str(override.get("payload", "prg"))
         entry["_payload"] = payload_id
-        if payload_id == "prg":
-            payload_load_address = load_address
-        elif payload_id == "chr":
-            payload_load_address = 0
-        else:
-            contract = payload_contracts.get(payload_id)
-            if not isinstance(contract, dict) or "load_address" not in contract:
-                raise ValueError(f"missing payload contract: {payload_id}")
-            payload_load_address = int(str(contract["load_address"]), 0)
+        entry_load_address = payload_load_address(profile, payload_id)
         if payload_id not in payloads:
             raise ValueError(f"content payload is unavailable: {payload_id}")
-        entry["_load_address"] = payload_load_address
+        entry["_load_address"] = entry_load_address
         if "pointer_table" in override:
             if payload_id != "chr" or entry["codec"] != "stream_collection":
                 raise ValueError(f"invalid external stream payload: {entry['id']}")
@@ -374,6 +491,54 @@ def encode_workspace_document(
     return encoded
 
 
+def virtual_stream_bytes(
+    entry: dict[str, Any], payloads: dict[str, bytes | bytearray]
+) -> bytes:
+    return b"".join(
+        bytes(payloads[item["payload"]][int(item["start"]):int(item["end"])])
+        for item in entry["_stream_slices"]
+    )
+
+
+def scatter_virtual_streams(
+    entry: dict[str, Any], encoded: bytes, candidates: dict[str, bytearray]
+) -> None:
+    position = 0
+    writes: dict[tuple[str, int, int], bytes] = {}
+    for item in entry["_stream_slices"]:
+        start = int(item["start"])
+        end = int(item["end"])
+        length = end - start
+        chunk = encoded[position:position + length]
+        key = (str(item["payload"]), start, end)
+        previous = writes.get(key)
+        if previous is not None and previous != chunk:
+            raise ValueError(
+                f"{entry['id']}: shared stream {item['name']} must remain identical"
+            )
+        writes[key] = chunk
+        position += length
+    if position != len(encoded):
+        raise ValueError(f"{entry['id']}: virtual stream slices do not consume data")
+    for (payload_id, start, end), chunk in writes.items():
+        candidates[payload_id][start:end] = chunk
+
+
+def virtual_changed_cpu_address(entry: dict[str, Any], offset: int) -> int:
+    position = 0
+    for item in entry["_stream_slices"]:
+        length = int(item["end"]) - int(item["start"])
+        if offset < position + length:
+            return (
+                int(item["load_address"])
+                + int(item["start"])
+                + offset
+                - position
+            )
+        position += length
+    raise ValueError(f"{entry['id']}: changed byte is outside virtual streams")
+
+
 def process_workspace(
     workspace: Path,
     selection: list[tuple[str, dict[str, Any]]],
@@ -386,12 +551,19 @@ def process_workspace(
     report: list[dict[str, Any]] = []
     for studio_id, entry in selection:
         entry = resolve_entry(entry, labels)
-        payload_id = entry.get("_payload", "prg")
-        baseline = payloads[payload_id]
-        entry_load_address = int(entry.get("_load_address", load_address))
-        start, end = artifact_range(
-            entry, labels, len(baseline), entry_load_address
-        )
+        virtual = "_stream_slices" in entry
+        if virtual:
+            payload_id = "virtual"
+            baseline = virtual_stream_bytes(entry, payloads)
+            entry_load_address = 0
+            start, end = 0, len(baseline)
+        else:
+            payload_id = entry.get("_payload", "prg")
+            baseline = payloads[payload_id]
+            entry_load_address = int(entry.get("_load_address", load_address))
+            start, end = artifact_range(
+                entry, labels, len(baseline), entry_load_address
+            )
         path = workspace / studio_id / f"{entry['id']}.json"
         if not path.is_file():
             raise ValueError(f"workspace artifact not found: {path}")
@@ -406,7 +578,17 @@ def process_workspace(
             if left != right
         ]
         if candidates is not None:
-            candidates[payload_id][start:end] = encoded
+            if virtual:
+                scatter_virtual_streams(entry, encoded, candidates)
+            else:
+                candidates[payload_id][start:end] = encoded
+        first_changed_address = None
+        if changed_offsets:
+            first_changed_address = (
+                virtual_changed_cpu_address(entry, changed_offsets[0])
+                if virtual
+                else entry_load_address + start + changed_offsets[0]
+            )
         report.append(
             {
                 "studio": studio_id,
@@ -415,8 +597,8 @@ def process_workspace(
                 "capacity_bytes": end - start,
                 "changed_bytes": len(changed_offsets),
                 "first_changed_cpu_address": (
-                    f"0x{entry_load_address + start + changed_offsets[0]:04x}"
-                    if changed_offsets else None
+                    f"0x{first_changed_address:04x}"
+                    if first_changed_address is not None else None
                 ),
                 "encoded_sha1": sha1(encoded),
             }
@@ -439,32 +621,51 @@ def write_workspace_documents(
 ) -> None:
     for studio_id, entry in selection:
         entry = resolve_entry(entry, labels)
-        payload_id = entry.get("_payload", "prg")
-        baseline = payloads[payload_id]
-        entry_load_address = int(entry.get("_load_address", load_address))
-        start, end = artifact_range(
-            entry, labels, len(baseline), entry_load_address
-        )
+        virtual = "_stream_slices" in entry
+        if virtual:
+            baseline = virtual_stream_bytes(entry, payloads)
+            entry_load_address = 0
+            start, end = 0, len(baseline)
+        else:
+            payload_id = entry.get("_payload", "prg")
+            baseline = payloads[payload_id]
+            entry_load_address = int(entry.get("_load_address", load_address))
+            start, end = artifact_range(
+                entry, labels, len(baseline), entry_load_address
+            )
         path = workspace / studio_id / f"{entry['id']}.json"
         if path.exists() and not overwrite:
             print(f"[OK] Kept existing {path}")
             continue
         decode = CODECS[entry["codec"]][0]
-        document = {
+        document: dict[str, Any] = {
             "schema_version": 1,
             "profile": profile_id,
             "studio": studio_id,
             "artifact_id": entry["id"],
             "codec": entry["codec"],
             "source": entry["source"],
-            "cpu_range": [
-                f"0x{entry_load_address + start:04x}",
-                f"0x{entry_load_address + end - 1:04x}",
-            ],
             "capacity_bytes": end - start,
             "original_sha1": sha1(baseline[start:end]),
             "data": decode(baseline[start:end], entry),
         }
+        if virtual:
+            document["payload_ranges"] = [
+                {
+                    "name": item["name"],
+                    "payload": item["payload"],
+                    "cpu_range": [
+                        f"0x{int(item['load_address']) + int(item['start']):04x}",
+                        f"0x{int(item['load_address']) + int(item['end']) - 1:04x}",
+                    ],
+                }
+                for item in entry["_stream_slices"]
+            ]
+        else:
+            document["cpu_range"] = [
+                f"0x{entry_load_address + start:04x}",
+                f"0x{entry_load_address + end - 1:04x}",
+            ]
         atomic_write_json(path, document)
         print(f"[OK] {'Exported' if overwrite else 'Initialized'} {path}")
 
@@ -663,9 +864,21 @@ def main() -> int:
     args = parser.parse_args()
     try:
         entries, profiles = load_configuration(args.formats, args.studios)
-        selection = selected_entries(entries, profiles, args.selected)
         profile_document = load_profiles(args.profiles)
         authoring_profile = require_supported(profile_document, args.profile)
+        selected_studios = args.selected
+        if selected_studios is None and authoring_profile["status"] == "partial":
+            selected_studios = [
+                studio_id
+                for studio_id, state in authoring_profile["studios"].items()
+                if state == "supported"
+            ]
+        selection = selected_entries(
+            entries,
+            profiles,
+            selected_studios,
+            authoring_profile.get("studio_artifacts"),
+        )
         for studio_id, _entry in selection:
             require_supported(profile_document, args.profile, studio_id)
         load_address = int(authoring_profile["baseline"]["load_address"], 0)

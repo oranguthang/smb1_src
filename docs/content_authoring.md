@@ -7,12 +7,14 @@ store local work beneath the ignored `content/workspace/` directory.
 Source Reconstruction 3.0 introduces a manifest-owned compatibility matrix at
 `config/content_authoring_profiles.json`. Run `make list-content-profiles` to
 inspect Studio availability and `make content-profile-audit` to validate the
-contract. JU, PC10, PAL, Vs. SMB, and FDS SMB1 support all four Studios through
-isolated profile workspaces, labels, stream capacities, program images, and
-container builders. ANN now has an exact multi-payload FDS composition
-contract, but remains unavailable until its normal and extended level banks
-receive distinct editable artifact contracts. A planned profile is not
+contract. JU, PC10, PAL, Vs. SMB, FDS SMB1, and ANN support all four Studios
+through isolated profile workspaces, labels, stream capacities, program images,
+and container builders. ANN has an exact multi-payload FDS composition contract,
+and point playtesting is proven for both its normal and extended course banks.
+A profile or Studio is not
 selectable merely because its program happens to share labels or bytes with JU.
+Source 3 formats extend the frozen Source 2 codec manifest through
+`config/content_formats_3.json`; the earlier release contract is not rewritten.
 
 Select a supported profile with `CONTENT_PROFILE`:
 
@@ -21,6 +23,7 @@ make level-studio CONTENT_PROFILE=pal
 make sound-studio CONTENT_PROFILE=pc10
 make level-studio CONTENT_PROFILE=vs_smb
 make graphics-studio CONTENT_PROFILE=fds_smb
+make level-studio CONTENT_PROFILE=ann_fds
 make build-content CONTENT_PROFILE=ju
 ```
 
@@ -34,7 +37,21 @@ JU or PC10 build.
 | `make world-studio` | All 36 world-to-area routes and nine player physics tables |
 | `make level-studio` | Every selected-profile area header, terrain-object stream, enemy stream, entrance, and page control |
 | `make graphics-studio` | 512 CHR tiles, 101 metatiles, 26 player frames, eight palette packets, and fixed-length UI text |
-| `make sound-studio` | Fourteen logical compositions, every selected-profile header and active channel view, plus the swim/stomp volume envelope |
+| `make sound-studio` | Fourteen main-game compositions, every selected-profile header and active channel view, plus the swim/stomp volume envelope; ANN also exposes its FDS ending suite |
+
+ANN Level Studio adds a course-set selector. Its normal set resolves 44 valid
+areas through pointer tables spanning `NSMMAIN` and `NSMDATA2`; its extended set
+resolves 21 areas from `NSMDATA4` plus the two deliberately reused primary
+streams. World Studio exposes the corresponding 36 normal and 18 extended
+routes. Shared empty enemy pointers must encode identically, and the service
+pointer that targets a lone `$FD` is excluded because it is not an area stream.
+ANN Sound Studio adds a bank selector instead of interpreting the ending overlay
+as ordinary SMB1 music. The main bank retains the four-channel APU model. The
+`NSMDATA3` bank decodes the actual 11-section ending order, six fixed headers,
+APU pulse/triangle/noise streams, FDS wave channel, private length table, and
+software envelopes. Its synthesis view edits both 32-byte source waves (mirrored
+by the game into 64 FDS samples) and typed direct/increase/decrease volume steps.
+All note and synthesis edits preserve the original byte capacities.
 
 The programs are semantic editors rather than generic JSON inspectors. Level
 Studio reconstructs every area from the authored headers and object streams,
@@ -95,7 +112,16 @@ not available at the default sibling path
 `../fceux_automation/vc/x64/Release/fceux64.exe`.
 FDS playtesting allows a longer boot interval than cartridge profiles because
 the BIOS must load the program and CHR records before the normal title task is
-ready. Vs. playtesting uses its distinct arcade mode tree: title readiness is
+ready. Embedded playtests use turbo only for this startup phase and restore
+normal speed before control is handed to the player. ANN normal courses use
+title task 3 and stabilize in gameplay task 5; these values were measured by
+the smoke trace rather than inherited from cartridge SMB. Extended-course
+playtests enter disk-loader task 6, load record `$40` (`NSMDATA4`) at `$C296`,
+verify its `$C33D=$00` overlay signature, and only then enter the same gameplay
+ready state. Run both gates with
+`make smoke-level-playtest CONTENT_PROFILE=ann_fds PLAYTEST_THEME=Night` and
+`make smoke-level-playtest CONTENT_PROFILE=ann_fds PLAYTEST_BANK=extended PLAYTEST_AREA=castle_1 PLAYTEST_THEME=Night`.
+Vs. playtesting uses its distinct arcade mode tree: title readiness is
 task 4, operating mode 2 is gameplay, and gameplay readiness is task 4. These
 values belong to the profile manifest rather than the shared Lua workflow.
 
@@ -125,6 +151,10 @@ against its `$6000` program load address. Its builder verifies an ignored,
 zeroed private disk template, writes the 32 KiB `SMMAIN` program into file IDs 3
 and 4, and writes the editable 8 KiB CHR into file ID 2. The template, retained
 CHR, and completed 65,500-byte disk side each have independent manifest hashes.
+ANN composition writes `NSMMAIN`, `NSMDATA2`, `NSMDATA3`, and `NSMDATA4` back to
+their original FDS records. Logical course documents gather streams through the
+source-built address tables and scatter edits back to their manifest-owned
+payloads; the unmodified build reproduces the complete disk side exactly.
 Vs. composition retains its exact 16-byte header, 32 KiB source-built PRG, and
 16 KiB CHR. Graphics Studio edits only the first 8 KiB pattern-table bank. The
 second bank holds the arcade level data: Level Studio derives all 39 area and 39
@@ -138,11 +168,11 @@ without opening windows. The lower-level init, export, validate, and build
 commands accept `STUDIO=world`, `STUDIO=level`, `STUDIO=graphics`, or
 `STUDIO=sound`.
 
-`make check-content-profiles` performs an isolated export, constructs all four
-Studio models, and rebuilds JU, PC10, PAL, Vs. SMB, and FDS SMB1 with zero edits. It
-rejects any image whose size or SHA-1 differs from the selected profile
-baseline. Its temporary workspaces live under `build/content_roundtrip/` and
-never overwrite local authoring work.
+`make check-content-profiles` performs an isolated export, constructs every
+supported Studio model, and rebuilds JU, PC10, PAL, Vs. SMB, FDS SMB1, and ANN
+with zero edits. It rejects any image whose size or SHA-1
+differs from the selected profile baseline. Its temporary workspaces live under
+`build/content_roundtrip/` and never overwrite local authoring work.
 
 The ignored `references/` directory may contain local research checkouts. The
 editors were implemented independently from the documented SMB1 formats. No

@@ -9,6 +9,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, ttk
 
+from ann_sound_studio_model import AnnFdsMusicBank
 from sound_studio_model import MusicBank
 from studio_common import change_document, dirty, guard, load_documents, run_make, save_documents
 
@@ -17,26 +18,28 @@ class SoundStudio(tk.Tk):
     def __init__(
         self,
         documents: dict,
-        model: MusicBank,
+        banks: list[tuple[str, MusicBank]],
         project_root: Path,
         preview: Path,
         profile_id: str = "ju",
     ) -> None:
         super().__init__()
         self.documents = documents
-        self.model = model
+        self.banks = banks
+        self.bank_name = tk.StringVar(value=banks[0][0])
+        self.model = banks[0][1]
         self.project_root = project_root
         self.profile_id = profile_id
         self.preview_path = preview
-        self.song_label = tk.StringVar(value=model.header_labels[0])
+        self.song_label = tk.StringVar(value=self.model.header_labels[0])
         self.channel_name = tk.StringVar()
         self.channel_enabled = {
             name: tk.BooleanVar(value=True)
-            for name in ("square2", "square1", "triangle", "noise")
+            for name in ("square2", "square1", "triangle", "noise", "wave")
         }
         self.raw_value = tk.IntVar()
         self.status = tk.StringVar()
-        self.compositions = model.compositions()
+        self.compositions = self.model.compositions()
         self.current_composition = self.compositions[0]
         self.current_song = self.current_composition["patterns"][0]
         self.current_channel = self.current_song["channels"][0]
@@ -49,6 +52,17 @@ class SoundStudio(tk.Tk):
     def build_ui(self) -> None:
         toolbar = ttk.Frame(self, padding=7)
         toolbar.pack(fill="x")
+        ttk.Label(toolbar, text="Bank").pack(side="left")
+        self.bank_box = ttk.Combobox(
+            toolbar,
+            state="readonly",
+            width=18,
+            textvariable=self.bank_name,
+            values=[name for name, _model in self.banks],
+        )
+        self.bank_box.current(0)
+        self.bank_box.pack(side="left", padx=5)
+        self.bank_box.bind("<<ComboboxSelected>>", lambda _event: self.select_bank())
         ttk.Label(toolbar, text="Song").pack(side="left")
         self.song_box = ttk.Combobox(
             toolbar, state="readonly", width=32,
@@ -77,6 +91,10 @@ class SoundStudio(tk.Tk):
         notebook.add(envelope, text="Swim/stomp envelope")
         self.build_music(music)
         self.build_envelope(envelope)
+        if any(isinstance(model, AnnFdsMusicBank) for _name, model in self.banks):
+            synthesis = ttk.Frame(notebook, padding=6)
+            notebook.add(synthesis, text="FDS synthesis")
+            self.build_fds_synthesis(synthesis)
         ttk.Label(self, textvariable=self.status, anchor="w", padding=7).pack(fill="x")
 
     def build_music(self, parent: ttk.Frame) -> None:
@@ -97,6 +115,7 @@ class SoundStudio(tk.Tk):
             ("square1", "Square 1"),
             ("triangle", "Triangle"),
             ("noise", "Noise"),
+            ("wave", "FDS wave"),
         ):
             ttk.Checkbutton(
                 mixer,
@@ -150,6 +169,188 @@ class SoundStudio(tk.Tk):
         ttk.Button(controls, text="Apply volume", command=self.apply_envelope).grid(row=0, column=4, padx=8)
         self.load_envelope_step()
 
+    def build_fds_synthesis(self, parent: ttk.Frame) -> None:
+        controls = ttk.Frame(parent)
+        controls.pack(fill="x")
+        self.fds_wave_id = tk.IntVar(value=1)
+        self.fds_sample_index = tk.IntVar(value=0)
+        self.fds_sample_value = tk.IntVar(value=0)
+        ttk.Label(controls, text="Wave").pack(side="left")
+        wave_box = ttk.Combobox(
+            controls,
+            state="readonly",
+            width=12,
+            values=("FDS wave 1", "FDS wave 2"),
+        )
+        wave_box.current(0)
+        wave_box.pack(side="left", padx=5)
+        wave_box.bind(
+            "<<ComboboxSelected>>",
+            lambda _event: (
+                self.fds_wave_id.set(wave_box.current() + 1),
+                self.refresh_fds_synthesis(),
+            ),
+        )
+        ttk.Label(controls, text="Sample").pack(side="left")
+        ttk.Spinbox(
+            controls,
+            from_=0,
+            to=31,
+            width=5,
+            textvariable=self.fds_sample_index,
+            command=self.load_fds_sample,
+        ).pack(side="left", padx=4)
+        ttk.Label(controls, text="Level 0-63").pack(side="left")
+        ttk.Spinbox(
+            controls,
+            from_=0,
+            to=63,
+            width=5,
+            textvariable=self.fds_sample_value,
+        ).pack(side="left", padx=4)
+        ttk.Button(
+            controls, text="Apply sample", command=self.apply_fds_sample
+        ).pack(side="left", padx=6)
+        self.fds_wave_canvas = tk.Canvas(parent, height=260, bg="#111824")
+        self.fds_wave_canvas.pack(fill="x", pady=8)
+        envelope_frame = ttk.LabelFrame(parent, text="FDS volume program", padding=6)
+        envelope_frame.pack(fill="both", expand=True)
+        self.fds_volume_tree = ttk.Treeview(
+            envelope_frame,
+            columns=("step", "mode", "value", "frames"),
+            show="headings",
+            height=7,
+        )
+        for column, title, width in (
+            ("step", "Step", 60),
+            ("mode", "Mode", 120),
+            ("value", "Value", 80),
+            ("frames", "Frames", 80),
+        ):
+            self.fds_volume_tree.heading(column, text=title)
+            self.fds_volume_tree.column(column, width=width)
+        self.fds_volume_tree.pack(side="left", fill="both", expand=True)
+        self.fds_volume_tree.bind(
+            "<<TreeviewSelect>>", lambda _event: self.load_fds_volume_step()
+        )
+        editor = ttk.Frame(envelope_frame, padding=8)
+        editor.pack(side="left", fill="y")
+        self.fds_volume_mode = tk.StringVar(value="direct")
+        self.fds_volume_value = tk.IntVar(value=0)
+        self.fds_volume_frames = tk.IntVar(value=1)
+        for row, (label, widget) in enumerate((
+            ("Mode", ttk.Combobox(
+                editor,
+                state="readonly",
+                width=10,
+                textvariable=self.fds_volume_mode,
+                values=("direct", "increase", "decrease"),
+            )),
+            ("Value", ttk.Spinbox(
+                editor, from_=0, to=63, width=8,
+                textvariable=self.fds_volume_value,
+            )),
+            ("Frames", ttk.Spinbox(
+                editor, from_=1, to=255, width=8,
+                textvariable=self.fds_volume_frames,
+            )),
+        )):
+            ttk.Label(editor, text=label).grid(row=row, column=0, sticky="w")
+            widget.grid(row=row, column=1, padx=4, pady=2)
+        ttk.Button(
+            editor, text="Apply step", command=self.apply_fds_volume_step
+        ).grid(row=3, column=0, columnspan=2, sticky="ew", pady=8)
+        ttk.Label(
+            editor,
+            text=(
+                "The 32 stored samples are mirrored by the game into the "
+                "64-sample FDS wave RAM. Volume steps preserve the engine's "
+                "register mode and fixed byte count."
+            ),
+            wraplength=260,
+        ).grid(row=4, column=0, columnspan=2, sticky="w")
+        self.refresh_fds_synthesis()
+
+    def ann_model(self) -> AnnFdsMusicBank:
+        for _name, model in self.banks:
+            if isinstance(model, AnnFdsMusicBank):
+                return model
+        raise ValueError("This profile has no FDS synthesis bank")
+
+    def refresh_fds_synthesis(self) -> None:
+        if not hasattr(self, "fds_wave_canvas"):
+            return
+        model = self.ann_model()
+        waveform = model.waveform(int(self.fds_wave_id.get()))["samples"]
+        self.fds_wave_canvas.delete("all")
+        width = max(1, self.fds_wave_canvas.winfo_width())
+        x_step = max(12, (width - 20) / len(waveform))
+        points = []
+        for index, value in enumerate(waveform):
+            x = 10 + (index + 0.5) * x_step
+            y = 240 - value * 3.5
+            points.extend((x, y))
+            self.fds_wave_canvas.create_line(x, 240, x, y, fill="#37536d")
+        self.fds_wave_canvas.create_line(*points, fill="#65c4ff", width=2)
+        self.fds_volume_tree.delete(*self.fds_volume_tree.get_children())
+        for step in model.volume_envelope(int(self.fds_wave_id.get())):
+            self.fds_volume_tree.insert(
+                "",
+                "end",
+                iid=str(step["step"]),
+                values=(step["step"], step["mode"], step["value"], step["frames"]),
+            )
+        self.load_fds_sample()
+        if self.fds_volume_tree.get_children():
+            self.fds_volume_tree.selection_set(self.fds_volume_tree.get_children()[0])
+            self.load_fds_volume_step()
+
+    def load_fds_sample(self) -> None:
+        index = max(0, min(31, int(self.fds_sample_index.get())))
+        self.fds_sample_index.set(index)
+        self.fds_sample_value.set(
+            self.ann_model().waveform(int(self.fds_wave_id.get()))["samples"][index]
+        )
+
+    def apply_fds_sample(self) -> None:
+        def action() -> None:
+            self.ann_model().set_wave_sample(
+                int(self.fds_wave_id.get()),
+                int(self.fds_sample_index.get()),
+                int(self.fds_sample_value.get()),
+            )
+            self.refresh_fds_synthesis()
+            if isinstance(self.model, AnnFdsMusicBank):
+                self.refresh_music()
+        guard("Sound Studio", action)
+
+    def load_fds_volume_step(self) -> None:
+        if not self.fds_volume_tree.selection():
+            return
+        step = int(self.fds_volume_tree.selection()[0])
+        value = self.ann_model().volume_envelope(int(self.fds_wave_id.get()))[step]
+        self.fds_volume_mode.set(str(value["mode"]))
+        self.fds_volume_value.set(int(value["value"]))
+        self.fds_volume_frames.set(int(value["frames"]))
+
+    def apply_fds_volume_step(self) -> None:
+        if not self.fds_volume_tree.selection():
+            return
+        step = int(self.fds_volume_tree.selection()[0])
+
+        def action() -> None:
+            self.ann_model().set_volume_step(
+                int(self.fds_wave_id.get()),
+                step,
+                self.fds_volume_mode.get(),
+                int(self.fds_volume_value.get()),
+                int(self.fds_volume_frames.get()),
+            )
+            self.refresh_fds_synthesis()
+            if isinstance(self.model, AnnFdsMusicBank):
+                self.refresh_music()
+        guard("Sound Studio", action)
+
     def envelope_steps(self) -> list[dict]:
         return self.documents["swim_stomp_envelope"].document["data"]["steps"]
 
@@ -164,6 +365,15 @@ class SoundStudio(tk.Tk):
         ])
         self.pattern_box.current(0)
         self.select_pattern()
+
+    def select_bank(self) -> None:
+        self.model = dict(self.banks)[self.bank_name.get()]
+        self.compositions = self.model.compositions()
+        self.song_box.configure(
+            values=[composition["name"] for composition in self.compositions]
+        )
+        self.song_box.current(0)
+        self.select_song()
 
     def select_pattern(self) -> None:
         self.current_song = self.current_composition["patterns"][self.pattern_box.current()]
@@ -201,7 +411,8 @@ class SoundStudio(tk.Tk):
         self.draw_roll()
         total = sum(frames for _frequency, frames in self.model.note_events(self.current_song, self.current_channel))
         self.status.set(
-            f"{self.current_composition['name']} / pattern {self.pattern_box.current() + 1} / {name}: "
+            f"{self.bank_name.get()} / {self.current_composition['name']} / "
+            f"pattern {self.pattern_box.current() + 1} / {name}: "
             f"{len(self.current_channel['bytes'])} bytes, "
             f"{total} frames | {'unsaved edits' if dirty(self.documents) else 'saved'}"
         )
@@ -316,9 +527,12 @@ class SoundStudio(tk.Tk):
 
     def undo(self) -> None:
         if not self.model.document.undo():
-            self.documents["swim_stomp_envelope"].undo()
+            for document in self.documents.values():
+                if document is not self.model.document and document.undo():
+                    break
         self.refresh_music()
         self.load_envelope_step()
+        self.refresh_fds_synthesis()
 
     def save(self) -> None:
         guard("Sound Studio", lambda: (save_documents(self.documents), self.refresh_music()))
@@ -360,25 +574,49 @@ def main() -> int:
         "sound",
         args.profile,
     )
-    model = MusicBank(
+    main_model = MusicBank(
         documents["music_bank"],
         labels,
         args.prg.read_bytes(),
         load_address=args.load_address,
     )
-    songs = model.songs()
-    compositions = model.compositions()
+    banks: list[tuple[str, MusicBank]] = [("Main game", main_model)]
+    if "ann_fds_music_bank" in documents:
+        banks.append((
+            "FDS ending",
+            AnnFdsMusicBank(
+                documents["ann_fds_music_bank"],
+                labels,
+                args.prg.read_bytes(),
+                load_address=args.load_address,
+            ),
+        ))
     for document in documents.values():
         document.validate()
     if args.check:
+        songs = sum(len(model.songs()) for _name, model in banks)
+        compositions = sum(len(model.compositions()) for _name, model in banks)
+        channels = sum(
+            len(song["channels"])
+            for _name, model in banks
+            for song in model.songs()
+        )
+        for _name, model in banks:
+            if isinstance(model, AnnFdsMusicBank):
+                preview_pcm = b"".join(
+                    model.render_pattern(pattern, sample_rate=3000)
+                    for pattern in model.compositions()[0]["patterns"]
+                )
+                if not any(preview_pcm):
+                    raise ValueError("ANN FDS preview renderer produced silence")
         print(
-            f"[OK] Sound Studio: {len(compositions)} compositions, {len(songs)} headers, "
-            f"and {sum(len(song['channels']) for song in songs)} active channel views"
+            f"[OK] Sound Studio: {compositions} compositions across {len(banks)} "
+            f"bank(s), {songs} headers, and {channels} active channel views"
         )
         return 0
     preview = args.workspace / "sound" / "preview.wav"
     application = SoundStudio(
-        documents, model, args.project_root, preview, args.profile
+        documents, banks, args.project_root, preview, args.profile
     )
     if args.smoke_ui:
         application.update_idletasks()

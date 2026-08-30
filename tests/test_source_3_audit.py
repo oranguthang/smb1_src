@@ -83,6 +83,7 @@ class Source3AuditTests(unittest.TestCase):
                     "default_profile": "ju",
                     "studio_ids": ["world", "level", "graphics", "sound"],
                     "supported_profiles": ["ju"],
+                    "partial_profiles": [],
                     "planned_profiles": [],
                 },
             )

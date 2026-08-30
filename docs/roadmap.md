@@ -664,10 +664,11 @@ unknowns without changing the frozen 1.0 runtime manifest.
 
 The semantic/runtime milestone is complete: every registered unknown now has a
 documented resolution, and its aggregate static or emulator evidence is pinned
-by `make semantic-evidence`. Profile-aware authoring is the active milestone.
-Its first contract records all six build profiles, the four-Studio compatibility
-matrix, isolated workspace/output roots, and explicit blockers for profiles
-that cannot yet round-trip edited content safely.
+by `make semantic-evidence`. Profile-aware authoring is also complete. Its
+contract records all six build profiles, the four-Studio compatibility matrix,
+isolated workspace/output roots, and explicit runtime paths for every supported
+Level Studio course bank. The later-engine feasibility study is the active
+milestone.
 
 The authoring matrix accepts JU, PC10, PAL, Vs. SMB, and FDS SMB1. All four Studios
 consume the selected build's labels and fixed capacities, PC10 retains its
@@ -679,7 +680,16 @@ level streams in the second half through source-built PRG pointer tables. Its
 World and Sound models use the arcade-specific routes and headers, while point
 playtesting selects the distinct Vs. game mode and task tree. An isolated
 aggregate gate reconstructs each unmodified image and checks its exact size and
-SHA-1. ANN remains deliberately planned.
+SHA-1. ANN World, Level, and Graphics Studio now expose 54 routes, 65 valid
+areas across normal and extended course sets, its 102 metatiles, CHR, palettes,
+player mappings, and platform-specific UI packets. Sound Studio separates the
+ordinary APU bank from the `NSMDATA3` ending suite and models its FDS wave channel
+and synthesis programs. Its exact four-payload disk composition is part of the
+aggregate gate. Normal-course point playtesting has a measured FDS contract:
+title task 3, gameplay mode 1, ready task 5, and engine subroutine 7. Extended
+courses now enter the original disk-loader task, load `NSMDATA4`, verify the
+overlay at `$C33D`, and reach the same ready-state contract. ANN is therefore a
+supported profile rather than a partial promise.
 
 The detailed sequence, fixed-layout constraints, and release boundaries are in
 `docs/source_reconstruction_3_0.md`. The final 3.0 milestone remains planned

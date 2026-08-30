@@ -25,6 +25,7 @@ class ContentProfileTests(unittest.TestCase):
 
     def test_default_profile_must_be_supported(self) -> None:
         document = copy.deepcopy(self.document)
+        profile_by_id(document, "ann_fds")["status"] = "partial"
         document["default_profile"] = "ann_fds"
         self.assertIn(
             "default content authoring profile is not supported",
@@ -43,9 +44,12 @@ class ContentProfileTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "profile not found"):
             profile_by_id(self.document, "unknown")
 
-    def test_planned_profile_cannot_be_selected(self) -> None:
-        with self.assertRaisesRegex(ValueError, "not ready"):
-            require_supported(self.document, "ann_fds", "level")
+    def test_ann_profile_accepts_each_studio(self) -> None:
+        for studio in self.document["studio_ids"]:
+            self.assertEqual(
+                require_supported(self.document, "ann_fds", studio)["id"],
+                "ann_fds",
+            )
 
     def test_supported_profile_accepts_each_studio(self) -> None:
         for studio in self.document["studio_ids"]:
@@ -81,6 +85,36 @@ class ContentProfileTests(unittest.TestCase):
         profile_by_id(document, "ann_fds")["payloads"]["NSMDATA2"]["sha1"] = "bad"
         self.assertIn(
             "invalid payload contract: ann_fds/NSMDATA2",
+            validate_profiles(document),
+        )
+
+    def test_ann_course_banks_keep_explicit_payload_ownership(self) -> None:
+        profile = profile_by_id(self.document, "ann_fds")
+        self.assertEqual(len(profile["stream_payload_maps"]["normal"]), 45)
+        self.assertEqual(len(profile["stream_payload_maps"]["extended"]), 21)
+        self.assertEqual(
+            [bank["id"] for bank in profile["studio_banks"]["level"]],
+            ["normal", "extended"],
+        )
+        self.assertEqual(
+            profile["studio_banks"]["level"][1]["playtest"],
+            {"loader": "ann_extended"},
+        )
+
+    def test_level_bank_rejects_an_unknown_playtest_loader(self) -> None:
+        document = copy.deepcopy(self.document)
+        bank = profile_by_id(document, "ann_fds")["studio_banks"]["level"][1]
+        bank["playtest"] = {"loader": "guess"}
+        self.assertIn(
+            "invalid bank playtest contract: ann_fds/extended",
+            validate_profiles(document),
+        )
+
+    def test_stream_payload_map_rejects_an_unknown_owner(self) -> None:
+        document = copy.deepcopy(self.document)
+        profile_by_id(document, "ann_fds")["stream_payload_maps"]["normal"][0] = "BAD"
+        self.assertIn(
+            "invalid stream payload map: ann_fds/normal",
             validate_profiles(document),
         )
 

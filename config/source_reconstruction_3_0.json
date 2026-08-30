@@ -14,8 +14,8 @@
     {"id": "platform_relocation", "status": "complete"},
     {"id": "platform_interfaces", "status": "complete"},
     {"id": "semantic_runtime_evidence", "status": "complete"},
-    {"id": "profile_aware_authoring", "status": "in-progress"},
-    {"id": "later_engine_feasibility", "status": "planned"},
+    {"id": "profile_aware_authoring", "status": "complete"},
+    {"id": "later_engine_feasibility", "status": "in-progress"},
     {"id": "source_reconstruction_3_0", "status": "planned"}
   ],
   "relocation": {
@@ -63,10 +63,12 @@
   },
   "authoring": {
     "profile_manifest": "config/content_authoring_profiles.json",
+    "format_manifest": "config/content_formats_3.json",
     "default_profile": "ju",
     "studio_ids": ["world", "level", "graphics", "sound"],
-    "supported_profiles": ["ju", "pc10", "pal", "vs_smb", "fds_smb"],
-    "planned_profiles": ["ann_fds"]
+    "supported_profiles": ["ju", "pc10", "pal", "vs_smb", "fds_smb", "ann_fds"],
+    "partial_profiles": [],
+    "planned_profiles": []
   },
   "required_documents": [
     "docs/preservation_source_1_0.md",

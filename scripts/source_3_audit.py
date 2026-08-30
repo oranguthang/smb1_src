@@ -121,6 +121,9 @@ def validate_resolved_unknowns(text: str, expected: list[str]) -> list[str]:
 def validate_authoring_contract(
     project_root: Path, contract: dict[str, Any]
 ) -> list[str]:
+    format_relative = contract.get("format_manifest", "")
+    if not (project_root / format_relative).is_file():
+        return ["Source 3.0 content format manifest is missing"]
     relative = contract.get("profile_manifest", "")
     path = project_root / relative
     if not path.is_file():
@@ -144,10 +147,17 @@ def validate_authoring_contract(
         for profile in document["profiles"]
         if profile["status"] == "planned"
     ]
+    partial = [
+        profile["id"]
+        for profile in document["profiles"]
+        if profile["status"] == "partial"
+    ]
     if supported != contract.get("supported_profiles"):
         errors.append("Source 3.0 supported content profile list differs")
     if planned != contract.get("planned_profiles"):
         errors.append("Source 3.0 planned content profile list differs")
+    if partial != contract.get("partial_profiles"):
+        errors.append("Source 3.0 partial content profile list differs")
     return errors
 
 

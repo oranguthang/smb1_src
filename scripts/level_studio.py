@@ -54,9 +54,19 @@ class LevelStudio(tk.Tk):
         playtest_ready_task: int = 3,
         playtest_boot_frames: int = 600,
         playtest_ready_frames: int = 600,
+        level_banks: list[dict] | None = None,
     ) -> None:
         super().__init__()
-        self.model = model
+        self.level_banks = level_banks or [{
+            "id": "default",
+            "name": "Courses",
+            "model": model,
+            "world_routes": world_routes or WORLD_AREA_POINTERS,
+            "playtest": True,
+        }]
+        self.bank_by_id = {bank["id"]: bank for bank in self.level_banks}
+        self.course_bank = tk.StringVar(value=self.level_banks[0]["id"])
+        self.model = self.level_banks[0]["model"]
         self.documents = documents
         self.visuals = visuals
         self.project_root = project_root
@@ -64,7 +74,7 @@ class LevelStudio(tk.Tk):
         self.content_image = content_image or (
             project_root / "build" / "content" / profile_id / "smb.nes"
         )
-        self.world_routes = world_routes or WORLD_AREA_POINTERS
+        self.world_routes = self.level_banks[0]["world_routes"]
         self.playtest_boot_task = playtest_boot_task
         self.playtest_game_mode = playtest_game_mode
         self.playtest_ready_task = playtest_ready_task
@@ -107,12 +117,23 @@ class LevelStudio(tk.Tk):
     def build_ui(self) -> None:
         toolbar = ttk.Frame(self, padding=7)
         toolbar.pack(fill="x")
+        if len(self.level_banks) > 1:
+            ttk.Label(toolbar, text="Course set").pack(side="left")
+            bank_box = ttk.Combobox(
+                toolbar,
+                textvariable=self.course_bank,
+                values=[bank["id"] for bank in self.level_banks],
+                state="readonly",
+                width=12,
+            )
+            bank_box.pack(side="left", padx=(5, 10))
+            bank_box.bind("<<ComboboxSelected>>", self.select_course_bank)
         ttk.Label(toolbar, text="Area").pack(side="left")
-        area_box = ttk.Combobox(
+        self.area_box = ttk.Combobox(
             toolbar, textvariable=self.area_name, values=self.model.names,
             state="readonly", width=22,
         )
-        area_box.pack(side="left", padx=5)
+        self.area_box.pack(side="left", padx=5)
         self.area_name.trace_add("write", self.select_area_from_control)
         ttk.Label(toolbar, text="Lighting").pack(side="left", padx=(5, 2))
         theme_box = ttk.Combobox(
@@ -136,15 +157,18 @@ class LevelStudio(tk.Tk):
         ):
             ttk.Button(toolbar, text=text, command=command).pack(side="left", padx=2)
         ttk.Label(toolbar, text="World").pack(side="left", padx=(10, 2))
-        ttk.Spinbox(
+        self.world_spinbox = ttk.Spinbox(
             toolbar, from_=1, to=8, textvariable=self.playtest_world, width=3,
-            command=self.refresh,
-        ).pack(side="left")
+            command=self.change_world_context,
+        )
+        self.world_spinbox.pack(side="left")
         ttk.Label(toolbar, text="Course").pack(side="left", padx=(6, 2))
-        ttk.Spinbox(
-            toolbar, from_=1, to=4, textvariable=self.playtest_level, width=3,
+        self.course_spinbox = ttk.Spinbox(
+            toolbar, from_=1, to=max(map(len, self.world_routes)),
+            textvariable=self.playtest_level, width=3,
             command=self.refresh,
-        ).pack(side="left")
+        )
+        self.course_spinbox.pack(side="left")
 
         header = ttk.LabelFrame(self, text="Area header", padding=6)
         header.pack(fill="x", padx=7)
@@ -240,6 +264,44 @@ class LevelStudio(tk.Tk):
         if not self.syncing_controls:
             self.select_area()
 
+    def select_course_bank(self, _event: object = None) -> None:
+        bank = self.bank_by_id[self.course_bank.get()]
+        self.model = bank["model"]
+        self.world_routes = bank["world_routes"]
+        self.world_spinbox.configure(to=len(self.world_routes))
+        self.area_box.configure(values=self.model.names)
+        initial_area = (
+            "ground_6" if "ground_6" in self.model.names else self.model.names[0]
+        )
+        self.selection = None
+        self.syncing_controls = True
+        try:
+            self.area_name.set(initial_area)
+            self.preview_theme.set(default_preview_theme(
+                initial_area, self.model.area(initial_area)
+            ))
+            default_world, default_level = first_world_context(
+                initial_area, self.world_routes
+            )
+            self.playtest_world.set(default_world + 1)
+            self.playtest_level.set(default_level + 1)
+        finally:
+            self.syncing_controls = False
+        self.update_route_limits()
+        self.reset_mario_to_entrance()
+        self.refresh()
+
+    def update_route_limits(self) -> None:
+        world = min(max(int(self.playtest_world.get()), 1), len(self.world_routes))
+        self.playtest_world.set(world)
+        course_count = len(self.world_routes[world - 1])
+        self.course_spinbox.configure(to=course_count)
+        self.playtest_level.set(min(max(int(self.playtest_level.get()), 1), course_count))
+
+    def change_world_context(self) -> None:
+        self.update_route_limits()
+        self.refresh()
+
     def change_theme_from_control(self, *_args: str) -> None:
         if not self.syncing_controls:
             self.change_theme()
@@ -258,6 +320,7 @@ class LevelStudio(tk.Tk):
             self.playtest_level.set(default_level + 1)
         finally:
             self.syncing_controls = False
+        self.update_route_limits()
         self.reset_mario_to_entrance()
         self.refresh()
 
@@ -288,7 +351,7 @@ class LevelStudio(tk.Tk):
             f"{'unsaved edits' if dirty(self.documents) else 'saved'}"
         )
         self.title(
-            f"SMB1 Level Studio [{self.profile_id}]"
+            f"SMB1 Level Studio [{self.profile_id}/{self.course_bank.get()}]"
             + (" *" if dirty(self.documents) else "")
         )
 
@@ -587,6 +650,12 @@ class LevelStudio(tk.Tk):
         guard("Level Studio", self._playtest)
 
     def _playtest(self) -> None:
+        bank_playtest = self.bank_by_id[self.course_bank.get()].get("playtest", True)
+        if bank_playtest is False:
+            raise ValueError(
+                f"Point playtesting is not yet available for the "
+                f"{self.course_bank.get()} course set"
+            )
         save_documents(self.documents)
         result = subprocess.run(
             ["make", "build-content", f"CONTENT_PROFILE={self.profile_id}"],
@@ -614,6 +683,11 @@ class LevelStudio(tk.Tk):
             "SMB1_PLAYTEST_READY_TASK": str(self.playtest_ready_task),
             "SMB1_PLAYTEST_BOOT_FRAMES": str(self.playtest_boot_frames),
             "SMB1_PLAYTEST_READY_FRAMES": str(self.playtest_ready_frames),
+            "SMB1_PLAYTEST_LOADER": (
+                str(bank_playtest["loader"])
+                if isinstance(bank_playtest, dict)
+                else "direct"
+            ),
         }
         self.view_notebook.select(1)
         self.emulator.start(executable, self.content_image, lua, environment)
@@ -772,6 +846,8 @@ def main() -> int:
     parser.add_argument(
         "--smoke-playtest", nargs="?", const="Day", choices=("Day", "Night"),
     )
+    parser.add_argument("--course-bank")
+    parser.add_argument("--area")
     args = parser.parse_args()
     documents, _labels = load_documents(
         args.formats,
@@ -822,25 +898,56 @@ def main() -> int:
         graphics_documents["area_palette_packets"].document["data"]["blocks"],
         graphics_documents["player_animation_tiles"].document["data"]["frames"],
     )
-    model = LevelDocument(documents["area_object_streams"], documents["enemy_object_streams"])
-    world_routes = tuple(
-        tuple(
-            (0x80 if pointer["alternate_bit"] else 0)
-            | (int(pointer["area_type"]) << 5)
-            | int(pointer["area_index"])
-            for pointer in world["areas"]
-        )
-        for world in world_documents["world_area_pointers"].document["data"]["worlds"]
-    )
     authoring_profile = require_supported(load_profiles(args.profiles), args.profile)
+    bank_contracts = authoring_profile.get("studio_banks", {}).get("level")
+
+    def routes(artifact_id: str) -> tuple[tuple[int, ...], ...]:
+        return tuple(
+            tuple(
+                (0x80 if pointer["alternate_bit"] else 0)
+                | (int(pointer["area_type"]) << 5)
+                | int(pointer["area_index"])
+                for pointer in world["areas"]
+            )
+            for world in world_documents[artifact_id].document["data"]["worlds"]
+        )
+
+    if bank_contracts:
+        level_banks = [
+            {
+                **bank,
+                "model": LevelDocument(
+                    documents[bank["areas"]], documents[bank["enemies"]]
+                ),
+                "world_routes": routes(bank["routes"]),
+            }
+            for bank in bank_contracts
+        ]
+    else:
+        level_banks = [{
+            "id": "default",
+            "name": "Courses",
+            "model": LevelDocument(
+                documents["area_object_streams"], documents["enemy_object_streams"]
+            ),
+            "world_routes": routes("world_area_pointers"),
+            "playtest": True,
+        }]
+    model = level_banks[0]["model"]
+    world_routes = level_banks[0]["world_routes"]
     playtest = authoring_profile.get("playtest", {})
-    for name in model.names:
-        positioned_area_objects(model.area(name))
-        positioned_enemy_objects(model.enemies(name))
+    for bank in level_banks:
+        for name in bank["model"].names:
+            positioned_area_objects(bank["model"].area(name))
+            positioned_enemy_objects(bank["model"].enemies(name))
     if args.check:
         for document in documents.values():
             document.validate()
-        print(f"[OK] Level Studio: {len(model.names)} areas are editable")
+        print(
+            f"[OK] Level Studio: "
+            f"{sum(len(bank['model'].names) for bank in level_banks)} areas "
+            f"across {len(level_banks)} course set(s) are editable"
+        )
         return 0
     application = LevelStudio(
         model,
@@ -855,7 +962,18 @@ def main() -> int:
         int(playtest.get("ready_task", 3)),
         int(playtest.get("boot_frames", 600)),
         int(playtest.get("ready_frames", 600)),
+        level_banks,
     )
+    if args.course_bank is not None:
+        if args.course_bank not in application.bank_by_id:
+            raise ValueError(f"Unknown Level Studio course bank: {args.course_bank}")
+        application.course_bank.set(args.course_bank)
+        application.select_course_bank()
+    if args.area is not None:
+        if args.area not in application.model.names:
+            raise ValueError(f"Unknown Level Studio area: {args.area}")
+        application.area_name.set(args.area)
+        application.select_area()
     if args.smoke_ui:
         application.update_idletasks()
         application.destroy()

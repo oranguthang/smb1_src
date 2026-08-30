@@ -8,6 +8,7 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, ttk
 
+from content_profiles import load_profiles, require_supported
 from level_studio_model import AREA_TYPES
 from studio_common import change_document, dirty, guard, load_documents, run_make, save_documents
 
@@ -27,13 +28,23 @@ PHYSICS_HELP = {
 
 class WorldStudio(tk.Tk):
     def __init__(
-        self, documents: dict, project_root: Path, profile_id: str = "ju"
+        self,
+        documents: dict,
+        project_root: Path,
+        profile_id: str = "ju",
+        banks: list[dict] | None = None,
     ) -> None:
         super().__init__()
         self.documents = documents
         self.project_root = project_root
         self.profile_id = profile_id
-        self.pointer_document = documents["world_area_pointers"]
+        self.banks = banks or [{
+            "id": "default",
+            "name": "Courses",
+            "routes": "world_area_pointers",
+        }]
+        self.bank_by_id = {bank["id"]: bank for bank in self.banks}
+        self.bank_id = tk.StringVar(value=self.banks[0]["id"])
         self.physics_document = documents["player_physics_profiles"]
         self.selection: tuple[int, int] | None = None
         self.area_type = tk.StringVar()
@@ -46,9 +57,24 @@ class WorldStudio(tk.Tk):
         self.build_ui()
         self.refresh()
 
+    @property
+    def pointer_document(self):
+        return self.documents[self.bank_by_id[self.bank_id.get()]["routes"]]
+
     def build_ui(self) -> None:
         toolbar = ttk.Frame(self, padding=7)
         toolbar.pack(fill="x")
+        if len(self.banks) > 1:
+            ttk.Label(toolbar, text="Course set").pack(side="left")
+            bank_box = ttk.Combobox(
+                toolbar,
+                textvariable=self.bank_id,
+                values=[bank["id"] for bank in self.banks],
+                state="readonly",
+                width=12,
+            )
+            bank_box.pack(side="left", padx=(5, 10))
+            bank_box.bind("<<ComboboxSelected>>", self.select_bank)
         for text, command in (
             ("Undo routing", self.undo_routing), ("Undo physics", self.undo_physics),
             ("Save", self.save),
@@ -142,9 +168,13 @@ class WorldStudio(tk.Tk):
                 ))
         self.status.set("Unsaved edits" if dirty(self.documents) else "All world settings are saved")
         self.title(
-            f"SMB1 World Studio [{self.profile_id}]"
+            f"SMB1 World Studio [{self.profile_id}/{self.bank_id.get()}]"
             + (" *" if dirty(self.documents) else "")
         )
+
+    def select_bank(self, _event: object = None) -> None:
+        self.selection = None
+        self.refresh()
 
     def select_pointer(self, _event: object = None) -> None:
         if not self.tree.selection():
@@ -234,14 +264,27 @@ def main() -> int:
         "world",
         args.profile,
     )
+    authoring_profile = require_supported(load_profiles(args.profiles), args.profile)
+    banks = authoring_profile.get("studio_banks", {}).get("world")
     for document in documents.values():
         document.validate()
     if args.check:
-        worlds = documents["world_area_pointers"].document["data"]["worlds"]
+        route_artifacts = (
+            [bank["routes"] for bank in banks]
+            if banks else ["world_area_pointers"]
+        )
+        route_count = sum(
+            len(world["areas"])
+            for artifact_id in route_artifacts
+            for world in documents[artifact_id].document["data"]["worlds"]
+        )
         profiles = documents["player_physics_profiles"].document["data"]["tables"]
-        print(f"[OK] World Studio: {sum(len(world['areas']) for world in worlds)} routes and {len(profiles)} physics tables")
+        print(
+            f"[OK] World Studio: {route_count} routes across "
+            f"{len(route_artifacts)} course set(s) and {len(profiles)} physics tables"
+        )
         return 0
-    application = WorldStudio(documents, args.project_root, args.profile)
+    application = WorldStudio(documents, args.project_root, args.profile, banks)
     if args.smoke_ui:
         application.update_idletasks()
         application.destroy()

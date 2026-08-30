@@ -333,7 +333,7 @@ def first_world_context(
     for world, route in enumerate(routes):
         for slot, candidate in enumerate(route):
             if candidate & 0x7F == pointer:
-                return world, min(slot, 3)
+                return world, slot
     return 0, 0
 
 

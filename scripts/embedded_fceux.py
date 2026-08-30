@@ -62,6 +62,10 @@ class EmbeddedFceux:
         user32.SetWindowPos.restype = wintypes.BOOL
         user32.GetClientRect.argtypes = (wintypes.HWND, ctypes.POINTER(wintypes.RECT))
         user32.GetClientRect.restype = wintypes.BOOL
+        user32.PostMessageW.argtypes = (
+            wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM,
+        )
+        user32.PostMessageW.restype = wintypes.BOOL
         return user32
 
     def __init__(self, host: tk.Widget, status: Callable[[str], None]) -> None:
@@ -101,6 +105,7 @@ class EmbeddedFceux:
         command.extend([
             "-window-x", "-10000",
             "-window-y", "-10000",
+            "-turbo", "1",
             "-lua", str(lua.resolve()),
             str(rom.resolve()),
         ])

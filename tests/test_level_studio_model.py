@@ -37,6 +37,10 @@ class LevelStudioModelTests(unittest.TestCase):
         routes = ((0x21, 0x25), (0x00,))
         self.assertEqual(first_world_context("ground_6", routes), (0, 1))
 
+    def test_world_context_preserves_a_fifth_course_slot(self) -> None:
+        routes = ((0x20, 0x21, 0x22, 0x23, 0x25),)
+        self.assertEqual(first_world_context("ground_6", routes), (0, 4))
+
     def test_world_pointer_name_uses_one_based_area_number(self) -> None:
         self.assertEqual(area_name(1, 5), "ground_6")
 

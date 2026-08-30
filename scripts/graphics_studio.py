@@ -212,7 +212,30 @@ class GraphicsStudio(tk.Tk):
         return values[start:start + 4]
 
     def text_names(self) -> list[str]:
-        return [block["name"] for block in self.documents["game_text_packets"].document["data"]["blocks"]]
+        return [
+            block["name"]
+            for artifact_id in self.text_artifact_ids()
+            for block in self.documents[artifact_id].document["data"]["blocks"]
+        ]
+
+    def text_artifact_ids(self) -> list[str]:
+        return [
+            artifact_id
+            for artifact_id in ("game_text_packets", "ann_warp_zone_text_packets")
+            if artifact_id in self.documents
+        ]
+
+    def text_block_context(self) -> tuple[object, dict]:
+        for artifact_id in self.text_artifact_ids():
+            document = self.documents[artifact_id]
+            for block in document.document["data"]["blocks"]:
+                if block["name"] == self.text_block.get():
+                    return document, block
+        raise ValueError(f"Unknown UI text block: {self.text_block.get()}")
+
+    def metatile_groups(self) -> tuple[tuple[str, int, int], ...]:
+        count = len(self.documents["all_metatiles"].document["data"]["metatiles"])
+        return (*METATILE_GROUPS[:-1], ("Palette 3", 95, count))
 
     def refresh_all(self) -> None:
         self.draw_bank()
@@ -290,7 +313,10 @@ class GraphicsStudio(tk.Tk):
         records = self.documents["all_metatiles"].document["data"]["metatiles"]
         labels = []
         for index in range(len(records)):
-            group = next(name for name, start, end in METATILE_GROUPS if start <= index < end)
+            group = next(
+                name for name, start, end in self.metatile_groups()
+                if start <= index < end
+            )
             labels.append(f"{index:03d} - {group}")
         self.metatile_box.configure(values=labels)
         if self.metatile_box.current() < 0:
@@ -312,7 +338,7 @@ class GraphicsStudio(tk.Tk):
             return
         self.metatile_canvas.delete("all")
         values = self.current_palette_values()
-        group_index = next(index for index, (_name, start, end) in enumerate(METATILE_GROUPS)
+        group_index = next(index for index, (_name, start, end) in enumerate(self.metatile_groups())
                            if start <= self.metatile_index.get() < end)
         palette = values[group_index * 4:group_index * 4 + 4]
         for index, variable in enumerate(self.metatile_vars):
@@ -398,8 +424,7 @@ class GraphicsStudio(tk.Tk):
         picker.destroy()
 
     def current_text_packet(self) -> dict:
-        block = next(item for item in self.documents["game_text_packets"].document["data"]["blocks"]
-                     if item["name"] == self.text_block.get())
+        _document, block = self.text_block_context()
         return block["packets"][0]
 
     def load_text(self) -> None:
@@ -417,7 +442,7 @@ class GraphicsStudio(tk.Tk):
         except KeyError as error:
             messagebox.showerror("Graphics Studio", f"Unsupported character: {error.args[0]}")
             return
-        document = self.documents["game_text_packets"]
+        document, _block = self.text_block_context()
         if replacement != packet["values"]:
             guard("Graphics Studio", lambda: (
                 change_document(document, lambda: packet.__setitem__("values", replacement)),

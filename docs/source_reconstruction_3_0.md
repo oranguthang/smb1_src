@@ -153,13 +153,31 @@ arcade-specific game mode and task numbers instead of assuming the console mode
 tree.
 
 `make check-content-profiles` exports disposable workspaces, constructs every
-headless Studio model, and rebuilds all five accepted images. A zero-edit build
-must match the manifest-owned image size and SHA-1. ANN remains planned with an
-explicit blocker until its normal and extended content layouts are modeled.
+headless Studio model, and rebuilds all six accepted images. A zero-edit build
+must match the manifest-owned image size and SHA-1. ANN now supports all four
+Studios and both course banks. Its normal bank has a measured embedded
+point-playtest contract: FDS startup reaches title task 3, then gameplay becomes
+ready at mode 1, task 5, and engine subroutine 7. The extended bank follows the
+real disk-loader path: operating-mode task 6 and disk task 1 load FDS record
+`$40` (`NSMDATA4`) at `$C296`; the `$C33D=$00` overlay signature is checked before
+the selected course enters gameplay. Day and Night smoke runs restore normal
+emulation speed before handing control to the player.
+The active `config/content_formats_3.json` layers ANN-only artifacts over the
+frozen Source 2 format manifest instead of changing the released contract.
 The shared authoring layer already validates named supplemental payloads by
 load address, size, and SHA-1; merges their linker labels; extracts CHR from the
 private FDS template; and composes `NSMMAIN`, `NSMDATA2`, `NSMDATA3`, and
 `NSMDATA4` into their original records. A zero-edit infrastructure probe
 reconstructs the exact ANN disk SHA-1, but this container proof does not make
-canonical level capacities safe for ANN. Keeping the profile planned prevents
-the selector from applying those capacities to its overlay-based layout.
+canonical level capacities safe for ANN. Its course contracts instead gather
+44 normal areas across `NSMMAIN` and `NSMDATA2`, and 21 extended areas across
+`NSMDATA4` and two primary streams. Separate course-set selectors expose 36 and
+18 routes without flattening the disk overlays. Manifest-owned scatter writes
+return edits to their exact payload ranges and reject divergent edits to shared
+pointers.
+Sound Studio keeps ANN's ordinary SMB1 APU bank separate from the loaded
+`NSMDATA3` ending engine. The latter is modeled as its real 11-section sequence
+with six headers, four APU channel formats, an FDS wavetable channel, two
+mirrored source waves, and typed volume programs. Preview rendering and editing
+therefore follow the late FDS engine rather than presenting its bytes through
+the cartridge decoder.

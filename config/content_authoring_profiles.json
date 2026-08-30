@@ -160,7 +160,7 @@
     {
       "id": "ann_fds",
       "name": "All Night Nippon Super Mario Bros.",
-      "status": "planned",
+      "status": "supported",
       "baseline": {
         "kind": "platform",
         "profile": "ann_fds",
@@ -174,6 +174,12 @@
       "container": "fds",
       "template": "assets/generated/platforms/ann_fds/template.fds",
       "template_sha1": "f9cc1120a7ca847763406572edc7aaa9212b0183",
+      "playtest": {
+        "boot_task": 3,
+        "game_mode": 1,
+        "ready_task": 5,
+        "boot_frames": 1800
+      },
       "program_payloads": [
         {"payload": "prg", "record_ids": [5]},
         {"payload": "NSMDATA2", "record_ids": [32]},
@@ -197,16 +203,127 @@
           "sha1": "eec327d5ebde3891439971986ae23afeefbdd1a7"
         }
       },
+      "stream_payload_maps": {
+        "normal": [
+          "prg", "prg", "prg", "prg",
+          "NSMDATA2", "NSMDATA2", "NSMDATA2", "NSMDATA2",
+          "prg", "NSMDATA2", "prg", "NSMDATA2",
+          "prg", "prg", "prg", "prg", "prg", "prg",
+          "NSMDATA2", "prg", "prg", "NSMDATA2", "NSMDATA2", "prg",
+          "NSMDATA2", "NSMDATA2", "NSMDATA2", "NSMDATA2", "prg", "prg",
+          "NSMDATA2", "NSMDATA2", "prg", "NSMDATA2", "NSMDATA2", "prg",
+          "prg", "prg", "prg", "NSMDATA2",
+          "NSMDATA2", "prg", "NSMDATA2", "NSMDATA2", "prg"
+        ],
+        "extended": [
+          "NSMDATA4", "NSMDATA4", "NSMDATA4", "NSMDATA4",
+          "NSMDATA4", "NSMDATA4", "NSMDATA4", "NSMDATA4",
+          "NSMDATA4", "NSMDATA4", "NSMDATA4", "NSMDATA4",
+          "NSMDATA4", "NSMDATA4", "NSMDATA4", "NSMDATA4",
+          "prg", "prg", "NSMDATA4", "NSMDATA4", "NSMDATA4"
+        ]
+      },
       "chr_source": "fds_records",
       "chr_record_ids": [1],
       "chr_sha1": "d286c6490183760d0f8da2099dd42e386b8b95ed",
-      "studios": {
-        "world": "planned",
-        "level": "planned",
-        "graphics": "planned",
-        "sound": "planned"
+      "studio_artifacts": {
+        "world": [
+          "world_area_pointers",
+          "ann_extended_world_area_pointers",
+          "player_physics_profiles"
+        ],
+        "level": [
+          "area_object_streams",
+          "enemy_object_streams",
+          "ann_extended_area_object_streams",
+          "ann_extended_enemy_object_streams"
+        ],
+        "graphics": [
+          "all_metatiles",
+          "player_animation_tiles",
+          "area_palette_packets",
+          "game_text_packets",
+          "ann_warp_zone_text_packets"
+        ],
+        "sound": [
+          "music_bank",
+          "swim_stomp_envelope",
+          "ann_fds_music_bank"
+        ]
       },
-      "blockers": ["Model primary, supplemental, and extended content as separate fixed payloads"]
+      "studio_banks": {
+        "world": [
+          {"id": "normal", "name": "Normal courses", "routes": "world_area_pointers"},
+          {"id": "extended", "name": "Extended courses", "routes": "ann_extended_world_area_pointers"}
+        ],
+        "level": [
+          {
+            "id": "normal",
+            "name": "Normal courses",
+            "areas": "area_object_streams",
+            "enemies": "enemy_object_streams",
+            "routes": "world_area_pointers"
+          },
+          {
+            "id": "extended",
+            "name": "Extended courses",
+            "areas": "ann_extended_area_object_streams",
+            "enemies": "ann_extended_enemy_object_streams",
+            "routes": "ann_extended_world_area_pointers",
+            "playtest": {"loader": "ann_extended"}
+          }
+        ]
+      },
+      "artifact_overrides": {
+        "world_area_pointers": {
+          "start": "tbl_ann_course_area_offsets",
+          "end": "tbl_ann_course_loopback_offsets"
+        },
+        "ann_extended_world_area_pointers": {
+          "payload": "NSMDATA4"
+        },
+        "area_object_streams": {
+          "pointer_table": "tbl_ann_course_area_addresses",
+          "pointer_payload_map": "normal",
+          "groups": [["castle", 8], ["ground", 28], ["underground", 4], ["water", 5]],
+          "skip_pointer_indices": [44]
+        },
+        "enemy_object_streams": {
+          "pointer_table": "tbl_ann_course_enemy_addresses",
+          "pointer_payload_map": "normal",
+          "groups": [["castle", 8], ["ground", 28], ["underground", 4], ["water", 5]],
+          "skip_pointer_indices": [44],
+          "allow_shared_pointers": true
+        },
+        "ann_extended_area_object_streams": {
+          "pointer_table": "tbl_ann_extended_course_area_addresses",
+          "pointer_payload": "NSMDATA4",
+          "pointer_payload_map": "extended",
+          "groups": [["castle", 4], ["ground", 14], ["underground", 2], ["water", 1]]
+        },
+        "ann_extended_enemy_object_streams": {
+          "pointer_table": "tbl_ann_extended_course_enemy_addresses",
+          "pointer_payload": "NSMDATA4",
+          "pointer_payload_map": "extended",
+          "groups": [["castle", 4], ["ground", 14], ["underground", 2], ["water", 1]],
+          "allow_shared_pointers": true
+        },
+        "game_text_packets": {
+          "start": "off_ann_game_text_packets",
+          "end": "off_ann_warp_zone_packet",
+          "block_names": ["top_status_bar", "world_lives", "time_up", "game_over"]
+        },
+        "ann_fds_music_bank": {
+          "payload": "NSMDATA3"
+        }
+      },
+      "studios": {
+        "world": "supported",
+        "level": "supported",
+        "graphics": "supported",
+        "sound": "supported"
+      },
+      "blockers": []
     }
   ]
 }

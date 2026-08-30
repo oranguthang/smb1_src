@@ -24,6 +24,8 @@ from content_studio import (
     load_format_manifest,
     load_workspace_chr,
     resolve_profile_selection,
+    scatter_virtual_streams,
+    selected_entries,
     stream_end,
     validate_unmodified_image,
     write_workspace_documents,
@@ -221,6 +223,57 @@ class ContentStudioTests(unittest.TestCase):
             merged = load_format_manifest(root / "content.json")
             self.assertEqual([entry["id"] for entry in merged["artifacts"]], ["keep", "new"])
 
+    def test_format_manifest_can_extend_an_existing_layer(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "base.json").write_text(
+                json.dumps({"format": 1, "artifacts": [{"id": "base"}]}),
+                encoding="utf-8",
+            )
+            (root / "middle.json").write_text(
+                json.dumps({
+                    "format": 1,
+                    "base_manifest": "base.json",
+                    "artifacts": [{"id": "middle"}],
+                }),
+                encoding="utf-8",
+            )
+            (root / "active.json").write_text(
+                json.dumps({
+                    "format": 1,
+                    "base_manifest": "middle.json",
+                    "artifacts": [{"id": "active"}],
+                }),
+                encoding="utf-8",
+            )
+            merged = load_format_manifest(root / "active.json")
+            self.assertEqual(
+                [entry["id"] for entry in merged["artifacts"]],
+                ["base", "middle", "active"],
+            )
+
+    def test_format_manifest_rejects_cycles(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "first.json").write_text(
+                json.dumps({
+                    "format": 1,
+                    "base_manifest": "second.json",
+                    "artifacts": [],
+                }),
+                encoding="utf-8",
+            )
+            (root / "second.json").write_text(
+                json.dumps({
+                    "format": 1,
+                    "base_manifest": "first.json",
+                    "artifacts": [],
+                }),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "cyclic content format manifest"):
+                load_format_manifest(root / "first.json")
+
     def test_init_keeps_existing_workspace_document(self) -> None:
         entry = {
             "id": "records",
@@ -351,6 +404,70 @@ class ContentStudioTests(unittest.TestCase):
         )[0][1]
         self.assertEqual(resolved["stream_boundaries"], [0, 2, 3])
         self.assertEqual(resolved["streams"][0]["capacity"], 2)
+
+    def test_pointer_streams_gather_and_scatter_named_payloads(self) -> None:
+        entry = {
+            "id": "area_object_streams",
+            "codec": "stream_collection",
+            "stream_codec": "area_object_stream",
+            "stream_terminator": 0xFD,
+        }
+        profile = {
+            "id": "overlay",
+            "baseline": {"load_address": "0x8000"},
+            "payloads": {"DATA2": {"load_address": "0xc000"}},
+            "stream_payload_maps": {
+                "normal": ["DATA2", "DATA2", "DATA2"],
+            },
+            "artifact_overrides": {
+                "area_object_streams": {
+                    "pointer_table": "pointers",
+                    "pointer_payload_map": "normal",
+                    "groups": [["ground", 3]],
+                    "allow_shared_pointers": True,
+                }
+            },
+        }
+        prg = bytes([0x00, 0xC0, 0x03, 0xC0, 0x00, 0xC0])
+        payload = bytes([0x00, 0x00, 0xFD, 0x01, 0x01, 0xFD])
+        resolved = resolve_profile_selection(
+            [("level", entry)],
+            profile,
+            {"pointers": 0x8000},
+            {"prg": prg, "chr": b"", "DATA2": payload},
+        )[0][1]
+        self.assertEqual(
+            [stream["name"] for stream in resolved["streams"]],
+            ["ground_1", "ground_2", "ground_3"],
+        )
+        candidates = {
+            "prg": bytearray(prg),
+            "chr": bytearray(),
+            "DATA2": bytearray(payload),
+        }
+        scatter_virtual_streams(
+            resolved,
+            bytes([0x02, 0x02, 0xFD, 0x01, 0x01, 0xFD, 0x02, 0x02, 0xFD]),
+            candidates,
+        )
+        self.assertEqual(candidates["DATA2"], bytearray([2, 2, 0xFD, 1, 1, 0xFD]))
+        with self.assertRaisesRegex(ValueError, "shared stream"):
+            scatter_virtual_streams(
+                resolved,
+                bytes([0, 0, 0xFD, 1, 1, 0xFD, 2, 2, 0xFD]),
+                candidates,
+            )
+
+    def test_profile_can_select_additional_studio_artifacts(self) -> None:
+        entries = {name: {"id": name} for name in ("normal", "extended")}
+        studios = {"level": {"artifacts": ["normal"]}}
+        selection = selected_entries(
+            entries,
+            studios,
+            ["level"],
+            {"level": ["normal", "extended"]},
+        )
+        self.assertEqual([entry["id"] for _studio, entry in selection], ["normal", "extended"])
 
     def test_unmodified_image_requires_profile_identity(self) -> None:
         profile = {

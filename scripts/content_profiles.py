@@ -11,7 +11,7 @@ from typing import Any
 
 EXPECTED_PROFILE_IDS = ("ju", "pc10", "pal", "vs_smb", "fds_smb", "ann_fds")
 EXPECTED_STUDIO_IDS = ("world", "level", "graphics", "sound")
-PROFILE_STATES = {"supported", "planned"}
+PROFILE_STATES = {"supported", "partial", "planned"}
 STUDIO_STATES = {"supported", "planned", "unsupported"}
 
 
@@ -93,8 +93,16 @@ def validate_profiles(document: dict[str, Any]) -> list[str]:
                 errors.append(f"supported profile retains blockers: {identifier}")
             if any(state != "supported" for state in studios.values()):
                 errors.append(f"supported profile has unavailable studios: {identifier}")
-        elif not blockers:
-            errors.append(f"planned profile lacks an explicit blocker: {identifier}")
+        elif status == "partial":
+            if not blockers:
+                errors.append(f"partial profile lacks an explicit blocker: {identifier}")
+            if not any(state == "supported" for state in studios.values()):
+                errors.append(f"partial profile has an invalid Studio matrix: {identifier}")
+        else:
+            if not blockers:
+                errors.append(f"planned profile lacks an explicit blocker: {identifier}")
+            if any(state == "supported" for state in studios.values()):
+                errors.append(f"planned profile has a supported Studio: {identifier}")
 
         for field in ("workspace", "output"):
             value = profile.get(field)
@@ -159,6 +167,73 @@ def validate_profiles(document: dict[str, Any]) -> list[str]:
         elif chr_source == "fds_records" and container != "fds":
             errors.append(f"FDS record CHR requires an FDS container: {identifier}")
 
+        stream_payload_maps = profile.get("stream_payload_maps", {})
+        if not isinstance(stream_payload_maps, dict):
+            errors.append(f"invalid stream payload maps: {identifier}")
+            stream_payload_maps = {}
+        else:
+            known_payloads = {"prg", "chr", *payloads}
+            for map_id, owners in stream_payload_maps.items():
+                if (
+                    not isinstance(map_id, str)
+                    or not isinstance(owners, list)
+                    or not owners
+                    or any(owner not in known_payloads for owner in owners)
+                ):
+                    errors.append(f"invalid stream payload map: {identifier}/{map_id}")
+
+        studio_artifacts = profile.get("studio_artifacts", {})
+        if not isinstance(studio_artifacts, dict) or any(
+            studio_id not in EXPECTED_STUDIO_IDS
+            or not isinstance(artifact_ids, list)
+            or not artifact_ids
+            or any(not isinstance(value, str) for value in artifact_ids)
+            for studio_id, artifact_ids in (
+                studio_artifacts.items() if isinstance(studio_artifacts, dict) else []
+            )
+        ):
+            errors.append(f"invalid studio artifact selection: {identifier}")
+
+        studio_banks = profile.get("studio_banks", {})
+        if not isinstance(studio_banks, dict):
+            errors.append(f"invalid Studio banks: {identifier}")
+        else:
+            for studio_id, banks in studio_banks.items():
+                required_fields = (
+                    {"id", "name", "routes"}
+                    if studio_id == "world"
+                    else {"id", "name", "areas", "enemies", "routes"}
+                )
+                if (
+                    studio_id not in {"world", "level"}
+                    or not isinstance(banks, list)
+                    or not banks
+                    or any(
+                        not isinstance(bank, dict)
+                        or not required_fields <= set(bank)
+                        or any(not isinstance(bank[field], str) for field in required_fields)
+                        for bank in banks
+                    )
+                    or len({bank.get("id") for bank in banks if isinstance(bank, dict)})
+                    != len(banks)
+                ):
+                    errors.append(f"invalid Studio banks: {identifier}/{studio_id}")
+                    continue
+                if studio_id == "level":
+                    for bank in banks:
+                        bank_playtest = bank.get("playtest", True)
+                        if isinstance(bank_playtest, bool):
+                            continue
+                        if not (
+                            isinstance(bank_playtest, dict)
+                            and bank_playtest.get("loader") == "ann_extended"
+                            and set(bank_playtest) == {"loader"}
+                        ):
+                            errors.append(
+                                f"invalid bank playtest contract: "
+                                f"{identifier}/{bank.get('id')}"
+                            )
+
         playtest = profile.get("playtest")
         if playtest is not None:
             if not isinstance(playtest, dict):
@@ -201,7 +276,33 @@ def validate_profiles(document: dict[str, Any]) -> list[str]:
                         for group in groups
                     )
                 )
-                if (
+                dynamic_map = override.get("pointer_payload_map")
+                if dynamic_map is not None:
+                    pointer_payload = override.get("pointer_payload", "prg")
+                    skipped = override.get("skip_pointer_indices", [])
+                    pointer_count = (
+                        sum(int(group[1]) for group in groups)
+                        if valid_groups else 0
+                    )
+                    owners = stream_payload_maps.get(dynamic_map, [])
+                    if (
+                        dynamic_map not in stream_payload_maps
+                        or len(owners) != pointer_count
+                        or pointer_payload not in {"prg", "chr", *payloads}
+                        or not isinstance(override.get("pointer_table"), str)
+                        or not valid_groups
+                        or not isinstance(skipped, list)
+                        or any(
+                            not isinstance(value, int)
+                            or not 0 <= value < pointer_count
+                            for value in skipped
+                        )
+                        or len(set(skipped)) != len(skipped)
+                    ):
+                        errors.append(
+                            f"invalid pointer stream override: {identifier}/{artifact_id}"
+                        )
+                elif (
                     override.get("payload") != "chr"
                     or not isinstance(override.get("pointer_table"), str)
                     or not isinstance(override.get("bank_offset"), int)
@@ -290,7 +391,7 @@ def require_supported(
     document: dict[str, Any], profile_id: str, studio_id: str | None = None
 ) -> dict[str, Any]:
     profile = profile_by_id(document, profile_id)
-    if profile["status"] != "supported":
+    if profile["status"] == "planned":
         blockers = "; ".join(profile["blockers"])
         raise ValueError(f"content authoring profile is not ready: {profile_id}: {blockers}")
     if studio_id is not None:

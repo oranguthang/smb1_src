@@ -1,0 +1,53 @@
+{
+  "format": 1,
+  "base_manifest": "content_formats.json",
+  "artifacts": [
+    {
+      "id": "ann_extended_world_area_pointers",
+      "family": "ANN extended course routing",
+      "source": "src/platforms/ann/courses/extended/tables.asm",
+      "start": "tbl_ann_extended_course_area_offsets",
+      "end": "tbl_ann_extended_course_enemy_pages",
+      "codec": "area_pointer_table",
+      "world_lengths": [5, 5, 4, 4]
+    },
+    {
+      "id": "ann_extended_area_object_streams",
+      "family": "ANN extended area headers and object streams",
+      "source": "src/platforms/ann/courses/extended/area_streams.asm",
+      "start": 0,
+      "end": 1,
+      "codec": "stream_collection",
+      "stream_codec": "area_object_stream",
+      "stream_terminator": 253
+    },
+    {
+      "id": "ann_extended_enemy_object_streams",
+      "family": "ANN extended enemy, entrance, and page-control streams",
+      "source": "src/platforms/ann/courses/extended/enemy_streams.asm",
+      "start": 0,
+      "end": 1,
+      "codec": "stream_collection",
+      "stream_codec": "enemy_object_stream",
+      "stream_terminator": 255
+    },
+    {
+      "id": "ann_warp_zone_text_packets",
+      "family": "ANN warp-zone PPU text packet",
+      "source": "src/platforms/ann/rendering/background_text.asm",
+      "start": "off_ann_warp_zone_packet",
+      "end": "tbl_ann_warp_zone_number_tiles",
+      "codec": "ppu_packet_blocks",
+      "terminator": 0,
+      "block_names": ["warp_zone"]
+    },
+    {
+      "id": "ann_fds_music_bank",
+      "family": "ANN ending music streams and FDS synthesis tables",
+      "source": "src/platforms/ann/audio/music.asm",
+      "start": "tbl_ann_fds_music_offsets",
+      "end": "sub_ann_write_fds_pulse_1_base",
+      "codec": "raw_bytes"
+    }
+  ]
+}

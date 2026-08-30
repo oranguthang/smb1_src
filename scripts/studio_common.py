@@ -59,9 +59,12 @@ def load_documents(
         "chr": load_profile_chr(chr_path, authoring_profile),
     }
     payloads.update(load_named_payloads(payload_paths, authoring_profile))
+    artifact_ids = authoring_profile.get("studio_artifacts", {}).get(
+        studio_id, profiles[studio_id]["artifacts"]
+    )
     selection = [
         (studio_id, entries[artifact_id])
-        for artifact_id in profiles[studio_id]["artifacts"]
+        for artifact_id in artifact_ids
     ]
     resolved_entries = {
         entry["id"]: entry
@@ -73,7 +76,7 @@ def load_documents(
         )
     }
     documents = {}
-    for artifact_id in profiles[studio_id]["artifacts"]:
+    for artifact_id in artifact_ids:
         entry = resolved_entries[artifact_id]
         path = workspace / studio_id / f"{artifact_id}.json"
         document = ArtifactDocument.load(path, entry)

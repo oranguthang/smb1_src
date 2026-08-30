@@ -33,7 +33,7 @@ SEMANTIC_RUNTIME_SCENARIOS ?= $(PROJECT_DIR)scenarios/semantic_runtime_scenarios
 SEMANTIC_RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/evidence/runtime
 DATA_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/data_formats.json
 DATA_FORMAT_SUMMARY ?= $(PROJECT_DIR)build/data_formats.json
-CONTENT_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/content_formats.json
+CONTENT_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/content_formats_3.json
 CONTENT_PROFILE_MANIFEST ?= $(PROJECT_DIR)config/content_authoring_profiles.json
 RELEASE_MANIFEST ?= $(PROJECT_DIR)config/preservation_source_1_0.json
 SOURCE_2_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_2_0.json
@@ -141,6 +141,12 @@ CONTENT_HEADER ?= $(GENERATED_HEADER)
 CONTENT_CHR ?= $(GENERATED_CHR)
 CONTENT_EXTRA ?= $(REVISION_ASSET_DIR)/$(CONTENT_PROFILE)/platform.extra
 CONTENT_EXTRA_ARG = $(if $(filter pc10,$(CONTENT_PROFILE)),--extra "$(CONTENT_EXTRA)",)
+LEVEL_STUDIO_ARGS ?=
+PLAYTEST_BANK ?=
+PLAYTEST_BANK_ARG = $(if $(PLAYTEST_BANK),--course-bank $(PLAYTEST_BANK),)
+PLAYTEST_AREA ?=
+PLAYTEST_AREA_ARG = $(if $(PLAYTEST_AREA),--area $(PLAYTEST_AREA),)
+PLAYTEST_THEME ?= Day
 CONTENT_LOAD_ADDRESS = 0x8000
 CONTENT_PREPARE_COMMAND = $(MAKE) build-revision PROFILE=$(CONTENT_PROFILE)
 CONTENT_CONTAINER_ARGS = --header "$(CONTENT_HEADER)" $(CONTENT_EXTRA_ARG)
@@ -260,7 +266,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded prepare-content-profile init-content export-content validate-content build-content run-content check-studios check-content-profile check-content-profiles world-studio level-studio graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor list-content-profiles content-profile-audit split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded prepare-content-profile init-content export-content validate-content build-content run-content check-studios check-content-profile check-content-profiles world-studio level-studio smoke-level-playtest graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor list-content-profiles content-profile-audit split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -478,6 +484,7 @@ check-content-profiles:
 	$(MAKE) check-content-profile CONTENT_PROFILE=pal
 	$(MAKE) check-content-profile CONTENT_PROFILE=vs_smb
 	$(MAKE) check-content-profile CONTENT_PROFILE=fds_smb
+	$(MAKE) check-content-profile CONTENT_PROFILE=ann_fds
 
 run-content: build-content
 	"$(FCEUX_EXE)" "$(CONTENT_ROM)"
@@ -491,7 +498,11 @@ level-studio:
 	$(MAKE) init-content STUDIO=level
 	$(MAKE) init-content STUDIO=graphics
 	$(PYTHON) "$(PROJECT_DIR)scripts/level_studio.py" $(STUDIO_COMMON_ARGS) \
-		--content-image "$(CONTENT_ROM)"
+		--content-image "$(CONTENT_ROM)" $(LEVEL_STUDIO_ARGS)
+
+smoke-level-playtest:
+	$(MAKE) level-studio CONTENT_PROFILE=$(CONTENT_PROFILE) \
+		LEVEL_STUDIO_ARGS="$(PLAYTEST_BANK_ARG) $(PLAYTEST_AREA_ARG) --smoke-playtest $(PLAYTEST_THEME)"
 
 graphics-studio:
 	$(MAKE) init-content STUDIO=graphics

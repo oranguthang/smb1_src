@@ -10,7 +10,7 @@ end
 
 local area_pointer = setting("SMB1_PLAYTEST_AREA", 0, 127)
 local world = setting("SMB1_PLAYTEST_WORLD", 0, 7)
-local level = setting("SMB1_PLAYTEST_LEVEL", 0, 3)
+local level = setting("SMB1_PLAYTEST_LEVEL", 0, 7)
 local page = setting("SMB1_PLAYTEST_PAGE", 0, 31)
 local player_x = setting("SMB1_PLAYTEST_X", 0, 255)
 local player_y = setting("SMB1_PLAYTEST_Y", 32, 239)
@@ -22,6 +22,10 @@ local ready_frames = setting("SMB1_PLAYTEST_READY_FRAMES", 1, 3600)
 local theme = os.getenv("SMB1_PLAYTEST_THEME") or "day"
 if theme ~= "day" and theme ~= "night" then
     error("SMB1_PLAYTEST_THEME must be day or night")
+end
+local loader = os.getenv("SMB1_PLAYTEST_LOADER") or "direct"
+if loader ~= "direct" and loader ~= "ann_extended" then
+    error("SMB1_PLAYTEST_LOADER must be direct or ann_extended")
 end
 
 local ram = {
@@ -50,6 +54,9 @@ local ram = {
     disable_screen_flag = 0x0774,
     mirror_ppu_ctrl_reg1 = 0x0778,
     mirror_ppu_ctrl_reg2 = 0x0779,
+    ann_hard_mode = 0x07fb,
+    fds_disk_loader_task = 0x07fc,
+    ann_disk_file_id = 0x07fd,
 }
 
 local transitions = {}
@@ -78,8 +85,10 @@ local function write_result(status)
     end
     local result = assert(io.open(result_path, "w"))
     result:write(string.format(
-        "status=%s area=%02x world=%d level=%d page=%d x=%d y=%d mode=%d task=%d engine=%d screen=%d sprite0=%d disable=%d vram=%d ppu1=%02x ppu2=%02x frame=%d background=%02x pc=%04x\n",
+        "status=%s loader=%s overlay=%02x area=%02x world=%d level=%d page=%d x=%d y=%d mode=%d task=%d engine=%d screen=%d sprite0=%d disable=%d vram=%d ppu1=%02x ppu2=%02x frame=%d background=%02x pc=%04x\n",
         status,
+        loader,
+        memory.readbyte(0xc33d),
         memory.readbyte(ram.area_pointer),
         memory.readbyte(ram.world),
         memory.readbyte(ram.level),
@@ -108,6 +117,7 @@ end
 local boot_ready = false
 for _frame = 1, boot_frames do
     emu.frameadvance()
+    record_transition(_frame)
     if memory.readbyte(ram.operating_mode) == 0
             and memory.readbyte(ram.operating_mode_task) == boot_task then
         boot_ready = true
@@ -126,15 +136,42 @@ end
 
 memory.writebyte(ram.world, world)
 memory.writebyte(ram.level, level)
-memory.writebyte(ram.area_number, 0)
+memory.writebyte(ram.area_number, loader == "ann_extended" and level or 0)
 memory.writebyte(ram.area_pointer, area_pointer)
 memory.writebyte(ram.halfway_page, 0)
 memory.writebyte(ram.entrance_page, page)
 memory.writebyte(ram.alternate_entrance, 1)
 memory.writebyte(ram.player_size, 1)
 memory.writebyte(ram.player_status, 0)
-memory.writebyte(ram.operating_mode_task, 0)
-memory.writebyte(ram.operating_mode, game_mode)
+
+if loader == "ann_extended" then
+    memory.writebyte(ram.ann_hard_mode, 1)
+    memory.writebyte(ram.ann_disk_file_id, 0)
+    memory.writebyte(ram.fds_disk_loader_task, 1)
+    memory.writebyte(ram.operating_mode_task, 6)
+    memory.writebyte(ram.operating_mode, 0)
+    local loader_ready = false
+    for frame = 1, ready_frames do
+        emu.frameadvance()
+        record_transition(boot_frames + frame)
+        if memory.readbyte(ram.operating_mode) == game_mode then
+            loader_ready = true
+            break
+        end
+    end
+    if not loader_ready or memory.readbyte(0xc33d) ~= 0 then
+        write_result("loader-timeout")
+        if os.getenv("SMB1_PLAYTEST_EXIT") == "1" then
+            emu.exit()
+        end
+        error("ANN extended-course payload did not become ready")
+    end
+    memory.writebyte(ram.area_pointer, area_pointer)
+    memory.writebyte(ram.operating_mode_task, 0)
+else
+    memory.writebyte(ram.operating_mode_task, 0)
+    memory.writebyte(ram.operating_mode, game_mode)
+end
 
 local ready = false
 for _frame = 1, ready_frames do
@@ -156,6 +193,7 @@ if not ready then
     error("SMB1 gameplay did not become ready for point playtest")
 end
 
+emu.speedmode("normal")
 memory.writebyte(ram.screen_left_page, page)
 memory.writebyte(ram.screen_left_x, 0)
 memory.writebyte(ram.player_page, page)
