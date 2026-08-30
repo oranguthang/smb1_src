@@ -87,12 +87,16 @@ class LabelRenameManifestTests(unittest.TestCase):
         self.assertEqual(len({item[0] for item in mapped_labels}), len(mapped_labels))
         self.assertEqual(manifest["counts"]["current_labels"], len(mapped_labels))
 
+        smb2_roots = (
+            PROJECT_ROOT / "src" / "revisions" / "smb2",
+            PROJECT_ROOT / "src" / "platforms" / "late_fds" / "smb2",
+        )
         source_labels: dict[str, set[str]] = {}
         source_paths = sorted(
             path
             for path in (PROJECT_ROOT / "src").rglob("*")
             if path.is_file() and path.suffix.lower() in {".asm", ".inc"}
-            and not path.is_relative_to(PROJECT_ROOT / "src" / "smb2")
+            and not any(path.is_relative_to(root) for root in smb2_roots)
         )
         for source_path in source_paths:
             relative_path = source_path.relative_to(PROJECT_ROOT).as_posix()
@@ -127,18 +131,27 @@ class LabelRenameManifestTests(unittest.TestCase):
     def test_smb2_manifest_matches_sibling_source_labels(self) -> None:
         manifest = json.loads(SMB2_MANIFEST_PATH.read_text(encoding="utf-8"))
         records = manifest["renames"]
+        additions = manifest.get("project_additions", [])
         self.assertEqual(manifest["schema_version"], 1)
         self.assertEqual(
             manifest["source"]["commit"],
             "9c40114626ecd07f13e16d5e67e217b98482d7af",
         )
         self.assertEqual(manifest["counts"]["records"], len(records))
-        self.assertEqual(len({item["current"] for item in records}), len(records))
+        self.assertEqual(manifest["counts"]["project_additions"], len(additions))
+        self.assertLessEqual(len({item["current"] for item in records}), len(records))
 
         source_labels: set[tuple[str, str]] = set()
         source_assignments: set[tuple[str, str]] = set()
-        source_root = PROJECT_ROOT / "src" / "smb2"
-        for source_path in sorted(source_root.rglob("*")):
+        source_roots = (
+            PROJECT_ROOT / "src" / "revisions" / "smb2",
+            PROJECT_ROOT / "src" / "platforms" / "late_fds" / "smb2",
+            PROJECT_ROOT / "src" / "platforms" / "late_fds" / "common",
+        )
+        source_paths = sorted(
+            path for root in source_roots for path in root.rglob("*")
+        )
+        for source_path in source_paths:
             if not source_path.is_file() or source_path.suffix.lower() not in {".asm", ".inc"}:
                 continue
             relative_path = source_path.relative_to(PROJECT_ROOT).as_posix()
@@ -153,6 +166,9 @@ class LabelRenameManifestTests(unittest.TestCase):
             for item in records
             if item["kind"] == "label"
         }
+        mapped_labels.update(
+            (item["current"], item["current_path"]) for item in additions
+        )
         mapped_assignments = {
             (item["current"], item["current_path"])
             for item in records

@@ -24,27 +24,39 @@ class Smb2RelocationTests(unittest.TestCase):
     def test_generated_candidate_does_not_modify_normal_source(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "src" / "smb2" / "data").mkdir(parents=True)
-            main = root / "src" / "smb2" / "main.asm"
-            main.write_text('    .include "system/reset.inc"\n', encoding="utf-8")
-            aggregate = root / "src" / "smb2" / "build.asm"
+            revision_root = root / "src" / "revisions" / "smb2"
+            platform_root = root / "src" / "platforms" / "late_fds" / "smb2"
+            revision_root.mkdir(parents=True)
+            (platform_root / "data").mkdir(parents=True)
+            main = revision_root / "main.asm"
+            main.write_text(
+                (
+                    '    .include "../../platforms/late_fds/smb2/system/reset.asm"\n'
+                    '    .include "../../platforms/late_fds/smb2/data/course_bank.asm"\n'
+                ),
+                encoding="utf-8",
+            )
+            aggregate = revision_root / "build.asm"
             aggregate.write_text('.include "main.asm"\n', encoding="utf-8")
-            padding = root / "src" / "smb2" / "data" / "course_bank.inc"
+            padding = platform_root / "data" / "course_bank.asm"
             padding.write_text("    .res 83, $ff\n", encoding="utf-8")
             manifest = {
                 "generated_root": "build/relocation/smb2",
-                "main_source": "src/smb2/main.asm",
-                "source": "src/smb2/build.asm",
+                "main_source": "src/revisions/smb2/main.asm",
+                "source": "src/revisions/smb2/build.asm",
                 "regions": [{
                     "id": "main",
                     "insertions": [{
                         "id": "origin",
-                        "before": '    .include "system/reset.inc"',
+                        "before": (
+                            '    .include "../../platforms/late_fds/smb2/'
+                            'system/reset.asm"'
+                        ),
                     }],
                 }],
                 "padding_override": {
-                    "source": "src/smb2/data/course_bank.inc",
-                    "include_path": "data/course_bank.inc",
+                    "source": "src/platforms/late_fds/smb2/data/course_bank.asm",
+                    "include_path": "platforms/late_fds/smb2/data/course_bank.asm",
                     "original_statement": "    .res 83, $ff",
                     "replacement_statement": "    .res 82, $ff",
                 },

@@ -1,8 +1,16 @@
-# SMB2 Sibling Reconstruction
+# SMB2 Late-FDS Revision Reconstruction
 
-Japanese Super Mario Bros. 2 / The Lost Levels is included in Source
-Reconstruction 3.0 as a sibling engine. It is not an additional conditional
-profile of the existing SMB1 source.
+Japanese Super Mario Bros. 2 / The Lost Levels entered Source Reconstruction
+3.0 as an independently verified sibling engine. Post-release instruction-flow
+comparison established that it and ANN are revisions of one late-FDS engine.
+They retain independent payload entrypoints and byte-identity contracts while
+shared code is promoted only where equivalence has been measured.
+
+The first shared promotion is complete: the upside-down-pipe runtime,
+hard-course loader, and checkpoint initializer now live under
+`src/platforms/late_fds/common/`. Together they cover the complete
+168-instruction hard-course match measured between ANN and SMB2; revision-owned
+tables and wind/spring extensions remain separate.
 
 The feasibility evidence connects 40,349 of 52,075 same-ID payload bytes to
 ANN, and the corresponding FDS images use the same eight file roles. The low
@@ -12,11 +20,13 @@ knowledge, not an engine-wide web of `.if SMB2` alternatives.
 
 ## Source Boundary
 
-All SMB2-owned assembly lives below `src/smb2/`. The existing SMB1 modules keep
-their Source Reconstruction 2.0 meaning and may not acquire SMB2 selection
-conditionals. The planned groups are `system`, `game`, `rendering`, `audio`,
-`data`, and `overlays`; files should remain small enough to review but represent
-complete responsibilities rather than dozens of tiny instruction fragments.
+SMB2 payload entrypoints live under `src/revisions/smb2/`, symmetrically with
+ANN. Its current implementation modules live under
+`src/platforms/late_fds/smb2/`; independently proven common modules are promoted
+to `src/platforms/late_fds/common/`. The cartridge-era SMB1 modules keep their
+Source Reconstruction 2.0 meaning and may not acquire SMB2 selection
+conditionals. Modules remain small enough to review while representing complete
+responsibilities rather than dozens of tiny instruction fragments.
 
 Each program payload has an independent entrypoint and linker contract:
 
@@ -35,8 +45,10 @@ zeroed private template, and retain its records beneath ignored
 65,500-byte disk side from those retained payloads.
 
 The normal reconstruction no longer uses private program payloads. The pinned
-listings are normalized into 52 source files under `src/smb2`, with the largest
-responsibility-owned module remaining below 700 lines. `make build-smb2-source`
+listings are normalized into 52 source files across the SMB2 revision and
+late-FDS platform trees, with the largest responsibility-owned module remaining
+below 700 lines. Implementation modules use `.asm`; `.inc` is reserved for
+declarations and interfaces. `make build-smb2-source`
 assembles one scoped ca65 unit so cross-overlay imports retain their original
 meaning, then emits `SM2MAIN`, `SM2DATA2`, `SM2DATA3`, and `SM2DATA4` as four
 separate files. `make verify-smb2-source` checks every payload identity without
@@ -126,5 +138,6 @@ interpretations.
    and output composition are proven for all relevant payloads.
 
 Code is shared only after independent static and runtime evidence establishes
-equivalence. Similar bytes, matching addresses, or a common historical ancestor
-are not sufficient promotion criteria.
+equivalence. `make later-engine-source-overlap` supplies the instruction-level
+promotion map; similar bytes, matching addresses, or a common historical
+ancestor are not sufficient promotion criteria.

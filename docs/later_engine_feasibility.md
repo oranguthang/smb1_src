@@ -60,3 +60,8 @@ Any future reconstruction should begin with byte-identical builds of `SM2MAIN`,
 Only routines proven equivalent in both source and behavior should move into a
 shared module. Address equality, matching bytes, or compatible FDS file IDs are
 not sufficient by themselves.
+
+The subsequent ca65-normalized instruction comparison supplies that stronger
+source evidence. See `docs/later_engine_source_overlap.md` for the measured
+overlap and the planned consolidation of ANN and SMB2 as revisions of one late
+FDS engine.

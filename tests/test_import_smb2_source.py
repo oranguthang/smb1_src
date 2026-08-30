@@ -12,7 +12,10 @@ from import_smb2_source import (  # noqa: E402
     Listing,
     SymbolKey,
     build_renames,
+    collapse_main_unused_padding,
     exported_symbols,
+    promote_common_gameplay,
+    promote_common_hard_course_runtime,
     snake_case,
     transform_line,
 )
@@ -70,6 +73,92 @@ class ImportSmb2SourceTests(unittest.TestCase):
             set(),
         )
         self.assertEqual(transform_line(listing, listing.lines[0], {}, {}), "")
+
+    def test_shared_gameplay_labels_converge_across_payloads(self) -> None:
+        listings = {}
+        for payload in ("data2", "data4"):
+            key = SymbolKey(payload, "UpsideDownPipe_High", "label")
+            listings[payload] = Listing(
+                payload,
+                Path(f"sm2{payload}.asm"),
+                ["UpsideDownPipe_High: rts"],
+                {"UpsideDownPipe_High": key},
+                {},
+                set(),
+                set(),
+            )
+        renames = build_renames(listings, exported_symbols(listings))
+        self.assertEqual(
+            {renames[next(iter(listing.labels.values()))] for listing in listings.values()},
+            {"handler_late_fds_upside_down_pipe_high"},
+        )
+
+    def test_gameplay_promotion_replaces_the_complete_runtime(self) -> None:
+        lines = [
+            "before:",
+            "    NOP",
+            "handler_late_fds_upside_down_pipe_high:",
+            "    LDA #$01",
+            "bra_late_fds_exit_upside_down_piranha_movement: RTS",
+            "after:",
+            "    RTS",
+        ]
+        promoted = promote_common_gameplay(lines)
+        self.assertEqual(
+            promoted,
+            [
+                "before:",
+                "    NOP",
+                '.include "../shared_gameplay_interface.inc"',
+                '.include "../../../common/gameplay/upside_down_pipe.asm"',
+                "after:",
+                "    RTS",
+            ],
+        )
+
+    def test_hard_course_promotion_keeps_revision_owned_tables(self) -> None:
+        lines = [
+            "revision_table:",
+            "    .byte $01",
+            "handler_late_fds_get_hard_course_descriptor: RTS",
+            "handler_late_fds_load_hard_course_streams: RTS",
+            "revision_checkpoint_table:",
+            "    .byte $02",
+            "sub_late_fds_initialize_hard_course_checkpoints: RTS",
+            "revision_tail:",
+            "    .byte $03",
+        ]
+        promoted = promote_common_hard_course_runtime(lines)
+        self.assertEqual(
+            promoted,
+            [
+                "revision_table:",
+                "    .byte $01",
+                '.include "shared_interface.inc"',
+                '.include "../../../common/game/hard_course_loader.asm"',
+                "revision_checkpoint_table:",
+                "    .byte $02",
+                '.include "../../../common/game/hard_course_checkpoints.asm"',
+                "revision_tail:",
+                "    .byte $03",
+            ],
+        )
+
+    def test_main_padding_is_expressed_as_capacity(self) -> None:
+        lines = [
+            "; a bunch of unused space",
+            *["    .byte " + ", ".join(["$ff"] * 16) for _ in range(5)],
+            "    .byte $ff, $ff, $ff",
+            "next_label:",
+        ]
+        self.assertEqual(
+            collapse_main_unused_padding(lines),
+            [
+                "; a bunch of unused space",
+                "    .res 83, $ff",
+                "next_label:",
+            ],
+        )
 
 
 if __name__ == "__main__":

@@ -1,0 +1,31 @@
+; Bind the shared late-FDS hard-course runtime to SMB2 symbols
+
+ram_late_fds_hard_course_number = WorldNumber
+ram_late_fds_hard_course_sub = AreaNumber
+tbl_late_fds_hard_course_world_offsets = tbl_smb2_data4_world_area_pointer_offsets
+tbl_late_fds_hard_course_area_offsets = tbl_smb2_data4_area_pointers
+sub_late_fds_get_course_type = sub_smb2_main_get_area_type
+tbl_late_fds_hard_course_enemy_pages = tbl_smb2_data4_enemy_data_offsets_by_area_type
+tbl_late_fds_hard_course_enemy_addresses = off_smb2_data4_enemy_data_addrs
+tbl_late_fds_hard_course_area_pages = tbl_smb2_data4_area_object_data_offsets_by_area_type
+tbl_late_fds_hard_course_area_addresses = off_smb2_data4_area_data_addrs
+
+ram_area_pointer = AreaPointer
+ram_area_addrs_l_offset = AreaAddrsLOffset
+ram_enemy_data_high = EnemyDataHigh
+ram_enemy_data_low = EnemyDataLow
+ram_area_type = AreaType
+ram_area_data_high = AreaDataHigh
+ram_area_data_low = AreaDataLow
+ram_area_data = AreaData
+ram_background_color_ctrl = BackgroundColorCtrl
+ram_foreground_scenery = ForegroundScenery
+ram_player_entrance_ctrl = PlayerEntranceCtrl
+ram_game_timer_setting = GameTimerSetting
+ram_terrain_control = TerrainControl
+ram_background_scenery = BackgroundScenery
+ram_cloud_type_override = CloudTypeOverride
+ram_area_style = AreaStyle
+
+off_late_fds_hard_course_checkpoint_starts = tbl_smb2_data4_ato_d_halfway_pages
+tbl_late_fds_halfway_page_nibbles = tbl_smb2_main_halfway_page_nibbles

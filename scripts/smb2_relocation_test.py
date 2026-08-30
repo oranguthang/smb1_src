@@ -66,10 +66,14 @@ def prepare_generated_source(
                 "region": region["id"],
                 "shift_before": index,
             })
-    main_path = generated_root / "main.asm"
-    main_path.write_text(main_text, encoding="utf-8", newline="\n")
-
     override = manifest["padding_override"]
+    source_include = Path(override["source"]).relative_to("src").as_posix()
+    main_text = replace_once(
+        main_text,
+        f"../../{source_include}",
+        source_include,
+        "SMB2 generated padding include",
+    )
     padding_text = rooted(project_root, override["source"]).read_text(
         encoding="utf-8"
     )
@@ -82,6 +86,9 @@ def prepare_generated_source(
     padding_path = generated_root / override["include_path"]
     padding_path.parent.mkdir(parents=True, exist_ok=True)
     padding_path.write_text(padding_text, encoding="utf-8", newline="\n")
+
+    main_path = generated_root / "main.asm"
+    main_path.write_text(main_text, encoding="utf-8", newline="\n")
 
     aggregate_text = rooted(project_root, manifest["source"]).read_text(
         encoding="utf-8"
@@ -121,7 +128,7 @@ def build_candidate(
         "scenarios": candidate / "runtime_scenarios.json",
         "summary": candidate / "relocation_summary.json",
     }
-    source_root = project_root / "src" / "smb2"
+    revision_root = project_root / "src" / "revisions" / "smb2"
     run_tool(
         resolve_tool("ca65", project_root),
         [
@@ -131,7 +138,7 @@ def build_candidate(
             "-I",
             str(source.parent),
             "-I",
-            str(source_root),
+            str(revision_root),
             "-I",
             str(project_root / "src"),
             "-o",
@@ -266,7 +273,9 @@ def validate_layout(
             checked += 1
             shifted += expected != 0
         elif any(marker in name for marker in (
-            "smb2_data2", "smb2_data3", "smb2_data4"
+            "smb2_supplemental_courses",
+            "smb2_ending",
+            "smb2_hard_courses",
         )):
             expected = 0
             overlay_checked += 1

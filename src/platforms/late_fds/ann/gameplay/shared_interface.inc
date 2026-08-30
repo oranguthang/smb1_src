@@ -1,0 +1,8 @@
+; Bind the shared late-FDS gameplay runtime to ANN symbols
+
+con_late_fds_upside_down_piranha_object = con_ann_piranha_plant_b_object
+sub_late_fds_get_pipe_height = sub_get_pipe_height
+sub_late_fds_find_empty_enemy_slot = sub_find_empty_enemy_slot
+sub_late_fds_initialize_upside_down_piranha = sub_initialize_ann_pipe_piranha_plant
+tbl_late_fds_vertical_pipe_metatiles = tbl_vertical_pipe_metatiles
+sub_late_fds_render_under_part = sub_render_under_part

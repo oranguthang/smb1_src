@@ -1,0 +1,19 @@
+; Bind the shared late-FDS hard-course runtime to ANN symbols
+
+.ifndef ANN_LATE_FDS_HARD_COURSE_INTERFACE_INC
+ANN_LATE_FDS_HARD_COURSE_INTERFACE_INC = 1
+
+ram_late_fds_hard_course_number = ram_ann_course_number
+ram_late_fds_hard_course_sub = ram_ann_course_sub
+tbl_late_fds_hard_course_world_offsets = tbl_ann_extended_course_world_offsets
+tbl_late_fds_hard_course_area_offsets = tbl_ann_extended_course_area_offsets
+sub_late_fds_get_course_type = sub_ann_get_course_type
+tbl_late_fds_hard_course_enemy_pages = tbl_ann_extended_course_enemy_pages
+tbl_late_fds_hard_course_enemy_addresses = tbl_ann_extended_course_enemy_addresses
+tbl_late_fds_hard_course_area_pages = tbl_ann_extended_course_area_pages
+tbl_late_fds_hard_course_area_addresses = tbl_ann_extended_course_area_addresses
+
+off_late_fds_hard_course_checkpoint_starts = off_ann_life_down_extension_starts
+tbl_late_fds_halfway_page_nibbles = tbl_halfway_page_nibbles
+
+.endif

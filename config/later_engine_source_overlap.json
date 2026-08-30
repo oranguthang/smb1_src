@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "minimum_instructions": 12,
+  "programs": [
+    {
+      "id": "ann_main",
+      "source": "src/revisions/ann/main.asm",
+      "include_dirs": ["src/revisions/ann", "src"]
+    },
+    {
+      "id": "smb2_main",
+      "source": "src/revisions/smb2/main.asm",
+      "include_dirs": ["src/revisions/smb2", "src"]
+    },
+    {
+      "id": "ann_supplemental_courses",
+      "source": "src/revisions/ann/supplemental_courses.asm",
+      "include_dirs": ["src/revisions/ann", "src"]
+    },
+    {
+      "id": "smb2_supplemental_courses",
+      "source": "src/revisions/smb2/supplemental_courses.asm",
+      "include_dirs": ["src/revisions/smb2", "src"]
+    },
+    {
+      "id": "ann_ending",
+      "source": "src/revisions/ann/ending.asm",
+      "include_dirs": ["src/revisions/ann", "src"]
+    },
+    {
+      "id": "smb2_ending",
+      "source": "src/revisions/smb2/ending.asm",
+      "include_dirs": ["src/revisions/smb2", "src"]
+    },
+    {
+      "id": "ann_hard_courses",
+      "source": "src/revisions/ann/hard_courses.asm",
+      "include_dirs": ["src/revisions/ann", "src"]
+    },
+    {
+      "id": "smb2_hard_courses",
+      "source": "src/revisions/smb2/hard_courses.asm",
+      "include_dirs": ["src/revisions/smb2", "src"]
+    }
+  ],
+  "comparisons": [
+    {
+      "id": "main_engine",
+      "ann": "ann_main",
+      "smb2": "smb2_main"
+    },
+    {
+      "id": "supplemental_courses",
+      "ann": "ann_supplemental_courses",
+      "smb2": "smb2_supplemental_courses"
+    },
+    {
+      "id": "ending",
+      "ann": "ann_ending",
+      "smb2": "smb2_ending"
+    },
+    {
+      "id": "hard_courses",
+      "ann": "ann_hard_courses",
+      "smb2": "smb2_hard_courses"
+    }
+  ]
+}

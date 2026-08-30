@@ -130,19 +130,22 @@ class Source3AuditTests(unittest.TestCase):
                 "schema_version": 1,
                 "id": "smb2_jp_fds",
                 "status": "source-ready",
-                "source_root": "src/smb2",
+                "source_roots": [
+                    "src/revisions/smb2",
+                    "src/platforms/late_fds/smb2",
+                ],
                 "platform_manifest": "platform.json",
                 "payloads": [
                     {
                         "name": name,
                         "size": 1,
                         "sha1": name.lower(),
-                        "source": f"src/smb2/{name.lower()}.asm",
+                        "source": f"src/revisions/smb2/{name.lower()}.asm",
                     }
                     for name in ("SM2MAIN", "SM2DATA2", "SM2DATA3", "SM2DATA4")
                 ],
                 "source_build": {
-                    "aggregate_source": "src/smb2/build.asm",
+                    "aggregate_source": "src/revisions/smb2/build.asm",
                     "linker_config": "smb2.cfg",
                     "build_script": "build_smb2.py",
                     "provenance_manifest": "smb2_labels.json",
@@ -171,10 +174,15 @@ class Source3AuditTests(unittest.TestCase):
                 }),
                 encoding="utf-8",
             )
-            (root / "src" / "smb2").mkdir(parents=True)
+            (root / "src" / "revisions" / "smb2").mkdir(parents=True)
+            (root / "src" / "platforms" / "late_fds" / "smb2").mkdir(
+                parents=True
+            )
             for payload in manifest["payloads"]:
                 (root / payload["source"]).write_text("", encoding="utf-8")
-            (root / "src" / "smb2" / "build.asm").write_text("", encoding="utf-8")
+            (root / "src" / "revisions" / "smb2" / "build.asm").write_text(
+                "", encoding="utf-8"
+            )
             for filename in ("smb2.cfg", "build_smb2.py", "import_smb2.py"):
                 (root / filename).write_text("", encoding="utf-8")
             (root / "smb2_labels.json").write_text(
@@ -187,7 +195,10 @@ class Source3AuditTests(unittest.TestCase):
             )
             contract = {
                 "reconstruction_manifest": "smb2.json",
-                "source_root": "src/smb2",
+                "source_roots": [
+                    "src/revisions/smb2",
+                    "src/platforms/late_fds/smb2",
+                ],
                 "profile": "smb2_jp_fds",
                 "shared_profile": False,
             }

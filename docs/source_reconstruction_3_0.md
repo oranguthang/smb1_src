@@ -64,9 +64,9 @@ expanded-layout ADR must be written instead.
 8. **Later-engine feasibility.** Compare the ANN-derived engine with Japanese
    SMB2 / The Lost Levels. Produce an evidence-backed decision; do not promise
    a shared-source profile when a separate reconstruction would be clearer.
-9. **SMB2 sibling architecture.** Keep the later engine in `src/smb2`, prohibit
-   SMB2 conditionals in the released SMB1 source, and define four independent
-   payload boundaries.
+9. **SMB2 sibling architecture.** Keep the later engine independent from the
+   released cartridge-era SMB1 source, prohibit SMB2 conditionals there, and
+   define four independent payload boundaries.
 10. **SMB2 identity build.** Split and reproduce the complete FDS image from
     independently verified program and retained private payloads.
 11. **SMB2 source reconstruction.** Normalize and modularize all four executable
@@ -231,8 +231,8 @@ Level Studio expose Worlds 1-9 and A-D as separate banks while preserving the
 table from the private FDS template. Sound Studio adapts the role-prefixed SMB2
 symbols to the shared APU model and decodes the FDS ending engine without
 flattening it into the main bank. The Level Studio's direct, World 5, World 9,
-and World A smoke paths prove the required main, data2, data3, and data4 runtime
-states respectively.
+and World A smoke paths prove the required main, supplemental-course, ending,
+and hard-course runtime states respectively.
 Sound Studio keeps ANN's ordinary SMB1 APU bank separate from the loaded
 `NSMDATA3` ending engine. The latter is modeled as its real 11-section sequence
 with six headers, four APU channel formats, an FDS wavetable channel, two
@@ -250,8 +250,10 @@ bytes have an order-preserving match in the corresponding ANN records. The
 `SM2MAIN` is equal to `NSMMAIN` at the same CPU address, and the three overlays
 have independently changed sizes and layouts.
 
-The evidence supports a separate later-engine reconstruction that reuses the
-project's FDS infrastructure and ANN research. It does not support adding SMB2
-as another conditional profile of the current SMB1 engine. Source 3.0 therefore
-places the sibling engine below `src/smb2`; the detailed structure and promotion
-rules are in `docs/smb2_reconstruction.md`.
+The evidence available at the Source 3.0 boundary supported a separate
+later-engine reconstruction that reused the project's FDS infrastructure and
+ANN research. It did not support adding SMB2 as another conditional profile of
+the cartridge-era SMB1 engine. Post-release instruction normalization provides
+stronger evidence: ANN and SMB2 are revisions of one late-FDS engine. Their
+current symmetric source boundary and conservative promotion rules are recorded
+in `docs/later_engine_source_overlap.md` and `docs/smb2_reconstruction.md`.

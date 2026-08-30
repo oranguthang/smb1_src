@@ -605,8 +605,8 @@ bra_dispatch_current_area_object:
     .word handler_draw_exit_pipe
     .word handler_residual_flag_balls
 .if con_revision_profile = con_revision_profile_ann
-    .word handler_ann_draw_flipped_vertical_pipe_a
-    .word handler_ann_draw_flipped_vertical_pipe_b
+    .word handler_late_fds_upside_down_pipe_high
+    .word handler_late_fds_upside_down_pipe_low
 .endif
 
 ; small objects (rows $00-$0b or 00-11, d6-d4 all clear)

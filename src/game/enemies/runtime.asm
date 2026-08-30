@@ -92,7 +92,7 @@ sub_dispatch_enemy_movement:
     .word sub_move_normal_enemy
     .word sub_move_normal_enemy
 .if con_revision_profile = con_revision_profile_ann
-    .word handler_ann_piranha_plant_b
+    .word handler_late_fds_move_upside_down_piranha_plant
 .else
     .word sub_move_normal_enemy
 .endif

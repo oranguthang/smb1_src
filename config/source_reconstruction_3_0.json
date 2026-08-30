@@ -87,7 +87,10 @@
   "smb2": {
     "reconstruction_manifest": "config/smb2_reconstruction.json",
     "relocation_manifest": "config/relocation/smb2_jp_fds.json",
-    "source_root": "src/smb2",
+    "source_roots": [
+      "src/revisions/smb2",
+      "src/platforms/late_fds/smb2"
+    ],
     "profile": "smb2_jp_fds",
     "shared_profile": false,
     "authoring_profile": "smb2_jp_fds",

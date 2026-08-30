@@ -79,8 +79,8 @@
     {
       "id": "ann_extended",
       "kind": "labeled_streams",
-      "binary": "build/platforms/ann_extended_courses/payload.bin",
-      "labels": "build/platforms/ann_extended_courses/payload.lbl",
+      "binary": "build/platforms/ann_hard_courses/payload.bin",
+      "labels": "build/platforms/ann_hard_courses/payload.lbl",
       "load_address": "0xc296",
       "label_pattern": "^off_ann_extended_enemy_",
       "expected_streams": 19,

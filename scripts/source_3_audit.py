@@ -208,7 +208,7 @@ def validate_smb2_contract(project_root: Path, contract: dict[str, Any]) -> list
         return ["Source 3.0 SMB2 source is not ready"]
     if contract.get("profile") != document["id"]:
         return ["Source 3.0 SMB2 profile differs from its reconstruction manifest"]
-    if contract.get("source_root") != document.get("source_root"):
+    if contract.get("source_roots") != document.get("source_roots"):
         return ["Source 3.0 SMB2 source boundary differs"]
     if contract.get("shared_profile") is not False:
         return ["Source 3.0 SMB2 must remain a sibling engine"]
@@ -282,14 +282,29 @@ def validate_smb2_contract(project_root: Path, contract: dict[str, Any]) -> list
         ):
             return ["Source 3.0 SMB2 payload identity differs"]
     errors = []
-    source_root = project_root / document["source_root"]
+    source_roots = [project_root / value for value in document["source_roots"]]
+    declaration_modules = {
+        (project_root / value).resolve()
+        for value in document.get("declaration_modules", [])
+    }
+    actual_declarations: set[Path] = set()
     assembly_root = project_root / "src"
     if assembly_root.is_dir():
         for path in assembly_root.rglob("*"):
             if not path.is_file() or path.suffix.lower() not in {".asm", ".inc"}:
                 continue
             text = path.read_text(encoding="utf-8")
-            inside_smb2 = source_root == path.parent or source_root in path.parents
+            inside_smb2 = any(
+                source_root == path.parent or source_root in path.parents
+                for source_root in source_roots
+            )
+            if inside_smb2 and path.suffix.lower() == ".inc":
+                actual_declarations.add(path.resolve())
+            if inside_smb2 and any(
+                part.lower() in {"data2", "data3", "data4"}
+                for part in path.relative_to(assembly_root).parts
+            ):
+                errors.append(f"SMB2 source path uses a physical payload number: {path}")
             if not inside_smb2 and re.search(
                 r"^\s*\.(?:if|ifdef|ifndef|elseif).*\bsmb2\b",
                 text,
@@ -302,6 +317,35 @@ def validate_smb2_contract(project_root: Path, contract: dict[str, Any]) -> list
                 errors.append(f"SMB2 source hides bytes with incbin: {path}")
             if inside_smb2 and len(text.splitlines()) > 700:
                 errors.append(f"SMB2 source module exceeds 700 lines: {path}")
+    if actual_declarations != declaration_modules:
+        errors.append("SMB2 .inc declaration boundary differs")
+    common_root = project_root / document.get("shared_source_root", "")
+    common_modules = document.get("common_modules", [])
+    for module in common_modules:
+        common_path = project_root / module.get("source", "")
+        if not common_path.is_file() or common_root not in common_path.parents:
+            errors.append(f"Late-FDS common module boundary differs: {common_path}")
+            continue
+        common_text = common_path.read_text(encoding="utf-8")
+        if re.search(
+            r"^\s*\.(?:if|ifdef|ifndef|elseif).*\b(?:ann|smb2)\b",
+            common_text,
+            re.IGNORECASE | re.MULTILINE,
+        ):
+            errors.append(f"Late-FDS common module contains a revision branch: {common_path}")
+        if re.search(r"^\s*\.incbin\b", common_text, re.IGNORECASE | re.MULTILINE):
+            errors.append(f"Late-FDS common module hides bytes with incbin: {common_path}")
+        common_include = common_path.relative_to(common_root.parent).as_posix()
+        for consumer_value in module.get("consumer_sources", []):
+            consumer_path = project_root / consumer_value
+            if not consumer_path.is_file():
+                errors.append(f"Late-FDS common consumer is missing: {consumer_path}")
+                continue
+            consumer_text = consumer_path.read_text(encoding="utf-8")
+            if common_include not in consumer_text.replace("\\", "/"):
+                errors.append(
+                    f"Late-FDS common consumer omits {common_include}: {consumer_path}"
+                )
     return errors
 
 

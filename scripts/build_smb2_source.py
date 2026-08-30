@@ -55,7 +55,7 @@ def load_payload_contract(path: Path) -> list[dict[str, Any]]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source", default="src/smb2/build.asm")
+    parser.add_argument("--source", default="src/revisions/smb2/build.asm")
     parser.add_argument("--config", default="config/linker/smb2_payloads.cfg")
     parser.add_argument("--manifest", default="config/smb2_reconstruction.json")
     parser.add_argument("--output-dir", default="build/smb2/source")

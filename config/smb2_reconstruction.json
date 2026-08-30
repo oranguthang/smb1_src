@@ -3,7 +3,48 @@
   "id": "smb2_jp_fds",
   "release": "Super Mario Bros. 2 / The Lost Levels",
   "status": "source-ready",
-  "source_root": "src/smb2",
+  "source_roots": [
+    "src/revisions/smb2",
+    "src/platforms/late_fds/smb2"
+  ],
+  "shared_source_root": "src/platforms/late_fds/common",
+  "common_modules": [
+    {
+      "source": "src/platforms/late_fds/common/gameplay/upside_down_pipe.asm",
+      "instructions": 75,
+      "payload_consumers": ["ann_supplemental_courses", "ann_hard_courses", "smb2_supplemental_courses", "smb2_hard_courses"],
+      "consumer_sources": [
+        "src/platforms/late_fds/ann/gameplay/overlay.asm",
+        "src/platforms/late_fds/smb2/overlays/supplemental_courses/course_bank.asm",
+        "src/platforms/late_fds/smb2/overlays/hard_courses/wind_and_pipes.asm"
+      ]
+    },
+    {
+      "source": "src/platforms/late_fds/common/game/hard_course_loader.asm",
+      "instructions": 87,
+      "payload_consumers": ["ann_hard_courses", "smb2_hard_courses"],
+      "consumer_sources": [
+        "src/platforms/late_fds/ann/courses/hard/loader.asm",
+        "src/platforms/late_fds/smb2/overlays/hard_courses/worlds_a_d_setup.asm"
+      ]
+    },
+    {
+      "source": "src/platforms/late_fds/common/game/hard_course_checkpoints.asm",
+      "instructions": 6,
+      "payload_consumers": ["ann_hard_courses", "smb2_hard_courses"],
+      "consumer_sources": [
+        "src/platforms/late_fds/ann/courses/hard/life_down.asm",
+        "src/platforms/late_fds/smb2/overlays/hard_courses/worlds_a_d_setup.asm"
+      ]
+    }
+  ],
+  "declaration_modules": [
+    "src/platforms/late_fds/smb2/system/definitions.inc",
+    "src/platforms/late_fds/smb2/system/hardware.inc",
+    "src/platforms/late_fds/smb2/system/interfaces.inc",
+    "src/platforms/late_fds/smb2/overlays/shared_gameplay_interface.inc",
+    "src/platforms/late_fds/smb2/overlays/hard_courses/shared_interface.inc"
+  ],
   "platform_manifest": "config/smb2_platform_profile.json",
   "reference": {
     "path": "Super Mario Brothers 2 (Japan).fds",
@@ -19,7 +60,7 @@
     "boundary": "ignored verification reference"
   },
   "source_build": {
-    "aggregate_source": "src/smb2/build.asm",
+    "aggregate_source": "src/revisions/smb2/build.asm",
     "linker_config": "config/linker/smb2_payloads.cfg",
     "build_script": "scripts/build_smb2_source.py",
     "provenance_manifest": "docs/provenance/smb2_label_renames.json",
@@ -31,10 +72,10 @@
     "image_verify_target": "verify-smb2"
   },
   "payloads": [
-    {"name": "SM2MAIN", "file_id": 5, "load_address": "0x6000", "size": 32768, "sha1": "511bdb385ae63f07e6077e33786b172caaf46806", "source": "src/smb2/main.asm"},
-    {"name": "SM2DATA2", "file_id": 32, "load_address": "0xc470", "size": 3631, "sha1": "909ce686c1e6612bb6625c712eddb6cadbdde40c", "source": "src/smb2/overlays/data2.asm"},
-    {"name": "SM2DATA3", "file_id": 48, "load_address": "0xc5d0", "size": 3279, "sha1": "e34432ec9e5310430f0a11445b6a439ef73e2cad", "source": "src/smb2/overlays/data3.asm"},
-    {"name": "SM2DATA4", "file_id": 64, "load_address": "0xc2b4", "size": 3916, "sha1": "1882308b0d4b8d0b4c762856d873225b25142adb", "source": "src/smb2/overlays/data4.asm"}
+    {"name": "SM2MAIN", "file_id": 5, "load_address": "0x6000", "size": 32768, "sha1": "511bdb385ae63f07e6077e33786b172caaf46806", "source": "src/revisions/smb2/main.asm"},
+    {"name": "SM2DATA2", "file_id": 32, "load_address": "0xc470", "size": 3631, "sha1": "909ce686c1e6612bb6625c712eddb6cadbdde40c", "source": "src/revisions/smb2/supplemental_courses.asm"},
+    {"name": "SM2DATA3", "file_id": 48, "load_address": "0xc5d0", "size": 3279, "sha1": "e34432ec9e5310430f0a11445b6a439ef73e2cad", "source": "src/revisions/smb2/ending.asm"},
+    {"name": "SM2DATA4", "file_id": 64, "load_address": "0xc2b4", "size": 3916, "sha1": "1882308b0d4b8d0b4c762856d873225b25142adb", "source": "src/revisions/smb2/hard_courses.asm"}
   ],
   "retained_private_payloads": [
     {"name": "KYODAKU", "file_id": 0, "size": 224, "sha1": "dc5ded785387c445c7e565eba8f8440836e1d10c"},

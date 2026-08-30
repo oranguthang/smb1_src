@@ -40,6 +40,8 @@ SOURCE_2_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_2_0.json
 SOURCE_3_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_3_0.json
 LATER_ENGINE_MANIFEST ?= $(PROJECT_DIR)config/later_engine_feasibility.json
 LATER_ENGINE_REPORT ?= $(PROJECT_DIR)build/evidence/later_engine_feasibility.json
+LATER_ENGINE_OVERLAP_MANIFEST ?= $(PROJECT_DIR)config/later_engine_source_overlap.json
+LATER_ENGINE_OVERLAP_REPORT ?= $(PROJECT_DIR)build/evidence/later_engine_source_overlap.json
 SMB2_RECONSTRUCTION_MANIFEST ?= $(PROJECT_DIR)config/smb2_reconstruction.json
 SMB2_PLATFORM_MANIFEST ?= $(PROJECT_DIR)config/smb2_platform_profile.json
 SMB2_REFERENCE ?= $(PROJECT_DIR)Super Mario Brothers 2 (Japan).fds
@@ -120,12 +122,12 @@ ANN_AUDIO_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_audio
 ANN_SUPPLEMENTAL_COURSES_SOURCE ?= $(PROJECT_DIR)src/revisions/ann/supplemental_courses.asm
 ANN_SUPPLEMENTAL_COURSES_CFG ?= $(PROJECT_DIR)config/linker/ann/supplemental_courses.cfg
 ANN_SUPPLEMENTAL_COURSES_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_supplemental_courses
-ANN_ENDING_AUDIO_SOURCE ?= $(PROJECT_DIR)src/revisions/ann/ending_audio.asm
-ANN_ENDING_AUDIO_CFG ?= $(PROJECT_DIR)config/linker/ann/ending_audio.cfg
-ANN_ENDING_AUDIO_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_ending_audio
-ANN_EXTENDED_COURSES_SOURCE ?= $(PROJECT_DIR)src/revisions/ann/extended_courses.asm
-ANN_EXTENDED_COURSES_CFG ?= $(PROJECT_DIR)config/linker/ann/extended_courses.cfg
-ANN_EXTENDED_COURSES_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_extended_courses
+ANN_ENDING_SOURCE ?= $(PROJECT_DIR)src/revisions/ann/ending.asm
+ANN_ENDING_CFG ?= $(PROJECT_DIR)config/linker/ann/ending.cfg
+ANN_ENDING_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_ending
+ANN_HARD_COURSES_SOURCE ?= $(PROJECT_DIR)src/revisions/ann/hard_courses.asm
+ANN_HARD_COURSES_CFG ?= $(PROJECT_DIR)config/linker/ann/hard_courses.cfg
+ANN_HARD_COURSES_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_hard_courses
 FIXED_VARIANT ?= five_lives
 FIXED_VARIANT_MANIFEST ?= $(PROJECT_DIR)config/fixed_layout_variants.json
 HACK_SOURCE ?= $(PROJECT_DIR)src/variants/five_lives.asm
@@ -237,8 +239,8 @@ PLATFORM_REFERENCE ?= $(PROJECT_DIR)All Night Nippon Super Mario Brothers (Japan
 PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.fds
 PLATFORM_PAYLOAD_ARGS = \
 	--payload NSMDATA2=$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.bin \
-	--payload NSMDATA3=$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.bin \
-	--payload NSMDATA4=$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.bin
+	--payload NSMDATA3=$(ANN_ENDING_BUILD_DIR)/payload.bin \
+	--payload NSMDATA4=$(ANN_HARD_COURSES_BUILD_DIR)/payload.bin
 else
 PLATFORM_SOURCE ?= $(PROJECT_DIR)src/platforms/$(PLATFORM).asm
 PLATFORM_CFG ?= $(NATIVE_CFG)
@@ -274,18 +276,18 @@ CONTENT_PREPARE_COMMAND = $(MAKE) build-platform PLATFORM=ann_fds
 CONTENT_CONTAINER_ARGS = --template "$(PLATFORM_ASSET_DIR)/ann_fds/template.fds"
 CONTENT_PAYLOAD_ARGS = \
 	--payload NSMDATA2=$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.bin \
-	--payload NSMDATA3=$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.bin \
-	--payload NSMDATA4=$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.bin \
+	--payload NSMDATA3=$(ANN_ENDING_BUILD_DIR)/payload.bin \
+	--payload NSMDATA4=$(ANN_HARD_COURSES_BUILD_DIR)/payload.bin \
 	--payload-labels NSMDATA2=$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.lbl \
-	--payload-labels NSMDATA3=$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.lbl \
-	--payload-labels NSMDATA4=$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.lbl
+	--payload-labels NSMDATA3=$(ANN_ENDING_BUILD_DIR)/payload.lbl \
+	--payload-labels NSMDATA4=$(ANN_HARD_COURSES_BUILD_DIR)/payload.lbl
 STUDIO_CONTENT_PAYLOAD_ARGS = \
 	--content-payload NSMDATA2=$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.bin \
-	--content-payload NSMDATA3=$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.bin \
-	--content-payload NSMDATA4=$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.bin \
+	--content-payload NSMDATA3=$(ANN_ENDING_BUILD_DIR)/payload.bin \
+	--content-payload NSMDATA4=$(ANN_HARD_COURSES_BUILD_DIR)/payload.bin \
 	--content-payload-labels NSMDATA2=$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.lbl \
-	--content-payload-labels NSMDATA3=$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.lbl \
-	--content-payload-labels NSMDATA4=$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.lbl
+	--content-payload-labels NSMDATA3=$(ANN_ENDING_BUILD_DIR)/payload.lbl \
+	--content-payload-labels NSMDATA4=$(ANN_HARD_COURSES_BUILD_DIR)/payload.lbl
 else ifeq ($(CONTENT_PROFILE),smb2_jp_fds)
 CONTENT_BASE_DIR = $(SMB2_SOURCE_BUILD_DIR)
 CONTENT_BASE_PRG = $(CONTENT_BASE_DIR)/SM2MAIN.bin
@@ -307,7 +309,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded prepare-content-profile init-content export-content validate-content build-content run-content check-studios check-content-profile check-content-profiles world-studio level-studio smoke-level-playtest graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor list-content-profiles content-profile-audit split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms split-smb2-assets build-smb2-identity verify-smb2-identity build-smb2-source verify-smb2-source build-smb2 verify-smb2 validate-smb2-runtime validate-smb2-overlays validate-smb2-gameplay test-smb2-relocation validate-smb2-relocation build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit source-3-release-audit source-3-check semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime later-engine-feasibility test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded prepare-content-profile init-content export-content validate-content build-content run-content check-studios check-content-profile check-content-profiles world-studio level-studio smoke-level-playtest graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor list-content-profiles content-profile-audit split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms split-smb2-assets build-smb2-identity verify-smb2-identity build-smb2-source verify-smb2-source build-smb2 verify-smb2 validate-smb2-runtime validate-smb2-overlays validate-smb2-gameplay test-smb2-relocation validate-smb2-relocation build-ann-payloads build-ann-supplemental-courses build-ann-ending build-ann-hard-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending verify-ann-hard-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit source-3-release-audit source-3-check semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime later-engine-feasibility later-engine-source-overlap test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -850,7 +852,7 @@ verify-ann-tail-core:
 		--start 0xBFBF \
 		--end 0xE000
 
-build-ann-payloads: build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses
+build-ann-payloads: build-ann-supplemental-courses build-ann-ending build-ann-hard-courses
 
 build-ann-supplemental-courses:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
@@ -872,41 +874,41 @@ verify-ann-supplemental-courses: build-ann-supplemental-courses
 		--start 0xC470 \
 		--end 0xD270
 
-build-ann-ending-audio:
+build-ann-ending:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
-		--source "$(ANN_ENDING_AUDIO_SOURCE)" \
-		--config "$(ANN_ENDING_AUDIO_CFG)" \
-		--object "$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.o" \
-		--output "$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.bin" \
-		--labels "$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.lbl" \
-		--map "$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.map"
+		--source "$(ANN_ENDING_SOURCE)" \
+		--config "$(ANN_ENDING_CFG)" \
+		--object "$(ANN_ENDING_BUILD_DIR)/payload.o" \
+		--output "$(ANN_ENDING_BUILD_DIR)/payload.bin" \
+		--labels "$(ANN_ENDING_BUILD_DIR)/payload.lbl" \
+		--map "$(ANN_ENDING_BUILD_DIR)/payload.map"
 
-verify-ann-ending-audio: build-ann-ending-audio
+verify-ann-ending: build-ann-ending
 	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
 		--reference "$(ANN_REFERENCE)" \
-		--candidate "$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.bin" \
+		--candidate "$(ANN_ENDING_BUILD_DIR)/payload.bin" \
 		--payload NSMDATA3 \
 		--load-address 0xC5D0 \
 		--start 0xC5D0 \
 		--end 0xD2E2
 
-build-ann-extended-courses:
+build-ann-hard-courses:
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
-		--source "$(ANN_EXTENDED_COURSES_SOURCE)" \
-		--config "$(ANN_EXTENDED_COURSES_CFG)" \
-		--object "$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.o" \
-		--output "$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.bin" \
-		--labels "$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.lbl" \
-		--map "$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.map"
+		--source "$(ANN_HARD_COURSES_SOURCE)" \
+		--config "$(ANN_HARD_COURSES_CFG)" \
+		--object "$(ANN_HARD_COURSES_BUILD_DIR)/payload.o" \
+		--output "$(ANN_HARD_COURSES_BUILD_DIR)/payload.bin" \
+		--labels "$(ANN_HARD_COURSES_BUILD_DIR)/payload.lbl" \
+		--map "$(ANN_HARD_COURSES_BUILD_DIR)/payload.map"
 
-verify-ann-extended-courses: build-ann-extended-courses
+verify-ann-hard-courses: build-ann-hard-courses
 	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
 		--reference "$(ANN_REFERENCE)" \
-		--candidate "$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.bin" \
+		--candidate "$(ANN_HARD_COURSES_BUILD_DIR)/payload.bin" \
 		--payload NSMDATA4 \
 		--load-address 0xC296 \
 		--start 0xC296 \
@@ -1033,6 +1035,13 @@ later-engine-feasibility:
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(LATER_ENGINE_MANIFEST)" \
 		--output "$(LATER_ENGINE_REPORT)"
+
+later-engine-source-overlap:
+	$(PYTHON) "$(PROJECT_DIR)scripts/compare_assembly_sources.py" \
+		--project-root "$(PROJECT_DIR)" \
+		--manifest "$(LATER_ENGINE_OVERLAP_MANIFEST)" \
+		--assembler "$(PROJECT_DIR)bin/ca65.exe" \
+		--output "$(LATER_ENGINE_OVERLAP_REPORT)"
 
 trace-semantic-runtime: symbols
 	$(PYTHON) "$(PROJECT_DIR)scripts/run_runtime_scenarios.py" \

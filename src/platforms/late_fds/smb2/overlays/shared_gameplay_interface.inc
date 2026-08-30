@@ -1,0 +1,19 @@
+; Bind the shared late-FDS gameplay runtime to SMB2 symbols
+
+con_late_fds_upside_down_piranha_object = $04
+sub_late_fds_get_pipe_height = sub_smb2_main_get_pipe_height
+sub_late_fds_find_empty_enemy_slot = sub_smb2_main_find_empty_enemy_slot
+sub_late_fds_initialize_upside_down_piranha = sub_smb2_main_setup_piranha_plant
+tbl_late_fds_vertical_pipe_metatiles = off_smb2_main_vertical_pipe_metatiles
+sub_late_fds_render_under_part = sub_smb2_main_render_under_part
+
+ram_area_object_length = AreaObjectLength
+ram_enemy_y_position = Enemy_Y_Position
+ram_piranha_plant_down_y_pos = PiranhaPlantDownYPos
+ram_piranha_plant_up_y_pos = PiranhaPlantUpYPos
+ram_piranha_plant_move_flag = PiranhaPlant_MoveFlag
+ram_metatile_buffer = MetatileBuffer
+ram_enemy_state = Enemy_State
+ram_enemy_frame_timer = EnemyFrameTimer
+ram_piranha_plant_y_speed = PiranhaPlant_Y_Speed
+ram_timer_control = TimerControl

@@ -438,7 +438,7 @@ bra_finish_victory_walk:
 .if con_revision_profile = con_revision_profile_vs
     .include "../platforms/vs/victory.asm"
 .elseif con_revision_profile = con_revision_profile_ann
-    .include "../platforms/ann/ending/victory.asm"
+    .include "../platforms/late_fds/ann/ending/victory.asm"
 .else
 handler_print_victory_messages:
     LDA ram_secondary_msg_counter  ; load secondary message counter

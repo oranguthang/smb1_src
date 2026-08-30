@@ -64,7 +64,7 @@ ending, audio, and disk files are not a simple CHR replacement over cartridge
 SMB1.
 
 The revision entrypoints are collected under `src/revisions/ann/`. Platform
-modules under `src/platforms/ann/` follow the disk's functional ownership:
+modules under `src/platforms/late_fds/ann/` follow the disk's functional ownership:
 disk loading, title flow, courses, gameplay, ending, audio, and rendering.
 
 The supplied

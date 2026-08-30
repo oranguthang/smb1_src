@@ -465,7 +465,7 @@ loc_advance_operation_mode_task:
 ; -------------------------------------------------------------------------------------
 
 .if con_revision_profile = con_revision_profile_ann
-    .include "../platforms/ann/rendering/background_text.asm"
+    .include "../platforms/late_fds/ann/rendering/background_text.asm"
 .else
 tbl_game_text_packets:
 off_top_status_bar_packet:

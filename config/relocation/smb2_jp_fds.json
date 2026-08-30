@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "id": "smb2_jp_fds_programs",
-  "source": "src/smb2/build.asm",
-  "main_source": "src/smb2/main.asm",
+  "source": "src/revisions/smb2/build.asm",
+  "main_source": "src/revisions/smb2/main.asm",
   "payload_manifest": "config/smb2_reconstruction.json",
   "platform_manifest": "config/smb2_platform_profile.json",
   "platform_profile": "smb2_jp_fds",
@@ -10,8 +10,8 @@
   "generated_root": "build/relocation/smb2_jp_fds",
   "cpu_base": "0x6000",
   "padding_override": {
-    "source": "src/smb2/data/course_bank.inc",
-    "include_path": "data/course_bank.inc",
+    "source": "src/platforms/late_fds/smb2/data/course_bank.asm",
+    "include_path": "platforms/late_fds/smb2/data/course_bank.asm",
     "original_statement": "    .res 83, $ff",
     "replacement_statement": "    .res 75, $ff\n    .assert * = $d29f, error, \"SMB2 main relocation budget differs\""
   },
@@ -23,14 +23,14 @@
       "absorbed_range": {"start": "0xd24c", "end": "0xd253"},
       "absorbed_bytes": "ffffffffffffffff",
       "insertions": [
-        {"id": "system_origin", "before": "    .include \"system/reset.inc\""},
-        {"id": "after_frame_core", "before": "    .include \"game/scoring.inc\""},
-        {"id": "before_area_engine", "before": "    .include \"game/area_attributes.inc\""},
-        {"id": "before_player_engine", "before": "    .include \"game/player_control.inc\""},
-        {"id": "before_enemy_engine", "before": "    .include \"game/enemy_dispatch.inc\""},
-        {"id": "before_collision_engine", "before": "    .include \"game/player_enemy_collision.inc\""},
-        {"id": "before_disk_engine", "before": "    .include \"system/disk_loading.inc\""},
-        {"id": "before_course_bank", "before": "    .include \"data/course_bank.inc\""}
+        {"id": "system_origin", "before": "    .include \"../../platforms/late_fds/smb2/system/reset.asm\""},
+        {"id": "after_frame_core", "before": "    .include \"../../platforms/late_fds/smb2/game/scoring.asm\""},
+        {"id": "before_area_engine", "before": "    .include \"../../platforms/late_fds/smb2/game/area_attributes.asm\""},
+        {"id": "before_player_engine", "before": "    .include \"../../platforms/late_fds/smb2/game/player_control.asm\""},
+        {"id": "before_enemy_engine", "before": "    .include \"../../platforms/late_fds/smb2/game/enemy_dispatch.asm\""},
+        {"id": "before_collision_engine", "before": "    .include \"../../platforms/late_fds/smb2/game/player_enemy_collision.asm\""},
+        {"id": "before_disk_engine", "before": "    .include \"../../platforms/late_fds/smb2/system/disk_loading.asm\""},
+        {"id": "before_course_bank", "before": "    .include \"../../platforms/late_fds/smb2/data/course_bank.asm\""}
       ]
     }
   ],

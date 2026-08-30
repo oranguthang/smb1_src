@@ -25,58 +25,151 @@ REFERENCE_FILES = {
 MAIN_MODULES = (
     ("system/definitions.inc", None),
     ("system/interfaces.inc", ";SUBROUTINES IN FAMICOM DISK SYSTEM BIOS"),
-    ("system/reset.inc", "Start"),
-    ("rendering/vram_buffers.inc", "VRAM_AddrTable"),
-    ("game/scoring.inc", "FloateyNumTileData"),
-    ("rendering/palettes.inc", "ColorRotatePalette"),
-    ("rendering/name_tables.inc", "InitializeNameTables"),
-    ("game/mode_dispatch.inc", "GameOverSubs"),
-    ("game/area_attributes.inc", "AlterAreaAttributes"),
-    ("game/area_objects.inc", "Bridge_High"),
-    ("game/scrolling.inc", "GetScreenPosition"),
-    ("game/player_control.inc", "PlayerMovementSubs"),
-    ("game/timers_and_flagpole.inc", "RunGameTimer"),
-    ("game/projectiles.inc", "BulletBillXSpdData"),
-    ("game/blocks.inc", "BrickQBlockMetatiles"),
-    ("game/enemy_dispatch.inc", "ChkEnemyFrenzy"),
-    ("game/firebars_and_spawns.inc", "FirebarSpinSpdData"),
-    ("game/piranha_and_platforms.inc", "InitPiranhaPlant"),
-    ("game/enemy_movement.inc", "MoveJumpingEnemy"),
-    ("game/bowser.inc", "PRandomSubtracter"),
-    ("rendering/enemy_graphics.inc", "FlameTimerData"),
-    ("game/platforms.inc", "YMovingPlatform"),
-    ("game/player_enemy_collision.inc", "ResidualXSpdData"),
-    ("game/platform_collision.inc", "ProcSPlatCollisions"),
-    ("game/background_collision.inc", "SolidMTileUpperExt"),
-    ("game/bounding_boxes.inc", "BoundBoxCtrlData"),
-    ("rendering/sprite_helpers.inc", "MoveSixSpritesOffscreen"),
-    ("rendering/enemy_sprites.inc", "EnemyGfxHandler"),
-    ("rendering/block_sprites.inc", "DefaultBlockObjTiles"),
-    ("rendering/player_sprites.inc", "PlayerGfxTblOffsets"),
-    ("rendering/relative_positions.inc", "RelativePlayerPosition"),
-    ("system/disk_loading.inc", "AttractModeSubs"),
-    ("game/continue_menu.inc", "JumpFrictionData"),
-    ("data/ui_messages.inc", "PlayerNameData"),
-    ("data/course_bank.inc", "E_CastleArea1"),
-    ("audio/engine_core.inc", "SoundEngine"),
-    ("audio/music_engine.inc", "ContinueMusic"),
-    ("audio/music_data.inc", "Star_CloudMData"),
+    ("system/reset.asm", "Start"),
+    ("rendering/vram_buffers.asm", "VRAM_AddrTable"),
+    ("game/scoring.asm", "FloateyNumTileData"),
+    ("rendering/palettes.asm", "ColorRotatePalette"),
+    ("rendering/name_tables.asm", "InitializeNameTables"),
+    ("game/mode_dispatch.asm", "GameOverSubs"),
+    ("game/area_attributes.asm", "AlterAreaAttributes"),
+    ("game/area_objects.asm", "Bridge_High"),
+    ("game/scrolling.asm", "GetScreenPosition"),
+    ("game/player_control.asm", "PlayerMovementSubs"),
+    ("game/timers_and_flagpole.asm", "RunGameTimer"),
+    ("game/projectiles.asm", "BulletBillXSpdData"),
+    ("game/blocks.asm", "BrickQBlockMetatiles"),
+    ("game/enemy_dispatch.asm", "ChkEnemyFrenzy"),
+    ("game/firebars_and_spawns.asm", "FirebarSpinSpdData"),
+    ("game/piranha_and_platforms.asm", "InitPiranhaPlant"),
+    ("game/enemy_movement.asm", "MoveJumpingEnemy"),
+    ("game/bowser.asm", "PRandomSubtracter"),
+    ("rendering/enemy_graphics.asm", "FlameTimerData"),
+    ("game/platforms.asm", "YMovingPlatform"),
+    ("game/player_enemy_collision.asm", "ResidualXSpdData"),
+    ("game/platform_collision.asm", "ProcSPlatCollisions"),
+    ("game/background_collision.asm", "SolidMTileUpperExt"),
+    ("game/bounding_boxes.asm", "BoundBoxCtrlData"),
+    ("rendering/sprite_helpers.asm", "MoveSixSpritesOffscreen"),
+    ("rendering/enemy_sprites.asm", "EnemyGfxHandler"),
+    ("rendering/block_sprites.asm", "DefaultBlockObjTiles"),
+    ("rendering/player_sprites.asm", "PlayerGfxTblOffsets"),
+    ("rendering/relative_positions.asm", "RelativePlayerPosition"),
+    ("system/disk_loading.asm", "AttractModeSubs"),
+    ("game/continue_menu.asm", "JumpFrictionData"),
+    ("data/ui_messages.asm", "PlayerNameData"),
+    ("data/course_bank.asm", "E_CastleArea1"),
+    ("audio/engine_core.asm", "SoundEngine"),
+    ("audio/music_engine.asm", "ContinueMusic"),
+    ("audio/music_data.asm", "Star_CloudMData"),
 )
 
 OVERLAY_MODULES = {
-    "data2": (("course_bank.inc", None),),
+    "data2": (("course_bank.asm", None),),
     "data3": (
-        ("ending.inc", None),
-        ("world_9.inc", "E_CastleArea9"),
-        ("ending_audio.inc", "AlternateSoundEngine"),
-        ("victory_music.inc", "MusicHeaderOffsetData"),
+        ("ending.asm", None),
+        ("world_9.asm", "E_CastleArea9"),
+        ("ending_audio.asm", "AlternateSoundEngine"),
+        ("victory_music.asm", "MusicHeaderOffsetData"),
     ),
     "data4": (
-        ("worlds_a_d_setup.inc", None),
-        ("wind_and_pipes.inc", "UpsideDownPipe_High"),
-        ("course_bank.inc", "E_CastleArea11"),
+        ("worlds_a_d_setup.asm", None),
+        ("wind_and_pipes.asm", "UpsideDownPipe_High"),
+        ("course_bank.asm", "E_CastleArea11"),
     ),
 }
+
+PAYLOAD_NAMES = {
+    "main": "main",
+    "data2": "supplemental_courses",
+    "data3": "ending",
+    "data4": "hard_courses",
+}
+
+COMMON_GAMEPLAY_RENAMES = {
+    (payload, original): current
+    for payload in ("data2", "data4")
+    for original, current in {
+        "UpsideDownPipe_High": "handler_late_fds_upside_down_pipe_high",
+        "UpsideDownPipe_Low": "handler_late_fds_upside_down_pipe_low",
+        "UDP": "bra_late_fds_render_upside_down_pipe_body",
+        "NoUDP": "bra_late_fds_finish_upside_down_pipe",
+        "MoveUpsideDownPiranhaP": (
+            "handler_late_fds_move_upside_down_piranha_plant"
+        ),
+        "SetupToMovePPlant": "bra_late_fds_select_upside_down_piranha_limit",
+        "RiseFallPiranhaPlant": "bra_late_fds_move_upside_down_piranha",
+        "ExMoveUDPP": "bra_late_fds_exit_upside_down_piranha_movement",
+    }.items()
+}
+
+COMMON_HARD_COURSE_RENAMES = {
+    ("data4", "FindAreaPointer"): "handler_late_fds_get_hard_course_descriptor",
+    ("data4", "GetAreaDataAddrs"): "handler_late_fds_load_hard_course_streams",
+    ("data4", "StoreFore"): "bra_late_fds_store_hard_course_foreground_scenery",
+    ("data4", "StoreStyle"): "bra_late_fds_store_hard_course_area_style",
+    ("data4", "ChangeHalfwayPages"): (
+        "sub_late_fds_initialize_hard_course_checkpoints"
+    ),
+    ("data4", "CHalfL"): "bra_late_fds_copy_hard_course_checkpoints",
+}
+
+SMB2_SHARED_GAMEPLAY_INTERFACE = (
+    "; Bind the shared late-FDS gameplay runtime to SMB2 symbols",
+    "",
+    "con_late_fds_upside_down_piranha_object = $04",
+    "sub_late_fds_get_pipe_height = sub_smb2_main_get_pipe_height",
+    "sub_late_fds_find_empty_enemy_slot = sub_smb2_main_find_empty_enemy_slot",
+    "sub_late_fds_initialize_upside_down_piranha = sub_smb2_main_setup_piranha_plant",
+    "tbl_late_fds_vertical_pipe_metatiles = off_smb2_main_vertical_pipe_metatiles",
+    "sub_late_fds_render_under_part = sub_smb2_main_render_under_part",
+    "",
+    "ram_area_object_length = AreaObjectLength",
+    "ram_enemy_y_position = Enemy_Y_Position",
+    "ram_piranha_plant_down_y_pos = PiranhaPlantDownYPos",
+    "ram_piranha_plant_up_y_pos = PiranhaPlantUpYPos",
+    "ram_piranha_plant_move_flag = PiranhaPlant_MoveFlag",
+    "ram_metatile_buffer = MetatileBuffer",
+    "ram_enemy_state = Enemy_State",
+    "ram_enemy_frame_timer = EnemyFrameTimer",
+    "ram_piranha_plant_y_speed = PiranhaPlant_Y_Speed",
+    "ram_timer_control = TimerControl",
+    "",
+)
+
+SMB2_SHARED_HARD_COURSE_INTERFACE = (
+    "; Bind the shared late-FDS hard-course runtime to SMB2 symbols",
+    "",
+    "ram_late_fds_hard_course_number = WorldNumber",
+    "ram_late_fds_hard_course_sub = AreaNumber",
+    "tbl_late_fds_hard_course_world_offsets = tbl_smb2_data4_world_area_pointer_offsets",
+    "tbl_late_fds_hard_course_area_offsets = tbl_smb2_data4_area_pointers",
+    "sub_late_fds_get_course_type = sub_smb2_main_get_area_type",
+    "tbl_late_fds_hard_course_enemy_pages = tbl_smb2_data4_enemy_data_offsets_by_area_type",
+    "tbl_late_fds_hard_course_enemy_addresses = off_smb2_data4_enemy_data_addrs",
+    "tbl_late_fds_hard_course_area_pages = tbl_smb2_data4_area_object_data_offsets_by_area_type",
+    "tbl_late_fds_hard_course_area_addresses = off_smb2_data4_area_data_addrs",
+    "",
+    "ram_area_pointer = AreaPointer",
+    "ram_area_addrs_l_offset = AreaAddrsLOffset",
+    "ram_enemy_data_high = EnemyDataHigh",
+    "ram_enemy_data_low = EnemyDataLow",
+    "ram_area_type = AreaType",
+    "ram_area_data_high = AreaDataHigh",
+    "ram_area_data_low = AreaDataLow",
+    "ram_area_data = AreaData",
+    "ram_background_color_ctrl = BackgroundColorCtrl",
+    "ram_foreground_scenery = ForegroundScenery",
+    "ram_player_entrance_ctrl = PlayerEntranceCtrl",
+    "ram_game_timer_setting = GameTimerSetting",
+    "ram_terrain_control = TerrainControl",
+    "ram_background_scenery = BackgroundScenery",
+    "ram_cloud_type_override = CloudTypeOverride",
+    "ram_area_style = AreaStyle",
+    "",
+    "off_late_fds_hard_course_checkpoint_starts = tbl_smb2_data4_ato_d_halfway_pages",
+    "tbl_late_fds_halfway_page_nibbles = tbl_smb2_main_halfway_page_nibbles",
+    "",
+)
 
 MNEMONICS = frozenset(
     """
@@ -477,6 +570,14 @@ def build_renames(
         keys = [*listing.labels.values()]
         keys.extend(key for key in listing.assignments.values() if "sub" in roles[key])
         for key in keys:
+            common_name = COMMON_GAMEPLAY_RENAMES.get((payload, key.original))
+            if common_name is None:
+                common_name = COMMON_HARD_COURSE_RENAMES.get(
+                    (payload, key.original)
+                )
+            if common_name is not None:
+                renames[key] = common_name
+                continue
             prefix = role_prefix(listing, key, roles, address_references)
             stem = semantic_names.get(key.original, snake_case(key.original))
             base = f"{prefix}_smb2_{payload}_{stem}"
@@ -556,11 +657,12 @@ def split_at_anchors(
 def wrapper(
     payload: str, load_address: int, hardware_include: str, includes: list[str]
 ) -> str:
+    semantic_name = PAYLOAD_NAMES[payload]
     lines = [
-        f"; Super Mario Bros. 2 {payload.upper()} payload",
+        f"; Super Mario Bros. 2 {semantic_name.replace('_', '-')} payload",
         "; Reconstructed from the pinned doppelganger ca65 listing",
         "",
-        f".scope smb2_{payload}",
+        f".scope smb2_{semantic_name}",
         f'.include "{hardware_include}"',
         f".org ${load_address:04x}",
     ]
@@ -569,19 +671,106 @@ def wrapper(
     return "\n".join(lines)
 
 
+def promote_common_gameplay(lines: list[str]) -> list[str]:
+    def label_index(name: str, start: int = 0) -> tuple[int, str]:
+        for index in range(start, len(lines)):
+            match = LABEL_RE.match(lines[index])
+            if match is not None and match.group(1) == name:
+                return index, match.group("tail").strip()
+        fail(f"shared late-FDS gameplay label is missing: {name}")
+
+    start, _ = label_index("handler_late_fds_upside_down_pipe_high")
+    end, tail = label_index(
+        "bra_late_fds_exit_upside_down_piranha_movement", start
+    )
+    if tail.upper() != "RTS":
+        end += 1
+        while end < len(lines) and not lines[end].strip():
+            end += 1
+        if end >= len(lines) or lines[end].strip().upper() != "RTS":
+            fail("shared late-FDS gameplay boundary does not end with RTS")
+    return [
+        *lines[:start],
+        '.include "../shared_gameplay_interface.inc"',
+        '.include "../../../common/gameplay/upside_down_pipe.asm"',
+        *lines[end + 1 :],
+    ]
+
+
+def promote_common_hard_course_runtime(lines: list[str]) -> list[str]:
+    def label_index(name: str, start: int = 0) -> tuple[int, str]:
+        for index in range(start, len(lines)):
+            match = LABEL_RE.match(lines[index])
+            if match is not None and match.group(1) == name:
+                return index, match.group("tail").strip()
+        fail(f"shared hard-course label is missing: {name}")
+
+    def routine_end(label: str, start: int = 0) -> tuple[int, int]:
+        label_start, tail = label_index(label, start)
+        end = label_start
+        if tail.upper() != "RTS":
+            end += 1
+            while end < len(lines) and lines[end].strip().upper() != "RTS":
+                end += 1
+            if end >= len(lines):
+                fail(f"shared hard-course routine does not end with RTS: {label}")
+        return label_start, end
+
+    loader_start, loader_end = routine_end(
+        "handler_late_fds_get_hard_course_descriptor"
+    )
+    _, loader_end = routine_end(
+        "handler_late_fds_load_hard_course_streams", loader_start
+    )
+    checkpoint_start, checkpoint_end = routine_end(
+        "sub_late_fds_initialize_hard_course_checkpoints", loader_end
+    )
+    return [
+        *lines[:loader_start],
+        '.include "shared_interface.inc"',
+        '.include "../../../common/game/hard_course_loader.asm"',
+        *lines[loader_end + 1 : checkpoint_start],
+        '.include "../../../common/game/hard_course_checkpoints.asm"',
+        *lines[checkpoint_end + 1 :],
+    ]
+
+
+def collapse_main_unused_padding(lines: list[str]) -> list[str]:
+    start = next(
+        (
+            index
+            for index, line in enumerate(lines)
+            if line.replace(" ", "").lower() == ";abunchofunusedspace"
+        ),
+        None,
+    )
+    if start is None:
+        fail("SMB2 main unused padding marker is missing")
+    end = start + 1
+    values: list[str] = []
+    while end < len(lines) and lines[end].strip().startswith(".byte "):
+        values.extend(value.strip() for value in lines[end].split(".byte ", 1)[1].split(","))
+        end += 1
+    if values != ["$ff"] * 83:
+        fail(f"SMB2 main unused padding differs: expected 83 bytes, found {len(values)}")
+    return [*lines[: start + 1], "    .res 83, $ff", *lines[end:]]
+
+
 def write_sources(
     project_root: Path,
     listings: dict[str, Listing],
     exports: dict[str, SymbolKey],
     renames: dict[SymbolKey, str],
 ) -> list[Path]:
-    source_root = project_root / "src" / "smb2"
-    if source_root.exists():
-        shutil.rmtree(source_root)
-    source_root.mkdir(parents=True)
+    platform_root = project_root / "src" / "platforms" / "late_fds" / "smb2"
+    revision_root = project_root / "src" / "revisions" / "smb2"
+    for source_root in (platform_root, revision_root):
+        if source_root.exists():
+            shutil.rmtree(source_root)
+        source_root.mkdir(parents=True)
     written: list[Path] = []
 
-    hardware_path = source_root / "system" / "hardware.inc"
+    hardware_path = platform_root / "system" / "hardware.inc"
     hardware_path.parent.mkdir(parents=True, exist_ok=True)
     hardware_path.write_text(
         "\n".join(
@@ -598,10 +787,37 @@ def write_sources(
     format_file(hardware_path)
     written.append(hardware_path)
 
+    shared_interface_path = platform_root / "overlays" / "shared_gameplay_interface.inc"
+    shared_interface_path.parent.mkdir(parents=True, exist_ok=True)
+    shared_interface_path.write_text(
+        "\n".join(SMB2_SHARED_GAMEPLAY_INTERFACE),
+        encoding="ascii",
+        newline="\n",
+    )
+    format_file(shared_interface_path)
+    written.append(shared_interface_path)
+
+    hard_interface_path = (
+        platform_root / "overlays" / "hard_courses" / "shared_interface.inc"
+    )
+    hard_interface_path.parent.mkdir(parents=True, exist_ok=True)
+    hard_interface_path.write_text(
+        "\n".join(SMB2_SHARED_HARD_COURSE_INTERFACE),
+        encoding="ascii",
+        newline="\n",
+    )
+    format_file(hard_interface_path)
+    written.append(hard_interface_path)
+
     module_sets = {"main": MAIN_MODULES, **OVERLAY_MODULES}
     load_addresses = {"main": 0x6000, "data2": 0xC470, "data3": 0xC5D0, "data4": 0xC2B4}
     for payload, listing in listings.items():
-        base = source_root if payload == "main" else source_root / "overlays" / payload
+        semantic_name = PAYLOAD_NAMES[payload]
+        base = (
+            platform_root
+            if payload == "main"
+            else platform_root / "overlays" / semantic_name
+        )
         includes: list[str] = []
         for relative_name, raw_lines in split_at_anchors(listing, module_sets[payload]):
             target = base / relative_name
@@ -609,22 +825,30 @@ def write_sources(
             transformed = [
                 transform_line(listing, line, exports, renames) for line in raw_lines
             ]
+            if (payload, relative_name) in {
+                ("data2", "course_bank.asm"),
+                ("data4", "wind_and_pipes.asm"),
+            }:
+                transformed = promote_common_gameplay(transformed)
+            if (payload, relative_name) == ("data4", "worlds_a_d_setup.asm"):
+                transformed = promote_common_hard_course_runtime(transformed)
+            if (payload, relative_name) == ("main", "data/course_bank.asm"):
+                transformed = collapse_main_unused_padding(transformed)
             target.write_text("\n".join(transformed) + "\n", encoding="ascii", newline="\n")
             format_file(target)
             written.append(target)
-            if payload == "main":
-                include = target.relative_to(source_root).as_posix()
-            else:
-                include = target.relative_to(source_root / "overlays").as_posix()
+            include = "../../platforms/late_fds/smb2/" + target.relative_to(
+                platform_root
+            ).as_posix()
             includes.append(include)
 
-        wrapper_path = source_root / ("main.asm" if payload == "main" else f"overlays/{payload}.asm")
+        wrapper_path = revision_root / f"{semantic_name}.asm"
         wrapper_path.parent.mkdir(parents=True, exist_ok=True)
         wrapper_path.write_text(
             wrapper(
                 payload,
                 load_addresses[payload],
-                "system/hardware.inc" if payload == "main" else "../system/hardware.inc",
+                "../../platforms/late_fds/smb2/system/hardware.inc",
                 includes,
             ),
             encoding="ascii",
@@ -633,15 +857,15 @@ def write_sources(
         format_file(wrapper_path)
         written.append(wrapper_path)
 
-    build_path = source_root / "build.asm"
+    build_path = revision_root / "build.asm"
     build_path.write_text(
         "\n".join(
             (
                 "; Assemble the four independently loaded SMB2 program payloads",
                 '.include "main.asm"',
-                '.include "overlays/data2.asm"',
-                '.include "overlays/data3.asm"',
-                '.include "overlays/data4.asm"',
+                '.include "supplemental_courses.asm"',
+                '.include "ending.asm"',
+                '.include "hard_courses.asm"',
                 "",
             )
         ),
@@ -661,8 +885,13 @@ def write_provenance(
     reviewed_semantic_names: dict[str, str],
 ) -> Path:
     current_paths: dict[str, str] = {}
-    source_root = project_root / "src" / "smb2"
-    for source_path in sorted(source_root.rglob("*")):
+    source_roots = (
+        project_root / "src" / "revisions" / "smb2",
+        project_root / "src" / "platforms" / "late_fds" / "smb2",
+        project_root / "src" / "platforms" / "late_fds" / "common",
+    )
+    source_paths = sorted(path for root in source_roots for path in root.rglob("*"))
+    for source_path in source_paths:
         if not source_path.is_file() or source_path.suffix.lower() not in {".asm", ".inc"}:
             continue
         relative_path = source_path.relative_to(project_root).as_posix()
@@ -724,7 +953,20 @@ def write_provenance(
                 for key in renames
             ),
             "records": len(records),
+            "project_additions": 1,
         },
+        "project_additions": [
+            {
+                "current": "unused_late_fds_upside_down_pipe_return",
+                "current_path": (
+                    "src/platforms/late_fds/common/gameplay/upside_down_pipe.asm"
+                ),
+                "reason": (
+                    "Named unreachable byte retained by the shared ANN and SMB2 "
+                    "upside-down-pipe routine"
+                ),
+            }
+        ],
         "renames": records,
     }
     path = project_root / "docs" / "provenance" / "smb2_label_renames.json"
@@ -748,7 +990,10 @@ def main() -> int:
     parser.add_argument(
         "--write",
         action="store_true",
-        help="replace src/smb2 and write the direct provenance mapping",
+        help=(
+            "replace the SMB2 revision and late-FDS platform sources and write "
+            "the direct provenance mapping"
+        ),
     )
     args = parser.parse_args()
     project_root = args.project_root.resolve()
