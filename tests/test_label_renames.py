@@ -9,6 +9,7 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MANIFEST_PATH = PROJECT_ROOT / "docs" / "provenance" / "label_renames.json"
+SMB2_MANIFEST_PATH = PROJECT_ROOT / "docs" / "provenance" / "smb2_label_renames.json"
 IMPORT_COMMIT = "052aa23781fe028d8d7d2627638a87326107c015"
 LABEL_RE = re.compile(
     r"^(?:bra|handler|loc|off|sub|tbl|unused|vec)_"
@@ -91,6 +92,7 @@ class LabelRenameManifestTests(unittest.TestCase):
             path
             for path in (PROJECT_ROOT / "src").rglob("*")
             if path.is_file() and path.suffix.lower() in {".asm", ".inc"}
+            and not path.is_relative_to(PROJECT_ROOT / "src" / "smb2")
         )
         for source_path in source_paths:
             relative_path = source_path.relative_to(PROJECT_ROOT).as_posix()
@@ -121,6 +123,46 @@ class LabelRenameManifestTests(unittest.TestCase):
             for label in labels
         }
         self.assertEqual(set(mapped_labels), active_labels)
+
+    def test_smb2_manifest_matches_sibling_source_labels(self) -> None:
+        manifest = json.loads(SMB2_MANIFEST_PATH.read_text(encoding="utf-8"))
+        records = manifest["renames"]
+        self.assertEqual(manifest["schema_version"], 1)
+        self.assertEqual(
+            manifest["source"]["commit"],
+            "9c40114626ecd07f13e16d5e67e217b98482d7af",
+        )
+        self.assertEqual(manifest["counts"]["records"], len(records))
+        self.assertEqual(len({item["current"] for item in records}), len(records))
+
+        source_labels: set[tuple[str, str]] = set()
+        source_assignments: set[tuple[str, str]] = set()
+        source_root = PROJECT_ROOT / "src" / "smb2"
+        for source_path in sorted(source_root.rglob("*")):
+            if not source_path.is_file() or source_path.suffix.lower() not in {".asm", ".inc"}:
+                continue
+            relative_path = source_path.relative_to(PROJECT_ROOT).as_posix()
+            for line in source_path.read_text(encoding="utf-8").splitlines():
+                if match := SOURCE_LABEL_RE.fullmatch(line):
+                    source_labels.add((match.group(1), relative_path))
+                if match := re.match(r"^([a-z][a-z0-9_]*)\s*=", line):
+                    source_assignments.add((match.group(1), relative_path))
+
+        mapped_labels = {
+            (item["current"], item["current_path"])
+            for item in records
+            if item["kind"] == "label"
+        }
+        mapped_assignments = {
+            (item["current"], item["current_path"])
+            for item in records
+            if item["kind"] == "assignment"
+        }
+        for item in records:
+            self.assertRegex(item["current"], LABEL_RE)
+            self.assertNotIn("line", item)
+        self.assertEqual(mapped_labels, source_labels)
+        self.assertTrue(mapped_assignments.issubset(source_assignments))
 
 
 if __name__ == "__main__":

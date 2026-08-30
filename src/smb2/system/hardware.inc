@@ -1,0 +1,37 @@
+; SMB2-owned NES and Famicom Disk System hardware registers
+
+PPU_CTRL              = $2000
+PPU_MASK              = $2001
+PPU_STATUS            = $2002
+PPU_SPR_ADDR          = $2003
+PPU_SPR_DATA          = $2004
+PPU_SCROLL            = $2005
+PPU_ADDRESS           = $2006
+PPU_DATA              = $2007
+SND_REGISTER          = $4000
+SND_SQUARE1_REG       = $4000
+SND_SQUARE2_REG       = $4004
+SND_TRIANGLE_REG      = $4008
+SND_NOISE_REG         = $400c
+SND_DELTA_REG         = $4010
+SND_MASTERCTRL_REG    = $4015
+SPR_DMA               = $4014
+JOYPAD_PORT           = $4016
+JOYPAD_PORT1          = $4016
+JOYPAD_PORT2          = $4017
+FDS_IRQTIMER_LOW      = $4020
+FDS_IRQTIMER_HIGH     = $4021
+FDS_IRQTIMER_CTRL     = $4022
+FDS_CTRL_REG          = $4025
+FDS_STATUS            = $4030
+FDS_DRIVE_STATUS      = $4032
+FDSSND_WAVERAM        = $4040
+FDSSND_VOLUMECTRL     = $4080
+FDSSND_FREQLOW        = $4082
+FDSSND_FREQHIGH       = $4083
+FDSSND_SWEEPCTRL      = $4084
+FDSSND_SWEEPBIAS      = $4085
+FDSSND_MODFREQLOW     = $4086
+FDSSND_MODFREQHIGH    = $4087
+FDSSND_MODTBLAPPEND   = $4088
+FDSSND_WAVEENABLEWR   = $4089

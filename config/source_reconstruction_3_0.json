@@ -15,7 +15,12 @@
     {"id": "platform_interfaces", "status": "complete"},
     {"id": "semantic_runtime_evidence", "status": "complete"},
     {"id": "profile_aware_authoring", "status": "complete"},
-    {"id": "later_engine_feasibility", "status": "in-progress"},
+    {"id": "later_engine_feasibility", "status": "complete"},
+    {"id": "smb2_architecture", "status": "complete"},
+    {"id": "smb2_identity_build", "status": "complete"},
+    {"id": "smb2_source_reconstruction", "status": "complete"},
+    {"id": "smb2_runtime_relocation", "status": "in-progress"},
+    {"id": "smb2_authoring", "status": "planned"},
     {"id": "source_reconstruction_3_0", "status": "planned"}
   ],
   "relocation": {
@@ -70,10 +75,26 @@
     "partial_profiles": [],
     "planned_profiles": []
   },
+  "later_engine": {
+    "feasibility_manifest": "config/later_engine_feasibility.json",
+    "subject": "smb2_jp_fds",
+    "classification": "later-engine-sibling",
+    "source_3_scope": "sibling-reconstruction",
+    "shared_profile": false,
+    "future_boundary": "smb2-owned-source"
+  },
+  "smb2": {
+    "reconstruction_manifest": "config/smb2_reconstruction.json",
+    "source_root": "src/smb2",
+    "profile": "smb2_jp_fds",
+    "shared_profile": false
+  },
   "required_documents": [
     "docs/preservation_source_1_0.md",
     "docs/source_reconstruction_2_0.md",
     "docs/source_reconstruction_3_0.md",
+    "docs/later_engine_feasibility.md",
+    "docs/smb2_reconstruction.md",
     "docs/relocation_testing.md",
     "docs/roadmap.md"
   ],
@@ -98,6 +119,14 @@
     "validate-semantic-runtime",
     "content-profile-audit",
     "list-content-profiles",
-    "check-content-profiles"
+    "check-content-profiles",
+    "later-engine-feasibility",
+    "split-smb2-assets",
+    "build-smb2-identity",
+    "verify-smb2-identity",
+    "build-smb2-source",
+    "verify-smb2-source",
+    "build-smb2",
+    "verify-smb2"
   ]
 }

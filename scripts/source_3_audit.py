@@ -22,6 +22,11 @@ EXPECTED_MILESTONES = [
     "semantic_runtime_evidence",
     "profile_aware_authoring",
     "later_engine_feasibility",
+    "smb2_architecture",
+    "smb2_identity_build",
+    "smb2_source_reconstruction",
+    "smb2_runtime_relocation",
+    "smb2_authoring",
     "source_reconstruction_3_0",
 ]
 
@@ -161,6 +166,145 @@ def validate_authoring_contract(
     return errors
 
 
+def validate_later_engine_contract(
+    project_root: Path, contract: dict[str, Any]
+) -> list[str]:
+    relative = contract.get("feasibility_manifest", "")
+    path = project_root / relative
+    if not path.is_file():
+        return ["Source 3.0 later-engine feasibility manifest is missing"]
+    document = load_json(path)
+    decision = document.get("decision", {})
+    expected = {
+        "subject": document.get("subject"),
+        "classification": decision.get("classification"),
+        "source_3_scope": decision.get("source_3_scope"),
+        "shared_profile": decision.get("shared_profile"),
+        "future_boundary": decision.get("future_boundary"),
+    }
+    actual = {field: contract.get(field) for field in expected}
+    if actual != expected:
+        return ["Source 3.0 later-engine decision differs from its evidence manifest"]
+    if actual != {
+        "subject": "smb2_jp_fds",
+        "classification": "later-engine-sibling",
+        "source_3_scope": "sibling-reconstruction",
+        "shared_profile": False,
+        "future_boundary": "smb2-owned-source",
+    }:
+        return ["Source 3.0 later-engine sibling boundary differs"]
+    return []
+
+
+def validate_smb2_contract(project_root: Path, contract: dict[str, Any]) -> list[str]:
+    relative = contract.get("reconstruction_manifest", "")
+    path = project_root / relative
+    if not path.is_file():
+        return ["Source 3.0 SMB2 reconstruction manifest is missing"]
+    document = load_json(path)
+    if document.get("schema_version") != 1 or document.get("id") != "smb2_jp_fds":
+        return ["Source 3.0 SMB2 reconstruction identity differs"]
+    if document.get("status") != "source-ready":
+        return ["Source 3.0 SMB2 source is not ready"]
+    if contract.get("profile") != document["id"]:
+        return ["Source 3.0 SMB2 profile differs from its reconstruction manifest"]
+    if contract.get("source_root") != document.get("source_root"):
+        return ["Source 3.0 SMB2 source boundary differs"]
+    if contract.get("shared_profile") is not False:
+        return ["Source 3.0 SMB2 must remain a sibling engine"]
+    complexity = document.get("complexity_contract", {})
+    expected = {
+        "existing_smb1_smb2_conditionals": 0,
+        "executable_incbin": False,
+        "shared_code_requires_independent_equivalence": True,
+        "payloads_build_independently": True,
+        "source_2_files_may_change": False,
+    }
+    if complexity != expected:
+        return ["Source 3.0 SMB2 complexity boundary differs"]
+    if len(document.get("payloads", [])) != 4:
+        return ["Source 3.0 SMB2 program payload set differs"]
+    source_build = document.get("source_build", {})
+    expected_order = ["SM2MAIN", "SM2DATA2", "SM2DATA3", "SM2DATA4"]
+    if source_build.get("payload_order") != expected_order:
+        return ["Source 3.0 SMB2 source payload order differs"]
+    if source_build.get("combined_size") != sum(
+        int(payload["size"]) for payload in document["payloads"]
+    ):
+        return ["Source 3.0 SMB2 combined source size differs"]
+    if any(
+        source_build.get(field) != value
+        for field, value in {
+            "build_target": "build-smb2-source",
+            "payload_verify_target": "verify-smb2-source",
+            "image_verify_target": "verify-smb2",
+        }.items()
+    ):
+        return ["Source 3.0 SMB2 source targets differ"]
+    for field in (
+        "aggregate_source",
+        "linker_config",
+        "build_script",
+        "provenance_manifest",
+        "import_script",
+    ):
+        if not (project_root / source_build.get(field, "")).is_file():
+            return [f"Source 3.0 SMB2 {field} is missing"]
+    for payload in document["payloads"]:
+        if not (project_root / payload.get("source", "")).is_file():
+            return [f"Source 3.0 SMB2 payload source is missing: {payload.get('name')}"]
+    provenance = load_json(project_root / source_build["provenance_manifest"])
+    if provenance.get("schema_version") != 1:
+        return ["Source 3.0 SMB2 provenance schema differs"]
+    if provenance.get("counts", {}).get("labels") != len(
+        [item for item in provenance.get("renames", []) if item.get("kind") == "label"]
+    ):
+        return ["Source 3.0 SMB2 provenance label count differs"]
+    platform_path = project_root / document.get("platform_manifest", "")
+    if not platform_path.is_file():
+        return ["Source 3.0 SMB2 platform manifest is missing"]
+    platform_document = load_json(platform_path)
+    profiles = platform_document.get("profiles", [])
+    if len(profiles) != 1 or profiles[0].get("id") != document["id"]:
+        return ["Source 3.0 SMB2 platform identity differs"]
+    platform_payloads = profiles[0].get("verified_payloads", [])
+    source_payloads = document["payloads"]
+    if [item.get("name") for item in platform_payloads] != [
+        item.get("name") for item in source_payloads
+    ]:
+        return ["Source 3.0 SMB2 platform payload set differs"]
+    for platform_payload, source_payload in zip(
+        platform_payloads, source_payloads, strict=True
+    ):
+        if any(
+            platform_payload.get(field) != source_payload.get(field)
+            for field in ("size", "sha1")
+        ):
+            return ["Source 3.0 SMB2 payload identity differs"]
+    errors = []
+    source_root = project_root / document["source_root"]
+    assembly_root = project_root / "src"
+    if assembly_root.is_dir():
+        for path in assembly_root.rglob("*"):
+            if not path.is_file() or path.suffix.lower() not in {".asm", ".inc"}:
+                continue
+            text = path.read_text(encoding="utf-8")
+            inside_smb2 = source_root == path.parent or source_root in path.parents
+            if not inside_smb2 and re.search(
+                r"^\s*\.(?:if|ifdef|ifndef|elseif).*\bsmb2\b",
+                text,
+                re.IGNORECASE | re.MULTILINE,
+            ):
+                errors.append(f"SMB1 source contains an SMB2 conditional: {path}")
+            if inside_smb2 and re.search(
+                r"^\s*\.incbin\b", text, re.IGNORECASE | re.MULTILINE
+            ):
+                errors.append(f"SMB2 source hides bytes with incbin: {path}")
+            if inside_smb2 and len(text.splitlines()) > 700:
+                errors.append(f"SMB2 source module exceeds 700 lines: {path}")
+    return errors
+
+
 def validate_source_3(project_root: Path, manifest_path: Path) -> list[str]:
     release = load_json(manifest_path)
     errors: list[str] = []
@@ -253,6 +397,10 @@ def validate_source_3(project_root: Path, manifest_path: Path) -> list[str]:
         )
     )
     errors.extend(validate_authoring_contract(project_root, release.get("authoring", {})))
+    errors.extend(
+        validate_later_engine_contract(project_root, release.get("later_engine", {}))
+    )
+    errors.extend(validate_smb2_contract(project_root, release.get("smb2", {})))
 
     for relative in release["required_documents"]:
         if not (project_root / relative).is_file():

@@ -627,10 +627,12 @@ image; the original payload load addresses remain visible and fixed.
 
 Later milestones consolidate only genuinely shared platform interfaces,
 resolve high-value semantic unknowns with deeper runtime evidence, and extend
-the four Studios with manifest-selected profile content. Japanese SMB2 / The
-Lost Levels receives a feasibility study, not a promised shared-source profile.
-If its later engine would make the SMB1 source incoherent, it remains a separate
-reconstruction.
+the four Studios with manifest-selected profile content. The Japanese SMB2 /
+The Lost Levels study is complete: its eight-file FDS structure and 40,349 of
+52,075 same-ID payload bytes connect it strongly to ANN, but its shifted main
+program and overlays would make the SMB1 source incoherent. Source 3.0 therefore
+includes it as an SMB2-owned sibling reconstruction rather than a shared
+profile; existing SMB1 modules remain free of SMB2 conditionals.
 
 Semantic evidence begins with a manifest-owned enemy-stream audit. It covers
 all 235 streams and 3,530 records across supported cartridge, Vs., FDS, and ANN
@@ -667,8 +669,12 @@ documented resolution, and its aggregate static or emulator evidence is pinned
 by `make semantic-evidence`. Profile-aware authoring is also complete. Its
 contract records all six build profiles, the four-Studio compatibility matrix,
 isolated workspace/output roots, and explicit runtime paths for every supported
-Level Studio course bank. The later-engine feasibility study is the active
-milestone.
+Level Studio course bank. The later-engine feasibility study is complete, and
+the SMB2 sibling architecture, independent FDS identity build, and source
+reconstruction are complete. Its 52 reviewable source files replace every
+private executable payload, preserve 2,383 original labels in a direct mapping,
+and reproduce all four program hashes plus the complete FDS side. Runtime and
+relocation evidence are now the active milestone before authoring promotion.
 
 The authoring matrix accepts JU, PC10, PAL, Vs. SMB, and FDS SMB1. All four Studios
 consume the selected build's labels and fixed capacities, PC10 retains its

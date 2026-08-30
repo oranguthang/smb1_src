@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "subject": "smb2_jp_fds",
+  "references": [
+    {
+      "id": "fds_smb",
+      "path": "Super Mario Brothers (Japan).fds",
+      "size": 65500,
+      "sha1": "383ad8e3890a95de9595f0a6087648f51177da13"
+    },
+    {
+      "id": "ann_fds",
+      "path": "All Night Nippon Super Mario Brothers (Japan) (Promotion Card).fds",
+      "size": 65500,
+      "sha1": "f30bdd3c556604d7eaa6d0f4864d5566e519b5d4"
+    },
+    {
+      "id": "smb2_jp_fds",
+      "path": "Super Mario Brothers 2 (Japan).fds",
+      "size": 65500,
+      "sha1": "20e50128742162ee47561db9e82b2836399c880c"
+    }
+  ],
+  "comparisons": ["fds_smb", "ann_fds"],
+  "expected_comparisons": {
+    "fds_smb": {
+      "subject_bytes": 52075,
+      "best_match_bytes": 21574,
+      "same_file_id_subject_bytes": 224,
+      "same_file_id_matching_bytes": 224,
+      "same_file_id_exact_records": 1
+    },
+    "ann_fds": {
+      "subject_bytes": 52075,
+      "best_match_bytes": 40394,
+      "same_file_id_subject_bytes": 52075,
+      "same_file_id_matching_bytes": 40349,
+      "same_file_id_exact_records": 2
+    }
+  },
+  "decision": {
+    "classification": "later-engine-sibling",
+    "source_3_scope": "sibling-reconstruction",
+    "shared_profile": false,
+    "future_boundary": "smb2-owned-source"
+  }
+}

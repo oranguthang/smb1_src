@@ -190,6 +190,15 @@ class FdsPlatformProfileTests(unittest.TestCase):
         self.assertEqual(paths["MAIN"], Path("main.bin"))
         self.assertEqual(paths["DATA2"], Path("private") / "payloads" / "DATA2.bin")
 
+    def test_identity_build_resolves_primary_from_private_assets(self) -> None:
+        paths = payload_paths(
+            self.profile,
+            None,
+            [],
+            Path("private") / "payloads",
+        )
+        self.assertEqual(paths["MAIN"], Path("private") / "payloads" / "MAIN.bin")
+
     def test_rejects_malformed_fds_side(self) -> None:
         with self.assertRaisesRegex(ValueError, "file-data block"):
             parse_fds_side(self.image[:74] + bytes((5,)) + self.image[75:])

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "id": "smb2_jp_fds",
+      "name": "Super Mario Bros. 2 / The Lost Levels",
+      "status": "source-ready",
+      "format": "fds_raw_side",
+      "reference_rom": "Super Mario Brothers 2 (Japan).fds",
+      "verification_boundary": "complete_fds_side",
+      "verify_target": "make verify-smb2",
+      "disk_size": 65500,
+      "disk_sha1": "20e50128742162ee47561db9e82b2836399c880c",
+      "template_sha1": "ad703c737543920fba630002c7e238eb4a0815be",
+      "primary_payload": "SM2MAIN",
+      "verified_payloads": [
+        {
+          "name": "SM2MAIN",
+          "size": 32768,
+          "sha1": "511bdb385ae63f07e6077e33786b172caaf46806",
+          "records": [
+            {"file_id": 5, "load_address": 24576, "size": 32768, "file_type": 0}
+          ]
+        },
+        {
+          "name": "SM2DATA2",
+          "size": 3631,
+          "sha1": "909ce686c1e6612bb6625c712eddb6cadbdde40c",
+          "records": [
+            {"file_id": 32, "load_address": 50288, "size": 3631, "file_type": 0}
+          ]
+        },
+        {
+          "name": "SM2DATA3",
+          "size": 3279,
+          "sha1": "e34432ec9e5310430f0a11445b6a439ef73e2cad",
+          "records": [
+            {"file_id": 48, "load_address": 50640, "size": 3279, "file_type": 0}
+          ]
+        },
+        {
+          "name": "SM2DATA4",
+          "size": 3916,
+          "sha1": "1882308b0d4b8d0b4c762856d873225b25142adb",
+          "records": [
+            {"file_id": 64, "load_address": 49844, "size": 3916, "file_type": 0}
+          ]
+        }
+      ]
+    }
+  ]
+}

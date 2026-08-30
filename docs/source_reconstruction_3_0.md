@@ -64,7 +64,19 @@ expanded-layout ADR must be written instead.
 8. **Later-engine feasibility.** Compare the ANN-derived engine with Japanese
    SMB2 / The Lost Levels. Produce an evidence-backed decision; do not promise
    a shared-source profile when a separate reconstruction would be clearer.
-9. **Source Reconstruction 3.0 release.** Promote the release only after every
+9. **SMB2 sibling architecture.** Keep the later engine in `src/smb2`, prohibit
+   SMB2 conditionals in the released SMB1 source, and define four independent
+   payload boundaries.
+10. **SMB2 identity build.** Split and reproduce the complete FDS image from
+    independently verified program and retained private payloads.
+11. **SMB2 source reconstruction.** Normalize and modularize all four executable
+    payloads without hiding code in binary assets. This milestone is complete:
+    all four source payloads and the complete FDS image are byte-identical.
+12. **SMB2 runtime and relocation.** Prove startup, overlay loading, gameplay,
+    and shifted-code behavior independently from ANN.
+13. **SMB2 authoring.** Extend only Studios whose formats and capacities have
+    profile-specific evidence across the relevant overlays.
+14. **Source Reconstruction 3.0 release.** Promote the release only after every
    accepted profile and tool is covered by aggregate static, byte-identity,
    round-trip, and runtime gates.
 
@@ -86,6 +98,13 @@ Run `make test-relocation` to generate, build, and statically validate the
 canonical candidate under `build/relocation/`. `make validate-relocation` also
 generates candidate debugger symbols and runs all deterministic scenarios with
 execution traps on every inserted byte.
+
+The SMB2 source milestone replaces all four retained program inputs with 52
+reviewable ASM/INC files. The direct provenance map covers 2,383 original labels
+without brittle line numbers, and the sibling source follows the same role-prefixed
+snake_case and formatting rules as SMB1. `make verify-smb2-source` proves the
+four payload hashes from source alone; `make verify-smb2` composes them with the
+private non-program records and reproduces the complete FDS side.
 
 The cartridge revision and platform relocation matrices are complete. Vs. SMB,
 FDS SMB, and ANN use profile-specific capacity contracts, container composition,
@@ -181,3 +200,19 @@ with six headers, four APU channel formats, an FDS wavetable channel, two
 mirrored source waves, and typed volume programs. Preview rendering and editing
 therefore follow the late FDS engine rather than presenting its bytes through
 the cartridge decoder.
+
+## Later-Engine Decision
+
+`make later-engine-feasibility` verifies the ignored original FDS images and
+compares their record structures without exporting private bytes. Japanese
+SMB2 and ANN share the same eight file IDs and 40,349 of 52,075 SMB2 payload
+bytes have an order-preserving match in the corresponding ANN records. The
+32 KiB main programs alone match across 27,054 bytes. However, only 3.5% of
+`SM2MAIN` is equal to `NSMMAIN` at the same CPU address, and the three overlays
+have independently changed sizes and layouts.
+
+The evidence supports a separate later-engine reconstruction that reuses the
+project's FDS infrastructure and ANN research. It does not support adding SMB2
+as another conditional profile of the current SMB1 engine. Source 3.0 therefore
+places the sibling engine below `src/smb2`; the detailed structure and promotion
+rules are in `docs/smb2_reconstruction.md`.

@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "id": "smb2_jp_fds",
+  "release": "Super Mario Bros. 2 / The Lost Levels",
+  "status": "source-ready",
+  "source_root": "src/smb2",
+  "platform_manifest": "config/smb2_platform_profile.json",
+  "reference": {
+    "path": "Super Mario Brothers 2 (Japan).fds",
+    "format": "fds_raw_side",
+    "size": 65500,
+    "sha1": "20e50128742162ee47561db9e82b2836399c880c"
+  },
+  "research_source": {
+    "name": "doppelganger SMB2J disassembly, ca65 port",
+    "url": "https://github.com/threecreepio/smb2j-disassembly",
+    "commit": "9c40114626ecd07f13e16d5e67e217b98482d7af",
+    "local_path": "references/threecreepio-smb2j",
+    "boundary": "ignored verification reference"
+  },
+  "source_build": {
+    "aggregate_source": "src/smb2/build.asm",
+    "linker_config": "config/linker/smb2_payloads.cfg",
+    "build_script": "scripts/build_smb2_source.py",
+    "provenance_manifest": "docs/provenance/smb2_label_renames.json",
+    "import_script": "scripts/import_smb2_source.py",
+    "combined_size": 43594,
+    "payload_order": ["SM2MAIN", "SM2DATA2", "SM2DATA3", "SM2DATA4"],
+    "build_target": "build-smb2-source",
+    "payload_verify_target": "verify-smb2-source",
+    "image_verify_target": "verify-smb2"
+  },
+  "payloads": [
+    {"name": "SM2MAIN", "file_id": 5, "load_address": "0x6000", "size": 32768, "sha1": "511bdb385ae63f07e6077e33786b172caaf46806", "source": "src/smb2/main.asm"},
+    {"name": "SM2DATA2", "file_id": 32, "load_address": "0xc470", "size": 3631, "sha1": "909ce686c1e6612bb6625c712eddb6cadbdde40c", "source": "src/smb2/overlays/data2.asm"},
+    {"name": "SM2DATA3", "file_id": 48, "load_address": "0xc5d0", "size": 3279, "sha1": "e34432ec9e5310430f0a11445b6a439ef73e2cad", "source": "src/smb2/overlays/data3.asm"},
+    {"name": "SM2DATA4", "file_id": 64, "load_address": "0xc2b4", "size": 3916, "sha1": "1882308b0d4b8d0b4c762856d873225b25142adb", "source": "src/smb2/overlays/data4.asm"}
+  ],
+  "retained_private_payloads": [
+    {"name": "KYODAKU", "file_id": 0, "size": 224, "sha1": "dc5ded785387c445c7e565eba8f8440836e1d10c"},
+    {"name": "SM2CHAR1", "file_id": 1, "size": 8192, "sha1": "f5ec342a44c909d99d46ae311a4b77ed00e645eb"},
+    {"name": "SM2CHAR2", "file_id": 16, "size": 64, "sha1": "1c848149ba41b8b042c75cd83775b2585c9dcb22"},
+    {"name": "SM2SAVE", "file_id": 15, "size": 1, "sha1": "5ba93c9db0cff93f52b521d7420e43f6eda2784f"}
+  ],
+  "module_groups": ["system", "game", "rendering", "audio", "data", "overlays"],
+  "complexity_contract": {
+    "existing_smb1_smb2_conditionals": 0,
+    "executable_incbin": false,
+    "shared_code_requires_independent_equivalence": true,
+    "payloads_build_independently": true,
+    "source_2_files_may_change": false
+  }
+}

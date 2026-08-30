@@ -38,6 +38,16 @@ CONTENT_PROFILE_MANIFEST ?= $(PROJECT_DIR)config/content_authoring_profiles.json
 RELEASE_MANIFEST ?= $(PROJECT_DIR)config/preservation_source_1_0.json
 SOURCE_2_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_2_0.json
 SOURCE_3_MANIFEST ?= $(PROJECT_DIR)config/source_reconstruction_3_0.json
+LATER_ENGINE_MANIFEST ?= $(PROJECT_DIR)config/later_engine_feasibility.json
+LATER_ENGINE_REPORT ?= $(PROJECT_DIR)build/evidence/later_engine_feasibility.json
+SMB2_RECONSTRUCTION_MANIFEST ?= $(PROJECT_DIR)config/smb2_reconstruction.json
+SMB2_PLATFORM_MANIFEST ?= $(PROJECT_DIR)config/smb2_platform_profile.json
+SMB2_REFERENCE ?= $(PROJECT_DIR)Super Mario Brothers 2 (Japan).fds
+SMB2_ASSET_DIR ?= $(GENERATED_ASSET_DIR)/smb2
+SMB2_BUILD_DIR ?= $(PROJECT_DIR)build/smb2/identity
+SMB2_IDENTITY_IMAGE ?= $(SMB2_BUILD_DIR)/smb2.fds
+SMB2_SOURCE_BUILD_DIR ?= $(PROJECT_DIR)build/smb2/source
+SMB2_SOURCE_IMAGE ?= $(SMB2_SOURCE_BUILD_DIR)/smb2.fds
 ENEMY_STREAM_EVIDENCE_MANIFEST ?= $(PROJECT_DIR)config/semantic_evidence/enemy_streams.json
 ENEMY_STREAM_EVIDENCE_REPORT ?= $(PROJECT_DIR)build/evidence/enemy_streams.json
 UNREACHABLE_CODE_EVIDENCE_MANIFEST ?= $(PROJECT_DIR)config/semantic_evidence/unreachable_code.json
@@ -266,7 +276,7 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded prepare-content-profile init-content export-content validate-content build-content run-content check-studios check-content-profile check-content-profiles world-studio level-studio smoke-level-playtest graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor list-content-profiles content-profile-audit split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded prepare-content-profile init-content export-content validate-content build-content run-content check-studios check-content-profile check-content-profiles world-studio level-studio smoke-level-playtest graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor list-content-profiles content-profile-audit split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms split-smb2-assets build-smb2-identity verify-smb2-identity build-smb2-source verify-smb2-source build-smb2 verify-smb2 build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime later-engine-feasibility test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -584,6 +594,63 @@ split-platform-assets:
 		--reference "$(PLATFORM_REFERENCE)" \
 		--asset-dir "$(PLATFORM_ASSET_DIR)"
 
+split-smb2-assets:
+	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" split \
+		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
+		--profile smb2_jp_fds \
+		--reference "$(SMB2_REFERENCE)" \
+		--asset-dir "$(SMB2_ASSET_DIR)" \
+		--retain-primary
+
+build-smb2-identity:
+	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" build \
+		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
+		--profile smb2_jp_fds \
+		--asset-dir "$(SMB2_ASSET_DIR)" \
+		--output "$(SMB2_IDENTITY_IMAGE)"
+
+verify-smb2-identity: build-smb2-identity
+	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" verify \
+		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
+		--profile smb2_jp_fds \
+		--reference "$(SMB2_REFERENCE)" \
+		--asset-dir "$(SMB2_ASSET_DIR)" \
+		--output "$(SMB2_IDENTITY_IMAGE)"
+
+build-smb2-source:
+	$(PYTHON) "$(PROJECT_DIR)scripts/build_smb2_source.py" \
+		--manifest "$(SMB2_RECONSTRUCTION_MANIFEST)" \
+		--output-dir "$(SMB2_SOURCE_BUILD_DIR)"
+
+verify-smb2-source:
+	$(PYTHON) "$(PROJECT_DIR)scripts/build_smb2_source.py" \
+		--manifest "$(SMB2_RECONSTRUCTION_MANIFEST)" \
+		--output-dir "$(SMB2_SOURCE_BUILD_DIR)" \
+		--verify
+
+build-smb2: build-smb2-source
+	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" build \
+		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
+		--profile smb2_jp_fds \
+		--asset-dir "$(SMB2_ASSET_DIR)" \
+		--prg "$(SMB2_SOURCE_BUILD_DIR)/SM2MAIN.bin" \
+		--payload "SM2DATA2=$(SMB2_SOURCE_BUILD_DIR)/SM2DATA2.bin" \
+		--payload "SM2DATA3=$(SMB2_SOURCE_BUILD_DIR)/SM2DATA3.bin" \
+		--payload "SM2DATA4=$(SMB2_SOURCE_BUILD_DIR)/SM2DATA4.bin" \
+		--output "$(SMB2_SOURCE_IMAGE)"
+
+verify-smb2: verify-smb2-source
+	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" verify \
+		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
+		--profile smb2_jp_fds \
+		--reference "$(SMB2_REFERENCE)" \
+		--asset-dir "$(SMB2_ASSET_DIR)" \
+		--prg "$(SMB2_SOURCE_BUILD_DIR)/SM2MAIN.bin" \
+		--payload "SM2DATA2=$(SMB2_SOURCE_BUILD_DIR)/SM2DATA2.bin" \
+		--payload "SM2DATA3=$(SMB2_SOURCE_BUILD_DIR)/SM2DATA3.bin" \
+		--payload "SM2DATA4=$(SMB2_SOURCE_BUILD_DIR)/SM2DATA4.bin" \
+		--output "$(SMB2_SOURCE_IMAGE)"
+
 ifeq ($(PLATFORM),ann_fds)
 build-platform: build-ann-payloads
 endif
@@ -838,6 +905,12 @@ content-profile-audit:
 		--manifest "$(CONTENT_PROFILE_MANIFEST)"
 
 semantic-evidence: audit-enemy-streams audit-unreachable-code trace-semantic-runtime
+
+later-engine-feasibility:
+	$(PYTHON) "$(PROJECT_DIR)scripts/later_engine_feasibility.py" \
+		--project-root "$(PROJECT_DIR)" \
+		--manifest "$(LATER_ENGINE_MANIFEST)" \
+		--output "$(LATER_ENGINE_REPORT)"
 
 trace-semantic-runtime: symbols
 	$(PYTHON) "$(PROJECT_DIR)scripts/run_runtime_scenarios.py" \

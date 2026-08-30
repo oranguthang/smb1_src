@@ -304,6 +304,7 @@ def main() -> int:
     parser.add_argument("--asset-dir", required=True, type=Path)
     parser.add_argument("--prg", type=Path)
     parser.add_argument("--payload", action="append", default=[])
+    parser.add_argument("--retain-primary", action="store_true")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     try:
@@ -349,7 +350,7 @@ def main() -> int:
                 atomic_write(template_path, template)
                 primary = profile.get("primary_payload")
                 for name, data in payloads.items():
-                    if name != primary:
+                    if name != primary or args.retain_primary:
                         atomic_write(profile_assets / "payloads" / f"{name}.bin", data)
                 for name, data in source_assets.items():
                     atomic_write(profile_assets / "source" / f"{name}.bin", data)
