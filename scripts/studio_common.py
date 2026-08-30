@@ -34,6 +34,10 @@ NES_RGB = (
 )
 
 
+def studio_game_name(profile_id: str) -> str:
+    return "SMB2" if profile_id == "smb2_jp_fds" else "SMB1"
+
+
 def load_documents(
     formats: Path,
     studios: Path,

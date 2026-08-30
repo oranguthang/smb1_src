@@ -101,6 +101,24 @@ class ContentProfileTests(unittest.TestCase):
             {"loader": "ann_extended"},
         )
 
+    def test_smb2_profile_owns_normal_and_hard_course_payloads(self) -> None:
+        profile = profile_by_id(self.document, "smb2_jp_fds")
+        self.assertEqual(
+            [entry["payload"] for entry in profile["program_payloads"]],
+            ["prg", "SM2DATA2", "SM2DATA3", "SM2DATA4"],
+        )
+        self.assertEqual(len(profile["stream_payload_maps"]["normal"]), 52)
+        self.assertEqual(len(profile["stream_payload_maps"]["hard"]), 21)
+        self.assertEqual(
+            [bank["id"] for bank in profile["studio_banks"]["level"]],
+            ["normal", "hard"],
+        )
+        for studio in self.document["studio_ids"]:
+            self.assertEqual(
+                require_supported(self.document, "smb2_jp_fds", studio)["id"],
+                "smb2_jp_fds",
+            )
+
     def test_level_bank_rejects_an_unknown_playtest_loader(self) -> None:
         document = copy.deepcopy(self.document)
         bank = profile_by_id(document, "ann_fds")["studio_banks"]["level"][1]

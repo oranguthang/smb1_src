@@ -2,20 +2,19 @@
 
 A comprehensive disassembly of Super Mario Bros for the Nintendo Entertainment System (NES).
 
-The current stable reconstruction is **Source Reconstruction 2.0**. It retains
-the byte-identical Preservation Source 1.0 baseline while adding isolated
-fixed-layout and CNROM builds, four graphical content-authoring programs, and
-exact shared-source profiles for the selected SMB1 cartridge, arcade, and FDS
-family. Original ROMs, disk images, CHR payloads, and extracted content remain
-private ignored inputs.
+The current tag-ready release candidate is **Source Reconstruction 3.0**. It
+retains the byte-identical Preservation Source 1.0 baseline and complete Source
+Reconstruction 2.0 contract while adding relocation proofs, deeper semantic
+evidence, seven-profile content authoring, and a separate source reconstruction
+of Japanese SMB2 / The Lost Levels. Original ROMs, disk images, CHR payloads,
+and extracted content remain private ignored inputs.
 
-The immutable `source-reconstruction-1.0` tag preserves the original release
-contract. Source Reconstruction 2.0 keeps every 1.0 acceptance gate and layers
-its profile, authoring, expansion, and runtime contracts on top.
+The immutable `source-reconstruction-1.0` and `source-reconstruction-2.0` tags
+preserve their original release contracts. Source Reconstruction 3.0 keeps
+every earlier acceptance gate and layers its new contracts on top.
 
-Source Reconstruction 3.0 is under development on a separate roadmap branch.
-Its first objective is a mechanically checked relocation proof; it does not
-change the stable 2.0 tag or default byte-identical build contract. See
+The complete `make source-3-check` gate qualifies the 3.0 candidate without
+changing either stable predecessor tag or the default byte-identical build. See
 [`docs/source_reconstruction_3_0.md`](docs/source_reconstruction_3_0.md).
 
 ## Overview
@@ -146,8 +145,22 @@ make release-check
 # Run Preservation Source 1.0 plus every Source Reconstruction 2.0 gate
 make source-2-check
 
-# Audit the active Source Reconstruction 3.0 boundary and milestone state
+# Audit the Source Reconstruction 3.0 boundary and milestone state
 make source-3-audit
+
+# Run the complete Source Reconstruction 3.0 release gate
+make source-3-check
+
+# Rebuild SMB2 / The Lost Levels and verify the complete FDS side
+make verify-smb2
+
+# Prove SMB2 startup and all three normal FDS overlay-load paths
+make validate-smb2-runtime
+make validate-smb2-overlays
+
+# Exercise World 1-1 and prove all four programs survive controlled relocation
+make validate-smb2-gameplay
+make validate-smb2-relocation
 
 # Build and statically validate the generated canonical relocation candidate
 make test-relocation

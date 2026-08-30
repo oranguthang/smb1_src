@@ -1,4 +1,4 @@
-"""Semantic model and preview renderer for the ANN ending music engine."""
+"""Semantic model and preview renderer for the FDS ending music engine."""
 
 from __future__ import annotations
 
@@ -35,6 +35,30 @@ ANN_PATTERN_NAMES = (
     "Procession A finale",
     "Coda",
 )
+FDS_ENDING_SYMBOLS = {
+    "ann_fds_music_bank": {
+        "sequence": "tbl_ann_fds_music_offsets",
+        "periods": "tbl_music_note_periods",
+        "lengths": "tbl_ann_fds_note_lengths",
+        "envelope": "tbl_ann_fds_envelope",
+        "wave_notes": "tbl_ann_fds_wave_notes",
+        "wave_a_volumes": "tbl_ann_fds_wave_a_volumes",
+        "wave_offsets": "tbl_ann_fds_wave_offsets",
+        "composition": "ANN ending suite",
+        "pattern_prefix": "ann_fds_pattern_",
+    },
+    "smb2_fds_music_bank": {
+        "sequence": "tbl_smb2_data3_music_header_offset_data",
+        "periods": "tbl_smb2_main_music_note_periods",
+        "lengths": "tbl_smb2_data3_music_note_lengths",
+        "envelope": "off_smb2_data3_victory_music_envelope_data",
+        "wave_notes": "tbl_smb2_data3_fds_freq_lookup_tbl",
+        "wave_a_volumes": "off_smb2_data3_volume_envelope_data_1",
+        "wave_offsets": "tbl_smb2_data3_waveform_header_offsets",
+        "composition": "SMB2 ending suite",
+        "pattern_prefix": "smb2_fds_pattern_",
+    },
+}
 MAX_CHANNEL_BYTES = 256
 
 
@@ -43,8 +67,13 @@ def fds_wave_frequency(period: int) -> float:
     return CPU_FREQUENCY * period / (65_536.0 * 64.0)
 
 
+def _resolve_boundary(value: int | str, labels: dict[str, int]) -> int:
+    """Resolve a numeric or symbol-owned artifact boundary."""
+    return labels[value] if isinstance(value, str) else int(value)
+
+
 class AnnFdsMusicBank(MusicBank):
-    """Decode ANN's NSMDATA3 APU/FDS ending suite without canonical assumptions."""
+    """Decode the ANN or SMB2 APU/FDS ending suite without canonical assumptions."""
 
     def __init__(
         self,
@@ -57,19 +86,28 @@ class AnnFdsMusicBank(MusicBank):
         self.labels = labels
         self.prg = main_prg
         self.load_address = load_address
-        self.base = labels["tbl_ann_fds_music_offsets"]
-        self.end = labels["sub_ann_write_fds_pulse_1_base"]
-        self.period_bytes = self._prg_bytes("tbl_music_note_periods", 0x66)
+        try:
+            self.symbols = FDS_ENDING_SYMBOLS[document.entry["id"]]
+        except KeyError as exc:
+            raise ValueError(
+                f"unsupported FDS ending artifact: {document.entry['id']}"
+            ) from exc
+        self.base = labels[self.symbols["sequence"]]
+        self.end = _resolve_boundary(document.entry["end"], labels)
+        self.period_bytes = self._prg_bytes(self.symbols["periods"], 0x66)
         self.periods = []
         self.lengths = [
-            self.byte(labels["tbl_ann_fds_note_lengths"] + index)
+            self.byte(labels[self.symbols["lengths"]] + index)
             for index in range(16)
         ]
-        envelope = labels["tbl_ann_fds_envelope"]
+        envelope = labels[self.symbols["envelope"]]
         self.envelope_bytes = bytes(self.byte(envelope + index) for index in range(17))
         self.sequence_offsets = [self.byte(self.base + index) for index in range(11)]
         unique_offsets = list(dict.fromkeys(self.sequence_offsets))
-        self.header_labels = [f"ann_fds_pattern_{index + 1}" for index in range(len(unique_offsets))]
+        self.header_labels = [
+            f"{self.symbols['pattern_prefix']}{index + 1}"
+            for index in range(len(unique_offsets))
+        ]
         self.header_addresses = {
             label: self.base + offset
             for label, offset in zip(self.header_labels, unique_offsets, strict=True)
@@ -88,7 +126,7 @@ class AnnFdsMusicBank(MusicBank):
 
     def set_byte(self, address: int, value: int) -> None:
         if not self.base <= address < self.end:
-            raise ValueError("ANN music edit address is outside NSMDATA3 music data")
+            raise ValueError("FDS music edit address is outside the ending-music data")
         index = address - self.base
         if self.values[index] != value:
             self.document._remember()
@@ -97,7 +135,7 @@ class AnnFdsMusicBank(MusicBank):
     def _length(self, song: dict[str, Any], index: int) -> int:
         table_index = int(song["length_offset"]) + index
         if not 0 <= table_index < len(self.lengths):
-            raise ValueError(f"ANN music length index {table_index} is outside the table")
+            raise ValueError(f"FDS music length index {table_index} is outside the table")
         return self.lengths[table_index]
 
     def _decode_uncompressed(
@@ -218,9 +256,9 @@ class AnnFdsMusicBank(MusicBank):
         }
 
     def _wave_period(self, note_byte: int) -> int:
-        address = self.labels["tbl_ann_fds_wave_notes"] + (note_byte & 0x7F)
-        if address + 1 >= self.labels["tbl_ann_fds_envelope"]:
-            raise ValueError(f"ANN FDS note ${note_byte:02X} is outside the period table")
+        address = self.labels[self.symbols["wave_notes"]] + (note_byte & 0x7F)
+        if address + 1 >= self.labels[self.symbols["envelope"]]:
+            raise ValueError(f"FDS note ${note_byte:02X} is outside the period table")
         return (self.byte(address) << 8) | self.byte(address + 1)
 
     def songs(self) -> list[dict[str, Any]]:
@@ -239,7 +277,7 @@ class AnnFdsMusicBank(MusicBank):
         data_address = header[1] | (header[2] << 8)
         song: dict[str, Any] = {
             "label": label,
-            "name": label.replace("ann_fds_pattern_", "Ending pattern "),
+            "name": label.replace(self.symbols["pattern_prefix"], "Ending pattern "),
             "address": address,
             "length_offset": header[0],
             "data_address": data_address,
@@ -279,7 +317,7 @@ class AnnFdsMusicBank(MusicBank):
             pattern["name"] = ANN_PATTERN_NAMES[index]
             patterns.append(pattern)
         return [{
-            "name": "ANN ending suite",
+            "name": self.symbols["composition"],
             "pointer_indexes": list(range(11)),
             "patterns": patterns,
         }]
@@ -467,9 +505,9 @@ class AnnFdsMusicBank(MusicBank):
         configuration = self._wave_configuration(wave_id)
         address = int(configuration["volume_address"])
         end = (
-            self.labels["tbl_ann_fds_wave_a_volumes"]
+            self.labels[self.symbols["wave_a_volumes"]]
             if wave_id == 2
-            else self.labels["tbl_ann_fds_wave_notes"]
+            else self.labels[self.symbols["wave_notes"]]
         )
         result = []
         for step, pointer in enumerate(range(address, end, 2)):
@@ -505,9 +543,9 @@ class AnnFdsMusicBank(MusicBank):
 
     def _wave_configuration(self, wave_id: int) -> dict[str, int]:
         if wave_id <= 0 or wave_id & (wave_id - 1):
-            raise ValueError(f"Unsupported ANN FDS wave id: {wave_id}")
+            raise ValueError(f"Unsupported FDS wave id: {wave_id}")
         selector = wave_id.bit_length()
-        table = self.labels["tbl_ann_fds_wave_offsets"]
+        table = self.labels[self.symbols["wave_offsets"]]
         descriptor_offset = self.byte(table - 1 + selector)
         address = table + descriptor_offset
         return {

@@ -29,6 +29,12 @@ def milestones(*states: str) -> list[dict[str, str]]:
 
 
 class Source3AuditTests(unittest.TestCase):
+    def test_tag_ready_requires_every_milestone_complete(self) -> None:
+        states = ["complete"] * len(EXPECTED_MILESTONES)
+        self.assertEqual(validate_milestones(milestones(*states), "tag-ready"), [])
+        states[-1] = "in-progress"
+        self.assertTrue(validate_milestones(milestones(*states), "tag-ready"))
+
     def test_development_allows_one_active_milestone_after_complete_prefix(self) -> None:
         states = ["complete", "complete", "in-progress"]
         states.extend(["planned"] * (len(EXPECTED_MILESTONES) - len(states)))

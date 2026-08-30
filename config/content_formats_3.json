@@ -48,6 +48,53 @@
       "start": "tbl_ann_fds_music_offsets",
       "end": "sub_ann_write_fds_pulse_1_base",
       "codec": "raw_bytes"
+    },
+    {
+      "id": "smb2_hard_world_area_pointers",
+      "family": "SMB2 Worlds A-D course routing",
+      "source": "src/smb2/overlays/data4/course_data.inc",
+      "start": "tbl_smb2_data4_area_pointers",
+      "end": "tbl_smb2_data4_enemy_data_offsets_by_area_type",
+      "codec": "area_pointer_table",
+      "world_lengths": [5, 5, 4, 4]
+    },
+    {
+      "id": "smb2_hard_area_object_streams",
+      "family": "SMB2 Worlds A-D area headers and object streams",
+      "source": "src/smb2/overlays/data4/course_data.inc",
+      "start": 0,
+      "end": 1,
+      "codec": "stream_collection",
+      "stream_codec": "area_object_stream",
+      "stream_terminator": 253
+    },
+    {
+      "id": "smb2_hard_enemy_object_streams",
+      "family": "SMB2 Worlds A-D enemy, entrance, and page-control streams",
+      "source": "src/smb2/overlays/data4/course_data.inc",
+      "start": 0,
+      "end": 1,
+      "codec": "stream_collection",
+      "stream_codec": "enemy_object_stream",
+      "stream_terminator": 255
+    },
+    {
+      "id": "smb2_warp_zone_text_packets",
+      "family": "SMB2 warp-zone PPU text packet",
+      "source": "src/smb2/main/rendering/background_text.inc",
+      "start": "tbl_smb2_main_warp_zone",
+      "end": "tbl_smb2_main_warp_zone_number_tiles",
+      "codec": "ppu_packet_blocks",
+      "terminator": 0,
+      "block_names": ["warp_zone"]
+    },
+    {
+      "id": "smb2_fds_music_bank",
+      "family": "SMB2 ending music streams and FDS synthesis tables",
+      "source": "src/smb2/overlays/data3/victory_music.inc",
+      "start": "tbl_smb2_data3_music_header_offset_data",
+      "end": 53919,
+      "codec": "raw_bytes"
     }
   ]
 }

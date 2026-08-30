@@ -1,7 +1,8 @@
 {
   "schema_version": 1,
   "release": "Source Reconstruction 3.0",
-  "status": "development",
+  "tag": "source-reconstruction-3.0",
+  "status": "tag-ready",
   "predecessor": {
     "manifest": "config/source_reconstruction_2_0.json",
     "tag": "source-reconstruction-2.0",
@@ -19,9 +20,9 @@
     {"id": "smb2_architecture", "status": "complete"},
     {"id": "smb2_identity_build", "status": "complete"},
     {"id": "smb2_source_reconstruction", "status": "complete"},
-    {"id": "smb2_runtime_relocation", "status": "in-progress"},
-    {"id": "smb2_authoring", "status": "planned"},
-    {"id": "source_reconstruction_3_0", "status": "planned"}
+    {"id": "smb2_runtime_relocation", "status": "complete"},
+    {"id": "smb2_authoring", "status": "complete"},
+    {"id": "source_reconstruction_3_0", "status": "complete"}
   ],
   "relocation": {
     "manifests": [
@@ -71,7 +72,7 @@
     "format_manifest": "config/content_formats_3.json",
     "default_profile": "ju",
     "studio_ids": ["world", "level", "graphics", "sound"],
-    "supported_profiles": ["ju", "pc10", "pal", "vs_smb", "fds_smb", "ann_fds"],
+    "supported_profiles": ["ju", "pc10", "pal", "vs_smb", "fds_smb", "ann_fds", "smb2_jp_fds"],
     "partial_profiles": [],
     "planned_profiles": []
   },
@@ -85,9 +86,14 @@
   },
   "smb2": {
     "reconstruction_manifest": "config/smb2_reconstruction.json",
+    "relocation_manifest": "config/relocation/smb2_jp_fds.json",
     "source_root": "src/smb2",
     "profile": "smb2_jp_fds",
-    "shared_profile": false
+    "shared_profile": false,
+    "authoring_profile": "smb2_jp_fds",
+    "course_banks": ["normal", "hard"],
+    "editable_areas": 73,
+    "studio_artifacts": 15
   },
   "required_documents": [
     "docs/preservation_source_1_0.md",
@@ -127,6 +133,13 @@
     "build-smb2-source",
     "verify-smb2-source",
     "build-smb2",
-    "verify-smb2"
+    "verify-smb2",
+    "validate-smb2-runtime",
+    "validate-smb2-overlays",
+    "validate-smb2-gameplay",
+    "test-smb2-relocation",
+    "validate-smb2-relocation",
+    "source-3-release-audit",
+    "source-3-check"
   ]
 }

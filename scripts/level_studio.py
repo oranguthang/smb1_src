@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Visual editor for every original SMB1 area, object, enemy, and entrance stream."""
+"""Visual editor for SMB area, object, enemy, and entrance streams."""
 
 from __future__ import annotations
 
@@ -30,7 +30,10 @@ from level_studio_model import (
     positioned_enemy_objects,
     render_level_scene,
 )
-from studio_common import NES_RGB, dirty, guard, load_documents, run_make, save_documents
+from studio_common import (
+    NES_RGB, dirty, guard, load_documents, run_make, save_documents,
+    studio_game_name,
+)
 
 
 CELL = 32
@@ -106,7 +109,8 @@ class LevelStudio(tk.Tk):
             ("column", "row", "object_control", "page_advance", "hard_mode", "kind",
              "entrance_world", "entrance_page")
         }
-        self.title(f"SMB1 Level Studio [{profile_id}]")
+        self.game_name = studio_game_name(profile_id)
+        self.title(f"{self.game_name} Level Studio [{profile_id}]")
         self.geometry("1320x790")
         self.minsize(980, 620)
         self.protocol("WM_DELETE_WINDOW", self.close)
@@ -351,7 +355,7 @@ class LevelStudio(tk.Tk):
             f"{'unsaved edits' if dirty(self.documents) else 'saved'}"
         )
         self.title(
-            f"SMB1 Level Studio [{self.profile_id}/{self.course_bank.get()}]"
+            f"{self.game_name} Level Studio [{self.profile_id}/{self.course_bank.get()}]"
             + (" *" if dirty(self.documents) else "")
         )
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Edit SMB1 world routing, area selection, and player movement characteristics."""
+"""Edit SMB world routing, area selection, and player movement characteristics."""
 
 from __future__ import annotations
 
@@ -10,7 +10,10 @@ from tkinter import messagebox, ttk
 
 from content_profiles import load_profiles, require_supported
 from level_studio_model import AREA_TYPES
-from studio_common import change_document, dirty, guard, load_documents, run_make, save_documents
+from studio_common import (
+    change_document, dirty, guard, load_documents, run_make, save_documents,
+    studio_game_name,
+)
 
 
 PHYSICS_HELP = {
@@ -51,7 +54,8 @@ class WorldStudio(tk.Tk):
         self.area_index = tk.IntVar()
         self.alternate = tk.BooleanVar()
         self.status = tk.StringVar()
-        self.title(f"SMB1 World Studio [{profile_id}]")
+        self.game_name = studio_game_name(profile_id)
+        self.title(f"{self.game_name} World Studio [{profile_id}]")
         self.geometry("1050x720")
         self.protocol("WM_DELETE_WINDOW", self.close)
         self.build_ui()
@@ -168,7 +172,7 @@ class WorldStudio(tk.Tk):
                 ))
         self.status.set("Unsaved edits" if dirty(self.documents) else "All world settings are saved")
         self.title(
-            f"SMB1 World Studio [{self.profile_id}/{self.bank_id.get()}]"
+            f"{self.game_name} World Studio [{self.profile_id}/{self.bank_id.get()}]"
             + (" *" if dirty(self.documents) else "")
         )
 

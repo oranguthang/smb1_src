@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "id": "smb2_jp_fds_programs",
+  "source": "src/smb2/build.asm",
+  "main_source": "src/smb2/main.asm",
+  "payload_manifest": "config/smb2_reconstruction.json",
+  "platform_manifest": "config/smb2_platform_profile.json",
+  "platform_profile": "smb2_jp_fds",
+  "linker_config": "config/linker/smb2_payloads.cfg",
+  "generated_root": "build/relocation/smb2_jp_fds",
+  "cpu_base": "0x6000",
+  "padding_override": {
+    "source": "src/smb2/data/course_bank.inc",
+    "include_path": "data/course_bank.inc",
+    "original_statement": "    .res 83, $ff",
+    "replacement_statement": "    .res 75, $ff\n    .assert * = $d29f, error, \"SMB2 main relocation budget differs\""
+  },
+  "regions": [
+    {
+      "id": "main_program",
+      "start": "0x6000",
+      "end": "0xd29e",
+      "absorbed_range": {"start": "0xd24c", "end": "0xd253"},
+      "absorbed_bytes": "ffffffffffffffff",
+      "insertions": [
+        {"id": "system_origin", "before": "    .include \"system/reset.inc\""},
+        {"id": "after_frame_core", "before": "    .include \"game/scoring.inc\""},
+        {"id": "before_area_engine", "before": "    .include \"game/area_attributes.inc\""},
+        {"id": "before_player_engine", "before": "    .include \"game/player_control.inc\""},
+        {"id": "before_enemy_engine", "before": "    .include \"game/enemy_dispatch.inc\""},
+        {"id": "before_collision_engine", "before": "    .include \"game/player_enemy_collision.inc\""},
+        {"id": "before_disk_engine", "before": "    .include \"system/disk_loading.inc\""},
+        {"id": "before_course_bank", "before": "    .include \"data/course_bank.inc\""}
+      ]
+    }
+  ],
+  "fixed_ranges": [
+    {"start": "0xd29f", "end": "0xdff9", "meaning": "Save byte and audio ABI"}
+  ],
+  "vectors": {
+    "start": "0xdffa",
+    "targets": [
+      "handler_smb2_main_nmi_handler",
+      "handler_smb2_main_reset_handler",
+      "handler_smb2_main_irq_handler"
+    ]
+  },
+  "expected_changed_payloads": ["SM2MAIN", "SM2DATA2", "SM2DATA3", "SM2DATA4"],
+  "minimum_shifted_labels": 1800
+}

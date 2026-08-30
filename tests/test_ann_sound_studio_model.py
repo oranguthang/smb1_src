@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
 from ann_sound_studio_model import (  # noqa: E402
     AnnFdsMusicBank,
+    _resolve_boundary,
     fds_wave_frequency,
 )
 
@@ -33,6 +34,12 @@ def synthetic_bank() -> AnnFdsMusicBank:
         "tbl_ann_fds_wave_notes": 0x1310,
         "tbl_ann_fds_envelope": 0x1350,
     }
+    model.symbols = {
+        "wave_offsets": "tbl_ann_fds_wave_offsets",
+        "wave_a_volumes": "tbl_ann_fds_wave_a_volumes",
+        "wave_notes": "tbl_ann_fds_wave_notes",
+        "envelope": "tbl_ann_fds_envelope",
+    }
     model.period_bytes = bytes([0x00, 0x00, 0x00, 0x88])
     model.lengths = [6] * 16
     model.envelope_bytes = bytes([0x97] * 17)
@@ -40,6 +47,9 @@ def synthetic_bank() -> AnnFdsMusicBank:
 
 
 class AnnFdsSoundStudioModelTests(unittest.TestCase):
+    def test_symbolic_artifact_boundary_uses_build_label(self) -> None:
+        self.assertEqual(_resolve_boundary("ending_data_end", {"ending_data_end": 0xCDEF}), 0xCDEF)
+
     def test_fds_period_uses_64_sample_phase_accumulator(self) -> None:
         self.assertAlmostEqual(fds_wave_frequency(0x0144), 138.25, delta=0.1)
 

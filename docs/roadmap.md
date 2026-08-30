@@ -604,7 +604,7 @@ Exit criterion: every required profile has a shared-source build, the strongest
 stable byte-identity boundary available for its container, an appropriate
 runtime gate, and inclusion in `make source-2-check`.
 
-### 15. Source Reconstruction 3.0 - In Progress
+### 15. Source Reconstruction 3.0 - Complete
 
 Source Reconstruction 3.0 begins with a mechanical relocation proof while the
 tagged Source Reconstruction 2.0 contract remains immutable. SMB fills its
@@ -667,16 +667,25 @@ unknowns without changing the frozen 1.0 runtime manifest.
 The semantic/runtime milestone is complete: every registered unknown now has a
 documented resolution, and its aggregate static or emulator evidence is pinned
 by `make semantic-evidence`. Profile-aware authoring is also complete. Its
-contract records all six build profiles, the four-Studio compatibility matrix,
+contract records all seven build profiles, the four-Studio compatibility matrix,
 isolated workspace/output roots, and explicit runtime paths for every supported
 Level Studio course bank. The later-engine feasibility study is complete, and
 the SMB2 sibling architecture, independent FDS identity build, and source
 reconstruction are complete. Its 52 reviewable source files replace every
 private executable payload, preserve 2,383 original labels in a direct mapping,
 and reproduce all four program hashes plus the complete FDS side. Runtime and
-relocation evidence are now the active milestone before authoring promotion.
+relocation evidence are complete.
+The source-built disk reaches its stable title state after 1,200 frames, and
+three clean emulator runs drive the original FDS loader to fetch `SM2DATA2`,
+`SM2DATA3`, and `SM2DATA4` into their declared CPU ranges. A deterministic
+World 1-1 transaction remains in the active engine for 360 frames and advances
+Mario by 472 pixels. Eight probes consume only eight of 83 declared unused
+bytes, move 1,860 main labels, rebuild all three fixed-address overlays against
+the shifted interface, and never execute across title, overlay, or gameplay
+validation. SMB2 Studio authoring is complete as well, and the final aggregate
+Source Reconstruction 3.0 release gate covers the completed contract.
 
-The authoring matrix accepts JU, PC10, PAL, Vs. SMB, and FDS SMB1. All four Studios
+The authoring matrix accepts JU, PC10, PAL, Vs. SMB, FDS SMB1, ANN, and SMB2. All four Studios
 consume the selected build's labels and fixed capacities, PC10 retains its
 trailing container payload, and PAL music follows the engine's byte-offset
 period lookup. FDS ranges use the `$6000` load base; its source-built `SMMAIN`
@@ -697,10 +706,18 @@ courses now enter the original disk-loader task, load `NSMDATA4`, verify the
 overlay at `$C33D`, and reach the same ready-state contract. ANN is therefore a
 supported profile rather than a partial promise.
 
+SMB2 keeps a separate sibling-engine profile. Its World and Level Studios expose
+58 routes and 73 editable areas across Worlds 1-9 and A-D, retaining explicit
+stream ownership across all four FDS programs. Graphics Studio exposes 512 CHR
+tiles, 104 metatiles, and 26 player frames. Sound Studio keeps the ordinary APU
+bank separate from the `SM2DATA3` FDS ending suite. Zero-edit composition
+reproduces every program record and the complete disk SHA-1; embedded point
+playtests traverse the original `SM2DATA2`, `SM2DATA3`, and `SM2DATA4` loaders.
+
 The detailed sequence, fixed-layout constraints, and release boundaries are in
-`docs/source_reconstruction_3_0.md`. The final 3.0 milestone remains planned
-until every accepted addition has aggregate static, build, round-trip, and
-runtime acceptance gates.
+`docs/source_reconstruction_3_0.md`. `make source-3-check` defines the completed
+aggregate static, build, round-trip, and runtime boundary and requires the
+explicitly tag-ready manifest as its final step.
 
 ## Permanent Project Invariants
 

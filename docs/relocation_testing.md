@@ -126,3 +126,26 @@ generated interface also verifies every baseline address before accepting the
 candidate. Main-resident title and portrait aliases follow semantic labels;
 addresses belonging to dynamically loaded payloads remain fixed by design.
 The focused FCEUX title gate passes with execute traps on every inserted byte.
+
+## SMB2 Sibling Layout
+
+Run the independent later-engine proof with:
+
+```bash
+make test-smb2-relocation
+make validate-smb2-relocation
+```
+
+`SM2MAIN` has 83 source-declared unused bytes at `$D24C..$D29E`, immediately
+before the separately loaded save byte. The generated candidate consumes eight
+of them with probes at major responsibility boundaries and keeps the save byte
+plus audio ABI at `$D29F..$DFF9` fixed. NMI, RESET, and IRQ vector slots stay at
+`$DFFA..$DFFF`, and their operands follow their shifted semantic handlers.
+
+The candidate moves 1,860 main labels and checks 316 overlay labels at their
+unchanged load addresses. Because all four programs assemble together,
+cross-program references in `SM2DATA2`, `SM2DATA3`, and `SM2DATA4` follow the
+shifted `SM2MAIN`; requiring all four candidate hashes to change guards that
+property. Runtime validation boots the candidate, exercises all three FDS
+overlay-load paths, and compares a 360-frame World 1-1 transaction against the
+byte-identical baseline. Execute traps cover every inserted probe throughout.

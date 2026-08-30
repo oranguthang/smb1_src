@@ -305,7 +305,11 @@ def validate_smb2_contract(project_root: Path, contract: dict[str, Any]) -> list
     return errors
 
 
-def validate_source_3(project_root: Path, manifest_path: Path) -> list[str]:
+def validate_source_3(
+    project_root: Path,
+    manifest_path: Path,
+    require_ready: bool = False,
+) -> list[str]:
     release = load_json(manifest_path)
     errors: list[str] = []
     status = release.get("status")
@@ -314,6 +318,10 @@ def validate_source_3(project_root: Path, manifest_path: Path) -> list[str]:
     if status not in {"development", "tag-ready"}:
         errors.append("Source Reconstruction 3.0 status is invalid")
         return errors
+    if require_ready and status != "tag-ready":
+        errors.append("Source Reconstruction 3.0 manifest is not tag-ready")
+    if status == "tag-ready" and release.get("tag") != "source-reconstruction-3.0":
+        errors.append("Source Reconstruction 3.0 release tag differs")
 
     predecessor = release["predecessor"]
     predecessor_manifest = load_json(project_root / predecessor["manifest"])
@@ -451,10 +459,16 @@ def main() -> int:
         / "config"
         / "source_reconstruction_3_0.json",
     )
+    parser.add_argument(
+        "--require-ready",
+        action="store_true",
+        help="fail unless every milestone and the release manifest are tag-ready",
+    )
     args = parser.parse_args()
     errors = validate_source_3(
         args.project_root.resolve(),
         args.manifest.resolve(),
+        args.require_ready,
     )
     if errors:
         for error in errors:

@@ -9,7 +9,7 @@ local function setting(name, minimum, maximum)
 end
 
 local area_pointer = setting("SMB1_PLAYTEST_AREA", 0, 127)
-local world = setting("SMB1_PLAYTEST_WORLD", 0, 7)
+local world = setting("SMB1_PLAYTEST_WORLD", 0, 8)
 local level = setting("SMB1_PLAYTEST_LEVEL", 0, 7)
 local page = setting("SMB1_PLAYTEST_PAGE", 0, 31)
 local player_x = setting("SMB1_PLAYTEST_X", 0, 255)
@@ -24,8 +24,11 @@ if theme ~= "day" and theme ~= "night" then
     error("SMB1_PLAYTEST_THEME must be day or night")
 end
 local loader = os.getenv("SMB1_PLAYTEST_LOADER") or "direct"
-if loader ~= "direct" and loader ~= "ann_extended" then
-    error("SMB1_PLAYTEST_LOADER must be direct or ann_extended")
+if loader ~= "direct"
+        and loader ~= "ann_extended"
+        and loader ~= "smb2_normal"
+        and loader ~= "smb2_hard" then
+    error("SMB1_PLAYTEST_LOADER is not supported")
 end
 
 local ram = {
@@ -57,6 +60,7 @@ local ram = {
     ann_hard_mode = 0x07fb,
     fds_disk_loader_task = 0x07fc,
     ann_disk_file_id = 0x07fd,
+    smb2_file_list = 0x07f7,
 }
 
 local transitions = {}
@@ -136,7 +140,10 @@ end
 
 memory.writebyte(ram.world, world)
 memory.writebyte(ram.level, level)
-memory.writebyte(ram.area_number, loader == "ann_extended" and level or 0)
+memory.writebyte(
+    ram.area_number,
+    (loader == "ann_extended" or loader == "smb2_hard") and level or 0
+)
 memory.writebyte(ram.area_pointer, area_pointer)
 memory.writebyte(ram.halfway_page, 0)
 memory.writebyte(ram.entrance_page, page)
@@ -168,6 +175,49 @@ if loader == "ann_extended" then
     end
     memory.writebyte(ram.area_pointer, area_pointer)
     memory.writebyte(ram.operating_mode_task, 0)
+elseif loader == "smb2_hard" or (loader == "smb2_normal" and world >= 4) then
+    local target_world = world
+    memory.writebyte(ram.smb2_file_list, 0)
+    memory.writebyte(ram.fds_disk_loader_task, 1)
+    if loader == "smb2_hard" then
+        memory.writebyte(ram.ann_hard_mode, 1)
+        memory.writebyte(ram.operating_mode_task, 5)
+        memory.writebyte(ram.operating_mode, 0)
+    elseif world == 8 then
+        memory.writebyte(ram.world, 7)
+        memory.writebyte(ram.ann_hard_mode, 0)
+        memory.writebyte(ram.operating_mode_task, 5)
+        memory.writebyte(ram.operating_mode, 2)
+    else
+        memory.writebyte(ram.ann_hard_mode, 0)
+        memory.writebyte(ram.operating_mode_task, 0)
+        memory.writebyte(ram.operating_mode, 1)
+    end
+    local loader_ready = false
+    for frame = 1, ready_frames do
+        emu.frameadvance()
+        record_transition(boot_frames + frame)
+        if memory.readbyte(ram.fds_disk_loader_task) == 0 then
+            loader_ready = true
+            break
+        end
+    end
+    if not loader_ready then
+        write_result("loader-timeout")
+        if os.getenv("SMB1_PLAYTEST_EXIT") == "1" then
+            emu.exit()
+        end
+        error("SMB2 course payload did not become ready")
+    end
+    memory.writebyte(ram.world, target_world)
+    memory.writebyte(ram.level, level)
+    memory.writebyte(
+        ram.area_number,
+        loader == "smb2_hard" and level or 0
+    )
+    memory.writebyte(ram.area_pointer, area_pointer)
+    memory.writebyte(ram.operating_mode_task, 0)
+    memory.writebyte(ram.operating_mode, game_mode)
 else
     memory.writebyte(ram.operating_mode_task, 0)
     memory.writebyte(ram.operating_mode, game_mode)

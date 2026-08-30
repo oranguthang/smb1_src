@@ -375,8 +375,26 @@ def decode_stream_collection(data: bytes, entry: dict[str, Any]) -> dict[str, An
     for specification in entry["streams"]:
         capacity = int(specification["capacity"])
         chunk = data[offset:offset + capacity]
-        implicit_terminator = terminator not in chunk
-        used = len(chunk) if implicit_terminator else chunk.index(terminator) + 1
+        terminator_offset = None
+        if stream_codec == "area_object_stream":
+            for position in range(2, len(chunk), 2):
+                if chunk[position] == terminator:
+                    terminator_offset = position
+                    break
+        elif stream_codec == "enemy_object_stream":
+            position = 0
+            while position < len(chunk):
+                if chunk[position] == terminator:
+                    terminator_offset = position
+                    break
+                position += 3 if chunk[position] & 0x0F == 0x0E else 2
+        else:
+            try:
+                terminator_offset = chunk.index(terminator)
+            except ValueError:
+                pass
+        implicit_terminator = terminator_offset is None
+        used = len(chunk) if implicit_terminator else terminator_offset + 1
         encoded_stream = chunk[:used] + (bytes([terminator]) if implicit_terminator else b"")
         stream_entry = {"id": specification["name"], "codec": stream_codec}
         streams.append({

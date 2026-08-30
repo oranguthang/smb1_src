@@ -7,7 +7,7 @@ store local work beneath the ignored `content/workspace/` directory.
 Source Reconstruction 3.0 introduces a manifest-owned compatibility matrix at
 `config/content_authoring_profiles.json`. Run `make list-content-profiles` to
 inspect Studio availability and `make content-profile-audit` to validate the
-contract. JU, PC10, PAL, Vs. SMB, FDS SMB1, and ANN support all four Studios
+contract. JU, PC10, PAL, Vs. SMB, FDS SMB1, ANN, and SMB2 support all four Studios
 through isolated profile workspaces, labels, stream capacities, program images,
 and container builders. ANN has an exact multi-payload FDS composition contract,
 and point playtesting is proven for both its normal and extended course banks.
@@ -24,6 +24,7 @@ make sound-studio CONTENT_PROFILE=pc10
 make level-studio CONTENT_PROFILE=vs_smb
 make graphics-studio CONTENT_PROFILE=fds_smb
 make level-studio CONTENT_PROFILE=ann_fds
+make level-studio CONTENT_PROFILE=smb2_jp_fds
 make build-content CONTENT_PROFILE=ju
 ```
 
@@ -37,7 +38,7 @@ JU or PC10 build.
 | `make world-studio` | All 36 world-to-area routes and nine player physics tables |
 | `make level-studio` | Every selected-profile area header, terrain-object stream, enemy stream, entrance, and page control |
 | `make graphics-studio` | 512 CHR tiles, 101 metatiles, 26 player frames, eight palette packets, and fixed-length UI text |
-| `make sound-studio` | Fourteen main-game compositions, every selected-profile header and active channel view, plus the swim/stomp volume envelope; ANN also exposes its FDS ending suite |
+| `make sound-studio` | Fourteen main-game compositions, every selected-profile header and active channel view, plus the swim/stomp volume envelope; ANN and SMB2 also expose their FDS ending suites |
 
 ANN Level Studio adds a course-set selector. Its normal set resolves 44 valid
 areas through pointer tables spanning `NSMMAIN` and `NSMDATA2`; its extended set
@@ -52,6 +53,14 @@ APU pulse/triangle/noise streams, FDS wave channel, private length table, and
 software envelopes. Its synthesis view edits both 32-byte source waves (mirrored
 by the game into 64 FDS samples) and typed direct/increase/decrease volume steps.
 All note and synthesis edits preserve the original byte capacities.
+
+SMB2 Level Studio exposes Worlds 1-9 and Worlds A-D as separate course banks.
+Their 73 editable areas retain explicit stream ownership across `SM2MAIN`,
+`SM2DATA2`, `SM2DATA3`, and `SM2DATA4`; shared streams are written back to one
+canonical owner. World Studio exposes 58 routes, Graphics Studio exposes 512
+CHR tiles, 104 metatiles, and 26 player frames, and Sound Studio keeps the main
+APU bank separate from the `SM2DATA3` FDS ending suite. Studio window titles
+identify this sibling engine as SMB2 rather than SMB1.
 
 The programs are semantic editors rather than generic JSON inspectors. Level
 Studio reconstructs every area from the authored headers and object streams,
@@ -125,6 +134,17 @@ Vs. playtesting uses its distinct arcade mode tree: title readiness is
 task 4, operating mode 2 is gameplay, and gameplay readiness is task 4. These
 values belong to the profile manifest rather than the shared Lua workflow.
 
+SMB2 point playtesting preserves the engine's disk-overlay boundary. Worlds
+1-4 enter directly from `SM2MAIN`; Worlds 5-8 load `SM2DATA2`, World 9 loads
+`SM2DATA3`, and Worlds A-D load `SM2DATA4` before the selected world, area, and
+entrance are restored. Representative loader paths can be checked with:
+
+```
+make smoke-level-playtest CONTENT_PROFILE=smb2_jp_fds PLAYTEST_AREA=ground_12
+make smoke-level-playtest CONTENT_PROFILE=smb2_jp_fds PLAYTEST_AREA=ground_25 PLAYTEST_THEME=Night
+make smoke-level-playtest CONTENT_PROFILE=smb2_jp_fds PLAYTEST_BANK=hard PLAYTEST_AREA=ground_1 PLAYTEST_THEME=Night
+```
+
 Run `make init-content` before editing. It creates only missing workspace files,
 so opening a studio never overwrites earlier local work. Run
 `make export-content` only when intentionally restoring every supported artifact
@@ -155,6 +175,11 @@ ANN composition writes `NSMMAIN`, `NSMDATA2`, `NSMDATA3`, and `NSMDATA4` back to
 their original FDS records. Logical course documents gather streams through the
 source-built address tables and scatter edits back to their manifest-owned
 payloads; the unmodified build reproduces the complete disk side exactly.
+SMB2 composition follows the same container discipline while retaining its
+sibling-engine formats. It writes `SM2MAIN`, `SM2DATA2`, `SM2DATA3`, and
+`SM2DATA4` to their original records, validates each payload's load address,
+size, and SHA-1, and reproduces the 65,500-byte disk side with SHA-1
+`20e50128742162ee47561db9e82b2836399c880c` when no edits are present.
 Vs. composition retains its exact 16-byte header, 32 KiB source-built PRG, and
 16 KiB CHR. Graphics Studio edits only the first 8 KiB pattern-table bank. The
 second bank holds the arcade level data: Level Studio derives all 39 area and 39
@@ -169,8 +194,8 @@ commands accept `STUDIO=world`, `STUDIO=level`, `STUDIO=graphics`, or
 `STUDIO=sound`.
 
 `make check-content-profiles` performs an isolated export, constructs every
-supported Studio model, and rebuilds JU, PC10, PAL, Vs. SMB, FDS SMB1, and ANN
-with zero edits. It rejects any image whose size or SHA-1
+supported Studio model, and rebuilds JU, PC10, PAL, Vs. SMB, FDS SMB1, ANN, and
+SMB2 with zero edits. It rejects any image whose size or SHA-1
 differs from the selected profile baseline. Its temporary workspaces live under
 `build/content_roundtrip/` and never overwrite local authoring work.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Piano-roll and envelope editor for the complete vanilla SMB1 sound bank."""
+"""Piano-roll and envelope editor for the complete SMB sound banks."""
 
 from __future__ import annotations
 
@@ -11,7 +11,39 @@ from tkinter import messagebox, ttk
 
 from ann_sound_studio_model import AnnFdsMusicBank
 from sound_studio_model import MusicBank
-from studio_common import change_document, dirty, guard, load_documents, run_make, save_documents
+from studio_common import (
+    change_document, dirty, guard, load_documents, run_make, save_documents,
+    studio_game_name,
+)
+
+
+def canonical_music_labels(labels: dict[str, int]) -> dict[str, int]:
+    """Expose SMB2's role-prefixed music symbols through the shared engine model."""
+    if "off_smb2_main_music_header_offsets" not in labels:
+        return labels
+    result = dict(labels)
+    result.update({
+        "tbl_music_header_offsets": labels["off_smb2_main_music_header_offsets"],
+        "tbl_music_note_periods": labels["tbl_smb2_main_music_note_periods"],
+        "tbl_music_note_lengths": labels["tbl_smb2_main_music_note_lengths"],
+        "tbl_castle_clear_music_envelope": labels[
+            "off_smb2_main_castle_clear_music_envelope"
+        ],
+    })
+    for name, address in labels.items():
+        header_prefix = "tbl_smb2_main_music_header_"
+        stream_prefix = "off_smb2_main_music_stream_"
+        if name.startswith(header_prefix):
+            suffix = name.removeprefix(header_prefix)
+            canonical = (
+                "unused_music_header_residual"
+                if suffix == "residual"
+                else f"off_music_header_{suffix}"
+            )
+            result[canonical] = address
+        elif name.startswith(stream_prefix):
+            result[f"off_music_stream_{name.removeprefix(stream_prefix)}"] = address
+    return result
 
 
 class SoundStudio(tk.Tk):
@@ -43,7 +75,8 @@ class SoundStudio(tk.Tk):
         self.current_composition = self.compositions[0]
         self.current_song = self.current_composition["patterns"][0]
         self.current_channel = self.current_song["channels"][0]
-        self.title(f"SMB1 Sound Studio [{profile_id}]")
+        self.game_name = studio_game_name(profile_id)
+        self.title(f"{self.game_name} Sound Studio [{profile_id}]")
         self.geometry("1240x790")
         self.protocol("WM_DELETE_WINDOW", self.close)
         self.build_ui()
@@ -417,7 +450,7 @@ class SoundStudio(tk.Tk):
             f"{total} frames | {'unsaved edits' if dirty(self.documents) else 'saved'}"
         )
         self.title(
-            f"SMB1 Sound Studio [{self.profile_id}]"
+            f"{self.game_name} Sound Studio [{self.profile_id}]"
             + (" *" if dirty(self.documents) else "")
         )
 
@@ -574,6 +607,7 @@ def main() -> int:
         "sound",
         args.profile,
     )
+    labels = canonical_music_labels(labels)
     main_model = MusicBank(
         documents["music_bank"],
         labels,
@@ -581,11 +615,19 @@ def main() -> int:
         load_address=args.load_address,
     )
     banks: list[tuple[str, MusicBank]] = [("Main game", main_model)]
-    if "ann_fds_music_bank" in documents:
+    fds_artifact = next(
+        (
+            artifact_id
+            for artifact_id in ("ann_fds_music_bank", "smb2_fds_music_bank")
+            if artifact_id in documents
+        ),
+        None,
+    )
+    if fds_artifact is not None:
         banks.append((
             "FDS ending",
             AnnFdsMusicBank(
-                documents["ann_fds_music_bank"],
+                documents[fds_artifact],
                 labels,
                 args.prg.read_bytes(),
                 load_address=args.load_address,

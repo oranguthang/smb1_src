@@ -9,7 +9,9 @@ from pathlib import Path
 from typing import Any
 
 
-EXPECTED_PROFILE_IDS = ("ju", "pc10", "pal", "vs_smb", "fds_smb", "ann_fds")
+EXPECTED_PROFILE_IDS = (
+    "ju", "pc10", "pal", "vs_smb", "fds_smb", "ann_fds", "smb2_jp_fds"
+)
 EXPECTED_STUDIO_IDS = ("world", "level", "graphics", "sound")
 PROFILE_STATES = {"supported", "partial", "planned"}
 STUDIO_STATES = {"supported", "planned", "unsupported"}
@@ -226,7 +228,9 @@ def validate_profiles(document: dict[str, Any]) -> list[str]:
                             continue
                         if not (
                             isinstance(bank_playtest, dict)
-                            and bank_playtest.get("loader") == "ann_extended"
+                            and bank_playtest.get("loader") in {
+                                "ann_extended", "smb2_normal", "smb2_hard"
+                            }
                             and set(bank_playtest) == {"loader"}
                         ):
                             errors.append(
@@ -325,8 +329,12 @@ def validate_profiles(document: dict[str, Any]) -> list[str]:
 
         if container == "fds":
             template = profile.get("template")
+            expected_template_roots = (
+                f"assets/generated/platforms/{identifier}/",
+                f"assets/generated/{identifier.removesuffix('_jp_fds')}/",
+            )
             if not isinstance(template, str) or not template.startswith(
-                f"assets/generated/platforms/{identifier}/"
+                expected_template_roots
             ):
                 errors.append(f"invalid FDS template path: {identifier}")
             for field in ("template_sha1", "chr_sha1"):

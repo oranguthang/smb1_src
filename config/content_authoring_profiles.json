@@ -324,6 +324,206 @@
         "sound": "supported"
       },
       "blockers": []
+    },
+    {
+      "id": "smb2_jp_fds",
+      "name": "Super Mario Bros. 2 / The Lost Levels",
+      "status": "supported",
+      "baseline": {
+        "kind": "platform",
+        "profile": "smb2_jp_fds",
+        "load_address": "0x6000",
+        "payload": "SM2MAIN"
+      },
+      "workspace": "content/workspace/smb2_jp_fds",
+      "output": "build/content/smb2_jp_fds",
+      "image_size": 65500,
+      "image_sha1": "20e50128742162ee47561db9e82b2836399c880c",
+      "container": "fds",
+      "template": "assets/generated/smb2/smb2_jp_fds/template.fds",
+      "template_sha1": "ad703c737543920fba630002c7e238eb4a0815be",
+      "playtest": {
+        "boot_task": 4,
+        "game_mode": 1,
+        "ready_task": 4,
+        "boot_frames": 1800,
+        "ready_frames": 900
+      },
+      "program_payloads": [
+        {"payload": "prg", "record_ids": [5]},
+        {"payload": "SM2DATA2", "record_ids": [32]},
+        {"payload": "SM2DATA3", "record_ids": [48]},
+        {"payload": "SM2DATA4", "record_ids": [64]}
+      ],
+      "payloads": {
+        "SM2DATA2": {
+          "load_address": "0xc470",
+          "size": 3631,
+          "sha1": "909ce686c1e6612bb6625c712eddb6cadbdde40c"
+        },
+        "SM2DATA3": {
+          "load_address": "0xc5d0",
+          "size": 3279,
+          "sha1": "e34432ec9e5310430f0a11445b6a439ef73e2cad"
+        },
+        "SM2DATA4": {
+          "load_address": "0xc2b4",
+          "size": 3916,
+          "sha1": "1882308b0d4b8d0b4c762856d873225b25142adb"
+        }
+      },
+      "stream_payload_maps": {
+        "normal": [
+          "prg", "prg", "prg", "prg",
+          "SM2DATA2", "SM2DATA2", "SM2DATA2", "SM2DATA2",
+          "SM2DATA3", "SM2DATA3",
+          "prg", "prg", "prg", "prg", "prg", "prg", "prg", "prg", "prg", "prg", "prg",
+          "SM2DATA2", "SM2DATA2", "SM2DATA2", "SM2DATA2", "SM2DATA2", "SM2DATA2", "SM2DATA2", "SM2DATA2",
+          "prg", "prg",
+          "SM2DATA2", "SM2DATA2", "SM2DATA2",
+          "SM2DATA3", "SM2DATA3", "SM2DATA3",
+          "prg", "SM2DATA2",
+          "prg", "prg", "prg",
+          "SM2DATA2", "SM2DATA2",
+          "prg", "SM2DATA2", "prg", "SM2DATA2", "SM2DATA2",
+          "SM2DATA3", "SM2DATA3", "SM2DATA3"
+        ],
+        "hard": [
+          "SM2DATA4", "SM2DATA4", "SM2DATA4", "SM2DATA4",
+          "SM2DATA4", "SM2DATA4", "SM2DATA4", "SM2DATA4",
+          "SM2DATA4", "SM2DATA4", "SM2DATA4", "SM2DATA4",
+          "SM2DATA4", "SM2DATA4", "SM2DATA4", "SM2DATA4",
+          "prg", "prg",
+          "SM2DATA4", "SM2DATA4", "SM2DATA4"
+        ]
+      },
+      "chr_source": "fds_records",
+      "chr_record_ids": [1],
+      "chr_sha1": "f5ec342a44c909d99d46ae311a4b77ed00e645eb",
+      "studio_artifacts": {
+        "world": [
+          "world_area_pointers",
+          "smb2_hard_world_area_pointers",
+          "player_physics_profiles"
+        ],
+        "level": [
+          "area_object_streams",
+          "enemy_object_streams",
+          "smb2_hard_area_object_streams",
+          "smb2_hard_enemy_object_streams"
+        ],
+        "graphics": [
+          "all_metatiles",
+          "player_animation_tiles",
+          "area_palette_packets",
+          "game_text_packets",
+          "smb2_warp_zone_text_packets"
+        ],
+        "sound": [
+          "music_bank",
+          "swim_stomp_envelope",
+          "smb2_fds_music_bank"
+        ]
+      },
+      "studio_banks": {
+        "world": [
+          {"id": "normal", "name": "Worlds 1-9", "routes": "world_area_pointers"},
+          {"id": "hard", "name": "Worlds A-D", "routes": "smb2_hard_world_area_pointers"}
+        ],
+        "level": [
+          {
+            "id": "normal",
+            "name": "Worlds 1-9",
+            "areas": "area_object_streams",
+            "enemies": "enemy_object_streams",
+            "routes": "world_area_pointers",
+            "playtest": {"loader": "smb2_normal"}
+          },
+          {
+            "id": "hard",
+            "name": "Worlds A-D",
+            "areas": "smb2_hard_area_object_streams",
+            "enemies": "smb2_hard_enemy_object_streams",
+            "routes": "smb2_hard_world_area_pointers",
+            "playtest": {"loader": "smb2_hard"}
+          }
+        ]
+      },
+      "artifact_overrides": {
+        "world_area_pointers": {
+          "start": "tbl_smb2_main_area_pointers",
+          "end": "off_smb2_main_area_object_loopback_offsets",
+          "world_lengths": [5, 4, 5, 4, 5, 5, 4, 4, 4]
+        },
+        "smb2_hard_world_area_pointers": {
+          "payload": "SM2DATA4"
+        },
+        "player_physics_profiles": {
+          "start": "off_smb2_main_jump_gravity",
+          "end": "sub_smb2_main_update_player_physics"
+        },
+        "area_object_streams": {
+          "pointer_table": "off_smb2_main_area_data_addrs",
+          "pointer_payload_map": "normal",
+          "groups": [["castle", 10], ["ground", 29], ["underground", 5], ["water", 8]],
+          "allow_shared_pointers": true
+        },
+        "enemy_object_streams": {
+          "pointer_table": "off_smb2_main_enemy_data_addrs",
+          "pointer_payload_map": "normal",
+          "groups": [["castle", 10], ["ground", 29], ["underground", 5], ["water", 8]],
+          "allow_shared_pointers": true
+        },
+        "smb2_hard_area_object_streams": {
+          "pointer_table": "off_smb2_data4_area_data_addrs",
+          "pointer_payload": "SM2DATA4",
+          "pointer_payload_map": "hard",
+          "groups": [["castle", 4], ["ground", 14], ["underground", 2], ["water", 1]],
+          "allow_shared_pointers": true
+        },
+        "smb2_hard_enemy_object_streams": {
+          "pointer_table": "off_smb2_data4_enemy_data_addrs",
+          "pointer_payload": "SM2DATA4",
+          "pointer_payload_map": "hard",
+          "groups": [["castle", 4], ["ground", 14], ["underground", 2], ["water", 1]],
+          "allow_shared_pointers": true
+        },
+        "all_metatiles": {
+          "start": "off_smb2_main_palette_0_metatiles",
+          "end": "off_smb2_main_water_area_palette_packet"
+        },
+        "player_animation_tiles": {
+          "start": "tbl_smb2_main_player_graphics_tiles",
+          "end": "tbl_smb2_main_player_swim_kick_tiles"
+        },
+        "area_palette_packets": {
+          "start": "off_smb2_main_water_area_palette_packet",
+          "end": "off_smb2_main_thank_you_message"
+        },
+        "game_text_packets": {
+          "start": "tbl_smb2_main_game_text_packets",
+          "end": "tbl_smb2_main_warp_zone",
+          "block_names": ["top_status_bar", "world_lives", "time_up", "game_over"]
+        },
+        "music_bank": {
+          "start": "off_smb2_main_music_header_offsets",
+          "end": "tbl_smb2_main_music_note_periods"
+        },
+        "swim_stomp_envelope": {
+          "start": "off_smb2_main_swim_stomp_volume_envelope",
+          "end": "bra_smb2_main_start_flagpole_slide_sound"
+        },
+        "smb2_fds_music_bank": {
+          "payload": "SM2DATA3"
+        }
+      },
+      "studios": {
+        "world": "supported",
+        "level": "supported",
+        "graphics": "supported",
+        "sound": "supported"
+      },
+      "blockers": []
     }
   ]
 }

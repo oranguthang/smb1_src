@@ -1,10 +1,10 @@
 # Source Reconstruction 3.0
 
-Source Reconstruction 3.0 develops the project beyond the stable, tagged
+Source Reconstruction 3.0 advances the project beyond the stable, tagged
 Source Reconstruction 2.0 contract. The 2.0 commit and tag remain immutable;
 all 3.0 experiments use separate entrypoints, outputs, manifests, and
-acceptance gates until their evidence is strong enough to become normal
-project infrastructure.
+acceptance gates. The completed aggregate gate promotes only those experiments
+whose evidence is strong enough to become normal project infrastructure.
 
 ## Priorities
 
@@ -73,9 +73,10 @@ expanded-layout ADR must be written instead.
     payloads without hiding code in binary assets. This milestone is complete:
     all four source payloads and the complete FDS image are byte-identical.
 12. **SMB2 runtime and relocation.** Prove startup, overlay loading, gameplay,
-    and shifted-code behavior independently from ANN.
+    and shifted-code behavior independently from ANN. Complete.
 13. **SMB2 authoring.** Extend only Studios whose formats and capacities have
-    profile-specific evidence across the relevant overlays.
+    profile-specific evidence across the relevant overlays. Complete: all four
+    Studios cover the main program and the relevant fixed-address overlays.
 14. **Source Reconstruction 3.0 release.** Promote the release only after every
    accepted profile and tool is covered by aggregate static, byte-identity,
    round-trip, and runtime gates.
@@ -91,9 +92,12 @@ expanded-layout ADR must be written instead.
   behavior genuinely differs.
 - Evidence and inference retain separate documentation and naming treatment.
 
-The development manifest is `config/source_reconstruction_3_0.json`. During
-development, `make source-3-audit` validates the release boundary and milestone
-state without pretending that the final 3.0 acceptance gate already exists.
+The tag-ready manifest is `config/source_reconstruction_3_0.json`.
+`make source-3-audit` validates the release boundary and milestone state.
+`make source-3-check` is the aggregate acceptance gate. It retains
+the complete 2.0 gate, then runs every revision and platform relocation,
+semantic evidence, all seven zero-edit Studio round trips, later-engine
+evidence, baseline and relocated SMB2 runtime paths, and the tag-ready audit.
 Run `make test-relocation` to generate, build, and statically validate the
 canonical candidate under `build/relocation/`. `make validate-relocation` also
 generates candidate debugger symbols and runs all deterministic scenarios with
@@ -105,6 +109,31 @@ without brittle line numbers, and the sibling source follows the same role-prefi
 snake_case and formatting rules as SMB1. `make verify-smb2-source` proves the
 four payload hashes from source alone; `make verify-smb2` composes them with the
 private non-program records and reproduces the complete FDS side.
+
+The first SMB2 runtime gate now boots that source-built disk through the pinned
+FDS BIOS and requires its stable 1,200-frame title state. A second gate performs
+three independent clean boots and reaches the original disk-loader paths for
+worlds 5-8, the ending/World 9 program, and worlds A-D. It derives signatures
+from the verified payloads and observes `SM2DATA2`, `SM2DATA3`, and `SM2DATA4`
+at their declared load addresses after each disk task completes. Run
+`make validate-smb2-runtime` and `make validate-smb2-overlays` to reproduce the
+evidence. A normal Start transition and deterministic 360-frame World 1-1 input
+advance Mario by 472 pixels while remaining in the active engine.
+
+The relocation candidate consumes eight of 83 source-declared unused bytes
+before the fixed `$D29F` save/audio boundary. Eight generated probes move 1,860
+main-program labels; all 316 overlay labels retain their FDS load addresses,
+while all four payload hashes change because cross-program operands follow the
+candidate labels. `make validate-smb2-relocation` repeats title, every overlay
+load, and World 1-1 against this candidate, compares gameplay state with the
+byte-identical baseline, and traps execution at every inserted byte. This
+milestone is complete. SMB2 authoring is also complete: the manifest-owned
+profile exposes 58 world routes, 73 editable areas across Worlds 1-9 and A-D,
+512 CHR tiles, 104 metatiles, 26 player frames, the ordinary APU bank, and the
+SM2DATA3 APU/FDS ending suite. A zero-edit round trip reconstructs all four
+program records and the complete disk SHA-1. Embedded point playtests exercise
+the original loaders for `SM2DATA2`, `SM2DATA3`, and `SM2DATA4` before entering
+the selected course. The aggregate 3.0 release gate accepts this contract.
 
 The cartridge revision and platform relocation matrices are complete. Vs. SMB,
 FDS SMB, and ANN use profile-specific capacity contracts, container composition,
@@ -142,7 +171,7 @@ area-header offset is reset to zero before any square-2 stream read.
 ## Profile-Aware Authoring Contract
 
 `config/content_authoring_profiles.json` is the Source 3.0 compatibility
-boundary for the four Studios. It records all six selected game-build profiles,
+boundary for the four Studios. It records all seven selected game-build profiles,
 their program load addresses and payload identities, isolated workspace and
 output roots, and the availability of World, Level, Graphics, and Sound Studio.
 Run `make list-content-profiles` for the current matrix and
@@ -172,7 +201,7 @@ arcade-specific game mode and task numbers instead of assuming the console mode
 tree.
 
 `make check-content-profiles` exports disposable workspaces, constructs every
-headless Studio model, and rebuilds all six accepted images. A zero-edit build
+headless Studio model, and rebuilds all seven accepted images. A zero-edit build
 must match the manifest-owned image size and SHA-1. ANN now supports all four
 Studios and both course banks. Its normal bank has a measured embedded
 point-playtest contract: FDS startup reaches title task 3, then gameplay becomes
@@ -194,6 +223,16 @@ canonical level capacities safe for ANN. Its course contracts instead gather
 18 routes without flattening the disk overlays. Manifest-owned scatter writes
 return edits to their exact payload ranges and reject divergent edits to shared
 pointers.
+
+SMB2 uses a sibling profile rather than adding conditionals to SMB1. World and
+Level Studio expose Worlds 1-9 and A-D as separate banks while preserving the
+52 normal and 21 hard-course stream owners across `SM2MAIN`, `SM2DATA2`,
+`SM2DATA3`, and `SM2DATA4`. Graphics Studio extracts the editable 8 KiB pattern
+table from the private FDS template. Sound Studio adapts the role-prefixed SMB2
+symbols to the shared APU model and decodes the FDS ending engine without
+flattening it into the main bank. The Level Studio's direct, World 5, World 9,
+and World A smoke paths prove the required main, data2, data3, and data4 runtime
+states respectively.
 Sound Studio keeps ANN's ordinary SMB1 APU bank separate from the loaded
 `NSMDATA3` ending engine. The latter is modeled as its real 11-section sequence
 with six headers, four APU channel formats, an FDS wavetable channel, two

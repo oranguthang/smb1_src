@@ -93,6 +93,17 @@ class DataFormatTests(unittest.TestCase):
         self.assertEqual(decoded["streams"][0]["capacity_bytes"], 7)
         self.assertEqual(encode_stream_collection(decoded, entry), data)
 
+    def test_area_collection_ignores_terminator_value_in_object_control(self) -> None:
+        entry = {
+            "stream_codec": "area_object_stream",
+            "stream_terminator": 0xFD,
+            "streams": [{"name": "ground_1", "capacity": 7}],
+        }
+        data = bytes([0x51, 0x21, 0x10, 0xFD, 0x20, 0x01, 0xFD])
+        decoded = decode_stream_collection(data, entry)
+        self.assertEqual(len(decoded["streams"][0]["data"]["objects"]), 2)
+        self.assertEqual(encode_stream_collection(decoded, entry), data)
+
     def test_stream_collection_supports_shared_terminator(self) -> None:
         entry = {
             "stream_codec": "enemy_object_stream",

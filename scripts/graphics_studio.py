@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Edit SMB1 CHR pixels, palettes, metatiles, player sprites, and screen text."""
+"""Edit SMB CHR pixels, palettes, metatiles, player sprites, and screen text."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from tkinter import messagebox, ttk
 from content_studio_model import ChrDocument, smb_tile_text
 from studio_common import (
     NES_RGB, change_document, dirty, draw_tile, guard, load_documents,
-    run_make, save_documents,
+    run_make, save_documents, studio_game_name,
 )
 
 
@@ -46,7 +46,8 @@ class GraphicsStudio(tk.Tk):
         self.text_value = tk.StringVar()
         self.status = tk.StringVar()
         self.stroke = False
-        self.title(f"SMB1 Graphics Studio [{profile_id}]")
+        self.game_name = studio_game_name(profile_id)
+        self.title(f"{self.game_name} Graphics Studio [{profile_id}]")
         self.geometry("1320x830")
         self.minsize(1050, 690)
         self.protocol("WM_DELETE_WINDOW", self.close)
@@ -247,7 +248,7 @@ class GraphicsStudio(tk.Tk):
         changed = dirty(self.documents) or self.chr_document.dirty
         self.status.set(f"Tile ${self.tile_index.get():03X} | palette {self.palette_name.get()} | {'unsaved edits' if changed else 'saved'}")
         self.title(
-            f"SMB1 Graphics Studio [{self.profile_id}]"
+            f"{self.game_name} Graphics Studio [{self.profile_id}]"
             + (" *" if changed else "")
         )
 

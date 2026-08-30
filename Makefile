@@ -48,6 +48,20 @@ SMB2_BUILD_DIR ?= $(PROJECT_DIR)build/smb2/identity
 SMB2_IDENTITY_IMAGE ?= $(SMB2_BUILD_DIR)/smb2.fds
 SMB2_SOURCE_BUILD_DIR ?= $(PROJECT_DIR)build/smb2/source
 SMB2_SOURCE_IMAGE ?= $(SMB2_SOURCE_BUILD_DIR)/smb2.fds
+SMB2_RUNTIME_RESULT ?= $(SMB2_SOURCE_BUILD_DIR)/runtime.txt
+SMB2_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_platform_runtime.lua
+SMB2_OVERLAY_RESULT_DIR ?= $(SMB2_SOURCE_BUILD_DIR)/overlay_runtime
+SMB2_OVERLAY_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_smb2_overlay_runtime.lua
+SMB2_GAMEPLAY_RESULT_DIR ?= $(SMB2_SOURCE_BUILD_DIR)/gameplay_runtime
+SMB2_GAMEPLAY_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_smb2_gameplay_runtime.lua
+SMB2_RELOCATION_MANIFEST ?= $(PROJECT_DIR)config/relocation/smb2_jp_fds.json
+SMB2_RELOCATION_BUILD_DIR ?= $(PROJECT_DIR)build/relocation/smb2_jp_fds/candidate
+SMB2_RELOCATION_IMAGE ?= $(SMB2_RELOCATION_BUILD_DIR)/smb2.fds
+SMB2_RELOCATION_SCENARIOS ?= $(SMB2_RELOCATION_BUILD_DIR)/runtime_scenarios.json
+SMB2_RELOCATION_SUMMARY ?= $(SMB2_RELOCATION_BUILD_DIR)/relocation_summary.json
+SMB2_RELOCATION_RUNTIME_RESULT ?= $(SMB2_RELOCATION_BUILD_DIR)/runtime.txt
+SMB2_RELOCATION_OVERLAY_RESULT_DIR ?= $(SMB2_RELOCATION_BUILD_DIR)/overlay_runtime
+SMB2_RELOCATION_GAMEPLAY_RESULT_DIR ?= $(SMB2_RELOCATION_BUILD_DIR)/gameplay_runtime
 ENEMY_STREAM_EVIDENCE_MANIFEST ?= $(PROJECT_DIR)config/semantic_evidence/enemy_streams.json
 ENEMY_STREAM_EVIDENCE_REPORT ?= $(PROJECT_DIR)build/evidence/enemy_streams.json
 UNREACHABLE_CODE_EVIDENCE_MANIFEST ?= $(PROJECT_DIR)config/semantic_evidence/unreachable_code.json
@@ -272,11 +286,28 @@ STUDIO_CONTENT_PAYLOAD_ARGS = \
 	--content-payload-labels NSMDATA2=$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.lbl \
 	--content-payload-labels NSMDATA3=$(ANN_ENDING_AUDIO_BUILD_DIR)/payload.lbl \
 	--content-payload-labels NSMDATA4=$(ANN_EXTENDED_COURSES_BUILD_DIR)/payload.lbl
+else ifeq ($(CONTENT_PROFILE),smb2_jp_fds)
+CONTENT_BASE_DIR = $(SMB2_SOURCE_BUILD_DIR)
+CONTENT_BASE_PRG = $(CONTENT_BASE_DIR)/SM2MAIN.bin
+CONTENT_BASE_LABELS = $(CONTENT_BASE_DIR)/smb2.lbl
+CONTENT_CHR = $(SMB2_ASSET_DIR)/smb2_jp_fds/template.fds
+CONTENT_ROM = $(CONTENT_BUILD_DIR)/smb2.fds
+CONTENT_LOAD_ADDRESS = 0x6000
+CONTENT_PREPARE_COMMAND = $(MAKE) build-smb2
+CONTENT_CONTAINER_ARGS = --template "$(SMB2_ASSET_DIR)/smb2_jp_fds/template.fds"
+CONTENT_PAYLOAD_ARGS = \
+	--payload SM2DATA2=$(CONTENT_BASE_DIR)/SM2DATA2.bin \
+	--payload SM2DATA3=$(CONTENT_BASE_DIR)/SM2DATA3.bin \
+	--payload SM2DATA4=$(CONTENT_BASE_DIR)/SM2DATA4.bin
+STUDIO_CONTENT_PAYLOAD_ARGS = \
+	--content-payload SM2DATA2=$(CONTENT_BASE_DIR)/SM2DATA2.bin \
+	--content-payload SM2DATA3=$(CONTENT_BASE_DIR)/SM2DATA3.bin \
+	--content-payload SM2DATA4=$(CONTENT_BASE_DIR)/SM2DATA4.bin
 endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded prepare-content-profile init-content export-content validate-content build-content run-content check-studios check-content-profile check-content-profiles world-studio level-studio smoke-level-playtest graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor list-content-profiles content-profile-audit split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms split-smb2-assets build-smb2-identity verify-smb2-identity build-smb2-source verify-smb2-source build-smb2 verify-smb2 build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime later-engine-feasibility test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded prepare-content-profile init-content export-content validate-content build-content run-content check-studios check-content-profile check-content-profiles world-studio level-studio smoke-level-playtest graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor list-content-profiles content-profile-audit split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms split-smb2-assets build-smb2-identity verify-smb2-identity build-smb2-source verify-smb2-source build-smb2 verify-smb2 validate-smb2-runtime validate-smb2-overlays validate-smb2-gameplay test-smb2-relocation validate-smb2-relocation build-ann-payloads build-ann-supplemental-courses build-ann-ending-audio build-ann-extended-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending-audio verify-ann-extended-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit source-3-release-audit source-3-check semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime later-engine-feasibility test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
@@ -495,6 +526,7 @@ check-content-profiles:
 	$(MAKE) check-content-profile CONTENT_PROFILE=vs_smb
 	$(MAKE) check-content-profile CONTENT_PROFILE=fds_smb
 	$(MAKE) check-content-profile CONTENT_PROFILE=ann_fds
+	$(MAKE) check-content-profile CONTENT_PROFILE=smb2_jp_fds
 
 run-content: build-content
 	"$(FCEUX_EXE)" "$(CONTENT_ROM)"
@@ -507,6 +539,7 @@ level-studio:
 	$(MAKE) init-content STUDIO=world
 	$(MAKE) init-content STUDIO=level
 	$(MAKE) init-content STUDIO=graphics
+	$(MAKE) init-content STUDIO=sound
 	$(PYTHON) "$(PROJECT_DIR)scripts/level_studio.py" $(STUDIO_COMMON_ARGS) \
 		--content-image "$(CONTENT_ROM)" $(LEVEL_STUDIO_ARGS)
 
@@ -650,6 +683,76 @@ verify-smb2: verify-smb2-source
 		--payload "SM2DATA3=$(SMB2_SOURCE_BUILD_DIR)/SM2DATA3.bin" \
 		--payload "SM2DATA4=$(SMB2_SOURCE_BUILD_DIR)/SM2DATA4.bin" \
 		--output "$(SMB2_SOURCE_IMAGE)"
+
+validate-smb2-runtime: verify-smb2
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_platform_runtime.py" \
+		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
+		--profile smb2_jp_fds \
+		--fceux "$(FCEUX_EXE)" \
+		--fds-bios "$(FDS_BIOS)" \
+		--image "$(SMB2_SOURCE_IMAGE)" \
+		--lua "$(SMB2_RUNTIME_LUA)" \
+		--result "$(SMB2_RUNTIME_RESULT)"
+
+validate-smb2-overlays: verify-smb2
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_smb2_overlays.py" \
+		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
+		--profile smb2_jp_fds \
+		--fceux "$(FCEUX_EXE)" \
+		--fds-bios "$(FDS_BIOS)" \
+		--image "$(SMB2_SOURCE_IMAGE)" \
+		--payload-dir "$(SMB2_SOURCE_BUILD_DIR)" \
+		--lua "$(SMB2_OVERLAY_RUNTIME_LUA)" \
+		--result-dir "$(SMB2_OVERLAY_RESULT_DIR)"
+
+validate-smb2-gameplay: verify-smb2
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_smb2_gameplay.py" \
+		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
+		--profile smb2_jp_fds \
+		--fceux "$(FCEUX_EXE)" \
+		--fds-bios "$(FDS_BIOS)" \
+		--baseline-image "$(SMB2_SOURCE_IMAGE)" \
+		--lua "$(SMB2_GAMEPLAY_RUNTIME_LUA)" \
+		--result-dir "$(SMB2_GAMEPLAY_RESULT_DIR)"
+
+test-smb2-relocation: verify-smb2
+	$(PYTHON) "$(PROJECT_DIR)scripts/smb2_relocation_test.py" \
+		--project-root "$(PROJECT_DIR)" \
+		--manifest "$(SMB2_RELOCATION_MANIFEST)" \
+		--baseline-dir "$(SMB2_SOURCE_BUILD_DIR)" \
+		--original-image "$(SMB2_REFERENCE)"
+
+validate-smb2-relocation: test-smb2-relocation
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_platform_runtime.py" \
+		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
+		--profile smb2_jp_fds \
+		--fceux "$(FCEUX_EXE)" \
+		--fds-bios "$(FDS_BIOS)" \
+		--image "$(SMB2_RELOCATION_IMAGE)" \
+		--lua "$(SMB2_RUNTIME_LUA)" \
+		--result "$(SMB2_RELOCATION_RUNTIME_RESULT)" \
+		--forbidden-manifest "$(SMB2_RELOCATION_SCENARIOS)"
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_smb2_overlays.py" \
+		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
+		--profile smb2_jp_fds \
+		--fceux "$(FCEUX_EXE)" \
+		--fds-bios "$(FDS_BIOS)" \
+		--image "$(SMB2_RELOCATION_IMAGE)" \
+		--payload-dir "$(SMB2_RELOCATION_BUILD_DIR)" \
+		--lua "$(SMB2_OVERLAY_RUNTIME_LUA)" \
+		--result-dir "$(SMB2_RELOCATION_OVERLAY_RESULT_DIR)" \
+		--forbidden-manifest "$(SMB2_RELOCATION_SCENARIOS)" \
+		--relocation-summary "$(SMB2_RELOCATION_SUMMARY)"
+	$(PYTHON) "$(PROJECT_DIR)scripts/validate_smb2_gameplay.py" \
+		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
+		--profile smb2_jp_fds \
+		--fceux "$(FCEUX_EXE)" \
+		--fds-bios "$(FDS_BIOS)" \
+		--baseline-image "$(SMB2_SOURCE_IMAGE)" \
+		--candidate-image "$(SMB2_RELOCATION_IMAGE)" \
+		--lua "$(SMB2_GAMEPLAY_RUNTIME_LUA)" \
+		--result-dir "$(SMB2_RELOCATION_GAMEPLAY_RESULT_DIR)" \
+		--forbidden-manifest "$(SMB2_RELOCATION_SCENARIOS)"
 
 ifeq ($(PLATFORM),ann_fds)
 build-platform: build-ann-payloads
@@ -895,6 +998,25 @@ source-3-audit:
 	$(PYTHON) "$(PROJECT_DIR)scripts/source_3_audit.py" \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(SOURCE_3_MANIFEST)"
+
+source-3-release-audit:
+	$(PYTHON) "$(PROJECT_DIR)scripts/source_3_audit.py" \
+		--project-root "$(PROJECT_DIR)" \
+		--manifest "$(SOURCE_3_MANIFEST)" \
+		--require-ready
+
+source-3-check:
+	$(MAKE) source-2-check
+	$(MAKE) validate-relocation-revisions
+	$(MAKE) validate-relocation-platforms
+	$(MAKE) semantic-evidence
+	$(MAKE) check-content-profiles
+	$(MAKE) later-engine-feasibility
+	$(MAKE) validate-smb2-runtime
+	$(MAKE) validate-smb2-overlays
+	$(MAKE) validate-smb2-gameplay
+	$(MAKE) validate-smb2-relocation
+	$(MAKE) source-3-release-audit
 
 list-content-profiles:
 	$(PYTHON) "$(PROJECT_DIR)scripts/content_profiles.py" list \

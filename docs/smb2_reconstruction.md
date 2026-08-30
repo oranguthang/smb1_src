@@ -44,6 +44,48 @@ requiring the FDS image. `make verify-smb2` additionally composes the source-bui
 programs with the private license, CHR, and save records and requires SHA-1
 `20e50128742162ee47561db9e82b2836399c880c` for the complete disk side.
 
+## Runtime Evidence
+
+`make validate-smb2-runtime` starts the complete source-built FDS image through
+the pinned 8 KiB BIOS and waits 1,200 frames. It requires the stable title-mode
+RAM contract recorded in `config/smb2_platform_profile.json`; this proves that
+the independent reconstruction reaches the ordinary engine rather than merely
+forming the right disk bytes.
+
+`make validate-smb2-overlays` performs three additional clean emulator boots.
+Each run selects one normal operating-mode transition and lets the game's own
+FDS loader fetch `SM2DATA2`, `SM2DATA3`, or `SM2DATA4`. The validator derives a
+16-byte distinguishing signature from the already hash-checked source payload,
+observes it at the payload's declared CPU load address, and requires the disk
+task to finish. Signatures are selected against the resident `SM2MAIN` bytes,
+which avoids treating the shared prefix of `SM2DATA4` as evidence of a load.
+
+`make validate-smb2-gameplay` presses Start through the emulated controller,
+enters World 1-1 through the normal mode tree, and supplies a deterministic
+Right+B input sequence with two jumps. The accepted 360-frame slice remains in
+the active game loop throughout and advances Mario by 472 pixels into page 2.
+
+## Relocation Evidence
+
+The main program contains 83 source-declared unused `$FF` bytes immediately
+before the save byte at `$D29F`. `make test-smb2-relocation` generates an
+isolated candidate with eight `$EA` probes distributed across the system,
+frame, area, player, enemy, collision, disk, and course boundaries. It consumes
+only eight bytes of that padding and keeps the save byte and `$D29F..$DFF9`
+audio ABI fixed. The vector slots remain at `$DFFA..$DFFF`, while their operands
+follow the shifted NMI, RESET, and IRQ handlers.
+
+The accepted candidate moves 1,860 `SM2MAIN` labels and preserves 316 overlay
+label addresses. All four program hashes change because imports in
+`SM2DATA2`, `SM2DATA3`, and `SM2DATA4` follow the shifted main engine within the
+same ca65 scope. `make validate-smb2-relocation` then repeats title startup,
+all three real FDS overlay loads, and the deterministic World 1-1 slice with
+execute traps at every probe. The final gameplay state must match the
+byte-identical baseline exactly.
+
+These gates prove all four executable programs participate in the running disk
+image and survive controlled address movement independently from ANN.
+
 Executable payloads must be visible assembly; `.incbin` is forbidden for code.
 CHR, license data, and the save byte remain ignored private assets extracted
 from the hash-checked original disk. No raw ROM, FDS, or CHR image is tracked.
@@ -78,7 +120,7 @@ interpretations.
    then split them by meaningful responsibility without changing bytes.
 3. Apply the project ASM style and semantic snake_case naming while retaining a
    generated original-name mapping.
-4. Prove runtime startup, course loading, overlay transitions, and relocation
+4. Prove runtime startup, overlay transitions, course behavior, and relocation
    independently from ANN.
 5. Add SMB2 to a Studio only after that Studio's pointer tables, capacities,
    and output composition are proven for all relevant payloads.
