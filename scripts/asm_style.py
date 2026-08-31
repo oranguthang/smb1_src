@@ -267,9 +267,14 @@ def lint_file(path: Path) -> list[Issue]:
         issues.extend(comment_issues(path, line_number, before, comment))
         if not before.strip():
             leading = len(before) - len(before.lstrip(" "))
-            if leading % 4:
+            if leading:
                 issues.append(
-                    Issue(path, line_number, "comment-indent", "indent comments in multiples of four spaces")
+                    Issue(
+                        path,
+                        line_number,
+                        "comment-indent",
+                        "standalone comments must start at column zero",
+                    )
                 )
             continue
 

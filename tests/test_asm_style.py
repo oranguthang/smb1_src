@@ -67,6 +67,26 @@ handler_demo_entry:
 
         self.assertIn("comment-period", codes)
 
+    def test_indented_standalone_comment_is_reported_and_fixed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory, "comment.asm")
+            path.write_text(
+                "label:\n    ; Describe the following data\n    .byte $00\n",
+                encoding="utf-8",
+                newline="\n",
+            )
+
+            self.assertIn(
+                "comment-indent",
+                {issue.code for issue in lint_file(path)},
+            )
+            self.assertTrue(format_file(path))
+            self.assertEqual(
+                path.read_text(encoding="utf-8"),
+                "label:\n; Describe the following data\n    .byte $00\n",
+            )
+            self.assertEqual(lint_file(path), [])
+
     def test_formatter_is_idempotent(self) -> None:
         source = "\n;Header.\nsub_start: lda #$00 ;first sentence. second sentence.\n\n\n"
         expected = "; Header\nsub_start:\n    LDA #$00  ; first sentence. second sentence\n"

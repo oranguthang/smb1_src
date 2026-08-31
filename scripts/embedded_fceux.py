@@ -36,9 +36,13 @@ class EmbeddedFceux:
     WS_EX_CLIENTEDGE = 0x00000200
     WS_EX_APPWINDOW = 0x00040000
     SWP_FRAMECHANGED = 0x0020
+    SWP_NOMOVE = 0x0002
     SWP_NOSIZE = 0x0001
     SWP_SHOWWINDOW = 0x0040
     WM_CLOSE = 0x0010
+    WM_COMMAND = 0x0111
+    MENU_INPUT = 321
+    GW_ENABLEDPOPUP = 6
     EO_FORCEISCALE = 0x00004000
     EO_BESTFIT = 0x00010000
     EO_SQUAREPIXELS = 0x00100000
@@ -66,16 +70,33 @@ class EmbeddedFceux:
             wintypes.HWND, wintypes.UINT, wintypes.WPARAM, wintypes.LPARAM,
         )
         user32.PostMessageW.restype = wintypes.BOOL
+        user32.IsWindowEnabled.argtypes = (wintypes.HWND,)
+        user32.IsWindowEnabled.restype = wintypes.BOOL
+        user32.GetWindow.argtypes = (wintypes.HWND, wintypes.UINT)
+        user32.GetWindow.restype = wintypes.HWND
+        user32.SetForegroundWindow.argtypes = (wintypes.HWND,)
+        user32.SetForegroundWindow.restype = wintypes.BOOL
         return user32
 
-    def __init__(self, host: tk.Widget, status: Callable[[str], None]) -> None:
+    def __init__(
+        self,
+        host: tk.Widget,
+        status: Callable[[str], None],
+        config_directory: Path | None = None,
+    ) -> None:
         self.host = host
         self.status = status
+        self.config_directory = config_directory
         self.process: subprocess.Popen[bytes] | None = None
         self.window = 0
         self.poll_count = 0
         self.poll_job: str | None = None
         self.resize_job: str | None = None
+        self.input_dialog_job: str | None = None
+        self.input_dialog_seen = False
+        self.input_dialog_polls = 0
+        self.top_level_style: int | None = None
+        self.top_level_exstyle: int | None = None
         self.host.bind("<Configure>", self._schedule_resize)
         self.host.bind("<Button-1>", lambda _event: self.focus())
 
@@ -96,10 +117,15 @@ class EmbeddedFceux:
         for path in (executable, rom, lua):
             if not path.is_file():
                 raise OSError(f"Required playtest file is missing: {path}")
+        self.top_level_style = None
+        self.top_level_exstyle = None
         command = [
             str(executable.resolve()),
         ]
-        embedded_config = self._prepare_config(executable, rom.parent)
+        embedded_config = self._prepare_config(
+            executable,
+            self.config_directory or rom.parent,
+        )
         if embedded_config is not None:
             command.extend(["-cfg", str(embedded_config.resolve())])
         command.extend([
@@ -149,6 +175,8 @@ class EmbeddedFceux:
         user32.SetMenu(self.window, 0)
         user32.SetParent(self.window, self.host.winfo_id())
         style = user32.GetWindowLongPtrW(self.window, self.GWL_STYLE)
+        if self.top_level_style is None:
+            self.top_level_style = style
         style &= ~(
             self.WS_CAPTION | self.WS_THICKFRAME | self.WS_MINIMIZEBOX
             | self.WS_MAXIMIZEBOX | self.WS_SYSMENU | self.WS_POPUP
@@ -156,6 +184,8 @@ class EmbeddedFceux:
         style |= self.WS_CHILD | self.WS_VISIBLE
         user32.SetWindowLongPtrW(self.window, self.GWL_STYLE, style)
         exstyle = user32.GetWindowLongPtrW(self.window, self.GWL_EXSTYLE)
+        if self.top_level_exstyle is None:
+            self.top_level_exstyle = exstyle
         exstyle &= ~(
             self.WS_EX_DLGMODALFRAME | self.WS_EX_WINDOWEDGE
             | self.WS_EX_CLIENTEDGE | self.WS_EX_APPWINDOW
@@ -219,7 +249,12 @@ class EmbeddedFceux:
 
     @classmethod
     def _prepare_config(cls, executable: Path, output_directory: Path) -> Path | None:
-        source = executable.with_name("fceux.cfg")
+        destination = output_directory / "fceux-embedded.cfg"
+        source = (
+            destination
+            if destination.is_file()
+            else executable.with_name("fceux.cfg")
+        )
         if not source.is_file():
             return None
         contents = source.read_text(encoding="utf-8")
@@ -235,7 +270,7 @@ class EmbeddedFceux:
             contents,
             count=1,
         )
-        destination = output_directory / "fceux-embedded.cfg"
+        output_directory.mkdir(parents=True, exist_ok=True)
         temporary = destination.with_suffix(".tmp")
         temporary.write_text(contents, encoding="utf-8")
         temporary.replace(destination)
@@ -245,6 +280,76 @@ class EmbeddedFceux:
         if self.window:
             self._user32().SetFocus(self.window)
 
+    def configure_input(self) -> None:
+        """Open FCEUX's native input configuration for the running playtest."""
+        if not self.window or not self.running:
+            raise OSError("Start a playtest before opening FCEUX controls")
+        if self.input_dialog_job is not None:
+            raise OSError("FCEUX input configuration is already open")
+        user32 = self._user32()
+        self._detach_for_input_dialog(user32)
+        if not user32.PostMessageW(
+            self.window,
+            self.WM_COMMAND,
+            self.MENU_INPUT,
+            0,
+        ):
+            self._embed()
+            raise OSError("FCEUX did not accept the input configuration command")
+        self.input_dialog_seen = False
+        self.input_dialog_polls = 0
+        self.status("Opening FCEUX input configuration")
+        self.input_dialog_job = self.host.after(50, self._poll_input_dialog)
+
+    def _detach_for_input_dialog(self, user32: object) -> None:
+        """Restore a top-level HWND while DirectInput changes cooperative mode."""
+        user32.ShowWindow(self.window, 0)
+        user32.SetParent(self.window, 0)
+        if self.top_level_style is not None:
+            user32.SetWindowLongPtrW(
+                self.window,
+                self.GWL_STYLE,
+                self.top_level_style,
+            )
+        if self.top_level_exstyle is not None:
+            user32.SetWindowLongPtrW(
+                self.window,
+                self.GWL_EXSTYLE,
+                self.top_level_exstyle,
+            )
+        user32.SetWindowPos(
+            self.window,
+            0,
+            0,
+            0,
+            0,
+            0,
+            self.SWP_FRAMECHANGED | self.SWP_NOMOVE | self.SWP_NOSIZE,
+        )
+
+    def _poll_input_dialog(self) -> None:
+        self.input_dialog_job = None
+        if not self.window or not self.running:
+            return
+        user32 = self._user32()
+        popup = user32.GetWindow(self.window, self.GW_ENABLEDPOPUP)
+        if popup and popup != self.window:
+            self.input_dialog_seen = True
+            user32.ShowWindow(popup, 5)
+            user32.SetForegroundWindow(popup)
+        if not user32.IsWindowEnabled(self.window):
+            self.input_dialog_seen = True
+        elif self.input_dialog_seen:
+            self._embed()
+            self.status("Playtest running; FCEUX controls applied")
+            return
+        self.input_dialog_polls += 1
+        if not self.input_dialog_seen and self.input_dialog_polls >= 100:
+            self._embed()
+            self.status("FCEUX input configuration did not open")
+            return
+        self.input_dialog_job = self.host.after(50, self._poll_input_dialog)
+
     def stop(self) -> None:
         if self.poll_job is not None:
             self.host.after_cancel(self.poll_job)
@@ -252,6 +357,9 @@ class EmbeddedFceux:
         if self.resize_job is not None:
             self.host.after_cancel(self.resize_job)
             self.resize_job = None
+        if self.input_dialog_job is not None:
+            self.host.after_cancel(self.input_dialog_job)
+            self.input_dialog_job = None
         process = self.process
         if self.window:
             self._user32().PostMessageW(self.window, self.WM_CLOSE, 0, 0)

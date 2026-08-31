@@ -120,6 +120,9 @@ class LevelStudio(tk.Tk):
         )
         self.playtest_world = tk.IntVar(value=default_world + 1)
         self.playtest_level = tk.IntVar(value=default_level + 1)
+        self.playtest_infinite_time = tk.BooleanVar(value=True)
+        self.playtest_invincible = tk.BooleanVar(value=True)
+        self.playtest_wrap_pits = tk.BooleanVar(value=True)
         self.field_vars = {
             name: tk.StringVar() for name in
             ("column", "row", "object_control", "page_advance", "hard_mode", "kind",
@@ -131,7 +134,11 @@ class LevelStudio(tk.Tk):
         self.minsize(980, 620)
         self.protocol("WM_DELETE_WINDOW", self.close)
         self.build_ui()
-        self.emulator = EmbeddedFceux(self.emulator_host, self.set_playtest_status)
+        self.emulator = EmbeddedFceux(
+            self.emulator_host,
+            self.set_playtest_status,
+            self.project_root / "content" / "workspace",
+        )
         self.refresh()
 
     def build_ui(self) -> None:
@@ -244,6 +251,28 @@ class LevelStudio(tk.Tk):
         x_scroll.pack(fill="x")
         self.canvas.bind("<Button-1>", self.canvas_click)
         self.canvas.bind("<Button-3>", self.place_mario)
+        playtest_controls = ttk.Frame(playtest_view, padding=(7, 5))
+        playtest_controls.pack(fill="x")
+        ttk.Checkbutton(
+            playtest_controls,
+            text="Infinite time",
+            variable=self.playtest_infinite_time,
+        ).pack(side="left")
+        ttk.Checkbutton(
+            playtest_controls,
+            text="Invincible",
+            variable=self.playtest_invincible,
+        ).pack(side="left", padx=(10, 0))
+        ttk.Checkbutton(
+            playtest_controls,
+            text="Wrap pits",
+            variable=self.playtest_wrap_pits,
+        ).pack(side="left", padx=(10, 0))
+        ttk.Button(
+            playtest_controls,
+            text="Controls...",
+            command=self.open_playtest_controls,
+        ).pack(side="right")
         self.emulator_host = tk.Frame(playtest_view, bg="black", width=768, height=720)
         self.emulator_host.pack(fill="both", expand=True)
         self.emulator_host.pack_propagate(False)
@@ -798,6 +827,20 @@ class LevelStudio(tk.Tk):
             "SMB1_PLAYTEST_READY_TASK": str(self.playtest_ready_task),
             "SMB1_PLAYTEST_BOOT_FRAMES": str(self.playtest_boot_frames),
             "SMB1_PLAYTEST_READY_FRAMES": str(self.playtest_ready_frames),
+            "SMB1_PLAYTEST_TIMER": str(
+                0x07EC
+                if self.profile_id in {"ann_fds", "smb2_jp_fds"}
+                else 0x07F8
+            ),
+            "SMB1_PLAYTEST_INFINITE_TIME": (
+                "1" if self.playtest_infinite_time.get() else "0"
+            ),
+            "SMB1_PLAYTEST_INVINCIBLE": (
+                "1" if self.playtest_invincible.get() else "0"
+            ),
+            "SMB1_PLAYTEST_WRAP_PITS": (
+                "1" if self.playtest_wrap_pits.get() else "0"
+            ),
             "SMB1_PLAYTEST_LOADER": (
                 str(bank_playtest["loader"])
                 if isinstance(bank_playtest, dict)
@@ -813,6 +856,9 @@ class LevelStudio(tk.Tk):
         )
         self.view_notebook.select(1)
         self.emulator.start(executable, emulator_image, lua, environment)
+
+    def open_playtest_controls(self) -> None:
+        guard("Level Studio", self.emulator.configure_input)
 
     def stop_playtest(self) -> None:
         self.emulator.stop()
@@ -1148,6 +1194,7 @@ def main() -> int:
         result_path.parent.mkdir(parents=True, exist_ok=True)
         result_path.write_text("pending\n", encoding="utf-8")
         os.environ["SMB1_PLAYTEST_RESULT"] = str(result_path)
+        os.environ["SMB1_PLAYTEST_PROBE_TRAINER"] = "1"
         application.preview_theme.set(args.smoke_playtest)
         application.change_theme()
 
@@ -1157,6 +1204,7 @@ def main() -> int:
                 application.emulator.window
                 and result.startswith("status=ready")
                 and f"background={expected_background}" in result
+                and "timer=999 trainer=1/1/1 probe=ok" in result
             ):
                 outcome["embedded"] = True
                 application.stop_playtest()
@@ -1175,6 +1223,7 @@ def main() -> int:
         application.after(100, finish_smoke_test)
         application.mainloop()
         os.environ.pop("SMB1_PLAYTEST_RESULT", None)
+        os.environ.pop("SMB1_PLAYTEST_PROBE_TRAINER", None)
         if not outcome["embedded"]:
             raise RuntimeError(
                 f"FCEUX {args.smoke_playtest} playtest did not reach the expected state: "

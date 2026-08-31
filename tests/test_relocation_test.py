@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from relocation_test import (  # noqa: E402
     insert_probe,
     prepare_generated_source,
+    rebase_incbin_paths,
     replace_fds_payloads,
     resolve_payload_interface,
     verify_absorbed_bytes,
@@ -20,6 +21,26 @@ from platform_profiles import FdsFileRecord  # noqa: E402
 
 
 class RelocationTestTests(unittest.TestCase):
+    def test_relative_incbin_path_is_rebased_for_generated_source(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "src" / "platform" / "data.asm"
+            destination = root / "build" / "generated" / "platform" / "data.asm"
+            source.parent.mkdir(parents=True)
+            destination.parent.mkdir(parents=True)
+            asset = root / "assets" / "private.bin"
+            asset.parent.mkdir(parents=True)
+            asset.write_bytes(b"private")
+
+            generated = rebase_incbin_paths(
+                '    .incbin "../../assets/private.bin"\n',
+                source,
+                destination,
+            )
+
+            binary_path = generated.split('"')[1]
+            self.assertEqual((destination.parent / binary_path).resolve(), asset)
+
     def test_generated_sources_keep_probes_and_overrides_out_of_src(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

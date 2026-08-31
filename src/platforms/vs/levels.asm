@@ -186,28 +186,28 @@ tbl_vs_enemy_data_offsets_by_area_type:
     .byte $23, $08, $20, $00
 
 tbl_enemy_data_ptr:
-    ; Castle streams: Vs 1, 2, 1, 4, 5, 6, Vs 7, and 3
+; Castle streams: Vs 1, 2, 1, 4, 5, 6, Vs 7, and 3
     .word $000b, $0048, $0063, $0086, $00bb, $00d0, $010a, $0127
-    ; Ground streams 1-6, Vs 7-8, 9-21, Vs 22, then original 7-8
+; Ground streams 1-6, Vs 7-8, 9-21, Vs 22, then original 7-8
     .word $0156, $0185, $01a2, $01b2, $01df, $0214, $0234, $0257
     .word $0278, $02a2, $02a3, $02d1, $02da, $02ff, $0322, $0335
     .word $0336, $0370, $039b, $03cf, $03ef, $03f8, $0429, $0442
-    ; Underground streams 1-3
+; Underground streams 1-3
     .word $0457, $0484, $04b6
-    ; Water streams 1, Vs 2, 3, and original 2
+; Water streams 1, Vs 2, 3, and original 2
     .word $04e3, $04f4, $0525, $0539
 
 tbl_vs_area_object_data_offsets_by_area_type:
     .byte $00, $04, $1c, $1f
 
 tbl_area_object_data_ptr:
-    ; Water streams 1, Vs 2, 3, and original 2
+; Water streams 1, Vs 2, 3, and original 2
     .word $1504, $1545, $1622, $163f
-    ; Ground streams 1-6, Vs 7-8, 9-21, Vs 22, then original 7-8
+; Ground streams 1-6, Vs 7-8, 9-21, Vs 22, then original 7-8
     .word $09cb, $0a2e, $0a93, $0aec, $0b83, $0c20, $0c85, $0cde
     .word $0d63, $0dce, $0dd7, $0e16, $0e2b, $0e8e, $0ef3, $0f60
     .word $0f91, $1022, $10a5, $111a, $1193, $11be, $1243, $1298
-    ; Underground streams 1-3
+; Underground streams 1-3
     .word $131d, $13ca, $1477
-    ; Castle streams: Vs 1, 2, 1, 4, 5, 6, Vs 7, and 3
+; Castle streams: Vs 1, 2, 1, 4, 5, 6, Vs 7, and 3
     .word $0563, $062e, $06b3, $071e, $07c1, $0850, $08d9, $0948
