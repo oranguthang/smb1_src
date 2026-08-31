@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -28,6 +29,7 @@ SYMBOL_PATTERN = re.compile(
     r'^sym\t.*name="([^"]+)".*val=0x([0-9A-Fa-f]+),type=lab$',
     re.MULTILINE,
 )
+INCBIN_PATTERN = re.compile(r'(?P<prefix>\.incbin\s+")(?P<path>[^"]+)(?P<suffix>")')
 
 
 def fail(message: str) -> None:
@@ -74,6 +76,20 @@ def insert_probe(
     return replace_once(text, token, f"{token}\n{snippet.rstrip()}", identifier)
 
 
+def rebase_incbin_paths(text: str, source: Path, destination: Path) -> str:
+    """Keep relative binary includes valid after copying an assembly module."""
+
+    def replace_path(match: re.Match[str]) -> str:
+        path = Path(match.group("path"))
+        if path.is_absolute():
+            return match.group(0)
+        absolute = (source.parent / path).resolve()
+        relative = Path(os.path.relpath(absolute, destination.parent)).as_posix()
+        return f'{match.group("prefix")}{relative}{match.group("suffix")}'
+
+    return INCBIN_PATTERN.sub(replace_path, text)
+
+
 def prepare_generated_source(
     project_root: Path,
     manifest: dict[str, Any],
@@ -117,6 +133,11 @@ def prepare_generated_source(
         )
         positioning_path = source_root / game_override["include_path"]
         positioning_path.parent.mkdir(parents=True, exist_ok=True)
+        positioning_text = rebase_incbin_paths(
+            positioning_text,
+            positioning_source,
+            positioning_path,
+        )
         positioning_path.write_text(positioning_text, encoding="utf-8", newline="\n")
 
     evidence_regions = [

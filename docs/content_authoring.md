@@ -137,10 +137,19 @@ ROM, opens the selected area and page with the original game engine, and embeds
 the native FCEUX window in the Playtest tab. The World and Course controls
 supply the correct route context for shared and bonus areas. Click the game
 screen before using the keyboard; configured gamepads continue to work through
-FCEUX. The embedded frame scales to the complete Playtest tab while preserving
+FCEUX. The Playtest tab enables infinite time, contact invincibility, and
+top-of-screen pit wrapping by default; each trainer feature has an independent
+checkbox and changes only the editor-owned emulator session. **Controls...**
+opens FCEUX's native input dialog, so keyboard and gamepad bindings use the
+emulator's own configuration rather than a second editor-specific mapping UI.
+The emulator frame is temporarily detached while this dialog is open because
+Windows DirectInput requires FCEUX to own a top-level window when changing its
+cooperative input mode; closing the dialog embeds the same running frame again.
+The embedded frame scales to the complete Playtest tab while preserving
 the NES aspect ratio; only the unavoidable side or letterbox bars remain. A
-generated per-run FCEUX configuration keeps these video settings isolated from
-the user's emulator configuration. **Stop** closes only the editor-owned
+dedicated persistent FCEUX configuration in `content/workspace` keeps video and
+input settings isolated from the user's main emulator configuration while
+sharing controls across all content profiles. **Stop** closes only the editor-owned
 emulator process and returns to the map. Set `FCEUX_EXE` when the executable is
 not available at the default sibling path
 `../fceux_automation/vc/x64/Release/fceux64.exe`.

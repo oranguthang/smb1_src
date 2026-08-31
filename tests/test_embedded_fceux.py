@@ -87,6 +87,142 @@ class EmbeddedFceuxTests(unittest.TestCase):
                 '"eoptions" 196737\nkeep 7\n',
             )
 
+            destination.write_text(
+                '"eoptions" 0\nkeep 9\ninput-config 42\n',
+                encoding="utf-8",
+            )
+            EmbeddedFceux._prepare_config(executable, output)
+            self.assertEqual(
+                destination.read_text(encoding="utf-8"),
+                '"eoptions" 65536\nkeep 9\ninput-config 42\n',
+            )
+
+    def test_input_configuration_uses_the_native_fceux_command(self) -> None:
+        class Host:
+            def __init__(self) -> None:
+                self.jobs = []
+
+            def after(self, delay, callback):
+                self.jobs.append((delay, callback))
+                return "input-dialog-job"
+
+        class Process:
+            @staticmethod
+            def poll():
+                return None
+
+        class User32:
+            def __init__(self) -> None:
+                self.messages = []
+                self.parents = []
+                self.styles = []
+
+            @staticmethod
+            def ShowWindow(*_arguments):
+                return True
+
+            def SetParent(self, *arguments):
+                self.parents.append(arguments)
+                return 0
+
+            def SetWindowLongPtrW(self, *arguments):
+                self.styles.append(arguments)
+                return 0
+
+            @staticmethod
+            def SetWindowPos(*_arguments):
+                return True
+
+            def PostMessageW(self, *arguments):
+                self.messages.append(arguments)
+                return True
+
+        statuses = []
+        emulator = object.__new__(EmbeddedFceux)
+        emulator.process = Process()
+        emulator.window = 42
+        emulator.status = statuses.append
+        emulator.host = Host()
+        emulator.input_dialog_job = None
+        emulator.input_dialog_seen = False
+        emulator.input_dialog_polls = 0
+        emulator.top_level_style = 0x1234
+        emulator.top_level_exstyle = 0x5678
+        user32 = User32()
+        with patch.object(emulator, "_user32", return_value=user32):
+            emulator.configure_input()
+
+        self.assertEqual(
+            user32.messages,
+            [(42, EmbeddedFceux.WM_COMMAND, EmbeddedFceux.MENU_INPUT, 0)],
+        )
+        self.assertEqual(user32.parents, [(42, 0)])
+        self.assertEqual(
+            user32.styles,
+            [
+                (42, EmbeddedFceux.GWL_STYLE, 0x1234),
+                (42, EmbeddedFceux.GWL_EXSTYLE, 0x5678),
+            ],
+        )
+        self.assertEqual(emulator.host.jobs[0][0], 50)
+        self.assertEqual(emulator.input_dialog_job, "input-dialog-job")
+        self.assertEqual(statuses, ["Opening FCEUX input configuration"])
+
+    def test_input_dialog_reembeds_fceux_after_the_modal_window_closes(self) -> None:
+        class Host:
+            @staticmethod
+            def after(_delay, _callback):
+                return "next-poll"
+
+        class Process:
+            @staticmethod
+            def poll():
+                return None
+
+        class User32:
+            def __init__(self) -> None:
+                self.enabled = False
+
+            @staticmethod
+            def GetWindow(_window, _command):
+                return 99
+
+            @staticmethod
+            def ShowWindow(_window, _command):
+                return True
+
+            @staticmethod
+            def SetForegroundWindow(_window):
+                return True
+
+            def IsWindowEnabled(self, _window):
+                return self.enabled
+
+        statuses = []
+        emulator = object.__new__(EmbeddedFceux)
+        emulator.host = Host()
+        emulator.process = Process()
+        emulator.window = 42
+        emulator.status = statuses.append
+        emulator.input_dialog_job = "current-poll"
+        emulator.input_dialog_seen = False
+        emulator.input_dialog_polls = 0
+        user32 = User32()
+        with (
+            patch.object(emulator, "_user32", return_value=user32),
+            patch.object(emulator, "_embed") as embed,
+        ):
+            emulator._poll_input_dialog()
+            self.assertTrue(emulator.input_dialog_seen)
+            self.assertEqual(emulator.input_dialog_job, "next-poll")
+            embed.assert_not_called()
+
+            user32.enabled = True
+            emulator._poll_input_dialog()
+            embed.assert_called_once_with()
+
+        self.assertEqual(statuses, ["Playtest running; FCEUX controls applied"])
+
 
 if __name__ == "__main__":
     unittest.main()
