@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from ann_sound_studio_model import (  # noqa: E402
+from authoring.ann_sound_studio_model import (  # noqa: E402
     AnnFdsMusicBank,
     FDS_ENDING_SYMBOLS,
     _resolve_boundary,

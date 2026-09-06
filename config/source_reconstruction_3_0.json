@@ -15,6 +15,7 @@
     {"id": "platform_relocation", "status": "complete"},
     {"id": "platform_interfaces", "status": "complete"},
     {"id": "semantic_runtime_evidence", "status": "complete"},
+    {"id": "scoring_runtime_evidence", "status": "complete"},
     {"id": "profile_aware_authoring", "status": "complete"},
     {"id": "later_engine_feasibility", "status": "complete"},
     {"id": "smb2_architecture", "status": "complete"},
@@ -65,6 +66,8 @@
     "unreachable_code_manifest": "config/semantic_evidence/unreachable_code.json",
     "runtime_manifest": "scenarios/semantic_runtime_scenarios.json",
     "runtime_scenarios": ["time-up-clear", "unreachable-code-longplay", "timer-tick-sfx", "coin-sfx"],
+    "scoring_runtime_manifest": "scenarios/scoring_runtime_scenarios.json",
+    "scoring_runtime_scenarios": ["coin-award", "coin-extra-life", "decimal-score-carry", "enemy-stomp-award", "stomp-chain-award", "flagpole-award"],
     "resolved_unknowns": ["CODE-002", "CODE-003", "DATA-001", "RAM-001", "SND-001", "SND-002"]
   },
   "authoring": {
@@ -105,6 +108,8 @@
     "docs/later_engine_feasibility.md",
     "docs/smb2_reconstruction.md",
     "docs/relocation_testing.md",
+    "docs/scoring_runtime.md",
+    "docs/index.md",
     "docs/roadmap.md"
   ],
   "required_stable_targets": [
@@ -126,6 +131,8 @@
     "audit-unreachable-code",
     "trace-semantic-runtime",
     "validate-semantic-runtime",
+    "trace-scoring-runtime",
+    "validate-scoring-runtime",
     "content-profile-audit",
     "list-content-profiles",
     "check-content-profiles",

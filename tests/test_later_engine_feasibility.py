@@ -8,7 +8,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from later_engine_feasibility import compare_bytes, load_manifest
+from workflow.later_engine_feasibility import compare_bytes, load_manifest
 
 
 class LaterEngineFeasibilityTests(unittest.TestCase):

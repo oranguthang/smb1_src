@@ -54,7 +54,8 @@ produced bytes.
   plus the documented ca65 layout, comment-spacing, mnemonic-case,
   directive-case, role-prefixed snake_case labels, module-size, and direct
   `JSR`/`sub_` consistency rules. The checkers have focused unit tests, and
-  `make trace-runtime` validates twelve deterministic emulator scenarios.
+  `make trace-runtime` validates twelve deterministic emulator scenarios, and
+  the separate scoring contract validates six complete score/HUD transactions.
 - All 516 RAM and assembly-time constant definitions use explicit `ram_` and
   `con_` prefixes. All 295 callable labels use `sub_`, have a direct `JSR`
   caller, and are protected by the semantic lint gate. All 1,993 colon labels
@@ -343,6 +344,11 @@ evidence; power-up and death/respawn use manifest-declared RAM patches that are
 recorded address by address and explicitly bounded in
 `docs/runtime_evidence.md`. The complete 17,862-frame movie supplies the broad
 deterministic regression.
+
+`make trace-scoring-runtime` adds transaction-level proof for a normal coin,
+the 100-coin extra-life boundary, multi-digit decimal carry, a natural stomp,
+a controlled shell-chain award, and the flagpole award. Each scenario connects
+the internal digits to the emitted HUD packet and subsequent top-score update.
 
 ### 7. Automated Source and Documentation Validation - Complete
 

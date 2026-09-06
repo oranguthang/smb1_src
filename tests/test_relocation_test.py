@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from relocation_test import (  # noqa: E402
+from validation.relocation_test import (  # noqa: E402
     insert_probe,
     prepare_generated_source,
     rebase_incbin_paths,
@@ -17,7 +17,7 @@ from relocation_test import (  # noqa: E402
     verify_absorbed_bytes,
     write_payload_interface,
 )
-from platform_profiles import FdsFileRecord  # noqa: E402
+from build.platform_profiles import FdsFileRecord  # noqa: E402
 
 
 class RelocationTestTests(unittest.TestCase):
@@ -162,7 +162,7 @@ class RelocationTestTests(unittest.TestCase):
             FdsFileRecord(0, 1, b"MAIN    ", 0x6000, 4, 0, 0, 4),
             FdsFileRecord(1, 2, b"OVERLAY ", 0xC000, 3, 0, 8, 12),
         ]
-        import relocation_test
+        from validation import relocation_test
 
         original_parser = relocation_test.parse_fds_side
         try:

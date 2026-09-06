@@ -8,7 +8,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from fixed_variant import verify_bytes
+from build.fixed_variant import verify_bytes
 
 
 class FixedVariantTests(unittest.TestCase):

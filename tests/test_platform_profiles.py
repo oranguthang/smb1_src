@@ -9,7 +9,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from platform_profiles import (
+from build.platform_profiles import (
     build_fds_image,
     build_ines_image,
     extract_fds_payloads,

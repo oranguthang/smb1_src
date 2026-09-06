@@ -10,7 +10,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from validate_platform_runtime import (
+from runtime.validate_platform_runtime import (
     load_forbidden_addresses,
     load_ignored_addresses,
     validate_fds_bios,

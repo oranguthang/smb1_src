@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from validate_runtime_scenarios import (  # noqa: E402
+from runtime.validate_runtime_scenarios import (  # noqa: E402
     validate_events,
     validate_event_details,
     validate_final_state,

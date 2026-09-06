@@ -1,0 +1,98 @@
+{
+  "format": 1,
+  "rom_sha1": "ea343f4e445a9050d4b4fbac2c77d0693b1d0922",
+  "movie": "movies/smb1_any_percent.fm2",
+  "movie_sha1": "fbbb675af9b85146015713b8ca5c488d6c0053ab",
+  "movie_source": "https://tasvideos.org/UserFiles/Info/68410246126700593",
+  "movie_author": "DJ Incendration",
+  "scenarios": [
+    {
+      "id": "coin-award",
+      "method": "natural World 1-1 question-block coin with score and HUD transaction capture",
+      "max_frames": 320,
+      "patches": [],
+      "expected_events": {"score_transaction": 304, "score_hud_packet": 304, "top_score_update": 305},
+      "expected_event_details": {
+        "score_transaction": "source=coin;score=000000>000020;coins=00>01;lives=02>02;coin_display=00>01",
+        "score_hud_packet": "source=coin;score=000020;tiles=240000000200",
+        "top_score_update": "source=coin;top=000000>000020"
+      }
+    },
+    {
+      "id": "coin-extra-life",
+      "method": "natural coin collection from a controlled 99-coin boundary",
+      "max_frames": 320,
+      "patches": [
+        {"address": "$075E", "symbol": "ram_coin_tally", "index": 0, "reason": "set_99_coin_tally"},
+        {"address": "$07ED", "symbol": "ram_display_digits", "index": 22, "reason": "set_99_coin_tens"},
+        {"address": "$07EE", "symbol": "ram_display_digits", "index": 23, "reason": "set_99_coin_ones"}
+      ],
+      "expected_events": {"score_transaction": 304, "score_hud_packet": 304, "top_score_update": 305},
+      "expected_event_details": {
+        "score_transaction": "source=coin;score=000000>000020;coins=63>00;lives=02>03;coin_display=99>00",
+        "score_hud_packet": "source=coin;score=000020;tiles=240000000200",
+        "top_score_update": "source=coin;top=000000>000020"
+      }
+    },
+    {
+      "id": "decimal-score-carry",
+      "method": "natural coin award from a controlled 009990 internal score with multi-digit carry",
+      "max_frames": 320,
+      "patches": [
+        {"address": "$07DD", "symbol": "ram_player_score_display", "index": 0, "reason": "set_score_digit_0"},
+        {"address": "$07DE", "symbol": "ram_player_score_display", "index": 1, "reason": "set_score_digit_1"},
+        {"address": "$07DF", "symbol": "ram_player_score_display", "index": 2, "reason": "set_score_digit_2"},
+        {"address": "$07E0", "symbol": "ram_player_score_display", "index": 3, "reason": "set_score_digit_3"},
+        {"address": "$07E1", "symbol": "ram_player_score_display", "index": 4, "reason": "set_score_digit_4"},
+        {"address": "$07E2", "symbol": "ram_player_score_display", "index": 5, "reason": "set_score_digit_5"}
+      ],
+      "expected_events": {"score_transaction": 304, "score_hud_packet": 304, "top_score_update": 305},
+      "expected_event_details": {
+        "score_transaction": "source=coin;score=009990>010010;coins=00>01;lives=02>02;coin_display=00>01",
+        "score_hud_packet": "source=coin;score=010010;tiles=240100000100",
+        "top_score_update": "source=coin;top=009990>010010"
+      }
+    },
+    {
+      "id": "enemy-stomp-award",
+      "method": "natural World 1-1 enemy stomp through the delayed floating-score award",
+      "max_frames": 1160,
+      "patches": [],
+      "expected_events": {"score_transaction": 1132, "score_hud_packet": 1132, "top_score_update": 1133},
+      "expected_event_details": {
+        "score_transaction": "source=floating:01;score=000240>000250;coins=0C>0C;lives=02>02;coin_display=12>12",
+        "score_hud_packet": "source=floating:01;score=000250;tiles=240000020500",
+        "top_score_update": "source=floating:01;top=000240>000250"
+      }
+    },
+    {
+      "id": "stomp-chain-award",
+      "method": "natural collision with controlled shell-chain scoring state",
+      "max_frames": 1160,
+      "patches": [
+        {"address": "$0016", "symbol": "ram_enemy_id", "index": 0, "reason": "select_stomped_shell"},
+        {"address": "$0484", "symbol": "ram_stomp_chain_counter", "index": 0, "reason": "set_stomp_chain"},
+        {"address": "$0791", "symbol": "ram_stomp_timer", "index": 0, "reason": "set_stomp_timer"}
+      ],
+      "expected_events": {"stomp_chain_selected": 1127, "score_transaction": 1132, "score_hud_packet": 1132, "top_score_update": 1133},
+      "expected_event_details": {
+        "stomp_chain_selected": "slot=0;chain=02;timer=01",
+        "score_transaction": "source=floating:03;score=000240>000280;coins=0C>0C;lives=02>02;coin_display=12>12",
+        "score_hud_packet": "source=floating:03;score=000280;tiles=240000020800",
+        "top_score_update": "source=floating:03;top=000240>000280"
+      }
+    },
+    {
+      "id": "flagpole-award",
+      "method": "natural World 1-1 flagpole score selection and award",
+      "max_frames": 1400,
+      "patches": [],
+      "expected_events": {"score_transaction": 1304, "score_hud_packet": 1304, "top_score_update": 1305},
+      "expected_event_details": {
+        "score_transaction": "source=flagpole:04;score=000250>000260;coins=0C>0C;lives=02>02;coin_display=12>12",
+        "score_hud_packet": "source=flagpole:04;score=000260;tiles=240000020600",
+        "top_score_update": "source=flagpole:04;top=000250>000260"
+      }
+    }
+  ]
+}

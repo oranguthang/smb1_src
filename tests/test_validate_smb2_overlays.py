@@ -11,7 +11,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from validate_smb2_overlays import (  # noqa: E402
+from runtime.validate_smb2_overlays import (  # noqa: E402
     checked_signature,
     overlay_plans,
     relocated_payloads,

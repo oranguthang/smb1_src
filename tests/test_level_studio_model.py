@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from level_studio_model import (  # noqa: E402
+from authoring.level_studio_model import (  # noqa: E402
     LevelDocument,
     LevelVisuals,
     area_pointer,

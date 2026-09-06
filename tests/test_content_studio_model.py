@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from content_studio_model import (  # noqa: E402
+from authoring.content_studio_model import (  # noqa: E402
     ArtifactDocument,
     ChrDocument,
     decode_chr,

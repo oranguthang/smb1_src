@@ -9,7 +9,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from revision_profiles import build_image, extract_source_assets, split_rom
+from build.revision_profiles import build_image, extract_source_assets, split_rom
 
 
 class RevisionProfileTests(unittest.TestCase):

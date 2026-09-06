@@ -1,5 +1,7 @@
 # Build artifacts and ROM files
 build/
+!/scripts/build/
+!/scripts/build/**
 *.o
 *.prg
 *.nes

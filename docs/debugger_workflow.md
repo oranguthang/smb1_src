@@ -28,7 +28,7 @@ source line positions because ca65 records the source paths present at build
 time.
 
 The linker writes a bare 32 KiB PRG while the debugger opens the final iNES
-image. `scripts/debug_symbols.py` retargets every output segment to `smb.nes`
+image. `scripts/validation/debug_symbols.py` retargets every output segment to `smb.nes`
 and adds the 16-byte iNES header to its file offset. This prevents source spans
 from pointing 16 bytes before the corresponding ROM instruction.
 

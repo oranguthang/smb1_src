@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from debug_symbols import (  # noqa: E402
+from validation.debug_symbols import (  # noqa: E402
     choose_unique_addresses,
     normalize_dbg_for_ines,
     parse_record,

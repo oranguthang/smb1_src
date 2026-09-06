@@ -8,7 +8,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from import_smb2_source import (  # noqa: E402
+from workflow.import_smb2_source import (  # noqa: E402
     Listing,
     SymbolKey,
     build_renames,

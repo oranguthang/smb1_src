@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from audit_unreachable_code import find_word_occurrences, parse_debug_symbols  # noqa: E402
+from validation.audit_unreachable_code import find_word_occurrences, parse_debug_symbols  # noqa: E402
 
 
 class UnreachableCodeAuditTests(unittest.TestCase):

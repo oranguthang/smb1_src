@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from release_audit import validate_hash_contracts, validate_roadmap  # noqa: E402
+from validation.release_audit import validate_hash_contracts, validate_roadmap  # noqa: E402
 
 
 class ReleaseAuditTests(unittest.TestCase):

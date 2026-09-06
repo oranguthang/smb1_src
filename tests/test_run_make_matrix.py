@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from run_make_matrix import (  # noqa: E402
+from validation.run_make_matrix import (  # noqa: E402
     MatrixStep,
     failure_excerpt,
     parse_steps,
@@ -34,7 +34,7 @@ class MakeMatrixTests(unittest.TestCase):
         ]
         steps = [MatrixStep(("first",)), MatrixStep(("second",))]
         output = io.StringIO()
-        with patch("run_make_matrix.subprocess.run", side_effect=completed) as run:
+        with patch("validation.run_make_matrix.subprocess.run", side_effect=completed) as run:
             with redirect_stdout(output):
                 results = run_matrix(steps, Path("project"), "make")
                 print_summary(results, "Test matrix")

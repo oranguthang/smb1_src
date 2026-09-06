@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from embedded_fceux import EmbeddedFceux  # noqa: E402
+from runtime.embedded_fceux import EmbeddedFceux  # noqa: E402
 
 
 @unittest.skipUnless(sys.platform == "win32", "Native FCEUX embedding is Windows-only")

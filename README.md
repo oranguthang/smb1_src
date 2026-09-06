@@ -25,6 +25,7 @@ This repository contains:
 - **config/linker/** - Linker contracts for native, expanded, FDS, and ANN payloads
 - **bin/ca65.exe** - 6502 assembly compiler from [cc65](http://www.cc65.org/)
 - **bin/ld65.exe** - 6502 linker from [cc65](http://www.cc65.org/)
+- **docs/index.md** - Documentation map by release, architecture, runtime, and authoring topic
 - **docs/6502_reference.md** - NES 6502 instructions, flags, and opcodes
 - **docs/modding_examples.md** - Example gameplay edits and patch ideas
 - **docs/naming.md** - Semantic symbol vocabulary and evidence rules
@@ -34,6 +35,7 @@ This repository contains:
 - **docs/unknowns.md** - Stable uncertainty and evidence registry
 - **docs/debugger_workflow.md** - Mesen/FCEUX symbols and source navigation
 - **docs/runtime_evidence.md** - Deterministic gameplay transaction scenarios
+- **docs/scoring_runtime.md** - Score, coin, extra-life, HUD, and top-score transactions
 - **docs/data_formats.md** - Typed authored-data codecs and byte round trips
 - **docs/provenance/label_renames.json** - Original-to-current symbol map
 - **docs/preservation_source_1_0.md** - Stable release scope and evidence boundary
@@ -57,7 +59,12 @@ smb1_src/
 |-- docs/               # Local technical notes
 |   |-- 6502_reference.md
 |   `-- modding_examples.md
-|-- scripts/            # Cross-platform build, split, and validation logic
+|-- scripts/            # Categorized build, validation, runtime, authoring, and workflow tools
+|   |-- authoring/      # Content codecs, models, and interactive Studios
+|   |-- build/          # Builds, images, assets, and profile composition
+|   |-- runtime/        # Emulator runners and runtime validators
+|   |-- validation/     # Lint, release, relocation, and artifact audits
+|   `-- workflow/       # Reconstruction workflows and Lua automation
 |-- src/                # Assembly source
 |   |-- audio/          # Sound effects, music engine, and music data
 |   |-- data/           # Level streams and fixed interrupt vectors

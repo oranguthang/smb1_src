@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from compare_assembly_sources import matching_blocks, parse_listing  # noqa: E402
+from workflow.compare_assembly_sources import matching_blocks, parse_listing  # noqa: E402
 
 
 class CompareAssemblySourcesTests(unittest.TestCase):

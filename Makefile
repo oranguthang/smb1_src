@@ -31,6 +31,9 @@ RUNTIME_TRACE_LUA ?= $(PROJECT_DIR)scripts/workflow/capture_runtime_scenario.lua
 RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/runtime
 SEMANTIC_RUNTIME_SCENARIOS ?= $(PROJECT_DIR)scenarios/semantic_runtime_scenarios.json
 SEMANTIC_RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/evidence/runtime
+SCORING_RUNTIME_SCENARIOS ?= $(PROJECT_DIR)scenarios/scoring_runtime_scenarios.json
+SCORING_RUNTIME_TRACE_LUA ?= $(PROJECT_DIR)scripts/workflow/capture_scoring_transaction.lua
+SCORING_RUNTIME_TRACE_DIR ?= $(PROJECT_DIR)build/evidence/scoring
 DATA_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/data_formats.json
 DATA_FORMAT_SUMMARY ?= $(PROJECT_DIR)build/data_formats.json
 CONTENT_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/content_formats_3.json
@@ -310,10 +313,10 @@ endif
 
 .DEFAULT_GOAL := build
 
-.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded prepare-content-profile init-content export-content validate-content build-content run-content check-studios check-content-profile check-content-profiles world-studio level-studio smoke-level-playtest graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor list-content-profiles content-profile-audit split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms split-smb2-assets build-smb2-identity verify-smb2-identity build-smb2-source verify-smb2-source build-smb2 verify-smb2 validate-smb2-runtime validate-smb2-overlays validate-smb2-gameplay test-smb2-relocation validate-smb2-relocation build-ann-payloads build-ann-supplemental-courses build-ann-ending build-ann-hard-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending verify-ann-hard-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit source-3-release-audit source-3-check semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime later-engine-feasibility later-engine-source-overlap test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
+.PHONY: build verify verify-all build-prg verify-prg build-hack verify-hack validate-hack build-expanded verify-expanded validate-expanded prepare-content-profile init-content export-content validate-content build-content run-content check-studios check-content-profile check-content-profiles world-studio level-studio smoke-level-playtest graphics-studio sound-studio world-editor level-editor graphics-editor sound-editor list-content-profiles content-profile-audit split-revision-assets build-revision verify-revision validate-revision verify-revisions validate-revisions split-platform-assets build-platform verify-platform validate-platform verify-platforms validate-platforms split-smb2-assets build-smb2-identity verify-smb2-identity build-smb2-source verify-smb2-source build-smb2 verify-smb2 validate-smb2-runtime validate-smb2-overlays validate-smb2-gameplay test-smb2-relocation validate-smb2-relocation build-ann-payloads build-ann-supplemental-courses build-ann-ending build-ann-hard-courses verify-ann-audio verify-ann-tail-core verify-ann-supplemental-courses verify-ann-ending verify-ann-hard-courses symbols validate-symbols trace trace-runtime validate-runtime roundtrip-formats release-audit release-check source-2-audit source-2-release-audit source-2-check source-3-audit source-3-release-audit source-3-check semantic-evidence audit-enemy-streams audit-unreachable-code trace-semantic-runtime validate-semantic-runtime trace-scoring-runtime validate-scoring-runtime later-engine-feasibility later-engine-source-overlap test-relocation test-relocation-revisions test-platform-relocations test-ann-main-relocation validate-relocation validate-revision-relocation validate-platform-relocation validate-relocation-revisions validate-relocation-platforms split split-all check-assets lint format test trace-player clean _require-assets
 
 build: _require-assets
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_native \
 		--source "$(NATIVE_SOURCE)" \
 		--config "$(NATIVE_CFG)" \
 		--manifest "$(ASSET_MANIFEST)" \
@@ -328,7 +331,7 @@ build: _require-assets
 		--output-rom "$(NATIVE_ROM)"
 
 verify: _require-assets
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_native \
 		--source "$(NATIVE_SOURCE)" \
 		--config "$(NATIVE_CFG)" \
 		--manifest "$(ASSET_MANIFEST)" \
@@ -344,7 +347,7 @@ verify: _require-assets
 		--verify
 
 build-prg:
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_native \
 		--source "$(NATIVE_SOURCE)" \
 		--config "$(NATIVE_CFG)" \
 		--manifest "$(ASSET_MANIFEST)" \
@@ -357,7 +360,7 @@ build-prg:
 		--prg-only
 
 verify-prg:
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_native \
 		--source "$(NATIVE_SOURCE)" \
 		--config "$(NATIVE_CFG)" \
 		--manifest "$(ASSET_MANIFEST)" \
@@ -370,7 +373,7 @@ verify-prg:
 		--prg-only --verify
 
 build-hack: _require-assets
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_native \
 		--source "$(HACK_SOURCE)" \
 		--config "$(NATIVE_CFG)" \
 		--manifest "$(ASSET_MANIFEST)" \
@@ -385,7 +388,7 @@ build-hack: _require-assets
 		--output-rom "$(HACK_ROM)"
 
 verify-hack: build build-hack
-	$(PYTHON) "$(PROJECT_DIR)scripts/fixed_variant.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.fixed_variant \
 		--manifest "$(FIXED_VARIANT_MANIFEST)" \
 		--variant "$(FIXED_VARIANT)" \
 		--baseline-prg "$(NATIVE_PRG)" \
@@ -394,7 +397,7 @@ verify-hack: build build-hack
 		--candidate-rom "$(HACK_ROM)"
 
 validate-hack: verify-hack
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_fixed_variant.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.validate_fixed_variant \
 		--manifest "$(FIXED_VARIANT_MANIFEST)" \
 		--variant "$(FIXED_VARIANT)" \
 		--fceux "$(FCEUX_EXE)" \
@@ -404,7 +407,7 @@ validate-hack: verify-hack
 		--result "$(HACK_RUNTIME_RESULT)"
 
 build-expanded: _require-assets
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_native \
 		--source "$(EXPANDED_SOURCE)" \
 		--config "$(EXPANDED_CFG)" \
 		--manifest "$(ASSET_MANIFEST)" \
@@ -415,14 +418,14 @@ build-expanded: _require-assets
 		--debug-info "$(EXPANDED_DEBUG)" \
 		--output-rom "$(EXPANDED_ROM)" \
 		--prg-only --verify
-	$(PYTHON) "$(PROJECT_DIR)scripts/expanded_rom.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.expanded_rom \
 		--manifest "$(EXPANDED_MANIFEST)" \
 		--prg "$(EXPANDED_PRG)" \
 		--chr "$(GENERATED_CHR)" \
 		--output "$(EXPANDED_ROM)"
 
 verify-expanded: build-expanded
-	$(PYTHON) "$(PROJECT_DIR)scripts/expanded_rom.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.expanded_rom \
 		--manifest "$(EXPANDED_MANIFEST)" \
 		--prg "$(EXPANDED_PRG)" \
 		--chr "$(GENERATED_CHR)" \
@@ -430,7 +433,7 @@ verify-expanded: build-expanded
 		--verify
 
 validate-expanded: verify-expanded
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_expanded_runtime.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_expanded_runtime \
 		--manifest "$(EXPANDED_MANIFEST)" \
 		--fceux "$(FCEUX_EXE)" \
 		--rom "$(EXPANDED_ROM)" \
@@ -439,14 +442,14 @@ validate-expanded: verify-expanded
 		--result "$(EXPANDED_RUNTIME_RESULT)"
 
 prepare-content-profile:
-	$(PYTHON) "$(PROJECT_DIR)scripts/content_profiles.py" check \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.content_profiles check \
 		--manifest "$(CONTENT_PROFILE_MANIFEST)" \
 		--profile "$(CONTENT_PROFILE)" \
 		$(CONTENT_STUDIO_ARG)
 	$(CONTENT_PREPARE_COMMAND)
 
 init-content: prepare-content-profile
-	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" init \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.content_studio init \
 		--formats "$(CONTENT_FORMAT_MANIFEST)" \
 		--studios "$(CONTENT_STUDIO_MANIFEST)" \
 		--profiles "$(CONTENT_PROFILE_MANIFEST)" \
@@ -459,7 +462,7 @@ init-content: prepare-content-profile
 		$(CONTENT_STUDIO_ARG)
 
 export-content: prepare-content-profile
-	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" export \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.content_studio export \
 		--formats "$(CONTENT_FORMAT_MANIFEST)" \
 		--studios "$(CONTENT_STUDIO_MANIFEST)" \
 		--profiles "$(CONTENT_PROFILE_MANIFEST)" \
@@ -472,7 +475,7 @@ export-content: prepare-content-profile
 		$(CONTENT_STUDIO_ARG)
 
 validate-content: prepare-content-profile
-	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" validate \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.content_studio validate \
 		--formats "$(CONTENT_FORMAT_MANIFEST)" \
 		--studios "$(CONTENT_STUDIO_MANIFEST)" \
 		--profiles "$(CONTENT_PROFILE_MANIFEST)" \
@@ -486,7 +489,7 @@ validate-content: prepare-content-profile
 		$(CONTENT_STUDIO_ARG)
 
 build-content: prepare-content-profile
-	$(PYTHON) "$(PROJECT_DIR)scripts/content_studio.py" build \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.content_studio build \
 		--formats "$(CONTENT_FORMAT_MANIFEST)" \
 		--studios "$(CONTENT_STUDIO_MANIFEST)" \
 		--profiles "$(CONTENT_PROFILE_MANIFEST)" \
@@ -503,11 +506,11 @@ build-content: prepare-content-profile
 		$(CONTENT_STUDIO_ARG)
 
 check-studios: init-content
-	$(PYTHON) "$(PROJECT_DIR)scripts/world_studio.py" $(STUDIO_COMMON_ARGS) --check
-	$(PYTHON) "$(PROJECT_DIR)scripts/level_studio.py" $(STUDIO_COMMON_ARGS) \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.world_studio $(STUDIO_COMMON_ARGS) --check
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.level_studio $(STUDIO_COMMON_ARGS) \
 		--content-image "$(CONTENT_ROM)" --check
-	$(PYTHON) "$(PROJECT_DIR)scripts/graphics_studio.py" $(STUDIO_COMMON_ARGS) --check
-	$(PYTHON) "$(PROJECT_DIR)scripts/sound_studio.py" $(STUDIO_COMMON_ARGS) \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.graphics_studio $(STUDIO_COMMON_ARGS) --check
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.sound_studio $(STUDIO_COMMON_ARGS) \
 		--prg "$(CONTENT_BASE_PRG)" --load-address "$(CONTENT_LOAD_ADDRESS)" --check
 
 check-content-profile:
@@ -532,7 +535,7 @@ check-content-profiles:
 	$(MAKE) check-content-profile CONTENT_PROFILE=smb2_jp_fds
 
 run-content: build-content
-	$(PYTHON) "$(PROJECT_DIR)scripts/emulator_image.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.emulator_image \
 		--profiles "$(CONTENT_PROFILE_MANIFEST)" \
 		--profile "$(CONTENT_PROFILE)" \
 		--input "$(CONTENT_ROM)" \
@@ -541,14 +544,14 @@ run-content: build-content
 
 world-studio:
 	$(MAKE) init-content STUDIO=world
-	$(PYTHON) "$(PROJECT_DIR)scripts/world_studio.py" $(STUDIO_COMMON_ARGS)
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.world_studio $(STUDIO_COMMON_ARGS)
 
 level-studio:
 	$(MAKE) init-content STUDIO=world
 	$(MAKE) init-content STUDIO=level
 	$(MAKE) init-content STUDIO=graphics
 	$(MAKE) init-content STUDIO=sound
-	$(PYTHON) "$(PROJECT_DIR)scripts/level_studio.py" $(STUDIO_COMMON_ARGS) \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.level_studio $(STUDIO_COMMON_ARGS) \
 		--content-image "$(CONTENT_ROM)" $(LEVEL_STUDIO_ARGS)
 
 smoke-level-playtest:
@@ -557,11 +560,11 @@ smoke-level-playtest:
 
 graphics-studio:
 	$(MAKE) init-content STUDIO=graphics
-	$(PYTHON) "$(PROJECT_DIR)scripts/graphics_studio.py" $(STUDIO_COMMON_ARGS)
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.graphics_studio $(STUDIO_COMMON_ARGS)
 
 sound-studio:
 	$(MAKE) init-content STUDIO=sound
-	$(PYTHON) "$(PROJECT_DIR)scripts/sound_studio.py" $(STUDIO_COMMON_ARGS) \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.sound_studio $(STUDIO_COMMON_ARGS) \
 		--prg "$(CONTENT_BASE_PRG)" --load-address "$(CONTENT_LOAD_ADDRESS)"
 
 world-editor: world-studio
@@ -570,14 +573,14 @@ graphics-editor: graphics-studio
 sound-editor: sound-studio
 
 split-revision-assets:
-	$(PYTHON) "$(PROJECT_DIR)scripts/revision_profiles.py" split \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.revision_profiles split \
 		--manifest "$(REVISION_MANIFEST)" \
 		--profile "$(PROFILE)" \
 		--reference-rom "$(REVISION_REFERENCE)" \
 		--asset-dir "$(REVISION_ASSET_DIR)"
 
 build-revision: _require-assets
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_native \
 		--source "$(REVISION_SOURCE)" \
 		--config "$(NATIVE_CFG)" \
 		--manifest "$(ASSET_MANIFEST)" \
@@ -588,7 +591,7 @@ build-revision: _require-assets
 		--debug-info "$(REVISION_DEBUG)" \
 		--output-rom "$(REVISION_ROM)" \
 		--prg-only
-	$(PYTHON) "$(PROJECT_DIR)scripts/revision_profiles.py" build \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.revision_profiles build \
 		--manifest "$(REVISION_MANIFEST)" \
 		--profile "$(PROFILE)" \
 		--asset-dir "$(REVISION_ASSET_DIR)" \
@@ -598,7 +601,7 @@ build-revision: _require-assets
 		--output "$(REVISION_ROM)"
 
 verify-revision: build-revision
-	$(PYTHON) "$(PROJECT_DIR)scripts/revision_profiles.py" verify \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.revision_profiles verify \
 		--manifest "$(REVISION_MANIFEST)" \
 		--profile "$(PROFILE)" \
 		--reference-rom "$(REVISION_REFERENCE)" \
@@ -609,7 +612,7 @@ verify-revision: build-revision
 		--output "$(REVISION_ROM)"
 
 validate-revision: verify-revision
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_revision_runtime.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_revision_runtime \
 		--manifest "$(REVISION_MANIFEST)" \
 		--profile "$(PROFILE)" \
 		--fceux "$(FCEUX_EXE)" \
@@ -629,14 +632,14 @@ validate-revisions:
 	$(MAKE) validate-revision PROFILE=pal
 
 split-platform-assets:
-	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" split \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.platform_profiles split \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile "$(PLATFORM)" \
 		--reference "$(PLATFORM_REFERENCE)" \
 		--asset-dir "$(PLATFORM_ASSET_DIR)"
 
 split-smb2-assets:
-	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" split \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.platform_profiles split \
 		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
 		--profile smb2_jp_fds \
 		--reference "$(SMB2_REFERENCE)" \
@@ -644,14 +647,14 @@ split-smb2-assets:
 		--retain-primary
 
 build-smb2-identity:
-	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" build \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.platform_profiles build \
 		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
 		--profile smb2_jp_fds \
 		--asset-dir "$(SMB2_ASSET_DIR)" \
 		--output "$(SMB2_IDENTITY_IMAGE)"
 
 verify-smb2-identity: build-smb2-identity
-	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" verify \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.platform_profiles verify \
 		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
 		--profile smb2_jp_fds \
 		--reference "$(SMB2_REFERENCE)" \
@@ -659,18 +662,18 @@ verify-smb2-identity: build-smb2-identity
 		--output "$(SMB2_IDENTITY_IMAGE)"
 
 build-smb2-source:
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_smb2_source.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_smb2_source \
 		--manifest "$(SMB2_RECONSTRUCTION_MANIFEST)" \
 		--output-dir "$(SMB2_SOURCE_BUILD_DIR)"
 
 verify-smb2-source:
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_smb2_source.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_smb2_source \
 		--manifest "$(SMB2_RECONSTRUCTION_MANIFEST)" \
 		--output-dir "$(SMB2_SOURCE_BUILD_DIR)" \
 		--verify
 
 build-smb2: build-smb2-source
-	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" build \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.platform_profiles build \
 		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
 		--profile smb2_jp_fds \
 		--asset-dir "$(SMB2_ASSET_DIR)" \
@@ -681,7 +684,7 @@ build-smb2: build-smb2-source
 		--output "$(SMB2_SOURCE_IMAGE)"
 
 verify-smb2: verify-smb2-source
-	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" verify \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.platform_profiles verify \
 		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
 		--profile smb2_jp_fds \
 		--reference "$(SMB2_REFERENCE)" \
@@ -693,7 +696,7 @@ verify-smb2: verify-smb2-source
 		--output "$(SMB2_SOURCE_IMAGE)"
 
 validate-smb2-runtime: verify-smb2
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_platform_runtime.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_platform_runtime \
 		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
 		--profile smb2_jp_fds \
 		--fceux "$(FCEUX_EXE)" \
@@ -703,7 +706,7 @@ validate-smb2-runtime: verify-smb2
 		--result "$(SMB2_RUNTIME_RESULT)"
 
 validate-smb2-overlays: verify-smb2
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_smb2_overlays.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_smb2_overlays \
 		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
 		--profile smb2_jp_fds \
 		--fceux "$(FCEUX_EXE)" \
@@ -714,7 +717,7 @@ validate-smb2-overlays: verify-smb2
 		--result-dir "$(SMB2_OVERLAY_RESULT_DIR)"
 
 validate-smb2-gameplay: verify-smb2
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_smb2_gameplay.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_smb2_gameplay \
 		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
 		--profile smb2_jp_fds \
 		--fceux "$(FCEUX_EXE)" \
@@ -724,14 +727,14 @@ validate-smb2-gameplay: verify-smb2
 		--result-dir "$(SMB2_GAMEPLAY_RESULT_DIR)"
 
 test-smb2-relocation: verify-smb2
-	$(PYTHON) "$(PROJECT_DIR)scripts/smb2_relocation_test.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.smb2_relocation_test \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(SMB2_RELOCATION_MANIFEST)" \
 		--baseline-dir "$(SMB2_SOURCE_BUILD_DIR)" \
 		--original-image "$(SMB2_REFERENCE)"
 
 validate-smb2-relocation: test-smb2-relocation
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_platform_runtime.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_platform_runtime \
 		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
 		--profile smb2_jp_fds \
 		--fceux "$(FCEUX_EXE)" \
@@ -740,7 +743,7 @@ validate-smb2-relocation: test-smb2-relocation
 		--lua "$(SMB2_RUNTIME_LUA)" \
 		--result "$(SMB2_RELOCATION_RUNTIME_RESULT)" \
 		--forbidden-manifest "$(SMB2_RELOCATION_SCENARIOS)"
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_smb2_overlays.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_smb2_overlays \
 		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
 		--profile smb2_jp_fds \
 		--fceux "$(FCEUX_EXE)" \
@@ -751,7 +754,7 @@ validate-smb2-relocation: test-smb2-relocation
 		--result-dir "$(SMB2_RELOCATION_OVERLAY_RESULT_DIR)" \
 		--forbidden-manifest "$(SMB2_RELOCATION_SCENARIOS)" \
 		--relocation-summary "$(SMB2_RELOCATION_SUMMARY)"
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_smb2_gameplay.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_smb2_gameplay \
 		--manifest "$(SMB2_PLATFORM_MANIFEST)" \
 		--profile smb2_jp_fds \
 		--fceux "$(FCEUX_EXE)" \
@@ -767,7 +770,7 @@ build-platform: build-ann-payloads
 endif
 
 build-platform:
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_native.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_native \
 		--source "$(PLATFORM_SOURCE)" \
 		--config "$(PLATFORM_CFG)" \
 		--manifest "$(ASSET_MANIFEST)" \
@@ -778,7 +781,7 @@ build-platform:
 		--debug-info "$(PLATFORM_DEBUG)" \
 		--output-rom "$(PLATFORM_OUTPUT)" \
 		--prg-only
-	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" build \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.platform_profiles build \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile "$(PLATFORM)" \
 		--asset-dir "$(PLATFORM_ASSET_DIR)" \
@@ -787,7 +790,7 @@ build-platform:
 		--output "$(PLATFORM_OUTPUT)"
 
 verify-platform: build-platform
-	$(PYTHON) "$(PROJECT_DIR)scripts/platform_profiles.py" verify \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.platform_profiles verify \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile "$(PLATFORM)" \
 		--reference "$(PLATFORM_REFERENCE)" \
@@ -797,7 +800,7 @@ verify-platform: build-platform
 		--output "$(PLATFORM_OUTPUT)"
 
 validate-platform: verify-platform
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_platform_runtime.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_platform_runtime \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile "$(PLATFORM)" \
 		--fceux "$(FCEUX_EXE)" \
@@ -812,7 +815,7 @@ verify-platforms:
 	$(MAKE) verify-platform PLATFORM=ann_fds
 
 verify-all:
-	$(PYTHON) "$(PROJECT_DIR)scripts/run_make_matrix.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.run_make_matrix \
 		--project-dir "$(PROJECT_DIR)" \
 		--make "$(MAKE)" \
 		--title "ROM verification matrix" \
@@ -825,14 +828,14 @@ verify-all:
 		--step "verify-platform PLATFORM=ann_fds"
 
 verify-ann-audio:
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_AUDIO_SOURCE)" \
 		--config "$(ANN_AUDIO_CFG)" \
 		--object "$(ANN_AUDIO_BUILD_DIR)/audio.o" \
 		--output "$(ANN_AUDIO_BUILD_DIR)/audio.bin" \
 		--labels "$(ANN_AUDIO_BUILD_DIR)/audio.lbl" \
 		--map "$(ANN_AUDIO_BUILD_DIR)/audio.map"
-	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.verify_platform_range \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
 		--reference "$(ANN_REFERENCE)" \
@@ -842,14 +845,14 @@ verify-ann-audio:
 		--end 0xDFFA
 
 verify-ann-tail-core:
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_TAIL_CORE_SOURCE)" \
 		--config "$(ANN_TAIL_CORE_CFG)" \
 		--object "$(ANN_TAIL_BUILD_DIR)/core.o" \
 		--output "$(ANN_TAIL_BUILD_DIR)/core.bin" \
 		--labels "$(ANN_TAIL_BUILD_DIR)/core.lbl" \
 		--map "$(ANN_TAIL_BUILD_DIR)/core.map"
-	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.verify_platform_range \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
 		--reference "$(ANN_REFERENCE)" \
@@ -861,7 +864,7 @@ verify-ann-tail-core:
 build-ann-payloads: build-ann-supplemental-courses build-ann-ending build-ann-hard-courses
 
 build-ann-supplemental-courses:
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_SUPPLEMENTAL_COURSES_SOURCE)" \
 		--config "$(ANN_SUPPLEMENTAL_COURSES_CFG)" \
 		--object "$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.o" \
@@ -870,7 +873,7 @@ build-ann-supplemental-courses:
 		--map "$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.map"
 
 verify-ann-supplemental-courses: build-ann-supplemental-courses
-	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.verify_platform_range \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
 		--reference "$(ANN_REFERENCE)" \
@@ -881,7 +884,7 @@ verify-ann-supplemental-courses: build-ann-supplemental-courses
 		--end 0xD270
 
 build-ann-ending:
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_ENDING_SOURCE)" \
 		--config "$(ANN_ENDING_CFG)" \
 		--object "$(ANN_ENDING_BUILD_DIR)/payload.o" \
@@ -890,7 +893,7 @@ build-ann-ending:
 		--map "$(ANN_ENDING_BUILD_DIR)/payload.map"
 
 verify-ann-ending: build-ann-ending
-	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.verify_platform_range \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
 		--reference "$(ANN_REFERENCE)" \
@@ -901,7 +904,7 @@ verify-ann-ending: build-ann-ending
 		--end 0xD2E2
 
 build-ann-hard-courses:
-	$(PYTHON) "$(PROJECT_DIR)scripts/build_asm_range.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_HARD_COURSES_SOURCE)" \
 		--config "$(ANN_HARD_COURSES_CFG)" \
 		--object "$(ANN_HARD_COURSES_BUILD_DIR)/payload.o" \
@@ -910,7 +913,7 @@ build-ann-hard-courses:
 		--map "$(ANN_HARD_COURSES_BUILD_DIR)/payload.map"
 
 verify-ann-hard-courses: build-ann-hard-courses
-	$(PYTHON) "$(PROJECT_DIR)scripts/verify_platform_range.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.verify_platform_range \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
 		--reference "$(ANN_REFERENCE)" \
@@ -926,7 +929,7 @@ validate-platforms:
 	$(MAKE) validate-platform PLATFORM=ann_fds
 
 symbols: build
-	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.debug_symbols \
 		--debug "$(NATIVE_DEBUG)" \
 		--map "$(NATIVE_MAP)" \
 		--labels "$(NATIVE_LABELS)" \
@@ -937,7 +940,7 @@ symbols: build
 		--summary "$(DEBUG_SUMMARY)"
 
 validate-symbols: symbols
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_debug_runtime.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_debug_runtime \
 		--fceux "$(FCEUX_EXE)" \
 		--rom "$(NATIVE_ROM)" \
 		--summary "$(DEBUG_SUMMARY)" \
@@ -945,7 +948,7 @@ validate-symbols: symbols
 		--result "$(DEBUG_RUNTIME_RESULT)"
 
 trace-runtime: symbols
-	$(PYTHON) "$(PROJECT_DIR)scripts/run_runtime_scenarios.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.run_runtime_scenarios \
 		--fceux "$(FCEUX_EXE)" \
 		--rom "$(NATIVE_ROM)" \
 		--movie "$(RUNTIME_MOVIE)" \
@@ -955,14 +958,14 @@ trace-runtime: symbols
 	$(MAKE) validate-runtime
 
 validate-runtime:
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_runtime_scenarios.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_runtime_scenarios \
 		--scenarios "$(RUNTIME_SCENARIOS)" \
 		--trace-dir "$(RUNTIME_TRACE_DIR)"
 
 trace: validate-symbols trace-runtime
 
 roundtrip-formats: build-prg
-	$(PYTHON) "$(PROJECT_DIR)scripts/data_formats.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.data_formats \
 		--manifest "$(DATA_FORMAT_MANIFEST)" \
 		--labels "$(NATIVE_LABELS)" \
 		--prg "$(NATIVE_PRG)" \
@@ -970,7 +973,7 @@ roundtrip-formats: build-prg
 		--summary "$(DATA_FORMAT_SUMMARY)"
 
 release-audit:
-	$(PYTHON) "$(PROJECT_DIR)scripts/release_audit.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.release_audit \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(RELEASE_MANIFEST)"
 
@@ -983,12 +986,12 @@ release-check:
 	$(MAKE) release-audit
 
 source-2-audit:
-	$(PYTHON) "$(PROJECT_DIR)scripts/source_2_audit.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.source_2_audit \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(SOURCE_2_MANIFEST)"
 
 source-2-release-audit:
-	$(PYTHON) "$(PROJECT_DIR)scripts/source_2_audit.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.source_2_audit \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(SOURCE_2_MANIFEST)" \
 		--require-ready
@@ -1003,12 +1006,12 @@ source-2-check:
 	$(MAKE) source-2-release-audit
 
 source-3-audit:
-	$(PYTHON) "$(PROJECT_DIR)scripts/source_3_audit.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.source_3_audit \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(SOURCE_3_MANIFEST)"
 
 source-3-release-audit:
-	$(PYTHON) "$(PROJECT_DIR)scripts/source_3_audit.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.source_3_audit \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(SOURCE_3_MANIFEST)" \
 		--require-ready
@@ -1027,30 +1030,30 @@ source-3-check:
 	$(MAKE) source-3-release-audit
 
 list-content-profiles:
-	$(PYTHON) "$(PROJECT_DIR)scripts/content_profiles.py" list \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.content_profiles list \
 		--manifest "$(CONTENT_PROFILE_MANIFEST)"
 
 content-profile-audit:
-	$(PYTHON) "$(PROJECT_DIR)scripts/content_profiles.py" audit \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" authoring.content_profiles audit \
 		--manifest "$(CONTENT_PROFILE_MANIFEST)"
 
-semantic-evidence: audit-enemy-streams audit-unreachable-code trace-semantic-runtime
+semantic-evidence: audit-enemy-streams audit-unreachable-code trace-semantic-runtime trace-scoring-runtime
 
 later-engine-feasibility:
-	$(PYTHON) "$(PROJECT_DIR)scripts/later_engine_feasibility.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" workflow.later_engine_feasibility \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(LATER_ENGINE_MANIFEST)" \
 		--output "$(LATER_ENGINE_REPORT)"
 
 later-engine-source-overlap:
-	$(PYTHON) "$(PROJECT_DIR)scripts/compare_assembly_sources.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" workflow.compare_assembly_sources \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(LATER_ENGINE_OVERLAP_MANIFEST)" \
 		--assembler "$(PROJECT_DIR)bin/ca65.exe" \
 		--output "$(LATER_ENGINE_OVERLAP_REPORT)"
 
 trace-semantic-runtime: symbols
-	$(PYTHON) "$(PROJECT_DIR)scripts/run_runtime_scenarios.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.run_runtime_scenarios \
 		--fceux "$(FCEUX_EXE)" \
 		--rom "$(NATIVE_ROM)" \
 		--movie "$(RUNTIME_MOVIE)" \
@@ -1060,12 +1063,29 @@ trace-semantic-runtime: symbols
 	$(MAKE) validate-semantic-runtime
 
 validate-semantic-runtime:
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_runtime_scenarios.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_runtime_scenarios \
 		--scenarios "$(SEMANTIC_RUNTIME_SCENARIOS)" \
 		--trace-dir "$(SEMANTIC_RUNTIME_TRACE_DIR)"
 
+trace-scoring-runtime: symbols
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.run_runtime_scenarios \
+		--fceux "$(FCEUX_EXE)" \
+		--rom "$(NATIVE_ROM)" \
+		--movie "$(RUNTIME_MOVIE)" \
+		--lua "$(SCORING_RUNTIME_TRACE_LUA)" \
+		--scenarios "$(SCORING_RUNTIME_SCENARIOS)" \
+		--output-dir "$(SCORING_RUNTIME_TRACE_DIR)"
+	$(MAKE) validate-scoring-runtime
+
+validate-scoring-runtime:
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_scoring_contract \
+		--manifest "$(SCORING_RUNTIME_SCENARIOS)"
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_runtime_scenarios \
+		--scenarios "$(SCORING_RUNTIME_SCENARIOS)" \
+		--trace-dir "$(SCORING_RUNTIME_TRACE_DIR)"
+
 audit-unreachable-code: verify
-	$(PYTHON) "$(PROJECT_DIR)scripts/audit_unreachable_code.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.audit_unreachable_code \
 		--manifest "$(UNREACHABLE_CODE_EVIDENCE_MANIFEST)" \
 		--debug "$(NATIVE_DEBUG)" \
 		--prg "$(NATIVE_PRG)" \
@@ -1078,14 +1098,14 @@ audit-enemy-streams:
 	$(MAKE) verify-platform PLATFORM=vs_smb
 	$(MAKE) verify-platform PLATFORM=fds_smb
 	$(MAKE) verify-platform PLATFORM=ann_fds
-	$(PYTHON) "$(PROJECT_DIR)scripts/audit_enemy_streams.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.audit_enemy_streams \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(ENEMY_STREAM_EVIDENCE_MANIFEST)" \
 		--output "$(ENEMY_STREAM_EVIDENCE_REPORT)"
 
 test-relocation:
 	$(MAKE) $(RELOCATION_VERIFY_TARGET)
-	$(PYTHON) "$(PROJECT_DIR)scripts/relocation_test.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.relocation_test \
 		--project-root "$(PROJECT_DIR)" \
 		--manifest "$(RELOCATION_MANIFEST)" \
 		--base-prg "$(RELOCATION_BASE_PRG)" \
@@ -1107,7 +1127,7 @@ test-ann-main-relocation:
 	$(MAKE) test-relocation RELOCATION_PROFILE=ann_fds
 
 validate-relocation: test-relocation
-	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.debug_symbols \
 		--debug "$(RELOCATION_DEBUG)" \
 		--map "$(RELOCATION_MAP)" \
 		--labels "$(RELOCATION_LABELS)" \
@@ -1116,25 +1136,25 @@ validate-relocation: test-relocation
 		--breakpoints "$(DEBUG_BREAKPOINTS)" \
 		--watches "$(DEBUG_WATCHES)" \
 		--summary "$(RELOCATION_DEBUG_SUMMARY)"
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_debug_runtime.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_debug_runtime \
 		--fceux "$(FCEUX_EXE)" \
 		--rom "$(RELOCATION_ROM)" \
 		--summary "$(RELOCATION_DEBUG_SUMMARY)" \
 		--lua "$(DEBUG_RUNTIME_LUA)" \
 		--result "$(RELOCATION_DEBUG_RESULT)"
-	$(PYTHON) "$(PROJECT_DIR)scripts/run_runtime_scenarios.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.run_runtime_scenarios \
 		--fceux "$(FCEUX_EXE)" \
 		--rom "$(RELOCATION_ROM)" \
 		--movie "$(RUNTIME_MOVIE)" \
 		--lua "$(RUNTIME_TRACE_LUA)" \
 		--scenarios "$(RELOCATION_SCENARIOS)" \
 		--output-dir "$(RELOCATION_TRACE_DIR)"
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_runtime_scenarios.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_runtime_scenarios \
 		--scenarios "$(RELOCATION_SCENARIOS)" \
 		--trace-dir "$(RELOCATION_TRACE_DIR)"
 
 validate-revision-relocation: test-relocation
-	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.debug_symbols \
 		--debug "$(RELOCATION_DEBUG)" \
 		--map "$(RELOCATION_MAP)" \
 		--labels "$(RELOCATION_LABELS)" \
@@ -1143,14 +1163,14 @@ validate-revision-relocation: test-relocation
 		--breakpoints "$(DEBUG_BREAKPOINTS)" \
 		--watches "$(DEBUG_WATCHES)" \
 		--summary "$(RELOCATION_DEBUG_SUMMARY)"
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_debug_runtime.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_debug_runtime \
 		--fceux "$(FCEUX_EXE)" \
 		--rom "$(RELOCATION_ROM)" \
 		--summary "$(RELOCATION_DEBUG_SUMMARY)" \
 		--lua "$(DEBUG_RUNTIME_LUA)" \
 		--result "$(RELOCATION_DEBUG_RESULT)" \
 		$(RELOCATION_PAL_ARG)
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_revision_runtime.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_revision_runtime \
 		--manifest "$(REVISION_MANIFEST)" \
 		--profile "$(RELOCATION_PROFILE)" \
 		--fceux "$(FCEUX_EXE)" \
@@ -1161,7 +1181,7 @@ validate-revision-relocation: test-relocation
 		--forbidden-manifest "$(RELOCATION_SCENARIOS)"
 
 validate-platform-relocation: test-relocation
-	$(PYTHON) "$(PROJECT_DIR)scripts/debug_symbols.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.debug_symbols \
 		--debug "$(RELOCATION_DEBUG)" \
 		--map "$(RELOCATION_MAP)" \
 		--labels "$(RELOCATION_LABELS)" \
@@ -1171,7 +1191,7 @@ validate-platform-relocation: test-relocation
 		--watches "$(DEBUG_WATCHES)" \
 		--summary "$(RELOCATION_DEBUG_SUMMARY)" \
 		$(RELOCATION_DEBUG_CONTAINER_ARG)
-	$(PYTHON) "$(PROJECT_DIR)scripts/validate_platform_runtime.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.validate_platform_runtime \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile "$(RELOCATION_PROFILE)" \
 		--fceux "$(FCEUX_EXE)" \
@@ -1192,13 +1212,13 @@ validate-relocation-platforms:
 	$(MAKE) validate-platform-relocation RELOCATION_PROFILE=ann_fds
 
 split:
-	$(PYTHON) "$(PROJECT_DIR)scripts/split_assets.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.split_assets \
 		--rom "$(ORIGINAL_ROM)" \
 		--manifest "$(ASSET_MANIFEST)" \
 		--output-dir "$(GENERATED_ASSET_DIR)"
 
 split-all:
-	$(PYTHON) "$(PROJECT_DIR)scripts/run_make_matrix.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.run_make_matrix \
 		--project-dir "$(PROJECT_DIR)" \
 		--make "$(MAKE)" \
 		--title "ROM asset split matrix" \
@@ -1210,30 +1230,31 @@ split-all:
 		--step "split-platform-assets PLATFORM=ann_fds"
 
 check-assets:
-	$(PYTHON) "$(PROJECT_DIR)scripts/check_assets.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.check_assets \
 		--manifest "$(ASSET_MANIFEST)" \
 		--asset-dir "$(GENERATED_ASSET_DIR)"
 
 lint:
-	$(PYTHON) "$(PROJECT_DIR)scripts/asm_style.py" "$(PROJECT_DIR)src"
-	$(PYTHON) "$(PROJECT_DIR)scripts/lint_source.py" "$(PROJECT_DIR)"
-	$(PYTHON) "$(PROJECT_DIR)scripts/lint_project.py" "$(PROJECT_DIR)"
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.asm_style "$(PROJECT_DIR)src"
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.lint_source "$(PROJECT_DIR)"
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.lint_project "$(PROJECT_DIR)"
 
 format:
-	$(PYTHON) "$(PROJECT_DIR)scripts/asm_style.py" --fix "$(PROJECT_DIR)src"
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" validation.asm_style --fix "$(PROJECT_DIR)src"
+	$(MAKE) lint
 
 test:
 	$(PYTHON) -m unittest discover -s "$(PROJECT_DIR)tests" -p "test_*.py"
 
 trace-player:
-	$(PYTHON) "$(PROJECT_DIR)scripts/player_physics.py"
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" runtime.player_physics
 
 _require-assets:
-	$(PYTHON) "$(PROJECT_DIR)scripts/check_assets.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.check_assets \
 		--manifest "$(ASSET_MANIFEST)" \
 		--asset-dir "$(GENERATED_ASSET_DIR)"
 
 clean:
-	$(PYTHON) "$(PROJECT_DIR)scripts/clean_artifacts.py" \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.clean_artifacts \
 		--project-root "$(PROJECT_DIR)" \
 		--path "$(NATIVE_BUILD_DIR)"

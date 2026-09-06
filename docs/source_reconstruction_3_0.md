@@ -59,25 +59,28 @@ expanded-layout ADR must be written instead.
    without hiding original engine differences.
 6. **Semantic and runtime evidence.** Resolve high-value unknowns and add
    behavior scenarios for claims that startup-only gates cannot establish.
-7. **Profile-aware authoring.** Let the four Studios select compatible content
+7. **Scoring runtime evidence.** Prove coin, extra-life, decimal-carry, stomp,
+   stomp-chain, flagpole, HUD-packet, and top-score transactions as one
+   machine-readable contract.
+8. **Profile-aware authoring.** Let the four Studios select compatible content
    profiles while keeping codecs, capacities, and build outputs manifest-owned.
-8. **Later-engine feasibility.** Compare the ANN-derived engine with Japanese
+9. **Later-engine feasibility.** Compare the ANN-derived engine with Japanese
    SMB2 / The Lost Levels. Produce an evidence-backed decision; do not promise
    a shared-source profile when a separate reconstruction would be clearer.
-9. **SMB2 sibling architecture.** Keep the later engine independent from the
+10. **SMB2 sibling architecture.** Keep the later engine independent from the
    released cartridge-era SMB1 source, prohibit SMB2 conditionals there, and
    define four independent payload boundaries.
-10. **SMB2 identity build.** Split and reproduce the complete FDS image from
+11. **SMB2 identity build.** Split and reproduce the complete FDS image from
     independently verified program and retained private payloads.
-11. **SMB2 source reconstruction.** Normalize and modularize all four executable
+12. **SMB2 source reconstruction.** Normalize and modularize all four executable
     payloads without hiding code in binary assets. This milestone is complete:
     all four source payloads and the complete FDS image are byte-identical.
-12. **SMB2 runtime and relocation.** Prove startup, overlay loading, gameplay,
+13. **SMB2 runtime and relocation.** Prove startup, overlay loading, gameplay,
     and shifted-code behavior independently from ANN. Complete.
-13. **SMB2 authoring.** Extend only Studios whose formats and capacities have
+14. **SMB2 authoring.** Extend only Studios whose formats and capacities have
     profile-specific evidence across the relevant overlays. Complete: all four
     Studios cover the main program and the relevant fixed-address overlays.
-14. **Source Reconstruction 3.0 release.** Promote the release only after every
+15. **Source Reconstruction 3.0 release.** Promote the release only after every
    accepted profile and tool is covered by aggregate static, byte-identity,
    round-trip, and runtime gates.
 
@@ -97,7 +100,8 @@ The tag-ready manifest is `config/source_reconstruction_3_0.json`.
 `make source-3-check` is the aggregate acceptance gate. It retains
 the complete 2.0 gate, then runs every revision and platform relocation,
 semantic evidence, all seven zero-edit Studio round trips, later-engine
-evidence, baseline and relocated SMB2 runtime paths, and the tag-ready audit.
+evidence, the scoring transaction layer, baseline and relocated SMB2 runtime
+paths, and the tag-ready audit.
 Run `make test-relocation` to generate, build, and statically validate the
 canonical candidate under `build/relocation/`. `make validate-relocation` also
 generates candidate debugger symbols and runs all deterministic scenarios with
@@ -150,6 +154,13 @@ focused 3.0 emulator scenarios. The first two resolved claims prove that no
 accepted stream selects the residual `$2E` power-up comparison and that the
 four-byte packet embedded in the world/lives display clears the preceding
 seven-tile TIME UP message.
+
+The independent `make trace-scoring-runtime` gate covers six exact scoring
+transactions. It relates player-score digits to the coin and life counters,
+the status-bar VRAM packet, and the next-frame top-score copy. Boundary patches
+for the 100th coin, decimal carry, and shell-chain state are declared in the
+scoring manifest and recorded in every trace; the other scenarios use only the
+pinned movie input. See `docs/scoring_runtime.md`.
 
 The same aggregate gate proves selected residual code unreachable without
 equating limited runtime coverage with absence. `make audit-unreachable-code`

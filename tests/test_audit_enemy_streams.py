@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from audit_enemy_streams import audit_artifact, read_stream  # noqa: E402
+from validation.audit_enemy_streams import audit_artifact, read_stream  # noqa: E402
 
 
 class EnemyStreamAuditTests(unittest.TestCase):

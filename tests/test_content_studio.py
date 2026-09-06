@@ -11,7 +11,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from content_studio import (
+from authoring.content_studio import (
     artifact_range,
     atomic_write_json,
     compose_profile_image,
@@ -31,7 +31,7 @@ from content_studio import (
     write_workspace_documents,
     encode_workspace_document,
 )
-from platform_profiles import FdsFileRecord
+from build.platform_profiles import FdsFileRecord
 
 
 class ContentStudioTests(unittest.TestCase):

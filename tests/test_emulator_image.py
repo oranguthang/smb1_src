@@ -9,8 +9,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from emulator_image import prepare_emulator_image  # noqa: E402
-from studio_common import profile_rgb  # noqa: E402
+from authoring.emulator_image import prepare_emulator_image  # noqa: E402
+from authoring.studio_common import profile_rgb  # noqa: E402
 
 
 class EmulatorImageTests(unittest.TestCase):

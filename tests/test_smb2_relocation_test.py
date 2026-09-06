@@ -9,7 +9,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-from smb2_relocation_test import (  # noqa: E402
+from validation.smb2_relocation_test import (  # noqa: E402
     expected_main_shift,
     prepare_generated_source,
 )

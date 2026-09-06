@@ -1,5 +1,8 @@
 # Runtime Evidence Scenarios
 
+The focused score, coin, extra-life, HUD, and top-score transaction layer is
+documented separately in [`scoring_runtime.md`](scoring_runtime.md).
+
 The runtime workflow replays a deterministic power-on FCEUX movie against the
 byte-identical preservation ROM and records compact semantic events from named
 source routines. Run the focused scenarios and their validator with:

@@ -8,7 +8,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
-import player_physics  # noqa: E402
+from runtime import player_physics  # noqa: E402
 
 
 PHYSICS_SOURCE = PROJECT_ROOT / "src" / "game" / "player" / "physics.asm"
