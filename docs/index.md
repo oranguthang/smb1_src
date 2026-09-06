@@ -24,6 +24,7 @@ contracts.
 - [`6502_reference.md`](6502_reference.md) — local 6502 instruction reference.
 - [`unknowns.md`](unknowns.md) — unresolved and closed evidence records.
 - [`provenance/README.md`](provenance/README.md) — provenance manifests and label history.
+- [`licensing.md`](licensing.md) — licensing and distribution status for source, tools, and private inputs.
 
 ## Builds, Profiles, and Debugging
 

@@ -7,6 +7,7 @@ import argparse
 import json
 import re
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -31,6 +32,28 @@ EXPECTED_MILESTONES = [
     "source_reconstruction_3_0",
 ]
 
+EXPECTED_REQUIREMENTS = {
+    "canonical_identity",
+    "accepted_profile_identity",
+    "runtime_coverage",
+    "relocation_architecture",
+    "semantic_runtime_evidence",
+    "profile_aware_authoring",
+    "toolchain_reproducibility",
+    "licensing_and_provenance",
+    "aggregate_release_gate",
+}
+
+EXPECTED_PROFILES = [
+    "ju",
+    "pc10",
+    "pal",
+    "vs_smb",
+    "fds_smb",
+    "ann_fds",
+    "smb2_jp_fds",
+]
+
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -46,6 +69,309 @@ def git_output(project_root: Path, *arguments: str) -> str:
         encoding="utf-8",
     )
     return result.stdout.strip()
+
+
+def make_target_name(command: str) -> str:
+    parts = command.split()
+    if parts and parts[0] == "make":
+        parts = parts[1:]
+    return parts[0] if parts else ""
+
+
+def make_targets(makefile: str) -> set[str]:
+    return set(re.findall(r"^([A-Za-z0-9_.-]+)\s*:", makefile, re.MULTILINE))
+
+
+def validate_contract_metadata(
+    project_root: Path,
+    release: dict[str, Any],
+    makefile: str,
+) -> list[str]:
+    errors: list[str] = []
+    if release.get("contract") != {
+        "schema": "openkaryon.source_reconstruction_release_contract",
+        "version": 3,
+        "release_line": "3.0",
+    }:
+        errors.append("Source 3.0 common release contract reference differs")
+    if release.get("release") != "Source Reconstruction 3.0":
+        errors.append("Source 3.0 release name differs")
+    if release.get("release_kind") != "optional_advanced_generation":
+        errors.append("Source 3.0 release kind differs")
+
+    included = release.get("included_scope", [])
+    if len(included) != len(set(included)) or not included:
+        errors.append("Source 3.0 included scope is empty or duplicated")
+    excluded = release.get("excluded_scope", [])
+    excluded_ids = [item.get("id") for item in excluded]
+    if len(excluded_ids) != len(set(excluded_ids)) or any(
+        not item.get("reason") or item.get("status") not in {"unsupported", "not_applicable"}
+        for item in excluded
+    ):
+        errors.append("Source 3.0 excluded scope lacks unique IDs, status, or reasons")
+    delta = release.get("delta", [])
+    delta_ids = [item.get("id") for item in delta]
+    if len(delta_ids) != len(set(delta_ids)) or any(
+        not item.get("summary") or not item.get("evidence") for item in delta
+    ):
+        errors.append("Source 3.0 delta lacks unique IDs, summaries, or evidence")
+    for item in delta:
+        for relative in item.get("evidence", []):
+            if not (project_root / relative).exists():
+                errors.append(f"Source 3.0 delta evidence is missing: {relative}")
+
+    requirements = release.get("requirements", {})
+    if set(requirements) != EXPECTED_REQUIREMENTS:
+        errors.append("Source 3.0 requirement set differs")
+    targets = make_targets(makefile)
+    for identifier, requirement in requirements.items():
+        if requirement.get("status") != "satisfied":
+            errors.append(f"Source 3.0 requirement is not satisfied: {identifier}")
+        evidence = requirement.get("evidence", {})
+        if not evidence:
+            errors.append(f"Source 3.0 requirement lacks evidence: {identifier}")
+        for command in evidence.get("targets", []):
+            target = make_target_name(command)
+            if target not in targets:
+                errors.append(f"Source 3.0 evidence target is missing: {target}")
+        for field in ("manifests", "documents"):
+            for relative in evidence.get(field, []):
+                if not (project_root / relative).is_file():
+                    errors.append(f"Source 3.0 evidence file is missing: {relative}")
+
+    profile_sources: dict[str, tuple[str, int, str]] = {}
+    for relative in (
+        "config/revision_profiles.json",
+        "config/platform_profiles.json",
+        "config/smb2_platform_profile.json",
+    ):
+        document = load_json(project_root / relative)
+        entries = document.get("supported", document.get("profiles", []))
+        for profile in entries:
+            size = profile.get("rom_size", profile.get("disk_size"))
+            digest = profile.get("rom_sha1", profile.get("disk_sha1"))
+            profile_sources[profile["id"]] = (relative, size, digest)
+
+    profiles = release.get("profiles", [])
+    profile_ids = [item.get("id") for item in profiles]
+    if profile_ids != EXPECTED_PROFILES:
+        errors.append("Source 3.0 accepted profile order or identity differs")
+    for profile in profiles:
+        identifier = profile.get("id")
+        expected = profile_sources.get(identifier)
+        actual = (
+            profile.get("identity_manifest"),
+            profile.get("size"),
+            profile.get("sha1"),
+        )
+        if actual != expected:
+            errors.append(f"Source 3.0 artifact identity differs: {identifier}")
+        if make_target_name(profile.get("verify_target", "")) not in targets:
+            errors.append(f"Source 3.0 profile verify target is missing: {identifier}")
+
+    coverage = release.get("runtime_coverage", [])
+    coverage_ids = [item.get("profile") for item in coverage]
+    if coverage_ids != EXPECTED_PROFILES:
+        errors.append("Source 3.0 runtime coverage profile set differs")
+    for item in coverage:
+        identifier = item.get("profile")
+        kind = item.get("kind")
+        if kind == "direct":
+            if not item.get("targets"):
+                errors.append(f"Source 3.0 direct runtime coverage is empty: {identifier}")
+        elif kind == "runtime_equivalent_to":
+            if item.get("profile") == item.get("equivalent_to") or item.get("equivalent_to") not in coverage_ids:
+                errors.append(f"Source 3.0 runtime equivalence is invalid: {identifier}")
+        else:
+            errors.append(f"Source 3.0 runtime coverage kind is invalid: {identifier}")
+        for command in item.get("targets", []):
+            if make_target_name(command) not in targets:
+                errors.append(f"Source 3.0 runtime target is missing: {command}")
+
+    artifacts = release.get("artifacts", {})
+    if artifacts.get("accepted_profiles") != EXPECTED_PROFILES:
+        errors.append("Source 3.0 artifact profile set differs")
+    if artifacts.get("generated_root") != "build" or artifacts.get("committed") is not False:
+        errors.append("Source 3.0 generated artifact policy differs")
+
+    toolchain = release.get("toolchain", {})
+    toolchain_path = project_root / toolchain.get("manifest", "")
+    if not toolchain_path.is_file():
+        errors.append("Source 3.0 toolchain manifest is missing")
+    else:
+        document = load_json(toolchain_path)
+        if document.get("schema_version") != 1 or document.get("release") != release.get("release"):
+            errors.append("Source 3.0 toolchain contract differs")
+    if toolchain.get("verification_target") not in targets:
+        errors.append("Source 3.0 toolchain verification target is missing")
+
+    gates = release.get("aggregate_gates", {})
+    if gates != {
+        "release": "source-3-check",
+        "pre_tag": "source-3-pre-tag",
+        "post_tag": "source-3-post-tag",
+    }:
+        errors.append("Source 3.0 aggregate gate map differs")
+    if any(target not in targets for target in gates.values()):
+        errors.append("Source 3.0 aggregate gate target is missing")
+    deviations = release.get("layout_deviations", [])
+    if [item.get("id") for item in deviations] != ["make_profile_routing"] or any(
+        item.get("status") != "accepted"
+        or not item.get("reason")
+        or not item.get("compensating_control")
+        for item in deviations
+    ):
+        errors.append("Source 3.0 project deviation record differs")
+
+    licensing = release.get("licensing", {})
+    if licensing.get("game_source") != "license_not_granted" or licensing.get("private_inputs_committed") is not False:
+        errors.append("Source 3.0 licensing boundary differs")
+    for relative in (
+        licensing.get("status_document", ""),
+        *release.get("provenance", {}).values(),
+    ):
+        if not (project_root / relative).is_file():
+            errors.append(f"Source 3.0 licensing or provenance file is missing: {relative}")
+    return errors
+
+
+def release_commits(project_root: Path, predecessor: str) -> list[dict[str, str]]:
+    result = subprocess.run(
+        [
+            "git",
+            "log",
+            "--reverse",
+            "--format=%H%x1f%aI%x1f%cI%x1f%B%x1e",
+            f"{predecessor}..HEAD",
+        ],
+        cwd=project_root,
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    commits = []
+    for record in result.stdout.split("\x1e"):
+        record = record.strip()
+        if not record:
+            continue
+        commit, author_date, commit_date, message = record.split("\x1f", 3)
+        commits.append({
+            "commit": commit,
+            "author_date": author_date,
+            "commit_date": commit_date,
+            "message": message.strip(),
+        })
+    return commits
+
+
+def validate_release_history(project_root: Path, predecessor: str) -> list[str]:
+    errors: list[str] = []
+    previous_author: datetime | None = None
+    previous_commit: datetime | None = None
+    commits = release_commits(project_root, predecessor)
+    for item in commits:
+        message = item["message"]
+        parts = re.split(r"\n\s*\n", message)
+        subject = parts[0]
+        body = [part for part in parts[1:] if not part.startswith("Co-Authored-By:")]
+        short = item["commit"][:12]
+        if re.search(r"[А-Яа-яЁё]", message):
+            errors.append(f"release commit message is not English: {short}")
+        if len(subject) > 72 or subject.endswith("."):
+            errors.append(f"release commit subject is not concise: {short}")
+        if len(body) not in {2, 3}:
+            errors.append(f"release commit body must contain two or three paragraphs: {short}")
+        if "Co-Authored-By: Codex <noreply@openai.com>" not in parts:
+            errors.append(f"release commit lacks the Codex co-author trailer: {short}")
+        author_date = datetime.fromisoformat(item["author_date"])
+        commit_date = datetime.fromisoformat(item["commit_date"])
+        if previous_author is not None and author_date <= previous_author:
+            errors.append(f"release AuthorDate order is not strictly increasing: {short}")
+        if previous_commit is not None and commit_date <= previous_commit:
+            errors.append(f"release CommitDate order is not strictly increasing: {short}")
+        previous_author = author_date
+        previous_commit = commit_date
+    if not commits:
+        errors.append("Source 3.0 release history is empty")
+    return errors
+
+
+def validate_tag_contract(
+    project_root: Path,
+    release: dict[str, Any],
+    phase: str,
+    check_remote: bool,
+) -> list[str]:
+    errors: list[str] = []
+    tag = release.get("tag", "")
+    policy = release.get("tag_policy", {})
+    try:
+        tag_object = git_output(project_root, "rev-parse", f"refs/tags/{tag}")
+        tag_type = git_output(project_root, "cat-file", "-t", f"refs/tags/{tag}")
+        peeled = git_output(project_root, "rev-list", "-n", "1", tag)
+    except subprocess.CalledProcessError:
+        tag_object = tag_type = peeled = ""
+
+    if phase == "pre":
+        if git_output(project_root, "status", "--porcelain", "--untracked-files=all"):
+            errors.append("pre-tag audit requires a clean Git tree")
+        branch = git_output(project_root, "branch", "--show-current")
+        if not branch.startswith("rewrite/"):
+            errors.append("pre-tag rewrite audit must run from a rewrite/* branch")
+        if git_output(project_root, "log", "-1", "--format=%s") != "Complete Source Reconstruction 3.0":
+            errors.append("pre-tag HEAD is not the Source Reconstruction 3.0 release commit")
+        errors.extend(validate_release_history(project_root, release["predecessor"]["commit"]))
+        if policy.get("mode") != "unpublished_owner_rewrite":
+            if tag_object:
+                errors.append(f"future release tag already exists locally: {tag}")
+        else:
+            if tag_type != "tag":
+                errors.append("preserved Source 3.0 tag is not annotated")
+            if tag_object != policy.get("existing_tag_object") or peeled != policy.get("preserved_old_target"):
+                errors.append("preserved Source 3.0 tag differs from the rewrite policy")
+            protected = git_output(project_root, "rev-parse", policy.get("protected_ref", ""))
+            if protected != policy.get("preserved_old_target"):
+                errors.append("protected main ref no longer preserves the old Source 3.0 target")
+    elif phase == "post":
+        if git_output(project_root, "status", "--porcelain", "--untracked-files=all"):
+            errors.append("post-tag audit requires a clean Git tree")
+        if tag_type != "tag":
+            errors.append("Source 3.0 release tag is missing or is not annotated")
+        head = git_output(project_root, "rev-parse", "HEAD")
+        if peeled != head:
+            errors.append("Source 3.0 tag does not point to HEAD")
+        tag_message = git_output(project_root, "for-each-ref", "--format=%(contents)", f"refs/tags/{tag}")
+        if release.get("release", "") not in tag_message:
+            errors.append("Source 3.0 annotated tag lacks a release summary")
+    else:
+        errors.append(f"unsupported tag audit phase: {phase}")
+
+    if check_remote:
+        remote = policy.get("remote", "origin")
+        result = subprocess.run(
+            ["git", "ls-remote", "--tags", remote, f"refs/tags/{tag}", f"refs/tags/{tag}^{{}}"],
+            cwd=project_root,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+        if result.returncode != 0:
+            errors.append(f"cannot inspect release tag on remote {remote}")
+        else:
+            refs = dict(
+                line.split("\t", 1)[::-1]
+                for line in result.stdout.splitlines()
+                if "\t" in line
+            )
+            remote_object = refs.get(f"refs/tags/{tag}", "")
+            remote_peeled = refs.get(f"refs/tags/{tag}^{{}}", "")
+            expected_object = tag_object
+            expected_peeled = peeled
+            if remote_object != expected_object or remote_peeled != expected_peeled:
+                errors.append(f"remote release tag differs from local annotated tag: {remote}")
+    return errors
 
 
 def validate_milestones(
@@ -358,8 +684,8 @@ def validate_source_3(
     release = load_json(manifest_path)
     errors: list[str] = []
     status = release.get("status")
-    if release.get("schema_version") != 1:
-        errors.append("Source Reconstruction 3.0 manifest is not schema 1")
+    if release.get("schema_version") != 2:
+        errors.append("Source Reconstruction 3.0 manifest is not schema 2")
     if status not in {"development", "tag-ready"}:
         errors.append("Source Reconstruction 3.0 status is invalid")
         return errors
@@ -393,6 +719,8 @@ def validate_source_3(
         if ancestor.returncode != 0:
             errors.append("Source Reconstruction 2.0 is not an ancestor of HEAD")
 
+    makefile = (project_root / "Makefile").read_text(encoding="utf-8")
+    errors.extend(validate_contract_metadata(project_root, release, makefile))
     errors.extend(validate_milestones(release["milestones"], status))
     relocation = release["relocation"]
     expected_layout = {
@@ -470,7 +798,6 @@ def validate_source_3(
     for relative in release["required_documents"]:
         if not (project_root / relative).is_file():
             errors.append(f"required 3.0 document is missing: {relative}")
-    makefile = (project_root / "Makefile").read_text(encoding="utf-8")
     for target_name in release["required_stable_targets"]:
         if re.search(
             rf"^{re.escape(target_name)}\s*:", makefile, re.MULTILINE
@@ -521,12 +848,31 @@ def main() -> int:
         action="store_true",
         help="fail unless every milestone and the release manifest are tag-ready",
     )
+    parser.add_argument(
+        "--tag-phase",
+        choices=("pre", "post"),
+        help="also enforce the local pre-tag or post-tag contract",
+    )
+    parser.add_argument(
+        "--check-remote",
+        action="store_true",
+        help="compare the annotated release tag with the configured remote",
+    )
     args = parser.parse_args()
     errors = validate_source_3(
         args.project_root.resolve(),
         args.manifest.resolve(),
         args.require_ready,
     )
+    if not errors and args.tag_phase:
+        errors.extend(
+            validate_tag_contract(
+                args.project_root.resolve(),
+                load_json(args.manifest.resolve()),
+                args.tag_phase,
+                args.check_remote,
+            )
+        )
     if errors:
         for error in errors:
             print(f"[ERROR] {error}")

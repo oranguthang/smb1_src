@@ -38,6 +38,7 @@ This repository contains:
 - **docs/scoring_runtime.md** - Score, coin, extra-life, HUD, and top-score transactions
 - **docs/data_formats.md** - Typed authored-data codecs and byte round trips
 - **docs/provenance/label_renames.json** - Original-to-current symbol map
+- **docs/licensing.md** - Licensing and distribution status by material class
 - **docs/preservation_source_1_0.md** - Stable release scope and evidence boundary
 - **docs/source_reconstruction_2_0.md** - Aggregate 2.0 scope and acceptance gate
 - **docs/source_reconstruction_3_0.md** - Active 3.0 milestones and boundaries
@@ -158,6 +159,15 @@ make source-3-audit
 # Run the complete Source Reconstruction 3.0 release gate
 make source-3-check
 
+# Verify the pinned assembler, linker, emulator, source commit, and FDS BIOS
+make check-source-3-toolchain
+
+# Before moving the reviewed tag, require a clean tree and audit local/remote refs
+make source-3-pre-tag
+
+# After publishing the annotated tag, prove local/remote tag identity
+make source-3-post-tag
+
 # Compare normalized ANN and SMB2 instruction streams
 make later-engine-source-overlap
 
@@ -267,4 +277,7 @@ For a few practical modification examples, see [docs/modding_examples.md](docs/m
 
 ## License
 
-This is a work of reverse engineering for educational and preservation purposes. The original game is copyright Nintendo.
+This is a work of reverse engineering for educational and preservation
+purposes. The original game is copyright Nintendo, and this repository grants
+no license to Nintendo's game code or assets. Tool and imported-material status
+is detailed in [docs/licensing.md](docs/licensing.md).

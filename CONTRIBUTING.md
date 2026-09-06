@@ -68,3 +68,27 @@ This runs lint, all unit tests, data round trips, complete-ROM verification,
 live debugger/runtime evidence, and the 1.0 release-contract audit. A future ROM
 hack must use a separate entrypoint and output; weakening `make verify` or
 silently changing the preservation profile is not an acceptable shortcut.
+
+## Commits and Draft History
+
+Commit messages are written in English. Use a concise, descriptive title and
+two or three body paragraphs that explain the change, its evidence, and any
+important boundary; a title alone is not sufficient. When Codex participated,
+finish with the exact trailer:
+
+```text
+Co-Authored-By: Codex <noreply@openai.com>
+```
+
+Draft commits may be combined, split, reordered, or renamed before publication,
+but history is never rewritten directly on checked-out `main`. Create a
+`rewrite/<topic>` branch from an immutable base, preserve the old refs, and show
+the human owner the proposed old-to-new commit map before rewriting. Moving
+`main`, replacing a tag, and pushing with `--force-with-lease` require a second,
+explicit owner approval after review and all gates pass.
+
+Dates in rewritten history must remain truthful. A combined commit receives an
+AuthorDate and CommitDate within the inclusive interval covered by the commits
+it replaces. After the rewrite, verify separately that author and committer
+dates increase in parent order, compare old and new trees when only metadata was
+intended to change, and rerun every applicable aggregate gate.

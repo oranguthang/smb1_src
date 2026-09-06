@@ -1,12 +1,154 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
+  "contract": {
+    "schema": "openkaryon.source_reconstruction_release_contract",
+    "version": 3,
+    "release_line": "3.0"
+  },
   "release": "Source Reconstruction 3.0",
+  "release_kind": "optional_advanced_generation",
   "tag": "source-reconstruction-3.0",
   "status": "tag-ready",
   "predecessor": {
     "manifest": "config/source_reconstruction_2_0.json",
     "tag": "source-reconstruction-2.0",
     "commit": "aaeb33466e40683d06dbdf907c346409d10d92bb"
+  },
+  "tag_policy": {
+    "mode": "unpublished_owner_rewrite",
+    "protected_ref": "refs/heads/main",
+    "preserved_old_target": "c9aeb8675b4d1a774914601ff87218c34b90e3f5",
+    "existing_tag_object": "8d0b5a5dfb3f37227da7a851c8fe7c75b286f2c9",
+    "remote": "origin",
+    "publication_status": "owner_only_not_externally_used",
+    "requires_owner_approval": true
+  },
+  "included_scope": [
+    "multi_profile_byte_identity",
+    "cross_profile_relocation_architecture",
+    "semantic_runtime_evidence",
+    "scoring_runtime_evidence",
+    "profile_aware_content_authoring",
+    "late_fds_shared_source_architecture",
+    "smb2_sibling_source_reconstruction"
+  ],
+  "excluded_scope": [
+    {
+      "id": "europe_revb_candidate",
+      "status": "unsupported",
+      "reason": "The available candidate lacks verified dump provenance and an independent semantic reconstruction."
+    },
+    {
+      "id": "smb2_as_smb1_profile",
+      "status": "not_applicable",
+      "reason": "SMB2 is a sibling late-FDS engine with its own source and profile boundary, not an SMB1 conditional build."
+    },
+    {
+      "id": "private_asset_distribution",
+      "status": "not_applicable",
+      "reason": "Original ROM, FDS, BIOS, CHR, and extracted proprietary payloads remain ignored user-supplied inputs."
+    }
+  ],
+  "delta": [
+    {
+      "id": "relocation",
+      "summary": "Relocatable builds and runtime proofs for every accepted SMB1 and SMB2 program profile.",
+      "evidence": ["docs/relocation_testing.md", "config/relocation"]
+    },
+    {
+      "id": "semantic_evidence",
+      "summary": "Closed source unknowns backed by static manifests and focused runtime scenarios.",
+      "evidence": ["docs/unknowns.md", "config/semantic_evidence", "scenarios/semantic_runtime_scenarios.json"]
+    },
+    {
+      "id": "scoring_evidence",
+      "summary": "Transaction-level runtime contracts for score, coins, extra lives, stomps, chains, and flagpoles.",
+      "evidence": ["docs/scoring_runtime.md", "scenarios/scoring_runtime_scenarios.json"]
+    },
+    {
+      "id": "content_authoring",
+      "summary": "Profile-aware World, Level, Graphics, and Sound Studio round trips for all accepted profiles.",
+      "evidence": ["docs/content_authoring.md", "config/content_authoring_profiles.json"]
+    },
+    {
+      "id": "late_fds_engine",
+      "summary": "Evidence-bounded shared late-FDS source architecture for ANN and SMB2.",
+      "evidence": ["docs/later_engine_feasibility.md", "docs/later_engine_source_overlap.md"]
+    },
+    {
+      "id": "smb2_reconstruction",
+      "summary": "Byte-identical source, runtime, relocation, overlay, gameplay, and authoring coverage for Japanese SMB2.",
+      "evidence": ["docs/smb2_reconstruction.md", "config/smb2_reconstruction.json"]
+    },
+    {
+      "id": "tooling_layout",
+      "summary": "Categorized Python tooling behind a stable launcher, top-level tests, and an indexed documentation set.",
+      "evidence": ["scripts/run.py", "docs/index.md"]
+    }
+  ],
+  "requirements": {
+    "canonical_identity": {"status": "satisfied", "evidence": {"targets": ["verify"], "manifests": ["assets/manifest.json"]}},
+    "accepted_profile_identity": {"status": "satisfied", "evidence": {"targets": ["verify-revisions", "verify-platforms", "verify-smb2"], "manifests": ["config/revision_profiles.json", "config/platform_profiles.json", "config/smb2_platform_profile.json"]}},
+    "runtime_coverage": {"status": "satisfied", "evidence": {"targets": ["trace", "validate-revisions", "validate-platforms", "validate-smb2-runtime", "validate-smb2-overlays", "validate-smb2-gameplay"]}},
+    "relocation_architecture": {"status": "satisfied", "evidence": {"targets": ["validate-relocation-revisions", "validate-relocation-platforms", "validate-smb2-relocation"], "documents": ["docs/relocation_testing.md"]}},
+    "semantic_runtime_evidence": {"status": "satisfied", "evidence": {"targets": ["semantic-evidence"], "manifests": ["scenarios/semantic_runtime_scenarios.json", "scenarios/scoring_runtime_scenarios.json"]}},
+    "profile_aware_authoring": {"status": "satisfied", "evidence": {"targets": ["check-content-profiles"], "manifests": ["config/content_authoring_profiles.json"]}},
+    "toolchain_reproducibility": {"status": "satisfied", "evidence": {"targets": ["check-source-3-toolchain"], "manifests": ["config/release_toolchain_3_0.json"]}},
+    "licensing_and_provenance": {"status": "satisfied", "evidence": {"documents": ["docs/licensing.md", "docs/provenance/README.md", "bin/README.md"]}},
+    "aggregate_release_gate": {"status": "satisfied", "evidence": {"targets": ["source-3-check", "source-3-pre-tag", "source-3-post-tag"]}}
+  },
+  "profiles": [
+    {"id": "ju", "identity_manifest": "config/revision_profiles.json", "size": 40976, "sha1": "ea343f4e445a9050d4b4fbac2c77d0693b1d0922", "verify_target": "verify-revision PROFILE=ju"},
+    {"id": "pc10", "identity_manifest": "config/revision_profiles.json", "size": 49168, "sha1": "d48d2c65fda380217ead73ffa6a46cae62939194", "verify_target": "verify-revision PROFILE=pc10"},
+    {"id": "pal", "identity_manifest": "config/revision_profiles.json", "size": 40976, "sha1": "ab30029efec6ccfc5d65dfda7fbc6e6489a80805", "verify_target": "verify-revision PROFILE=pal"},
+    {"id": "vs_smb", "identity_manifest": "config/platform_profiles.json", "size": 49168, "sha1": "3546486ba461536545daf9f27c9bcf275fc162da", "verify_target": "verify-platform PLATFORM=vs_smb"},
+    {"id": "fds_smb", "identity_manifest": "config/platform_profiles.json", "size": 65500, "sha1": "383ad8e3890a95de9595f0a6087648f51177da13", "verify_target": "verify-platform PLATFORM=fds_smb"},
+    {"id": "ann_fds", "identity_manifest": "config/platform_profiles.json", "size": 65500, "sha1": "f30bdd3c556604d7eaa6d0f4864d5566e519b5d4", "verify_target": "verify-platform PLATFORM=ann_fds"},
+    {"id": "smb2_jp_fds", "identity_manifest": "config/smb2_platform_profile.json", "size": 65500, "sha1": "20e50128742162ee47561db9e82b2836399c880c", "verify_target": "verify-smb2"}
+  ],
+  "runtime_coverage": [
+    {"profile": "ju", "kind": "direct", "targets": ["validate-revision PROFILE=ju", "trace", "validate-relocation RELOCATION_PROFILE=ju"]},
+    {"profile": "pc10", "kind": "direct", "targets": ["validate-revision PROFILE=pc10", "validate-relocation RELOCATION_PROFILE=pc10"]},
+    {"profile": "pal", "kind": "direct", "targets": ["validate-revision PROFILE=pal", "validate-revision-relocation RELOCATION_PROFILE=pal"]},
+    {"profile": "vs_smb", "kind": "direct", "targets": ["validate-platform PLATFORM=vs_smb", "validate-platform-relocation RELOCATION_PROFILE=vs_smb"]},
+    {"profile": "fds_smb", "kind": "direct", "targets": ["validate-platform PLATFORM=fds_smb", "validate-platform-relocation RELOCATION_PROFILE=fds_smb"]},
+    {"profile": "ann_fds", "kind": "direct", "targets": ["validate-platform PLATFORM=ann_fds", "validate-platform-relocation RELOCATION_PROFILE=ann_fds"]},
+    {"profile": "smb2_jp_fds", "kind": "direct", "targets": ["validate-smb2-runtime", "validate-smb2-overlays", "validate-smb2-gameplay", "validate-smb2-relocation"]}
+  ],
+  "toolchain": {
+    "manifest": "config/release_toolchain_3_0.json",
+    "verification_target": "check-source-3-toolchain"
+  },
+  "artifacts": {
+    "accepted_profiles": ["ju", "pc10", "pal", "vs_smb", "fds_smb", "ann_fds", "smb2_jp_fds"],
+    "generated_root": "build",
+    "committed": false
+  },
+  "aggregate_gates": {
+    "release": "source-3-check",
+    "pre_tag": "source-3-pre-tag",
+    "post_tag": "source-3-post-tag"
+  },
+  "layout_deviations": [
+    {
+      "id": "make_profile_routing",
+      "status": "accepted",
+      "reason": "The Makefile retains profile-specific path and command routing for cartridge, Vs., FDS, ANN overlay, and SMB2 builds.",
+      "compensating_control": "JSON manifests remain authoritative for accepted IDs, load addresses, sizes, hashes, capacities, runtime expectations, and content contracts; the Source 3 audit cross-checks their profile sets and the aggregate gate executes every route."
+    }
+  ],
+  "licensing": {
+    "status_document": "docs/licensing.md",
+    "game_source": "license_not_granted",
+    "project_tools_and_docs": "license_not_granted",
+    "bundled_cc65": "zlib",
+    "private_inputs_committed": false
+  },
+  "provenance": {
+    "source": "docs/provenance/label_renames.json",
+    "smb2_source": "docs/provenance/smb2_label_renames.json",
+    "runtime_fixtures": "movies/README.md",
+    "toolchain": "bin/README.md"
   },
   "milestones": [
     {"id": "relocation_architecture", "status": "complete"},
@@ -102,6 +244,10 @@
     "studio_artifacts": 15
   },
   "required_documents": [
+    "README.md",
+    "CONTRIBUTING.md",
+    "bin/README.md",
+    "movies/README.md",
     "docs/preservation_source_1_0.md",
     "docs/source_reconstruction_2_0.md",
     "docs/source_reconstruction_3_0.md",
@@ -109,6 +255,8 @@
     "docs/smb2_reconstruction.md",
     "docs/relocation_testing.md",
     "docs/scoring_runtime.md",
+    "docs/licensing.md",
+    "docs/provenance/README.md",
     "docs/index.md",
     "docs/roadmap.md"
   ],
@@ -150,6 +298,10 @@
     "test-smb2-relocation",
     "validate-smb2-relocation",
     "source-3-release-audit",
+    "check-source-3-toolchain",
+    "source-3-tag-audit",
+    "source-3-pre-tag",
+    "source-3-post-tag",
     "source-3-check"
   ]
 }

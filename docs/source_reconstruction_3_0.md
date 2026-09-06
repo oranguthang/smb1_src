@@ -102,6 +102,51 @@ the complete 2.0 gate, then runs every revision and platform relocation,
 semantic evidence, all seven zero-edit Studio round trips, later-engine
 evidence, the scoring transaction layer, baseline and relocated SMB2 runtime
 paths, and the tag-ready audit.
+
+## Release Contract and Tag Lifecycle
+
+The manifest implements revision 3 of
+`openkaryon.source_reconstruction_release_contract` and classifies this release
+as the optional advanced 3.0 generation. It is the machine-readable owner of
+the included and excluded scope, complete delta after Source 2.0, accepted
+profiles, artifact identities, runtime coverage, toolchain, licensing status,
+and release gates. The detailed milestone sections below explain that contract;
+they do not replace it.
+
+The repository adopts the recommended directory layout with one explicit
+deviation: Make still contains profile-specific path and command routing for
+the materially different cartridge, Vs., FDS, ANN-overlay, and SMB2 build
+shapes. It does not own profile hashes, capacities, load addresses, or runtime
+expectations. Those remain in JSON manifests, are cross-checked by the release
+audit, and are exercised route-by-route by the aggregate gate.
+
+Every accepted profile has direct runtime evidence rather than an equivalence
+shortcut: JU, PC10, PAL, Vs. SMB, FDS SMB1, ANN, and SMB2 each have an identity
+build plus profile-specific runtime and relocation checks. Their exact image
+sizes and SHA-1 values are repeated in the release manifest and audited against
+the owning revision/platform manifests.
+
+`config/release_toolchain_3_0.json` pins the bundled ca65/ld65 binaries by
+version, size, SHA-256, provenance, and license. It also pins the unbundled
+FCEUX binary, its source commit, and the private FDS BIOS used by the runtime
+matrix. `make check-source-3-toolchain` verifies the local files before the
+aggregate gate proceeds. The tested host and supported host boundary are
+recorded separately so a release claim is reproducible without committing
+private inputs.
+
+`make source-3-pre-tag` runs the complete aggregate gate, requires a clean Git
+tree and compliant release history, and compares the preserved annotated tag
+with `origin`. The current contract deliberately records an owner-only,
+unpublished rewrite: `main` and the old annotated 3.0 tag remain at the previous
+draft while this `rewrite/*` branch is reviewed. Moving either ref still
+requires explicit owner approval. After the replacement annotated tag is
+published, `make source-3-post-tag` reruns the release gate and requires the
+local and remote peeled tag targets to equal `HEAD`.
+
+Licensing and distribution boundaries are recorded in `docs/licensing.md`.
+In particular, hashes and provenance do not grant a license to original game
+code or assets, and ROM/FDS/BIOS inputs remain private and ignored.
+
 Run `make test-relocation` to generate, build, and statically validate the
 canonical candidate under `build/relocation/`. `make validate-relocation` also
 generates candidate debugger symbols and runs all deterministic scenarios with
