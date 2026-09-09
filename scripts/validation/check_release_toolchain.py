@@ -120,9 +120,10 @@ def main() -> int:
     parser.add_argument("--fceux", type=Path)
     parser.add_argument("--fds-bios", type=Path)
     args = parser.parse_args()
+    manifest = load_json(args.manifest.resolve())
     errors = validate_toolchain(
         args.project_root.resolve(),
-        load_json(args.manifest.resolve()),
+        manifest,
         fceux=args.fceux,
         fds_bios=args.fds_bios,
     )
@@ -131,7 +132,7 @@ def main() -> int:
             print(f"[ERROR] {error}")
         print(f"[FAIL] Release toolchain audit found {len(errors)} error(s)")
         return 1
-    print("[OK] Source Reconstruction 3.0 toolchain matches pinned files and commits")
+    print(f"[OK] {manifest.get('release', 'Release')} toolchain matches pinned files and commits")
     return 0
 
 

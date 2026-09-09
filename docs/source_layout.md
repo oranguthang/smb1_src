@@ -23,6 +23,12 @@ Typical modules should be a few hundred lines. The 200-500 line range is a
 useful target when natural boundaries permit it; 700 lines is a soft upper
 limit, not a mandate to fragment cohesive code.
 
+`config/reconstruction/repository_layout.json` is the machine-readable owner of
+the current line budgets. It records every intentionally short entrypoint,
+fixed-address block, interface, and shared adapter, plus a three-part review of
+each Python tool above the project threshold. The 3.1 audit compares that
+inventory with the actual tree so new exceptions cannot appear silently.
+
 ## Current Address Map
 
 | File | CPU range | Lines | Responsibility |

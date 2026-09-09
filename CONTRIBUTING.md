@@ -21,6 +21,10 @@ split files merely to reduce line counts.
 
 Use the vocabulary in `docs/naming.md` and the mechanically checked formatting
 in `docs/assembly_style.md`. Source comments and documentation are English.
+All tracked public prose, configuration descriptions, diagnostics, CLI help,
+and commit messages must remain English and contain no Cyrillic. Exact primary
+source quotations belong only in explicitly documented provenance records with
+an English explanation; this project currently has no such exception.
 Uncertain interpretations must use an evidence tag and a stable entry in
 `docs/unknowns.md`; do not turn a plausible guess into an unqualified fact.
 `make lint` also requires exactly one final newline and rejects trailing
@@ -36,6 +40,11 @@ make verify
 
 `make format` performs only safe mechanical normalization and then runs lint.
 Review semantic names, comments, contracts, and data changes manually.
+
+Tests mirror the responsibility packages under `scripts/`. Use `make test`
+rather than invoking a nested test package directly; the public command sets
+the project top-level directory so test packages cannot shadow production
+packages with the same name.
 
 ## Data Changes
 
@@ -92,3 +101,7 @@ AuthorDate and CommitDate within the inclusive interval covered by the commits
 it replaces. After the rewrite, verify separately that author and committer
 dates increase in parent order, compare old and new trees when only metadata was
 intended to change, and rerun every applicable aggregate gate.
+
+For the 3.1 compatibility release, run `make scaffold-check` during development
+and `make source-3-1-check` before requesting tag review. The latter reruns the
+entire published 3.0 gate before accepting the modernization delta.

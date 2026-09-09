@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "root_makefile": {
+    "path": "Makefile",
+    "maximum_lines": 300
+  },
+  "make_fragments": {
+    "directory": "mk",
+    "maximum_lines": 350,
+    "files": [
+      "mk/authoring.mk",
+      "mk/core.mk",
+      "mk/evidence.mk",
+      "mk/profiles.mk",
+      "mk/releases.mk",
+      "mk/relocation.mk",
+      "mk/runtime.mk",
+      "mk/smb2.mk",
+      "mk/variants.mk"
+    ]
+  },
+  "responsibility_packages": [
+    "authoring",
+    "build",
+    "runtime",
+    "validation",
+    "workflow"
+  ],
+  "assembly_size_policy": {
+    "short_module_lines": 25,
+    "large_module_lines": 900,
+    "exceptions": [
+      {
+        "path": "src/data/vectors.asm",
+        "kind": "fixed-address-vectors",
+        "reason": "The interrupt vectors are a complete six-byte fixed-address contract."
+      },
+      {
+        "path": "src/expanded/cnrom.asm",
+        "kind": "entrypoint",
+        "reason": "The expanded entrypoint selects one feature and includes the canonical source."
+      },
+      {
+        "path": "src/platforms/late_fds/ann/courses/hard/life_down.asm",
+        "kind": "shared-source-adapter",
+        "reason": "The module binds an ANN interface to one proven shared implementation."
+      },
+      {
+        "path": "src/platforms/late_fds/ann/courses/hard/loader.asm",
+        "kind": "shared-source-adapter",
+        "reason": "The module binds an ANN interface to one proven shared loader."
+      },
+      {
+        "path": "src/platforms/late_fds/ann/courses/hard/shared_interface.inc",
+        "kind": "interface",
+        "reason": "The declarations form the complete shared hard-course interface."
+      },
+      {
+        "path": "src/platforms/late_fds/ann/courses/supplemental/guest_chr.asm",
+        "kind": "fixed-payload-wrapper",
+        "reason": "The module owns one bounded guest CHR payload inclusion."
+      },
+      {
+        "path": "src/platforms/late_fds/ann/ending/guest_chr_and_save.asm",
+        "kind": "fixed-payload-wrapper",
+        "reason": "The module owns adjacent guest CHR and save payload inclusions."
+      },
+      {
+        "path": "src/platforms/late_fds/ann/gameplay/shared_interface.inc",
+        "kind": "interface",
+        "reason": "The declarations form the complete shared gameplay interface."
+      },
+      {
+        "path": "src/platforms/late_fds/common/game/hard_course_checkpoints.asm",
+        "kind": "shared-routine",
+        "reason": "One small routine is shared byte-identically by two independently built engines."
+      },
+      {
+        "path": "src/platforms/late_fds/smb2/overlays/shared_gameplay_interface.inc",
+        "kind": "interface",
+        "reason": "The declarations form the complete SMB2 overlay gameplay interface."
+      },
+      {
+        "path": "src/revisions/ann/main.asm",
+        "kind": "entrypoint",
+        "reason": "The ANN main entrypoint selects its profile and includes canonical source."
+      },
+      {
+        "path": "src/revisions/fds_smb.asm",
+        "kind": "entrypoint",
+        "reason": "The FDS entrypoint selects one profile and includes canonical source."
+      },
+      {
+        "path": "src/revisions/ju.asm",
+        "kind": "entrypoint",
+        "reason": "The JU entrypoint selects one profile and includes canonical source."
+      },
+      {
+        "path": "src/revisions/pal.asm",
+        "kind": "entrypoint",
+        "reason": "The PAL entrypoint selects one profile and includes canonical source."
+      },
+      {
+        "path": "src/revisions/pc10.asm",
+        "kind": "entrypoint",
+        "reason": "The PlayChoice entrypoint selects one profile and includes canonical source."
+      },
+      {
+        "path": "src/revisions/profile_ids.inc",
+        "kind": "interface",
+        "reason": "The include is the single registry of assembly profile identifiers."
+      },
+      {
+        "path": "src/revisions/smb2/build.asm",
+        "kind": "entrypoint",
+        "reason": "The aggregate source entrypoint includes four independently verified payloads."
+      },
+      {
+        "path": "src/revisions/smb2/ending.asm",
+        "kind": "entrypoint",
+        "reason": "The entrypoint binds the SMB2 ending payload to its linker contract."
+      },
+      {
+        "path": "src/revisions/smb2/hard_courses.asm",
+        "kind": "entrypoint",
+        "reason": "The entrypoint binds the SMB2 hard-course payload to its linker contract."
+      },
+      {
+        "path": "src/revisions/smb2/supplemental_courses.asm",
+        "kind": "entrypoint",
+        "reason": "The entrypoint binds the SMB2 supplemental payload to its linker contract."
+      },
+      {
+        "path": "src/revisions/vs.asm",
+        "kind": "entrypoint",
+        "reason": "The Vs. entrypoint selects one profile and includes canonical source."
+      },
+      {
+        "path": "src/variants/five_lives.asm",
+        "kind": "entrypoint",
+        "reason": "The variant entrypoint selects one feature and includes canonical source."
+      }
+    ]
+  },
+  "python_size_policy": {
+    "review_lines": 700,
+    "reviews": [
+      {
+        "path": "scripts/authoring/content_studio.py",
+        "cohesion": "One CLI coordinates atomic decode and encode transactions across registered codecs.",
+        "extraction_decision": "Codec and model logic already lives in separate modules; splitting command phases would duplicate transaction state.",
+        "public_api_control": "scripts.run exposes one stable authoring.content_studio command."
+      },
+      {
+        "path": "scripts/authoring/level_studio.py",
+        "cohesion": "One Tk controller owns the level editor window and its user actions.",
+        "extraction_decision": "Headless data, validation, and image preparation already live outside the view controller.",
+        "public_api_control": "level_studio_model remains the tested headless boundary and the CLI keeps one stable command."
+      },
+      {
+        "path": "scripts/authoring/level_studio_model.py",
+        "cohesion": "One domain model owns area objects, enemies, capacity checks, and transactional edits.",
+        "extraction_decision": "Serializers remain in data_formats and UI code remains in level_studio; further splitting would fragment invariants shared by edits.",
+        "public_api_control": "Tests exercise the model directly without a display."
+      },
+      {
+        "path": "scripts/validation/source_3_audit.py",
+        "cohesion": "The historical 3.0 audit preserves one tagged release boundary.",
+        "extraction_decision": "Shared Make parsing is extracted; the remaining checks stay frozen together for historical reproducibility.",
+        "public_api_control": "The 3.1 audit is independent and does not extend this historical module."
+      },
+      {
+        "path": "scripts/workflow/import_smb2_source.py",
+        "cohesion": "One reproducible import transaction parses, normalizes, validates, and writes a complete sibling-source set.",
+        "extraction_decision": "The importer is workflow-only and its output is reviewed and rebuilt; splitting its stateful pipeline would weaken atomicity.",
+        "public_api_control": "The command is isolated behind scripts.run and is not imported by production builders."
+      }
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "base": {
+    "branch": "main",
+    "commit": "4b0d6f885bdd41bdc08139f5044aeef3f099a69d",
+    "tree_was_clean": true
+  },
+  "source_drafts": [
+    {
+      "commit": "3d46496e1c38c96587368855464011dac03e3ac5",
+      "title": "Modularize project orchestration and test ownership",
+      "author_date": "2026-09-09T03:18:00+03:00",
+      "commit_date": "2026-09-09T03:18:00+03:00"
+    },
+    {
+      "commit": "5b5041a7ad20ffeefddeb2849167f305da89d56f",
+      "title": "Define the Source Reconstruction 3.1 project contract",
+      "author_date": "2026-09-09T03:46:12+03:00",
+      "commit_date": "2026-09-09T03:46:12+03:00"
+    },
+    {
+      "commit": "3f9960c64793d57fe209e477649171cb259b8b7f",
+      "title": "Complete Source Reconstruction 3.1 modernization",
+      "author_date": "2026-09-09T03:52:26+03:00",
+      "commit_date": "2026-09-09T03:52:26+03:00"
+    }
+  ],
+  "carried_dirty_paths": [],
+  "reconstructed_commits": [
+    {
+      "commit": "e9e49336f22a6d5a1b8a0c70d3967048f12c2256",
+      "title": "Modularize project orchestration and test ownership",
+      "source_commits": ["3d46496e1c38c96587368855464011dac03e3ac5", "5b5041a7ad20ffeefddeb2849167f305da89d56f"],
+      "scope": "Make fragments, responsibility-owned configuration, mirrored test packages, path repairs, Make interface tests, and cleanup of touched 3.0 public metadata.",
+      "reason": "Move the cleanup portion of the second draft earlier so the structural commit cannot introduce intermediate non-English or review-specific blobs."
+    },
+    {
+      "commit": "pending",
+      "title": "Define the Source Reconstruction 3.1 project contract",
+      "source_commits": ["5b5041a7ad20ffeefddeb2849167f305da89d56f"],
+      "scope": "Self-contained 3.1 manifest, language and history policy, layout evidence, toolchain pinning, release audit, and documentation.",
+      "reason": "Keep policy and release evidence separate from the mechanical directory reorganization."
+    },
+    {
+      "commit": "pending",
+      "title": "Complete Source Reconstruction 3.1 modernization",
+      "source_commits": ["3f9960c64793d57fe209e477649171cb259b8b7f"],
+      "scope": "Tag-ready status and final gate evidence after all preceding work passes the aggregate release command.",
+      "reason": "Create this commit only if final tracked metadata changes remain; an empty release marker is forbidden."
+    }
+  ],
+  "date_policy": {
+    "source_interval": {
+      "earliest": "2026-09-09T03:18:00+03:00",
+      "latest": "2026-09-09T03:52:26+03:00"
+    },
+    "reason": "The second draft was split so its public-metadata cleanup precedes structural path updates. Rewritten dates remain inside the source interval and follow parent order.",
+    "author_dates_strictly_increase": true,
+    "commit_dates_strictly_increase": true
+  },
+  "preserved_refs": {
+    "main_unchanged_during_rewrite": true,
+    "local_branches_and_tags_deleted": false,
+    "published_refs_rewritten": false
+  }
+}

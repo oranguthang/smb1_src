@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "release_line": "2.x",
+  "release": {
+    "name": "Source Reconstruction 3.1",
+    "version": "3.1"
+  },
+  "release_kind": "compatible_minor",
+  "tag": "source-reconstruction-3.1",
+  "status": "development",
+  "predecessor": {
+    "manifest": "config/source_reconstruction_3_0.json",
+    "tag": "source-reconstruction-3.0",
+    "commit": "4b0d6f885bdd41bdc08139f5044aeef3f099a69d"
+  },
+  "included_scope": [
+    "source_2_baseline_compatibility",
+    "modular_make_orchestration",
+    "responsibility_owned_configuration",
+    "mirrored_test_ownership",
+    "english_public_tree",
+    "self_contained_release_metadata",
+    "repository_layout_audit",
+    "inherited_source_3_capabilities"
+  ],
+  "excluded_scope": [
+    {
+      "id": "new_gameplay_or_rom_content",
+      "status": "not_applicable",
+      "reason": "The modernization changes repository structure and release evidence without changing emitted game bytes."
+    },
+    {
+      "id": "new_profiles_or_platform_abi",
+      "status": "not_applicable",
+      "reason": "The seven accepted 3.0 profiles and their platform boundaries remain unchanged."
+    },
+    {
+      "id": "new_relocation_or_sibling_engine_architecture",
+      "status": "not_applicable",
+      "reason": "Advanced capabilities are inherited unchanged from the published 3.0 release."
+    },
+    {
+      "id": "published_history_rewrite",
+      "status": "not_applicable",
+      "reason": "Published commits and tags remain immutable; superseded metadata is corrected only in the 3.1 tree."
+    }
+  ],
+  "delta": [
+    {
+      "id": "orchestration_layout",
+      "kind": "tooling",
+      "summary": "Split the root Makefile into bounded responsibility fragments while preserving its public target interface.",
+      "evidence": {
+        "files": ["Makefile", "mk", "scripts/validation/make_contract.py"],
+        "targets": ["help", "lint", "test"]
+      }
+    },
+    {
+      "id": "configuration_ownership",
+      "kind": "tooling",
+      "summary": "Group authoring, debugger, linker, reconstruction, and release configuration by owner.",
+      "evidence": {
+        "files": ["config/authoring", "config/debugger", "config/linker", "config/reconstruction"]
+      }
+    },
+    {
+      "id": "test_ownership",
+      "kind": "evidence",
+      "summary": "Mirror script responsibilities under package-aware tests and smoke the public Make help command.",
+      "evidence": {
+        "files": ["tests/authoring", "tests/build", "tests/runtime", "tests/validation", "tests/workflow"],
+        "targets": ["test", "scaffold-check"]
+      }
+    },
+    {
+      "id": "release_metadata",
+      "kind": "documentation",
+      "summary": "Replace inherited review metadata with a self-contained public 3.1 release contract and history map.",
+      "evidence": {
+        "files": ["config/source_reconstruction_3_1.json", "docs/source_reconstruction_3_1.md", "docs/provenance/source_3_1_history.json"]
+      }
+    },
+    {
+      "id": "public_language_policy",
+      "kind": "evidence",
+      "summary": "Require current public text and release commits to remain English and free of Cyrillic content.",
+      "evidence": {
+        "files": ["scripts/validation/lint_project.py", "scripts/validation/source_3_1_audit.py"],
+        "targets": ["lint", "source-3-1-audit"]
+      }
+    }
+  ],
+  "requirements": {
+    "preservation_identity": {
+      "status": "satisfied",
+      "evidence": {"targets": ["verify", "release-check"], "files": ["assets/manifest.json"]}
+    },
+    "source_2_baseline": {
+      "status": "satisfied",
+      "evidence": {"targets": ["source-2-check"], "files": ["config/source_reconstruction_2_0.json"]}
+    },
+    "accepted_profile_identity": {
+      "status": "satisfied",
+      "evidence": {"targets": ["verify-revisions", "verify-platforms", "verify-smb2"], "files": ["config/revision_profiles.json", "config/platform_profiles.json", "config/smb2_platform_profile.json"]}
+    },
+    "runtime_coverage": {
+      "status": "satisfied",
+      "evidence": {"targets": ["trace", "validate-revisions", "validate-platforms", "validate-smb2-gameplay"], "files": ["scenarios/runtime_scenarios.json", "scenarios/semantic_runtime_scenarios.json", "scenarios/scoring_runtime_scenarios.json"]}
+    },
+    "authoring_round_trips": {
+      "status": "satisfied",
+      "evidence": {"targets": ["roundtrip-formats", "check-content-profiles"], "files": ["config/authoring/content_authoring_profiles.json", "config/authoring/content_formats_3.json"]}
+    },
+    "toolchain_reproducibility": {
+      "status": "satisfied",
+      "evidence": {"targets": ["check-source-3-1-toolchain"], "files": ["config/release_toolchain_3_1.json"]}
+    },
+    "repository_layout": {
+      "status": "satisfied",
+      "evidence": {"targets": ["scaffold-check"], "files": ["config/reconstruction/repository_layout.json", "docs/source_layout.md"]}
+    },
+    "release_history": {
+      "status": "satisfied",
+      "evidence": {"targets": ["source-3-1-audit"], "files": ["docs/provenance/source_3_1_history.json"]}
+    },
+    "licensing_and_provenance": {
+      "status": "satisfied",
+      "evidence": {"files": ["docs/licensing.md", "docs/provenance/README.md", "bin/README.md"]}
+    },
+    "aggregate_release_gate": {
+      "status": "satisfied",
+      "evidence": {"targets": ["source-3-1-check", "source-3-1-pre-tag", "source-3-1-post-tag"]}
+    }
+  },
+  "profiles": [
+    {"id": "ju", "status": "supported", "artifact": "ju_rom", "identity": "byte-identical"},
+    {"id": "pc10", "status": "supported", "artifact": "pc10_rom", "identity": "byte-identical"},
+    {"id": "pal", "status": "supported", "artifact": "pal_rom", "identity": "byte-identical"},
+    {"id": "vs_smb", "status": "supported", "artifact": "vs_smb_rom", "identity": "byte-identical"},
+    {"id": "fds_smb", "status": "supported", "artifact": "fds_smb_disk", "identity": "byte-identical"},
+    {"id": "ann_fds", "status": "supported", "artifact": "ann_fds_disk", "identity": "byte-identical"},
+    {"id": "smb2_jp_fds", "status": "supported", "artifact": "smb2_jp_fds_disk", "identity": "byte-identical"}
+  ],
+  "runtime_coverage": [
+    {"profile_id": "ju", "mode": "direct", "targets": ["validate-revision PROFILE=ju", "trace"]},
+    {"profile_id": "pc10", "mode": "direct", "targets": ["validate-revision PROFILE=pc10"]},
+    {"profile_id": "pal", "mode": "direct", "targets": ["validate-revision PROFILE=pal"]},
+    {"profile_id": "vs_smb", "mode": "direct", "targets": ["validate-platform PLATFORM=vs_smb"]},
+    {"profile_id": "fds_smb", "mode": "direct", "targets": ["validate-platform PLATFORM=fds_smb"]},
+    {"profile_id": "ann_fds", "mode": "direct", "targets": ["validate-platform PLATFORM=ann_fds"]},
+    {"profile_id": "smb2_jp_fds", "mode": "direct", "targets": ["validate-smb2-runtime", "validate-smb2-overlays", "validate-smb2-gameplay"]}
+  ],
+  "toolchain": {
+    "manifest": "config/release_toolchain_3_1.json",
+    "verification_target": "check-source-3-1-toolchain"
+  },
+  "artifacts": [
+    {"id": "ju_rom", "profile": "ju", "build_target": "verify-revision PROFILE=ju", "size": 40976, "sha1": "ea343f4e445a9050d4b4fbac2c77d0693b1d0922", "sha256": "f61548fdf1670cffefcc4f0b7bdcdd9eaba0c226e3b74f8666071496988248de"},
+    {"id": "pc10_rom", "profile": "pc10", "build_target": "verify-revision PROFILE=pc10", "size": 49168, "sha1": "d48d2c65fda380217ead73ffa6a46cae62939194", "sha256": "f586afeaaaa7a6cf2e3b69e5b17f2f0f1eb3fd9aa1de1e3e14b75f90dc21ae87"},
+    {"id": "pal_rom", "profile": "pal", "build_target": "verify-revision PROFILE=pal", "size": 40976, "sha1": "ab30029efec6ccfc5d65dfda7fbc6e6489a80805", "sha256": "ec299b990e8bfee8ba46e3f61d63b2e1ae5b8a2e431de84e2e4bbd692dc53586"},
+    {"id": "vs_smb_rom", "profile": "vs_smb", "build_target": "verify-platform PLATFORM=vs_smb", "size": 49168, "sha1": "3546486ba461536545daf9f27c9bcf275fc162da", "sha256": "60098a93322a9e07a2b164a02e5517bc22664ca33f6323c2ae23a62941ad393b"},
+    {"id": "fds_smb_disk", "profile": "fds_smb", "build_target": "verify-platform PLATFORM=fds_smb", "size": 65500, "sha1": "383ad8e3890a95de9595f0a6087648f51177da13", "sha256": "56ba4c39fd7f9628bffac4c6ee0d5364f86de36d27c904ffc70f0abc97ae0d3a"},
+    {"id": "ann_fds_disk", "profile": "ann_fds", "build_target": "verify-platform PLATFORM=ann_fds", "size": 65500, "sha1": "f30bdd3c556604d7eaa6d0f4864d5566e519b5d4", "sha256": "a762d0a90d16c84b5f2b014816b37675cf5115320be7e815effbb64d91b2014d"},
+    {"id": "smb2_jp_fds_disk", "profile": "smb2_jp_fds", "build_target": "verify-smb2", "size": 65500, "sha1": "20e50128742162ee47561db9e82b2836399c880c", "sha256": "ff8afb9ae6b705b4e51dbcb193dcebadf4c049800a71003d3a45052648e52eda"}
+  ],
+  "aggregate_gates": {
+    "scaffold": "scaffold-check",
+    "release": "source-3-1-check",
+    "pre_tag": "source-3-1-pre-tag",
+    "post_tag": "source-3-1-post-tag"
+  },
+  "layout_deviations": [
+    {
+      "rule_id": "standard_unittest_discovery",
+      "actual_path": "tests",
+      "reason": "Mirrored test package names intentionally match tool package names.",
+      "equivalent_control": "make test supplies the project top-level directory so tests import as tests.<owner> and cannot shadow scripts packages."
+    }
+  ],
+  "history": {
+    "base_commit": "4b0d6f885bdd41bdc08139f5044aeef3f099a69d",
+    "allowed_identities": [
+      {"name": "Daniel Oranguthang", "email": "75395800+oranguthang@users.noreply.github.com"}
+    ],
+    "required_coauthor": "Co-Authored-By: Codex <noreply@openai.com>",
+    "rewrite_map": "docs/provenance/source_3_1_history.json"
+  },
+  "licensing": [
+    {"component": "project_tools_and_documentation", "origin": "this_repository", "license_id_or_status": "license_not_granted", "redistribution": "no_license_granted"},
+    {"component": "reconstructed_game_source", "origin": "user_supplied_reference_images", "license_id_or_status": "license_not_granted", "redistribution": "subject_to_rightsholder_terms"},
+    {"component": "bundled_cc65_tools", "origin": "cc65", "license_id_or_status": "Zlib", "redistribution": "permitted_under_bundled_license"},
+    {"component": "reference_images_and_fds_bios", "origin": "private_user_supplied", "license_id_or_status": "private_user_supplied", "redistribution": "not_committed"},
+    {"component": "fceux_runtime", "origin": "external_unbundled", "license_id_or_status": "external_unbundled", "redistribution": "not_committed"}
+  ],
+  "provenance": {
+    "references": ["docs/provenance/README.md", "docs/provenance/label_renames.json", "docs/provenance/smb2_label_renames.json", "movies/README.md", "bin/README.md"],
+    "private_inputs_tracked": false
+  },
+  "historical_constraints": [
+    {
+      "id": "published_3_0_metadata",
+      "status": "deferred",
+      "reason": "The published 3.0 history retains its original metadata and test fixtures. The 3.1 current tree removes superseded metadata without rewriting published commits."
+    }
+  ],
+  "required_documents": [
+    "README.md",
+    "CONTRIBUTING.md",
+    "docs/index.md",
+    "docs/source_layout.md",
+    "docs/source_reconstruction_2_0.md",
+    "docs/source_reconstruction_3_0.md",
+    "docs/source_reconstruction_3_1.md",
+    "docs/licensing.md",
+    "docs/provenance/README.md",
+    "docs/provenance/source_3_1_history.json"
+  ],
+  "required_targets": [
+    "help",
+    "lint",
+    "format",
+    "test",
+    "verify",
+    "release-check",
+    "source-2-check",
+    "scaffold-check",
+    "source-2-minor-check",
+    "source-3-1-audit",
+    "check-source-3-1-toolchain",
+    "source-3-1-check",
+    "source-3-1-pre-tag",
+    "source-3-1-post-tag"
+  ]
+}

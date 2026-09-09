@@ -16,6 +16,7 @@ MATERIAL_EVIDENCE_TAGS = ALLOWED_EVIDENCE_TAGS - {"OBS"}
 EVIDENCE_RE = re.compile(r"!\(([A-Z?]+)\)(?:\s+([A-Z]+-\d{3}))?")
 REGISTRY_ID_RE = re.compile(r"^###\s+([A-Z]+-\d{3})\b", re.MULTILINE)
 MARKDOWN_LINK_RE = re.compile(r"(?<!!)\[[^]]+\]\(([^)]+)\)")
+CYRILLIC_RE = re.compile(r"[\u0400-\u052f]")
 HARDWARE_ADDRESS_RE = re.compile(
     r"\$(?:200[0-7]|400[0-9A-Fa-f]|401[0-7])\b", re.IGNORECASE
 )
@@ -108,6 +109,27 @@ def lint_tracked_text(project_root: Path) -> list[Diagnostic]:
             diagnostics.append(Diagnostic(relative, 1, f"text file is not UTF-8: {exc}"))
             continue
         diagnostics.extend(lint_text_content(relative, text))
+    return diagnostics
+
+
+def lint_public_language(project_root: Path) -> list[Diagnostic]:
+    diagnostics: list[Diagnostic] = []
+    for path in tracked_paths(project_root):
+        relative = path.relative_to(project_root)
+        if not is_text_path(relative):
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        for match in CYRILLIC_RE.finditer(text):
+            diagnostics.append(
+                Diagnostic(
+                    relative,
+                    line_number(text, match.start()),
+                    "public project text must be English and contain no Cyrillic",
+                )
+            )
     return diagnostics
 
 
@@ -228,6 +250,7 @@ def lint_raw_hardware_operands(project_root: Path) -> list[Diagnostic]:
 def lint_project(project_root: Path) -> list[Diagnostic]:
     diagnostics = [
         *lint_tracked_text(project_root),
+        *lint_public_language(project_root),
         *lint_python(project_root),
         *lint_markdown_links(project_root),
         *lint_evidence(project_root),

@@ -85,6 +85,21 @@ class LintProjectTests(unittest.TestCase):
         messages = [item.message for item in lint_project.lint_project(root)]
         self.assertIn("broken local Markdown link: docs/missing.md", messages)
 
+    def test_rejects_cyrillic_in_public_text(self) -> None:
+        root = self.make_project()
+        (root / "src" / "main.asm").write_text(
+            "; !(UNUSED) CODE-001 - test\n", encoding="utf-8"
+        )
+        (root / "README.md").write_text(
+            "# " + "".join(chr(value) for value in (0x0422, 0x0435, 0x0441, 0x0442)) + "\n",
+            encoding="utf-8",
+        )
+        messages = [item.message for item in lint_project.lint_project(root)]
+        self.assertIn(
+            "public project text must be English and contain no Cyrillic",
+            messages,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

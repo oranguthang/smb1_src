@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "release": "Source Reconstruction 3.1",
+  "supported_host": {
+    "os": "Windows",
+    "architecture": "x86_64",
+    "shell": "PowerShell 5.1 or newer",
+    "python": "3.11 or newer",
+    "make": "GNU Make 4.x"
+  },
+  "release_host": {
+    "os": "Microsoft Windows 10.0.26200",
+    "architecture": "x86_64",
+    "python": "3.14.6",
+    "git": "2.55.0.windows.5",
+    "powershell": "5.1.26100.9168",
+    "make": "4.4.1"
+  },
+  "components": [
+    {
+      "id": "ca65",
+      "kind": "bundled_tool",
+      "path": "bin/ca65.exe",
+      "size": 721629,
+      "sha256": "9109d7118ff070e78f031bee4eb776061e56b74e7c8f9f40c70fd6707ea0ac5a",
+      "version": "V2.19 - Git 0fca835",
+      "provenance": "bin/README.md",
+      "license": "bin/cc65-LICENSE.txt"
+    },
+    {
+      "id": "ld65",
+      "kind": "bundled_tool",
+      "path": "bin/ld65.exe",
+      "size": 575874,
+      "sha256": "5f68367a135c578c88744e27ba0b1234604d87ef1ff6294b46fcb031ff984db4",
+      "version": "V2.19 - Git 0fca835",
+      "provenance": "bin/README.md",
+      "license": "bin/cc65-LICENSE.txt"
+    },
+    {
+      "id": "fceux",
+      "kind": "external_tool",
+      "default_path": "../fceux_automation/vc/x64/Release/fceux64.exe",
+      "size": 5499904,
+      "sha256": "97aadff4970e98a413377810a296c045fab717661dd8270f84d58190f43a232e",
+      "source_repository": "../fceux_automation",
+      "source_commit": "ec507d86c57acd8979547bc35e9627fb199fac9a"
+    },
+    {
+      "id": "fds_bios",
+      "kind": "private_input",
+      "default_path": "../fceux_automation/vc/x64/Release/disksys.rom",
+      "size": 8192,
+      "sha256": "99c18490ed9002d9c6d999b9d8d15be5c051bdfa7cc7e73318053c9a994b0178",
+      "committed": false
+    }
+  ]
+}

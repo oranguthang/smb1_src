@@ -37,11 +37,12 @@ CONTENT_FORMAT_MANIFEST ?= $(PROJECT_DIR)config/authoring/content_formats_3.json
 CONTENT_PROFILE_MANIFEST ?= $(PROJECT_DIR)config/authoring/content_authoring_profiles.json
 
 help:
-	@echo Core: build verify lint format test release-check source-2-check
+	@echo Core: build verify lint format test scaffold-check release-check source-2-check
 	@echo Profiles: verify-revisions validate-revisions verify-platforms validate-platforms
 	@echo Authoring: list-content-profiles check-content-profiles world-studio level-studio graphics-studio sound-studio
 	@echo Evidence: trace semantic-evidence validate-relocation-revisions
-	@echo Advanced: source-3-check verify-smb2 validate-smb2-relocation
+	@echo Releases: source-3-check source-3-1-check source-2-minor-check
+	@echo Advanced: verify-smb2 validate-smb2-relocation
 build: _require-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_native \
 		--source "$(NATIVE_SOURCE)" \
