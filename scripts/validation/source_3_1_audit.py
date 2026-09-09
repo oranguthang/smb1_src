@@ -419,7 +419,13 @@ def validate_evidence(
                 if target_name(command) not in targets:
                     errors.append(f"delta target is missing: {command}")
     for identifier, requirement in release.get("requirements", {}).items():
-        if requirement.get("status") != "satisfied":
+        status = requirement.get("status")
+        development_gate = (
+            release.get("status") == "development"
+            and identifier == "aggregate_release_gate"
+            and status == "partial"
+        )
+        if status != "satisfied" and not development_gate:
             errors.append(f"requirement is not satisfied: {identifier}")
         evidence = requirement.get("evidence", {})
         if not evidence:

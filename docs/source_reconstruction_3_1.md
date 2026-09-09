@@ -35,11 +35,11 @@ extracted payloads remain ignored private inputs.
   clusters and oversized documents.
 - One configuration-owned label registry covers both reconstructed source
   families; workflow tools and tests consume its named sections.
-- ANN supplemental sources name generated assets independently of repository
-  depth, while the assembly command supplies the validated cache as ca65's
-  binary-include root. A disposable-project integration test exercises that
-  production entrypoint from an absent default cache, and the ANN relocation
-  manifest forwards the same root when it regenerates payload wrappers.
+- ANN supplemental and hard-course sources name generated assets independently
+  of repository depth, while both assembly commands supply the validated cache
+  as ca65's binary-include root. A disposable-project integration test exercises
+  each production entrypoint independently from an absent default cache, and
+  the ANN relocation manifest forwards the same root for both payload wrappers.
 
 ## Repository and Evidence Boundaries
 
@@ -77,9 +77,8 @@ branch, a nonempty reviewed candidate commit, and absence of the future local ta
 After an annotated tag is published, `make source-3-1-post-tag` verifies its
 message and peeled local/remote target.
 
-The complete inherited gate passed from clean generated state after exercising
-both direct and relocation ANN supplemental assembly through the production
-source hierarchy and default asset cache. The candidate is therefore
-`tag-ready`; its commits retain neutral factual titles, and the eventual release
-milestone remains an owner-managed annotated tag rather than a completion claim
-in commit history.
+The candidate is in `development` while the hard-course direct and relocation
+assembly paths are corrected and the complete inherited gate is rerun from
+clean generated state. Its commits retain neutral factual titles; the eventual
+release milestone remains an owner-managed annotated tag rather than a
+completion claim in commit history.

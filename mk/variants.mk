@@ -197,6 +197,7 @@ build-ann-hard-courses: prepare-ann-supplemental-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_HARD_COURSES_SOURCE)" \
 		--config "$(ANN_HARD_COURSES_CFG)" \
+		--bin-include-dir "$(ANN_SUPPLEMENTAL_ASSET_DIR)" \
 		--object "$(ANN_HARD_COURSES_BUILD_DIR)/payload.o" \
 		--output "$(ANN_HARD_COURSES_BUILD_DIR)/payload.bin" \
 		--labels "$(ANN_HARD_COURSES_BUILD_DIR)/payload.lbl" \

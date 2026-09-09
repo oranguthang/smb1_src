@@ -12,6 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
 from validation.source_3_1_audit import (  # noqa: E402
+    validate_evidence,
     validate_layout,
     validate_release_history,
     validate_release_objects,
@@ -39,6 +40,49 @@ class Source31AuditTests(unittest.TestCase):
                 / "repository_layout.json",
             ),
             [],
+        )
+
+    def test_only_development_aggregate_gate_may_be_partial(self) -> None:
+        release = {
+            "status": "development",
+            "delta": [
+                {
+                    "id": "fixture",
+                    "kind": "evidence",
+                    "summary": "Exercise development requirement status validation.",
+                    "evidence": {"targets": ["source-3-1-check"]},
+                }
+            ],
+            "requirements": {
+                "aggregate_release_gate": {
+                    "status": "partial",
+                    "evidence": {"targets": ["source-3-1-check"]},
+                }
+            },
+        }
+        targets = {"source-3-1-check"}
+        self.assertEqual(validate_evidence(PROJECT_ROOT, release, targets), [])
+
+        release["status"] = "tag-ready"
+        self.assertTrue(
+            any(
+                "aggregate_release_gate" in error
+                for error in validate_evidence(PROJECT_ROOT, release, targets)
+            )
+        )
+
+        release["status"] = "development"
+        release["requirements"] = {
+            "runtime_coverage": {
+                "status": "partial",
+                "evidence": {"targets": ["source-3-1-check"]},
+            }
+        }
+        self.assertTrue(
+            any(
+                "runtime_coverage" in error
+                for error in validate_evidence(PROJECT_ROOT, release, targets)
+            )
         )
 
     def test_empty_release_commit_is_rejected(self) -> None:
