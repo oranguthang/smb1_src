@@ -144,7 +144,14 @@ verify-ann-tail-core:
 
 build-ann-payloads: build-ann-supplemental-courses build-ann-ending build-ann-hard-courses
 
-build-ann-supplemental-courses:
+prepare-ann-supplemental-assets:
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.platform_profiles split \
+		--manifest "$(PLATFORM_MANIFEST)" \
+		--profile ann_fds \
+		--reference "$(ANN_REFERENCE)" \
+		--asset-dir "$(PLATFORM_ASSET_DIR)"
+
+build-ann-supplemental-courses: prepare-ann-supplemental-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_SUPPLEMENTAL_COURSES_SOURCE)" \
 		--config "$(ANN_SUPPLEMENTAL_COURSES_CFG)" \

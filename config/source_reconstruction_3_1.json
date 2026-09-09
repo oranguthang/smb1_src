@@ -73,6 +73,15 @@
       }
     },
     {
+      "id": "clean_snapshot_reproducibility",
+      "kind": "tooling",
+      "summary": "Track every test package and prepare validated ANN supplemental-course source assets before assembly.",
+      "evidence": {
+        "files": [".gitignore", "tests/build/__init__.py", "mk/variants.mk"],
+        "targets": ["test", "prepare-ann-supplemental-assets", "verify-ann-supplemental-courses"]
+      }
+    },
+    {
       "id": "release_metadata",
       "kind": "documentation",
       "summary": "Replace inherited review metadata with a self-contained public 3.1 release contract and history map.",
@@ -223,6 +232,7 @@
     "verify",
     "release-check",
     "source-2-check",
+    "prepare-ann-supplemental-assets",
     "scaffold-check",
     "source-2-minor-check",
     "source-3-1-audit",

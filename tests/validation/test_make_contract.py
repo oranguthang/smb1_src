@@ -9,7 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 
-from validation.make_contract import make_targets  # noqa: E402
+from validation.make_contract import combined_makefile_text, make_targets  # noqa: E402
 
 
 class MakeContractTests(unittest.TestCase):
@@ -38,6 +38,16 @@ class MakeContractTests(unittest.TestCase):
         self.assertIn("release-check", result.stdout)
         self.assertIn("verify-revisions", result.stdout)
         self.assertIn("source-3-check", result.stdout)
+
+    def test_ann_supplemental_build_prepares_private_inputs(self) -> None:
+        project_root = Path(__file__).resolve().parents[2]
+        make_text = combined_makefile_text(project_root)
+        self.assertIn(
+            "build-ann-supplemental-courses: prepare-ann-supplemental-assets",
+            make_text,
+        )
+        self.assertIn("prepare-ann-supplemental-assets:", make_text)
+        self.assertIn("--profile ann_fds", make_text)
 
 
 if __name__ == "__main__":

@@ -86,6 +86,7 @@ def validate_public_language(project_root: Path) -> list[str]:
 def validate_layout(project_root: Path, layout_path: Path) -> list[str]:
     layout = load_json(layout_path)
     errors: list[str] = []
+    tracked = set(git_output(project_root, "ls-files").splitlines())
     root_rule = layout.get("root_makefile", {})
     root_path = project_root / root_rule.get("path", "")
     if not root_path.is_file():
@@ -116,7 +117,12 @@ def validate_layout(project_root: Path, layout_path: Path) -> list[str]:
     for package in packages:
         for root in ("scripts", "tests"):
             path = project_root / root / package
-            if not path.is_dir() or not (path / "__init__.py").is_file():
+            init_path = (path / "__init__.py").relative_to(project_root).as_posix()
+            if (
+                not path.is_dir()
+                or not (path / "__init__.py").is_file()
+                or init_path not in tracked
+            ):
                 errors.append(f"responsibility package is incomplete: {root}/{package}")
 
     assembly_rule = layout.get("assembly_size_policy", {})
@@ -348,8 +354,15 @@ def validate_rewrite_map(
             errors.append(f"rewrite map entry is incomplete: {title}")
             continue
         source_commits = set(entry.get("source_commits", []))
-        if not source_commits or not source_commits.issubset(draft_commits):
-            errors.append(f"rewrite map source attribution differs: {title}")
+        origin = entry.get("origin", "rewritten_draft")
+        if origin == "new_work":
+            if source_commits:
+                errors.append(f"new work invents source attribution: {title}")
+        elif origin == "rewritten_draft":
+            if not source_commits or not source_commits.issubset(draft_commits):
+                errors.append(f"rewrite map source attribution differs: {title}")
+        else:
+            errors.append(f"rewrite map origin differs: {title}")
         if commit == "pending":
             if release.get("status") == "tag-ready":
                 errors.append(f"tag-ready rewrite map retains a pending commit: {title}")

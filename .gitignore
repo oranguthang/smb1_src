@@ -1,5 +1,5 @@
 # Build artifacts and ROM files
-build/
+/build/
 !/scripts/build/
 !/scripts/build/**
 *.o

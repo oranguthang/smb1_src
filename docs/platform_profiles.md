@@ -78,11 +78,14 @@ reproduce all four program payloads exactly: the 32,768-byte `NSMMAIN` at SHA-1
 `8941894b39a959aab87338728919a8b475e4f691`, and the 3,568-byte `NSMDATA4` at
 `eec327d5ebde3891439971986ae23afeefbdd1a7`.
 
-Run `make split-platform-assets PLATFORM=ann_fds` once. The extractor validates
-the complete private disk and writes an ignored template with all four program
-payloads zeroed. `make verify-platform PLATFORM=ann_fds` then assembles each
-payload from reviewed semantic source, restores the corresponding FDS records,
-and compares the complete rebuilt disk side against the reference.
+Run `make split-platform-assets PLATFORM=ann_fds` to prepare every ANN source
+asset explicitly. The extractor validates the complete private disk and writes
+an ignored template with all four program payloads zeroed. The supplemental-course
+build performs this validated extraction automatically, so it is reproducible
+from an empty generated-asset directory. `make verify-platform PLATFORM=ann_fds`
+then assembles each payload from reviewed semantic source, restores the
+corresponding FDS records, and compares the complete rebuilt disk side against
+the reference.
 
 `make split-platform-assets PLATFORM=ann_fds` also extracts private authored
 content into `assets/generated/platforms/ann_fds/source/`. The 384-byte
