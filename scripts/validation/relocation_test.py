@@ -349,6 +349,10 @@ def build_relocated_payloads(
             "--labels", str(output_root / f"{stem}.lbl"),
             "--map", str(output_root / f"{stem}.map"),
         ]
+        for directory in payload.get("bin_include_dirs", []):
+            command.extend(
+                ("--bin-include-dir", str(rooted(project_root, directory)))
+            )
         subprocess.run(command, cwd=project_root, check=True)
         payload_data[name] = output.read_bytes()
     return payload_data, exports

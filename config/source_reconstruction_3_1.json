@@ -7,7 +7,7 @@
   },
   "release_kind": "compatible_minor",
   "tag": "source-reconstruction-3.1",
-  "status": "tag-ready",
+  "status": "development",
   "predecessor": {
     "manifest": "config/source_reconstruction_3_0.json",
     "tag": "source-reconstruction-3.0",
@@ -77,9 +77,9 @@
     {
       "id": "clean_snapshot_reproducibility",
       "kind": "tooling",
-      "summary": "Track every test package and prepare validated ANN payload source assets at the assembly-owned path before real builds.",
+      "summary": "Track every test package, prepare validated ANN payload assets, and give ca65 an explicit binary-include root for production supplemental sources.",
       "evidence": {
-        "files": [".gitignore", "tests/build/__init__.py", "mk/variants.mk", "scripts/build/prepare_ann_supplemental.py", "tests/build/test_ann_supplemental_build.py"],
+        "files": [".gitignore", "tests/build/__init__.py", "mk/variants.mk", "config/relocation/ann_fds.json", "scripts/build/build_asm_range.py", "scripts/build/prepare_ann_supplemental.py", "scripts/validation/relocation_test.py", "src/platforms/late_fds/ann/courses/supplemental", "tests/build/test_ann_supplemental_build.py"],
         "targets": ["test", "prepare-ann-supplemental-assets", "verify-ann-supplemental-courses"]
       }
     },

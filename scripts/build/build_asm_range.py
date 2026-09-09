@@ -17,6 +17,7 @@ def main() -> int:
     parser.add_argument("--output", required=True)
     parser.add_argument("--labels", required=True)
     parser.add_argument("--map", required=True)
+    parser.add_argument("--bin-include-dir", action="append", default=[])
     args = parser.parse_args()
     project_root = Path(__file__).resolve().parents[2]
     source = rooted(project_root, args.source)
@@ -25,22 +26,24 @@ def main() -> int:
     output = rooted(project_root, args.output)
     labels = rooted(project_root, args.labels)
     map_path = rooted(project_root, args.map)
+    bin_include_dirs = [rooted(project_root, path) for path in args.bin_include_dir]
+    for path in bin_include_dirs:
+        if not path.is_dir():
+            raise SystemExit(f"[ERROR] binary include directory not found: {path}")
     for path in (object_path, output, labels, map_path):
         path.parent.mkdir(parents=True, exist_ok=True)
-    run_tool(
-        resolve_tool("ca65", project_root),
-        [
-            str(source),
-            "-g",
-            "-I",
-            str(source.parent),
-            "-I",
-            str(project_root / "src"),
-            "-o",
-            str(object_path),
-        ],
-        project_root,
-    )
+    assembler_args = [
+        str(source),
+        "-g",
+        "-I",
+        str(source.parent),
+        "-I",
+        str(project_root / "src"),
+    ]
+    for path in bin_include_dirs:
+        assembler_args.extend(("--bin-include-dir", str(path)))
+    assembler_args.extend(("-o", str(object_path)))
+    run_tool(resolve_tool("ca65", project_root), assembler_args, project_root)
     run_tool(
         resolve_tool("ld65", project_root),
         [

@@ -65,12 +65,20 @@
       "reason": "Preserve the nonempty metadata change while replacing its release-completion claim after independent review findings."
     },
     {
-      "commit": "HEAD",
+      "commit": "37af6db05e30a63da425b66de02c52fced28d506",
       "title": "Consolidate documentation and label provenance",
       "origin": "new_work",
       "source_commits": [],
       "scope": "Complete documentation-corpus inventory and consolidation, one configuration-owned label registry, migrated consumers, and release-audit enforcement.",
       "reason": "Apply the refreshed compatible-quality rules retroactively and keep the reviewed source, evidence, and navigation contracts under one owner each."
+    },
+    {
+      "commit": "HEAD",
+      "title": "Correct ANN supplemental binary include resolution",
+      "origin": "new_work",
+      "source_commits": [],
+      "scope": "Explicit ca65 binary-include directories for direct and relocation payload assembly, repository-depth-independent ANN asset operands, a clean disposable-project production build regression, and development status during evidence renewal.",
+      "reason": "Correct the clean-review failure that the former flat synthetic source and absolute binary paths bypassed."
     }
   ],
   "date_policy": {

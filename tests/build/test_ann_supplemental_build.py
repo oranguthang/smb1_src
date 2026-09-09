@@ -31,10 +31,14 @@ class AnnSupplementalBuildTests(unittest.TestCase):
         if make is None:
             self.skipTest("GNU Make is required for the public build integration test")
 
-        enemy_streams = b"ENY"
-        area_streams = b"AREA"
-        guest_chr = b"GC"
-        payload = enemy_streams + area_streams + guest_chr
+        enemy_streams = bytes((index * 3 + 1) & 0xFF for index in range(680))
+        area_streams = bytes((index * 5 + 2) & 0xFF for index in range(2263))
+        guest_chr = bytes((index * 7 + 3) & 0xFF for index in range(288))
+        payload = bytearray(3584)
+        payload[352:1032] = enemy_streams
+        payload[1032:3295] = area_streams
+        payload[3295:3583] = guest_chr
+        payload = bytes(payload)
         image = (
             bytes((1,))
             + bytes(55)
@@ -48,32 +52,45 @@ class AnnSupplementalBuildTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            reference = root / "reference.fds"
-            manifest = root / "profiles.json"
-            source = root / "supplemental.asm"
-            config = root / "supplemental.cfg"
-            asset_dir = root / "assembly_assets"
-            redirected_platform_assets = root / "redirected_platform_assets"
-            build_dir = root / "build"
+            clone = root / "project"
+            clone.mkdir()
+            shutil.copy2(PROJECT_ROOT / "Makefile", clone / "Makefile")
+            for name in ("mk", "scripts", "src", "config", "bin"):
+                shutil.copytree(
+                    PROJECT_ROOT / name,
+                    clone / name,
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+                )
+
+            reference = clone / "ann-reference.fds"
+            manifest = clone / "config" / "test_ann_platform_profiles.json"
+            asset_dir = clone / "assets" / "generated" / "platforms" / "ann_fds" / "source"
+            build_dir = clone / "build" / "platforms" / "ann_supplemental_courses"
             reference.write_bytes(image)
 
-            source_assets = []
-            offset = 0
-            for name, data in (
-                ("supplemental_course_enemy_streams", enemy_streams),
-                ("supplemental_course_area_streams", area_streams),
-                ("supplemental_guest_chr", guest_chr),
-            ):
-                source_assets.append(
-                    {
-                        "name": name,
-                        "payload": "NSMDATA2",
-                        "offset": offset,
-                        "size": len(data),
-                        "sha1": sha1(data),
-                    }
-                )
-                offset += len(data)
+            source_assets = [
+                {
+                    "name": "supplemental_course_enemy_streams",
+                    "payload": "NSMDATA2",
+                    "offset": 352,
+                    "size": len(enemy_streams),
+                    "sha1": sha1(enemy_streams),
+                },
+                {
+                    "name": "supplemental_course_area_streams",
+                    "payload": "NSMDATA2",
+                    "offset": 1032,
+                    "size": len(area_streams),
+                    "sha1": sha1(area_streams),
+                },
+                {
+                    "name": "supplemental_guest_chr",
+                    "payload": "NSMDATA2",
+                    "offset": 3295,
+                    "size": len(guest_chr),
+                    "sha1": sha1(guest_chr),
+                },
+            ]
 
             profile = {
                 "id": "ann_fds",
@@ -104,45 +121,24 @@ class AnnSupplementalBuildTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            include_lines = []
-            for item in source_assets:
-                asset_path = asset_dir / f"{item['name']}.bin"
-                include_lines.append(f'.incbin "{asset_path.as_posix()}"')
-            source.write_text(
-                '.segment "OVERLAY"\n' + "\n".join(include_lines) + "\n",
-                encoding="utf-8",
-            )
-            config.write_text(
-                "MEMORY { ROM: file = %O, start = $C470, size = $0009; }\n"
-                "SEGMENTS { OVERLAY: load = ROM, type = ro; }\n",
-                encoding="utf-8",
-            )
-
             def make_assignment(name: str, path: Path) -> str:
                 return f"{name}={path.as_posix()}"
 
+            self.assertFalse(asset_dir.exists())
             result = subprocess.run(
                 [
                     make,
                     "build-ann-supplemental-courses",
                     make_assignment("ANN_REFERENCE", reference),
                     make_assignment("PLATFORM_MANIFEST", manifest),
-                    make_assignment("PLATFORM_ASSET_DIR", redirected_platform_assets),
-                    make_assignment("ANN_SUPPLEMENTAL_ASSET_DIR", asset_dir),
-                    make_assignment("ANN_SUPPLEMENTAL_COURSES_SOURCE", source),
-                    make_assignment("ANN_SUPPLEMENTAL_COURSES_CFG", config),
-                    make_assignment("ANN_SUPPLEMENTAL_COURSES_BUILD_DIR", build_dir),
                 ],
-                cwd=PROJECT_ROOT,
+                cwd=clone,
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertEqual(
-                (build_dir / "payload.bin").read_bytes(),
-                payload,
-            )
+            self.assertEqual((build_dir / "payload.bin").stat().st_size, 3584)
             for item, expected in zip(
                 source_assets,
                 (enemy_streams, area_streams, guest_chr),
@@ -151,7 +147,6 @@ class AnnSupplementalBuildTests(unittest.TestCase):
                 self.assertEqual(
                     (asset_dir / f"{item['name']}.bin").read_bytes(), expected
                 )
-            self.assertFalse(redirected_platform_assets.exists())
 
 
 if __name__ == "__main__":

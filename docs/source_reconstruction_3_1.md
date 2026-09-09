@@ -35,6 +35,11 @@ extracted payloads remain ignored private inputs.
   clusters and oversized documents.
 - One configuration-owned label registry covers both reconstructed source
   families; workflow tools and tests consume its named sections.
+- ANN supplemental sources name generated assets independently of repository
+  depth, while the assembly command supplies the validated cache as ca65's
+  binary-include root. A disposable-project integration test exercises that
+  production entrypoint from an absent default cache, and the ANN relocation
+  manifest forwards the same root when it regenerates payload wrappers.
 
 ## Repository and Evidence Boundaries
 
@@ -72,7 +77,7 @@ branch, a nonempty reviewed candidate commit, and absence of the future local ta
 After an annotated tag is published, `make source-3-1-post-tag` verifies its
 message and peeled local/remote target.
 
-The complete inherited gate succeeded on the candidate tree, so the manifest is
-now `tag-ready`. The candidate commits retain neutral factual titles after
-independent review findings; the eventual release milestone is an owner-managed
-annotated tag rather than a completion claim in commit history.
+The candidate is in `development` while clean-snapshot ANN assembly evidence is
+being corrected and rerun. The candidate commits retain neutral factual titles;
+the eventual release milestone remains an owner-managed annotated tag rather
+than a completion claim in commit history.

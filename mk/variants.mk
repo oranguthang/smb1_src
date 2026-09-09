@@ -156,6 +156,7 @@ build-ann-supplemental-courses: prepare-ann-supplemental-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_SUPPLEMENTAL_COURSES_SOURCE)" \
 		--config "$(ANN_SUPPLEMENTAL_COURSES_CFG)" \
+		--bin-include-dir "$(ANN_SUPPLEMENTAL_ASSET_DIR)" \
 		--object "$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.o" \
 		--output "$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.bin" \
 		--labels "$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.lbl" \

@@ -57,7 +57,8 @@
       {
         "name": "NSMDATA2",
         "source": "src/revisions/ann/supplemental_courses.asm",
-        "linker_config": "config/linker/ann/supplemental_courses.cfg"
+        "linker_config": "config/linker/ann/supplemental_courses.cfg",
+        "bin_include_dirs": ["assets/generated/platforms/ann_fds/source"]
       },
       {
         "name": "NSMDATA3",
