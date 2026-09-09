@@ -67,6 +67,6 @@ branch, a nonempty final release commit, and absence of the future local tag.
 After an annotated tag is published, `make source-3-1-post-tag` verifies its
 message and peeled local/remote target.
 
-The manifest remains `development` until the complete gate succeeds on the
-final candidate tree. Promotion to `tag-ready` changes tracked release metadata
-and is therefore a substantive final commit, never an empty milestone.
+The complete inherited gate succeeded on the candidate tree, so the manifest is
+now `tag-ready`. This promotion changes tracked release metadata and therefore
+forms a substantive final commit rather than an empty milestone.

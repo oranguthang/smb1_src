@@ -35,14 +35,30 @@
       "reason": "Move the cleanup portion of the second draft earlier so the structural commit cannot introduce intermediate non-English or review-specific blobs."
     },
     {
-      "commit": "pending",
+      "commit": "b55014ec5e28c205eeae089c88e059e91609d8e9",
       "title": "Define the Source Reconstruction 3.1 project contract",
       "source_commits": ["5b5041a7ad20ffeefddeb2849167f305da89d56f"],
-      "scope": "Self-contained 3.1 manifest, language and history policy, layout evidence, toolchain pinning, release audit, and documentation.",
-      "reason": "Keep policy and release evidence separate from the mechanical directory reorganization."
+      "scope": "Self-contained 3.1 manifest, language and history policy, introduced-object validation, layout evidence, toolchain pinning, release audit, and documentation.",
+      "reason": "Keep project contract and release evidence separate from the structural reorganization while enforcing the exact post-predecessor history boundary."
     },
     {
-      "commit": "pending",
+      "commit": "7d485f359ce501acb55d55f4ca3b2c8e0e4b7961",
+      "title": "Make clean-snapshot validation self-contained",
+      "origin": "new_work",
+      "source_commits": [],
+      "scope": "Tracked build-test discovery, bounded build-output ignores, and validated ANN supplemental asset preparation from an empty generated state.",
+      "reason": "Record the independent clean-snapshot findings as a separate corrective change before declaring the release tag-ready."
+    },
+    {
+      "commit": "b3c6f303c4f06b53995cd3ccde2c00b643b68fb1",
+      "title": "Make ANN supplemental preparation clone-local",
+      "origin": "new_work",
+      "source_commits": [],
+      "scope": "Assembly-owned ANN source-asset preparation for every dependent payload build plus an end-to-end synthetic regression with the general platform cache redirected.",
+      "reason": "Correct the clean-clone path mismatch that a Makefile text assertion could not exercise before retaining tag-ready status."
+    },
+    {
+      "commit": "HEAD",
       "title": "Complete Source Reconstruction 3.1 modernization",
       "source_commits": ["3f9960c64793d57fe209e477649171cb259b8b7f"],
       "scope": "Tag-ready status and final gate evidence after all preceding work passes the aggregate release command.",

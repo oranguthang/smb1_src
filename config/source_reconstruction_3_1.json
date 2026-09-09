@@ -7,7 +7,7 @@
   },
   "release_kind": "compatible_minor",
   "tag": "source-reconstruction-3.1",
-  "status": "development",
+  "status": "tag-ready",
   "predecessor": {
     "manifest": "config/source_reconstruction_3_0.json",
     "tag": "source-reconstruction-3.0",

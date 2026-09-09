@@ -20,7 +20,7 @@ engine boundaries unchanged. Its release delta modularizes Make orchestration,
 assigns configuration and tests to explicit responsibility packages, enforces
 English public text, and replaces review-specific metadata with a self-contained
 project release contract. `make source-3-1-check` is the aggregate gate; the
-candidate remains in development until that command passes on the final tree.
+candidate is tag-ready after that command passed on the completed release tree.
 
 ## Preservation Contract
 
