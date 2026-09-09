@@ -77,8 +77,10 @@ branch, a nonempty reviewed candidate commit, and absence of the future local ta
 After an annotated tag is published, `make source-3-1-post-tag` verifies its
 message and peeled local/remote target.
 
-The candidate is in `development` while clean-gate evidence is renewed for the
-ANN primary program path. The generated-asset contract now covers primary,
-supplemental, hard-course, ending, audio, and relocation assembly through one
-explicit binary-include root. Tag-ready status will return only after the
-complete inherited gate passes from an empty ANN platform cache.
+The candidate is `tag-ready`. The complete inherited `make source-3-check` gate
+passed after removing the entire build tree and ANN generated cache. That run
+rebuilt and verified the ANN primary program, supplemental courses, ending,
+hard courses, final disk image, authoring round trip, direct runtime path, and
+relocation path through the shared explicit binary-include contract. The same
+run passed all 265 tests and the preservation, profile, runtime, authoring,
+semantic-evidence, and sibling-engine checks inherited from earlier releases.

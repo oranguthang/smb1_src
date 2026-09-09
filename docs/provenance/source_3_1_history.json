@@ -28,21 +28,21 @@
   "carried_dirty_paths": [],
   "reconstructed_commits": [
     {
-      "commit": "e9e49336f22a6d5a1b8a0c70d3967048f12c2256",
+      "commit": "201e9fbd5dc8aea6da339484cf02e5dad2f127ab",
       "title": "Modularize project orchestration and test ownership",
       "source_commits": ["3d46496e1c38c96587368855464011dac03e3ac5", "5b5041a7ad20ffeefddeb2849167f305da89d56f"],
-      "scope": "Make fragments, responsibility-owned configuration, mirrored test packages, path repairs, Make interface tests, and cleanup of touched 3.0 public metadata.",
-      "reason": "Move the cleanup portion of the second draft earlier so the structural commit cannot introduce intermediate non-English or review-specific blobs."
+      "scope": "Make fragments, responsibility-owned configuration, mirrored test packages, path repairs, Make interface tests, ASCII-escaped language-policy fixtures, and cleanup of touched 3.0 public metadata.",
+      "reason": "Move the cleanup portion of the second draft earlier and encode the negative language fixture without embedding non-English text, so the structural commit cannot introduce an intermediate policy violation."
     },
     {
-      "commit": "b55014ec5e28c205eeae089c88e059e91609d8e9",
+      "commit": "ded186e4a47f7984c39747898abb3f976d8f0da6",
       "title": "Define the Source Reconstruction 3.1 project contract",
       "source_commits": ["5b5041a7ad20ffeefddeb2849167f305da89d56f"],
       "scope": "Self-contained 3.1 manifest, language and history policy, introduced-object validation, layout evidence, toolchain pinning, release audit, and documentation.",
       "reason": "Keep project contract and release evidence separate from the structural reorganization while enforcing the exact post-predecessor history boundary."
     },
     {
-      "commit": "7d485f359ce501acb55d55f4ca3b2c8e0e4b7961",
+      "commit": "2a63ce80150f01c9de90a715ddba28430afd1918",
       "title": "Make clean-snapshot validation self-contained",
       "origin": "new_work",
       "source_commits": [],
@@ -50,7 +50,7 @@
       "reason": "Record the independent clean-snapshot findings as a separate corrective change before declaring the release tag-ready."
     },
     {
-      "commit": "b3c6f303c4f06b53995cd3ccde2c00b643b68fb1",
+      "commit": "bb8e52afe2173eeb8820b1393914d649655cf5bf",
       "title": "Make ANN supplemental preparation clone-local",
       "origin": "new_work",
       "source_commits": [],
@@ -58,14 +58,14 @@
       "reason": "Correct the clean-clone path mismatch that a Makefile text assertion could not exercise before retaining tag-ready status."
     },
     {
-      "commit": "a837fc02017ee81f469b1934f1f647f01c9b4bbd",
+      "commit": "8b7c9c7f36e26ff02f834d65d7e8bf4fcdf59d6e",
       "title": "Record the modernization review candidate",
       "source_commits": ["3f9960c64793d57fe209e477649171cb259b8b7f"],
       "scope": "Tag-ready status and final gate evidence after all preceding work passes the aggregate release command.",
       "reason": "Preserve the nonempty metadata change while replacing its release-completion claim after independent review findings."
     },
     {
-      "commit": "37af6db05e30a63da425b66de02c52fced28d506",
+      "commit": "f2e9ee95fc9a2cd729084958bfb8fada065cf768",
       "title": "Consolidate documentation and label provenance",
       "origin": "new_work",
       "source_commits": [],
@@ -73,7 +73,7 @@
       "reason": "Apply the refreshed compatible-quality rules retroactively and keep the reviewed source, evidence, and navigation contracts under one owner each."
     },
     {
-      "commit": "a0d09eacfe1456e8cdec4cbd8d7e1f940211371a",
+      "commit": "a8eb25156df37eb6f965634561b45038632b37ce",
       "title": "Correct ANN supplemental binary include resolution",
       "origin": "new_work",
       "source_commits": [],
@@ -81,7 +81,7 @@
       "reason": "Correct the clean-review failure that the former flat synthetic source and absolute binary paths bypassed."
     },
     {
-      "commit": "5f78c94d92012c7eacbd7467aeeb4b09a8d97675",
+      "commit": "d177a6d57c13721781fbaf6e88303ff392be4e1e",
       "title": "Record renewed clean-gate evidence",
       "origin": "new_work",
       "source_commits": [],
@@ -89,7 +89,7 @@
       "reason": "Keep readiness metadata in a nonempty factual commit that follows the successful aggregate evidence instead of retaining the earlier unsupported claim."
     },
     {
-      "commit": "baa8b010334fe27afb80e59f027624994e88bc90",
+      "commit": "c93229ce4a595573b28f5646e7bf0a42c0bf28c8",
       "title": "Extend ANN binary includes to hard courses",
       "origin": "new_work",
       "source_commits": [],
@@ -97,7 +97,7 @@
       "reason": "Apply the validated ANN asset contract to the hard-course sibling path that the prior supplemental-only regression did not exercise."
     },
     {
-      "commit": "637f20c2e4c5b00fc951cef4b67d7f95da75f4a1",
+      "commit": "c83f782f292fc4c010d1657b4691df55f0bd0e2c",
       "title": "Record complete ANN clean-gate evidence",
       "origin": "new_work",
       "source_commits": [],
@@ -105,14 +105,100 @@
       "reason": "Restore readiness only after the corrected NSMDATA2 and NSMDATA4 production paths pass the full aggregate evidence sequence."
     },
     {
-      "commit": "pending",
+      "commit": "407040a017fbecc087e3a981862677165c31f2e6",
       "title": "Unify ANN generated-asset resolution",
       "origin": "new_work",
       "source_commits": [],
       "scope": "Explicit binary-include roots for primary, ending, audio, tail-core, and relocation builds; repository-depth-independent ANN asset operands; container-template preparation; a clean-cache build-platform integration regression; the resulting relocation-validator size review; and development status during evidence renewal.",
       "reason": "Close the remaining NSMMAIN path gap and exercise the complete production platform target that prior payload-only regressions did not reach."
+    },
+    {
+      "commit": "HEAD",
+      "title": "Record complete ANN platform-gate evidence",
+      "origin": "new_work",
+      "source_commits": [],
+      "scope": "Tag-ready status and release documentation after the complete inherited gate passes from an empty build tree and ANN generated cache with primary, supplemental, ending, hard-course, authoring, runtime, and relocation paths exercised.",
+      "reason": "Restore readiness only after the production platform target and all inherited evidence complete successfully on the corrected candidate."
     }
   ],
+  "superseded_candidate": {
+    "tip": "e296eb3d86fbf3c90f075253c9e029beb2c36be5",
+    "reason": "A final object scan found a literal non-English negative-test fixture in the first candidate commit. The series was rebuilt from the same base with an ASCII Unicode escape sequence, unchanged authorship and dates, and otherwise equivalent commit trees.",
+    "old_to_new": [
+      {
+        "old_commit": "e9e49336f22a6d5a1b8a0c70d3967048f12c2256",
+        "new_commit": "201e9fbd5dc8aea6da339484cf02e5dad2f127ab",
+        "scope": "Structural reorganization and its language-policy regression fixture.",
+        "reason": "Encode the negative-test sample with ASCII Unicode escapes so the commit introduces no non-English blob."
+      },
+      {
+        "old_commit": "b55014ec5e28c205eeae089c88e059e91609d8e9",
+        "new_commit": "ded186e4a47f7984c39747898abb3f976d8f0da6",
+        "scope": "The project contract and release evidence tree.",
+        "reason": "Replay the unchanged tree change on the corrected parent."
+      },
+      {
+        "old_commit": "7d485f359ce501acb55d55f4ca3b2c8e0e4b7961",
+        "new_commit": "2a63ce80150f01c9de90a715ddba28430afd1918",
+        "scope": "Clean-snapshot test discovery and asset preparation.",
+        "reason": "Replay the unchanged tree change on the corrected parent."
+      },
+      {
+        "old_commit": "b3c6f303c4f06b53995cd3ccde2c00b643b68fb1",
+        "new_commit": "bb8e52afe2173eeb8820b1393914d649655cf5bf",
+        "scope": "Clone-local ANN supplemental preparation.",
+        "reason": "Replay the unchanged tree change on the corrected parent."
+      },
+      {
+        "old_commit": "a837fc02017ee81f469b1934f1f647f01c9b4bbd",
+        "new_commit": "8b7c9c7f36e26ff02f834d65d7e8bf4fcdf59d6e",
+        "scope": "Modernization candidate metadata.",
+        "reason": "Replay the unchanged tree change on the corrected parent."
+      },
+      {
+        "old_commit": "37af6db05e30a63da425b66de02c52fced28d506",
+        "new_commit": "f2e9ee95fc9a2cd729084958bfb8fada065cf768",
+        "scope": "Documentation and label-provenance consolidation.",
+        "reason": "Replay the unchanged tree change on the corrected parent."
+      },
+      {
+        "old_commit": "a0d09eacfe1456e8cdec4cbd8d7e1f940211371a",
+        "new_commit": "a8eb25156df37eb6f965634561b45038632b37ce",
+        "scope": "ANN supplemental binary-include resolution.",
+        "reason": "Replay the unchanged tree change on the corrected parent."
+      },
+      {
+        "old_commit": "5f78c94d92012c7eacbd7467aeeb4b09a8d97675",
+        "new_commit": "d177a6d57c13721781fbaf6e88303ff392be4e1e",
+        "scope": "Renewed clean-gate evidence.",
+        "reason": "Replay the unchanged tree change on the corrected parent."
+      },
+      {
+        "old_commit": "baa8b010334fe27afb80e59f027624994e88bc90",
+        "new_commit": "c93229ce4a595573b28f5646e7bf0a42c0bf28c8",
+        "scope": "ANN hard-course binary-include resolution.",
+        "reason": "Replay the unchanged tree change on the corrected parent."
+      },
+      {
+        "old_commit": "637f20c2e4c5b00fc951cef4b67d7f95da75f4a1",
+        "new_commit": "c83f782f292fc4c010d1657b4691df55f0bd0e2c",
+        "scope": "Complete ANN course-path gate evidence.",
+        "reason": "Replay the unchanged tree change on the corrected parent."
+      },
+      {
+        "old_commit": "a8c76f9c44b8d7f4e170b471583db0c6fecb3cfa",
+        "new_commit": "407040a017fbecc087e3a981862677165c31f2e6",
+        "scope": "Unified ANN generated-asset resolution.",
+        "reason": "Replay the unchanged tree change on the corrected parent."
+      },
+      {
+        "old_commit": "e296eb3d86fbf3c90f075253c9e029beb2c36be5",
+        "new_commit": "HEAD",
+        "scope": "Complete platform-gate evidence and the retained history map.",
+        "reason": "Retain the evidence tree while recording the corrected commit identities without an impossible self-referential hash."
+      }
+    ]
+  },
   "date_policy": {
     "source_interval": {
       "earliest": "2026-09-09T03:18:00+03:00",

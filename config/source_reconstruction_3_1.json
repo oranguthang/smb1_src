@@ -7,7 +7,7 @@
   },
   "release_kind": "compatible_minor",
   "tag": "source-reconstruction-3.1",
-  "status": "development",
+  "status": "tag-ready",
   "predecessor": {
     "manifest": "config/source_reconstruction_3_0.json",
     "tag": "source-reconstruction-3.0",
@@ -156,7 +156,7 @@
       "evidence": {"files": ["docs/licensing.md", "docs/provenance/README.md", "bin/README.md"]}
     },
     "aggregate_release_gate": {
-      "status": "partial",
+      "status": "satisfied",
       "evidence": {"targets": ["source-3-1-check", "source-3-1-pre-tag", "source-3-1-post-tag"]}
     }
   },
