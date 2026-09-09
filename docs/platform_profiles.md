@@ -81,8 +81,11 @@ reproduce all four program payloads exactly: the 32,768-byte `NSMMAIN` at SHA-1
 Run `make split-platform-assets PLATFORM=ann_fds` to prepare every ANN source
 asset explicitly. The extractor validates the complete private disk and writes
 an ignored template with all four program payloads zeroed. The supplemental-course
-build performs this validated extraction automatically, so it is reproducible
-from an empty generated-asset directory. `make verify-platform PLATFORM=ann_fds`
+build validates the disk and writes all profile-declared source assets directly
+to the assembly-owned generated cache, independently of any redirected general
+platform asset directory. The supplemental, ending, and hard-course targets each
+depend on that preparation and are reproducible from an empty generated-asset
+directory. `make verify-platform PLATFORM=ann_fds`
 then assembles each payload from reviewed semantic source, restores the
 corresponding FDS records, and compares the complete rebuilt disk side against
 the reference.

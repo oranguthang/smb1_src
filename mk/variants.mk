@@ -9,6 +9,7 @@ ANN_AUDIO_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_audio
 ANN_SUPPLEMENTAL_COURSES_SOURCE ?= $(PROJECT_DIR)src/revisions/ann/supplemental_courses.asm
 ANN_SUPPLEMENTAL_COURSES_CFG ?= $(PROJECT_DIR)config/linker/ann/supplemental_courses.cfg
 ANN_SUPPLEMENTAL_COURSES_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_supplemental_courses
+ANN_SUPPLEMENTAL_ASSET_DIR ?= $(PROJECT_DIR)assets/generated/platforms/ann_fds/source
 ANN_ENDING_SOURCE ?= $(PROJECT_DIR)src/revisions/ann/ending.asm
 ANN_ENDING_CFG ?= $(PROJECT_DIR)config/linker/ann/ending.cfg
 ANN_ENDING_BUILD_DIR ?= $(PROJECT_DIR)build/platforms/ann_ending
@@ -145,11 +146,11 @@ verify-ann-tail-core:
 build-ann-payloads: build-ann-supplemental-courses build-ann-ending build-ann-hard-courses
 
 prepare-ann-supplemental-assets:
-	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.platform_profiles split \
+	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.prepare_ann_supplemental \
 		--manifest "$(PLATFORM_MANIFEST)" \
 		--profile ann_fds \
 		--reference "$(ANN_REFERENCE)" \
-		--asset-dir "$(PLATFORM_ASSET_DIR)"
+		--output-dir "$(ANN_SUPPLEMENTAL_ASSET_DIR)"
 
 build-ann-supplemental-courses: prepare-ann-supplemental-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
@@ -171,7 +172,7 @@ verify-ann-supplemental-courses: build-ann-supplemental-courses
 		--start 0xC470 \
 		--end 0xD270
 
-build-ann-ending:
+build-ann-ending: prepare-ann-supplemental-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_ENDING_SOURCE)" \
 		--config "$(ANN_ENDING_CFG)" \
@@ -191,7 +192,7 @@ verify-ann-ending: build-ann-ending
 		--start 0xC5D0 \
 		--end 0xD2E2
 
-build-ann-hard-courses:
+build-ann-hard-courses: prepare-ann-supplemental-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_HARD_COURSES_SOURCE)" \
 		--config "$(ANN_HARD_COURSES_CFG)" \

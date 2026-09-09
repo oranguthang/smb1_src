@@ -75,9 +75,9 @@
     {
       "id": "clean_snapshot_reproducibility",
       "kind": "tooling",
-      "summary": "Track every test package and prepare validated ANN supplemental-course source assets before assembly.",
+      "summary": "Track every test package and prepare validated ANN payload source assets at the assembly-owned path before real builds.",
       "evidence": {
-        "files": [".gitignore", "tests/build/__init__.py", "mk/variants.mk"],
+        "files": [".gitignore", "tests/build/__init__.py", "mk/variants.mk", "scripts/build/prepare_ann_supplemental.py", "tests/build/test_ann_supplemental_build.py"],
         "targets": ["test", "prepare-ann-supplemental-assets", "verify-ann-supplemental-courses"]
       }
     },
