@@ -24,7 +24,7 @@ contracts.
 - [`assembly_style.md`](assembly_style.md) — mechanically checked assembly conventions.
 - [`6502_reference.md`](6502_reference.md) — local 6502 instruction reference.
 - [`unknowns.md`](unknowns.md) — unresolved and closed evidence records.
-- [`provenance/README.md`](provenance/README.md) — provenance manifests and label history.
+- [`provenance.md`](provenance.md) — imported-source provenance and canonical label history.
 - [`licensing.md`](licensing.md) — licensing and distribution status for source, tools, and private inputs.
 
 ## Builds, Profiles, and Debugging
@@ -34,7 +34,6 @@ contracts.
 - [`variants.md`](variants.md) — fixed-layout and expanded-ROM variant contracts.
 - [`relocation_testing.md`](relocation_testing.md) — relocation generation and runtime proof.
 - [`debugger_workflow.md`](debugger_workflow.md) — Mesen/FCEUX symbols, watches, and breakpoints.
-- [`adr/0001-expanded-rom-architecture.md`](adr/0001-expanded-rom-architecture.md) — expanded-ROM architecture decision.
 
 ## Runtime Evidence and Gameplay
 

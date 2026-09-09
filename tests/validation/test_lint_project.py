@@ -123,6 +123,46 @@ class LintProjectTests(unittest.TestCase):
         messages = [item.message for item in lint_project.lint_documentation_corpus(root)]
         self.assertTrue(any("documentation inventory differs" in item for item in messages))
 
+    def test_documentation_corpus_rejects_deprecated_category_directories(self) -> None:
+        root = self.make_project()
+        config = root / "config" / "reconstruction"
+        config.mkdir(parents=True)
+        (root / "docs" / "adr").mkdir()
+        (config / "documentation_corpus.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "maximum_reviewed_lines": 600,
+                    "documents": [
+                        {
+                            "path": "README.md",
+                            "owner": "project",
+                            "purpose": "Fixture entrypoint.",
+                            "decision": "retain",
+                        },
+                        {
+                            "path": "docs/unknowns.md",
+                            "owner": "evidence",
+                            "purpose": "Fixture evidence.",
+                            "decision": "retain",
+                        },
+                    ],
+                    "reader_journeys": [],
+                    "consolidations": [],
+                    "configuration_moves": [],
+                    "prefix_exemptions": [],
+                    "oversize_reviews": [],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        messages = [item.message for item in lint_project.lint_documentation_corpus(root)]
+        self.assertIn(
+            "deprecated documentation category directory must be removed",
+            messages,
+        )
+
     def test_rejects_duplicate_label_registry(self) -> None:
         root = self.make_project()
         canonical = root / "config" / "reconstruction"

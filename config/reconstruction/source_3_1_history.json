@@ -113,12 +113,20 @@
       "reason": "Close the remaining NSMMAIN path gap and exercise the complete production platform target that prior payload-only regressions did not reach."
     },
     {
-      "commit": "HEAD",
+      "commit": "057aa4e29c0b6f89c507a37d2983a0f7f9b8b8d9",
       "title": "Record complete ANN platform-gate evidence",
       "origin": "new_work",
       "source_commits": [],
       "scope": "Tag-ready status and release documentation after the complete inherited gate passes from an empty build tree and ANN generated cache with primary, supplemental, ending, hard-course, authoring, runtime, and relocation paths exercised.",
       "reason": "Restore readiness only after the production platform target and all inherited evidence complete successfully on the corrected candidate."
+    },
+    {
+      "commit": "HEAD",
+      "title": "Complete Source Reconstruction 3.1",
+      "origin": "new_work",
+      "source_commits": [],
+      "scope": "Integrate the expanded-ROM decision into the variants guide, replace the provenance category with one edited top-level document, move the rewrite map under reconstruction configuration, update every live reference, and enforce the flattened documentation boundary.",
+      "reason": "Keep reader documentation task-oriented while preserving substantive architecture and attribution evidence under their actual owners."
     }
   ],
   "superseded_candidate": {
@@ -193,9 +201,9 @@
       },
       {
         "old_commit": "e296eb3d86fbf3c90f075253c9e029beb2c36be5",
-        "new_commit": "HEAD",
+        "new_commit": "057aa4e29c0b6f89c507a37d2983a0f7f9b8b8d9",
         "scope": "Complete platform-gate evidence and the retained history map.",
-        "reason": "Retain the evidence tree while recording the corrected commit identities without an impossible self-referential hash."
+        "reason": "Retain the evidence tree while recording the corrected commit identities."
       }
     ]
   },

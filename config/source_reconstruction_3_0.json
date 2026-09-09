@@ -88,7 +88,7 @@
     "semantic_runtime_evidence": {"status": "satisfied", "evidence": {"targets": ["semantic-evidence"], "manifests": ["scenarios/semantic_runtime_scenarios.json", "scenarios/scoring_runtime_scenarios.json"]}},
     "profile_aware_authoring": {"status": "satisfied", "evidence": {"targets": ["check-content-profiles"], "manifests": ["config/authoring/content_authoring_profiles.json"]}},
     "toolchain_reproducibility": {"status": "satisfied", "evidence": {"targets": ["check-source-3-toolchain"], "manifests": ["config/release_toolchain_3_0.json"]}},
-    "licensing_and_provenance": {"status": "satisfied", "evidence": {"documents": ["docs/licensing.md", "docs/provenance/README.md", "bin/README.md"]}},
+    "licensing_and_provenance": {"status": "satisfied", "evidence": {"documents": ["docs/licensing.md", "docs/provenance.md", "bin/README.md"]}},
     "aggregate_release_gate": {"status": "satisfied", "evidence": {"targets": ["source-3-check", "source-3-pre-tag", "source-3-post-tag"]}}
   },
   "profiles": [
@@ -250,7 +250,7 @@
     "docs/relocation_testing.md",
     "docs/runtime_evidence.md",
     "docs/licensing.md",
-    "docs/provenance/README.md",
+    "docs/provenance.md",
     "docs/index.md",
     "docs/roadmap.md"
   ],

@@ -327,6 +327,8 @@ def validate_rewrite_map(
     errors: list[str] = []
     history = release.get("history", {})
     relative = history.get("rewrite_map", "")
+    if relative != "config/reconstruction/source_3_1_history.json":
+        errors.append("Source Reconstruction 3.1 rewrite map location differs")
     path = project_root / relative
     if not path.is_file():
         return ["Source Reconstruction 3.1 rewrite map is missing"]

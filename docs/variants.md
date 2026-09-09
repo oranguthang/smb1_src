@@ -55,5 +55,39 @@ World 1-1 RAM state in FCEUX. The expanded build has its own entrypoint, linker
 configuration, manifest, and output directory. It does not alter or replace the
 default Mapper 0 preservation build.
 
-The rationale and the boundary around future PRG banking are recorded in
-[`adr/0001-expanded-rom-architecture.md`](adr/0001-expanded-rom-architecture.md).
+### Expanded-ROM Architecture Decision
+
+This accepted decision was recorded on 2026-08-26 for the 2.0 source baseline.
+
+The canonical program fills the complete 32 KiB NROM-256 CPU window. Its reset
+vector targets `$8000`, its NMI handler begins at `$8082`, and the fixed
+`$C000..$FFFF` half contains no proven block large enough for reset, NMI, IRQ,
+and bank-call trampolines. Expansion must leave the default Mapper 0 build
+untouched and must not depend on an emulator-specific power-on bank.
+
+Reclaiming residual Mapper 0 bytes can support small fixed-layout changes but
+cannot provide a general content bank. Treating inferred dead code as free space
+would weaken the preservation boundary while leaving the ROM at its mapper
+limit. UxROM, MMC1, and MMC3 provide PRG capacity, but make at least part of
+`$8000..$BFFF` switchable while SMB keeps reset, NMI, and early boot code there.
+Safe PRG banking therefore requires reviewed relocation of interrupt-safe common
+code and mapper-register handling. CHR-RAM was also rejected for the first
+expansion because it adds initialization time and mutable graphics state without
+being necessary for reversible graphics capacity.
+
+CNROM is the accepted first expanded profile because it keeps the entire 32 KiB
+PRG continuously mapped at `$8000..$FFFF` while adding switchable 8 KiB CHR
+banks. The original vectors, interrupt behavior, fixed operands, vertical
+mirroring, and CHR-ROM rendering model remain valid. Both initial banks contain
+the canonical CHR, making every possible power-on bank visually equivalent.
+The current profile intentionally performs no mapper writes; any future visible
+graphics variant must add bus-conflict-safe switching.
+
+The separate entrypoint, linker configuration, manifest, output directory, and
+iNES header isolate this decision from preservation builds. Acceptance verifies
+the mapper header, complete canonical PRG, vectors through that PRG comparison,
+every CHR-bank hash, and an FCEUX World 1-1 startup observation. The result adds
+graphics capacity without claiming that safe PRG banking is solved. A future
+CNROM content variant may replace bank 1 and add reviewed selection logic through
+the fixed-layout patch contract; PRG expansion requires a separate architecture
+decision and explicit interrupt/common-code relocation evidence.

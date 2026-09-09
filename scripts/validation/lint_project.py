@@ -217,6 +217,16 @@ def lint_documentation_corpus(project_root: Path) -> list[Diagnostic]:
     if document.get("schema_version") != 1:
         diagnostics.append(Diagnostic(relative_manifest, 1, "documentation corpus schema differs"))
 
+    for relative in ("docs/adr", "docs/provenance"):
+        if (project_root / relative).exists():
+            diagnostics.append(
+                Diagnostic(
+                    Path(relative),
+                    1,
+                    "deprecated documentation category directory must be removed",
+                )
+            )
+
     records = document.get("documents", [])
     declared = [item.get("path") for item in records]
     actual = [path.relative_to(project_root).as_posix() for path in documentation_paths(project_root)]
@@ -278,6 +288,17 @@ def lint_documentation_corpus(project_root: Path) -> list[Diagnostic]:
             diagnostics.append(Diagnostic(relative_manifest, 1, "documentation consolidation is incomplete"))
         if any((project_root / source).exists() for source in sources):
             diagnostics.append(Diagnostic(relative_manifest, 1, f"consolidated document still exists: {sources}"))
+    for item in document.get("configuration_moves", []):
+        source = item.get("source", "")
+        destination = item.get("destination", "")
+        if (
+            not item.get("reason")
+            or not destination
+            or not (project_root / destination).is_file()
+        ):
+            diagnostics.append(Diagnostic(relative_manifest, 1, "documentation configuration move is incomplete"))
+        if source and (project_root / source).exists():
+            diagnostics.append(Diagnostic(relative_manifest, 1, f"moved documentation configuration still exists: {source}"))
     return diagnostics
 
 

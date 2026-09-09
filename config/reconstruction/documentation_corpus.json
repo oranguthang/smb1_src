@@ -20,7 +20,7 @@
     {"path": "docs/platform_profiles.md", "owner": "build", "purpose": "Vs. and FDS container profiles, inputs, and evidence.", "decision": "retain"},
     {"path": "docs/player_movement.md", "owner": "gameplay", "purpose": "Player input, state, physics, collision, and static trace.", "decision": "retain"},
     {"path": "docs/preservation_source_1_0.md", "owner": "release", "purpose": "Published preservation baseline and acceptance boundary.", "decision": "retain"},
-    {"path": "docs/provenance/README.md", "owner": "provenance", "purpose": "Source and symbol provenance policy for the canonical registry.", "decision": "retain"},
+    {"path": "docs/provenance.md", "owner": "provenance", "purpose": "Imported-source provenance and symbol policy for the canonical registry.", "decision": "retain"},
     {"path": "docs/ram_fields.md", "owner": "source", "purpose": "Verified RAM symbol ownership by subsystem.", "decision": "retain"},
     {"path": "docs/relocation_testing.md", "owner": "runtime", "purpose": "Relocation generation, supported matrices, and runtime proof.", "decision": "retain"},
     {"path": "docs/revision_profiles.md", "owner": "build", "purpose": "Cartridge revision profile matrix and identity expectations.", "decision": "retain"},
@@ -33,21 +33,25 @@
     {"path": "docs/source_reconstruction_3_1.md", "owner": "release", "purpose": "Compatible 3.1 delta, boundaries, and verification command.", "decision": "retain"},
     {"path": "docs/subsystems.md", "owner": "source", "purpose": "Runtime subsystem boundaries and principal interactions.", "decision": "retain"},
     {"path": "docs/unknowns.md", "owner": "evidence", "purpose": "Open and resolved evidence records referenced from source.", "decision": "retain"},
-    {"path": "docs/variants.md", "owner": "build", "purpose": "Fixed-layout and expanded-ROM isolation, verification, and runtime checks.", "decision": "retain"},
-    {"path": "docs/adr/0001-expanded-rom-architecture.md", "owner": "architecture", "purpose": "Decision record for isolated CNROM graphics expansion.", "decision": "retain"}
+    {"path": "docs/variants.md", "owner": "build", "purpose": "Fixed-layout and expanded-ROM isolation, architecture decisions, verification, and runtime checks.", "decision": "retain"}
   ],
   "reader_journeys": [
     {"id": "build_and_verify", "paths": ["README.md", "docs/index.md", "docs/revision_profiles.md", "docs/platform_profiles.md", "docs/source_reconstruction_3_1.md"]},
     {"id": "understand_architecture", "paths": ["README.md", "docs/index.md", "docs/source_layout.md", "docs/subsystems.md", "docs/ram_fields.md"]},
     {"id": "author_content", "paths": ["README.md", "docs/index.md", "docs/content_authoring.md", "docs/data_formats.md"]},
-    {"id": "review_evidence", "paths": ["README.md", "docs/index.md", "docs/runtime_evidence.md", "docs/unknowns.md", "docs/provenance/README.md"]},
+    {"id": "review_evidence", "paths": ["README.md", "docs/index.md", "docs/runtime_evidence.md", "docs/unknowns.md", "docs/provenance.md"]},
     {"id": "review_late_fds", "paths": ["README.md", "docs/index.md", "docs/later_engine.md", "docs/smb2_reconstruction.md", "docs/platform_profiles.md"]}
   ],
   "consolidations": [
     {"sources": ["docs/editor_references.md"], "destination": "docs/content_authoring.md", "reason": "Editor references are evidence for the authoring workflow rather than a separate reader task."},
     {"sources": ["docs/scoring_runtime.md"], "destination": "docs/runtime_evidence.md", "reason": "Scoring scenarios are one runtime-evidence layer and now share its validation narrative."},
     {"sources": ["docs/expanded_rom.md", "docs/fixed_layout_variants.md"], "destination": "docs/variants.md", "reason": "Both documents describe isolated non-preservation builds and their three-layer acceptance checks."},
-    {"sources": ["docs/later_engine_feasibility.md", "docs/later_engine_source_overlap.md"], "destination": "docs/later_engine.md", "reason": "The binary and instruction comparisons support one late-FDS architectural decision."}
+    {"sources": ["docs/later_engine_feasibility.md", "docs/later_engine_source_overlap.md"], "destination": "docs/later_engine.md", "reason": "The binary and instruction comparisons support one late-FDS architectural decision."},
+    {"sources": ["docs/adr/0001-expanded-rom-architecture.md"], "destination": "docs/variants.md", "reason": "The CNROM decision, rejected alternatives, acceptance evidence, and future PRG-banking boundary now live beside the expanded profile they govern."},
+    {"sources": ["docs/provenance/README.md"], "destination": "docs/provenance.md", "reason": "The edited top-level document preserves unique source and symbol attribution without retaining a one-file category directory."}
+  ],
+  "configuration_moves": [
+    {"source": "docs/provenance/source_3_1_history.json", "destination": "config/reconstruction/source_3_1_history.json", "reason": "The machine-readable rewrite map is release configuration rather than reader documentation."}
   ],
   "prefix_exemptions": [
     {"prefix": "source_reconstruction", "reason": "Each release document has an independent immutable release audience and lifecycle."}

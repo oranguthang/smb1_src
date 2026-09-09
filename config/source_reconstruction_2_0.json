@@ -27,7 +27,6 @@
   "required_documents": [
     "docs/preservation_source_1_0.md",
     "docs/variants.md",
-    "docs/adr/0001-expanded-rom-architecture.md",
     "docs/content_authoring.md",
     "docs/revision_profiles.md",
     "docs/platform_profiles.md",

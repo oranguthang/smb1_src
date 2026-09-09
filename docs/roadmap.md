@@ -496,7 +496,8 @@ ADR 0001 selects a conservative CNROM graphics expansion after rejecting unsafe
 power-on assumptions for PRG-bank mappers. The isolated profile preserves the
 complete canonical PRG, duplicates validated CHR into two initial banks, checks
 the Mapper 3 header and every bank hash, and reaches active World 1-1 in FCEUX.
-See `docs/adr/0001-expanded-rom-architecture.md` and `docs/variants.md`.
+See `docs/variants.md` for the integrated expanded-ROM architecture decision and
+variant acceptance boundary.
 
 ### 12. Content Authoring Tools - Complete
 

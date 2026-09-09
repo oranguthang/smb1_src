@@ -88,7 +88,7 @@
       "kind": "documentation",
       "summary": "Replace inherited review metadata with a self-contained public 3.1 release contract and history map.",
       "evidence": {
-        "files": ["config/source_reconstruction_3_1.json", "docs/source_reconstruction_3_1.md", "docs/provenance/source_3_1_history.json"]
+        "files": ["config/source_reconstruction_3_1.json", "docs/source_reconstruction_3_1.md", "config/reconstruction/source_3_1_history.json"]
       }
     },
     {
@@ -103,9 +103,9 @@
     {
       "id": "documentation_and_label_provenance",
       "kind": "documentation",
-      "summary": "Review the complete documentation corpus, consolidate overlapping reader tasks, and make one configuration-owned registry authoritative for all label renames.",
+      "summary": "Review the complete documentation corpus, consolidate overlapping reader tasks and architecture decisions into top-level documents, and make one configuration-owned registry authoritative for all label renames.",
       "evidence": {
-        "files": ["config/reconstruction/documentation_corpus.json", "config/reconstruction/label_renames.json", "docs/index.md", "docs/provenance/README.md"],
+        "files": ["config/reconstruction/documentation_corpus.json", "config/reconstruction/label_renames.json", "config/reconstruction/source_3_1_history.json", "docs/index.md", "docs/provenance.md", "docs/variants.md"],
         "targets": ["lint", "source-3-1-audit"]
       }
     }
@@ -145,15 +145,15 @@
     },
     "label_rename_registry": {
       "status": "satisfied",
-      "evidence": {"targets": ["lint", "source-3-1-audit"], "files": ["config/reconstruction/label_renames.json", "docs/provenance/README.md"]}
+      "evidence": {"targets": ["lint", "source-3-1-audit"], "files": ["config/reconstruction/label_renames.json", "docs/provenance.md"]}
     },
     "release_history": {
       "status": "satisfied",
-      "evidence": {"targets": ["source-3-1-audit"], "files": ["docs/provenance/source_3_1_history.json"]}
+      "evidence": {"targets": ["source-3-1-audit"], "files": ["config/reconstruction/source_3_1_history.json"]}
     },
     "licensing_and_provenance": {
       "status": "satisfied",
-      "evidence": {"files": ["docs/licensing.md", "docs/provenance/README.md", "bin/README.md"]}
+      "evidence": {"files": ["docs/licensing.md", "docs/provenance.md", "bin/README.md"]}
     },
     "aggregate_release_gate": {
       "status": "satisfied",
@@ -211,7 +211,7 @@
       {"name": "Daniel Oranguthang", "email": "75395800+oranguthang@users.noreply.github.com"}
     ],
     "required_coauthor": "Co-Authored-By: Codex <noreply@openai.com>",
-    "rewrite_map": "docs/provenance/source_3_1_history.json"
+    "rewrite_map": "config/reconstruction/source_3_1_history.json"
   },
   "licensing": [
     {"component": "project_tools_and_documentation", "origin": "this_repository", "license_id_or_status": "license_not_granted", "redistribution": "no_license_granted"},
@@ -221,7 +221,7 @@
     {"component": "fceux_runtime", "origin": "external_unbundled", "license_id_or_status": "external_unbundled", "redistribution": "not_committed"}
   ],
   "provenance": {
-    "references": ["docs/provenance/README.md", "config/reconstruction/label_renames.json", "movies/README.md", "bin/README.md"],
+    "references": ["docs/provenance.md", "config/reconstruction/label_renames.json", "movies/README.md", "bin/README.md"],
     "private_inputs_tracked": false
   },
   "historical_constraints": [
@@ -240,10 +240,10 @@
     "docs/source_reconstruction_3_0.md",
     "docs/source_reconstruction_3_1.md",
     "docs/licensing.md",
-    "docs/provenance/README.md",
+    "docs/provenance.md",
     "config/reconstruction/documentation_corpus.json",
     "config/reconstruction/label_renames.json",
-    "docs/provenance/source_3_1_history.json"
+    "config/reconstruction/source_3_1_history.json"
   ],
   "required_targets": [
     "help",
