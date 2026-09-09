@@ -548,8 +548,9 @@ def semantic_stems(path: Path) -> dict[str, str]:
         document = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
         fail(f"cannot read SMB1 semantic provenance {path}: {exc}")
+    smb1 = document.get("registries", {}).get("smb1", {})
     stems: dict[str, str] = {}
-    for original, current, _current_path in document.get("renames", []):
+    for original, current, _current_path in smb1.get("renames", []):
         prefix, separator, remainder = current.partition("_")
         if not separator or prefix not in ROLE_PREFIXES or not remainder:
             fail(f"invalid semantic provenance target for {original}: {current}")
@@ -924,7 +925,6 @@ def write_provenance(
             }
         )
     document = {
-        "schema_version": 1,
         "description": (
             "Direct provenance map from the pinned SMB2J ca65 listings to the "
             "reviewed project symbols; source line numbers are intentionally omitted."
@@ -969,10 +969,12 @@ def write_provenance(
         ],
         "renames": records,
     }
-    path = project_root / "docs" / "provenance" / "smb2_label_renames.json"
+    path = project_root / "config" / "reconstruction" / "label_renames.json"
     path.parent.mkdir(parents=True, exist_ok=True)
+    registry = json.loads(path.read_text(encoding="utf-8"))
+    registry["registries"]["smb2"] = document
     path.write_text(
-        json.dumps(document, indent=2, ensure_ascii=True) + "\n",
+        json.dumps(registry, indent=2, ensure_ascii=True) + "\n",
         encoding="ascii",
         newline="\n",
     )
@@ -1006,7 +1008,7 @@ def main() -> int:
     }
     exports = exported_symbols(listings)
     reviewed_semantic_names = semantic_stems(
-        project_root / "docs" / "provenance" / "label_renames.json"
+        project_root / "config" / "reconstruction" / "label_renames.json"
     )
     semantic_names = {**SMB2_SEMANTIC_OVERRIDES, **reviewed_semantic_names}
     renames = build_renames(listings, exports, semantic_names)

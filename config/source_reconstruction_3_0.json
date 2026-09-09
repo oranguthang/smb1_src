@@ -57,7 +57,7 @@
     {
       "id": "scoring_evidence",
       "summary": "Transaction-level runtime contracts for score, coins, extra lives, stomps, chains, and flagpoles.",
-      "evidence": ["docs/scoring_runtime.md", "scenarios/scoring_runtime_scenarios.json"]
+      "evidence": ["docs/runtime_evidence.md", "scenarios/scoring_runtime_scenarios.json"]
     },
     {
       "id": "content_authoring",
@@ -67,7 +67,7 @@
     {
       "id": "late_fds_engine",
       "summary": "Evidence-bounded shared late-FDS source architecture for ANN and SMB2.",
-      "evidence": ["docs/later_engine_feasibility.md", "docs/later_engine_source_overlap.md"]
+      "evidence": ["docs/later_engine.md"]
     },
     {
       "id": "smb2_reconstruction",
@@ -139,8 +139,8 @@
     "private_inputs_committed": false
   },
   "provenance": {
-    "source": "docs/provenance/label_renames.json",
-    "smb2_source": "docs/provenance/smb2_label_renames.json",
+    "source": "config/reconstruction/label_renames.json",
+    "smb2_source": "config/reconstruction/label_renames.json",
     "runtime_fixtures": "movies/README.md",
     "toolchain": "bin/README.md"
   },
@@ -245,10 +245,10 @@
     "docs/preservation_source_1_0.md",
     "docs/source_reconstruction_2_0.md",
     "docs/source_reconstruction_3_0.md",
-    "docs/later_engine_feasibility.md",
+    "docs/later_engine.md",
     "docs/smb2_reconstruction.md",
     "docs/relocation_testing.md",
-    "docs/scoring_runtime.md",
+    "docs/runtime_evidence.md",
     "docs/licensing.md",
     "docs/provenance/README.md",
     "docs/index.md",

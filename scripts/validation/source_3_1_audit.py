@@ -11,6 +11,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from validation.lint_project import (
+    lint_documentation_corpus,
+    lint_label_registry_location,
+)
 from validation.make_contract import make_targets
 
 
@@ -498,8 +502,9 @@ def validate_tag(
             errors.append("pre-tag audit requires a clean Git tree")
         if not git_output(project_root, "branch", "--show-current").startswith("rewrite/"):
             errors.append("pre-tag audit must run from a rewrite branch")
-        if git_output(project_root, "log", "-1", "--format=%s") != "Complete Source Reconstruction 3.1 modernization":
-            errors.append("pre-tag HEAD is not the Source Reconstruction 3.1 release commit")
+        subject = git_output(project_root, "log", "-1", "--format=%s")
+        if subject.startswith("Complete Source Reconstruction"):
+            errors.append("pre-tag HEAD retains a completion claim after review findings")
         if tag_object:
             errors.append(f"future release tag already exists locally: {tag}")
     elif phase == "post":
@@ -636,6 +641,14 @@ def validate_source_3_1(
         )
         errors.extend(validate_release_objects(project_root, predecessor["commit"]))
     errors.extend(validate_rewrite_map(project_root, release))
+    errors.extend(
+        f"documentation corpus: {diagnostic.message}"
+        for diagnostic in lint_documentation_corpus(project_root)
+    )
+    errors.extend(
+        f"label registry: {diagnostic.message}"
+        for diagnostic in lint_label_registry_location(project_root)
+    )
     constraints = release.get("historical_constraints", [])
     if not constraints or any(
         item.get("status") != "deferred" or not item.get("reason")

@@ -58,11 +58,19 @@
       "reason": "Correct the clean-clone path mismatch that a Makefile text assertion could not exercise before retaining tag-ready status."
     },
     {
-      "commit": "HEAD",
-      "title": "Complete Source Reconstruction 3.1 modernization",
+      "commit": "a837fc02017ee81f469b1934f1f647f01c9b4bbd",
+      "title": "Record the modernization review candidate",
       "source_commits": ["3f9960c64793d57fe209e477649171cb259b8b7f"],
       "scope": "Tag-ready status and final gate evidence after all preceding work passes the aggregate release command.",
-      "reason": "Create this commit only if final tracked metadata changes remain; an empty release marker is forbidden."
+      "reason": "Preserve the nonempty metadata change while replacing its release-completion claim after independent review findings."
+    },
+    {
+      "commit": "HEAD",
+      "title": "Consolidate documentation and label provenance",
+      "origin": "new_work",
+      "source_commits": [],
+      "scope": "Complete documentation-corpus inventory and consolidation, one configuration-owned label registry, migrated consumers, and release-audit enforcement.",
+      "reason": "Apply the refreshed compatible-quality rules retroactively and keep the reviewed source, evidence, and navigation contracts under one owner each."
     }
   ],
   "date_policy": {

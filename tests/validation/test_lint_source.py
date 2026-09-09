@@ -95,7 +95,7 @@ class LintSourceTests(unittest.TestCase):
         messages = self.messages("sub_example:  ; was: sub_C000\n    RTS\n")
         self.assertIn(
             "inline label provenance is forbidden; update "
-            "docs/provenance/label_renames.json",
+            "config/reconstruction/label_renames.json",
             messages,
         )
 

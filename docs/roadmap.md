@@ -19,8 +19,10 @@ Version 3.1 keeps the published 3.0 gameplay, profile, relocation, and sibling
 engine boundaries unchanged. Its release delta modularizes Make orchestration,
 assigns configuration and tests to explicit responsibility packages, enforces
 English public text, and replaces review-specific metadata with a self-contained
-project release contract. `make source-3-1-check` is the aggregate gate; the
-candidate is tag-ready after that command passed on the completed release tree.
+project release contract. The refreshed delta also inventories and consolidates
+the documentation corpus and establishes one configuration-owned label-rename
+registry. `make source-3-1-check` is the aggregate gate; the candidate is
+tag-ready after that command passes on the complete candidate tree.
 
 ## Preservation Contract
 
@@ -64,7 +66,8 @@ produced bytes.
   directive-case, role-prefixed snake_case labels, module-size, and direct
   `JSR`/`sub_` consistency rules. The checkers have focused unit tests, and
   `make trace-runtime` validates twelve deterministic emulator scenarios, and
-  the separate scoring contract validates six complete score/HUD transactions.
+  the scoring layer in the runtime contract validates six complete score/HUD
+  transactions.
 - All 516 RAM and assembly-time constant definitions use explicit `ram_` and
   `con_` prefixes. All 295 callable labels use `sub_`, have a direct `JSR`
   caller, and are protected by the semantic lint gate. All 1,993 colon labels
@@ -268,7 +271,7 @@ module exceeds the agreed size budget.
   All colon labels now use strict role-prefixed snake_case, including callable
   routines, branch and jump entries, handlers, data blocks, and lookup tables.
   The direct doppelganger-to-current mapping is retained in
-  `docs/provenance/label_renames.json`; project-internal intermediate names are
+  `config/reconstruction/label_renames.json`; project-internal intermediate names are
   intentionally omitted.
 - Remove address-derived active symbol names where they exist.
   Semantic lint rejects new lowercase address-derived identifiers.
@@ -468,7 +471,7 @@ The `five_lives` demonstrator establishes the contract with a separate source
 entrypoint and output directory. Its manifest permits one operand change,
 complete-ROM comparison rejects every undeclared difference, and a focused
 FCEUX gate observes the resulting spare-life count after game setup. See
-`docs/fixed_layout_variants.md`.
+`docs/variants.md`.
 
 ### 11. Expanded-ROM Architecture - Complete
 
@@ -493,7 +496,7 @@ ADR 0001 selects a conservative CNROM graphics expansion after rejecting unsafe
 power-on assumptions for PRG-bank mappers. The isolated profile preserves the
 complete canonical PRG, duplicates validated CHR into two initial banks, checks
 the Mapper 3 header and every bank hash, and reaches active World 1-1 in FCEUX.
-See docs/adr/0001-expanded-rom-architecture.md and docs/expanded_rom.md.
+See `docs/adr/0001-expanded-rom-architecture.md` and `docs/variants.md`.
 
 ### 12. Content Authoring Tools - Complete
 

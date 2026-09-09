@@ -580,8 +580,13 @@ def validate_smb2_contract(project_root: Path, contract: dict[str, Any]) -> list
     provenance = load_json(project_root / source_build["provenance_manifest"])
     if provenance.get("schema_version") != 1:
         return ["Source 3.0 SMB2 provenance schema differs"]
-    if provenance.get("counts", {}).get("labels") != len(
-        [item for item in provenance.get("renames", []) if item.get("kind") == "label"]
+    smb2_provenance = provenance.get("registries", {}).get("smb2", provenance)
+    if smb2_provenance.get("counts", {}).get("labels") != len(
+        [
+            item
+            for item in smb2_provenance.get("renames", [])
+            if item.get("kind") == "label"
+        ]
     ):
         return ["Source 3.0 SMB2 provenance label count differs"]
     platform_path = project_root / document.get("platform_manifest", "")

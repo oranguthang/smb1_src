@@ -34,7 +34,7 @@
     "docs/runtime_evidence.md",
     "docs/data_formats.md",
     "docs/provenance/README.md",
-    "docs/provenance/label_renames.json",
+    "config/reconstruction/label_renames.json",
     "docs/preservation_source_1_0.md"
   ],
   "release_commands": [

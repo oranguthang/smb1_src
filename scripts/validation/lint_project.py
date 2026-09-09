@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import json
 import re
 import subprocess
 from dataclasses import dataclass
@@ -185,6 +186,136 @@ def lint_markdown_links(project_root: Path) -> list[Diagnostic]:
     return diagnostics
 
 
+def documentation_paths(project_root: Path) -> list[Path]:
+    candidates = [
+        project_root / "README.md",
+        project_root / "CONTRIBUTING.md",
+        *sorted((project_root / "docs").rglob("*.md")),
+        project_root / "bin" / "README.md",
+        project_root / "movies" / "README.md",
+    ]
+    return [path for path in candidates if path.is_file()]
+
+
+def documentation_prefix(path: str) -> str | None:
+    stem = Path(path).stem
+    parts = stem.split("_")
+    if len(parts) < 2:
+        return None
+    return "_".join(parts[:2])
+
+
+def lint_documentation_corpus(project_root: Path) -> list[Diagnostic]:
+    manifest_path = (
+        project_root / "config" / "reconstruction" / "documentation_corpus.json"
+    )
+    if not manifest_path.is_file():
+        return []
+    relative_manifest = manifest_path.relative_to(project_root)
+    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    diagnostics: list[Diagnostic] = []
+    if document.get("schema_version") != 1:
+        diagnostics.append(Diagnostic(relative_manifest, 1, "documentation corpus schema differs"))
+
+    records = document.get("documents", [])
+    declared = [item.get("path") for item in records]
+    actual = [path.relative_to(project_root).as_posix() for path in documentation_paths(project_root)]
+    if len(declared) != len(set(declared)):
+        diagnostics.append(Diagnostic(relative_manifest, 1, "documentation inventory contains duplicate paths"))
+    if set(declared) != set(actual):
+        missing = sorted(set(actual) - set(declared))
+        stale = sorted(set(declared) - set(actual))
+        diagnostics.append(
+            Diagnostic(
+                relative_manifest,
+                1,
+                f"documentation inventory differs; missing={missing}, stale={stale}",
+            )
+        )
+    for item in records:
+        if not item.get("owner") or not item.get("purpose") or item.get("decision") != "retain":
+            diagnostics.append(
+                Diagnostic(relative_manifest, 1, f"documentation review is incomplete: {item.get('path')}")
+            )
+
+    maximum_lines = document.get("maximum_reviewed_lines", 600)
+    oversize = {item.get("path"): item for item in document.get("oversize_reviews", [])}
+    for path in documentation_paths(project_root):
+        relative = path.relative_to(project_root).as_posix()
+        count = len(path.read_text(encoding="utf-8").splitlines())
+        if count > maximum_lines and not oversize.get(relative, {}).get("reason"):
+            diagnostics.append(
+                Diagnostic(Path(relative), 1, f"documentation has {count} lines without an oversize review")
+            )
+
+    groups: dict[str, list[str]] = {}
+    for relative in actual:
+        if not relative.startswith("docs/"):
+            continue
+        prefix = documentation_prefix(relative)
+        if prefix is not None:
+            groups.setdefault(prefix, []).append(relative)
+    exemptions = {
+        item.get("prefix"): item.get("reason")
+        for item in document.get("prefix_exemptions", [])
+    }
+    for prefix, paths in sorted(groups.items()):
+        if len(paths) > 1 and not exemptions.get(prefix):
+            diagnostics.append(
+                Diagnostic(relative_manifest, 1, f"repeated documentation prefix lacks review: {prefix} ({paths})")
+            )
+
+    for journey in document.get("reader_journeys", []):
+        paths = journey.get("paths", [])
+        if not journey.get("id") or not paths or any(path not in actual for path in paths):
+            diagnostics.append(
+                Diagnostic(relative_manifest, 1, f"reader journey is incomplete: {journey.get('id')}")
+            )
+    for item in document.get("consolidations", []):
+        destination = item.get("destination")
+        sources = item.get("sources", [])
+        if not item.get("reason") or destination not in actual:
+            diagnostics.append(Diagnostic(relative_manifest, 1, "documentation consolidation is incomplete"))
+        if any((project_root / source).exists() for source in sources):
+            diagnostics.append(Diagnostic(relative_manifest, 1, f"consolidated document still exists: {sources}"))
+    return diagnostics
+
+
+def lint_label_registry_location(project_root: Path) -> list[Diagnostic]:
+    canonical = project_root / "config" / "reconstruction" / "label_renames.json"
+    diagnostics: list[Diagnostic] = []
+    if not canonical.parent.is_dir():
+        return diagnostics
+    if not canonical.is_file():
+        diagnostics.append(
+            Diagnostic(Path("config/reconstruction/label_renames.json"), 1, "canonical label registry is missing")
+        )
+    else:
+        try:
+            document = json.loads(canonical.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            diagnostics.append(
+                Diagnostic(canonical.relative_to(project_root), exc.lineno, "canonical label registry is invalid JSON")
+            )
+        else:
+            if document.get("schema_version") != 1 or set(document.get("registries", {})) != {"smb1", "smb2"}:
+                diagnostics.append(
+                    Diagnostic(canonical.relative_to(project_root), 1, "canonical label registry schema differs")
+                )
+    candidates = [
+        path
+        for root in (project_root / "config", project_root / "docs")
+        for path in root.rglob("*.json")
+        if "label" in path.name.lower() and "rename" in path.name.lower()
+    ]
+    extras = [path for path in candidates if path.resolve() != canonical.resolve()]
+    for path in extras:
+        diagnostics.append(
+            Diagnostic(path.relative_to(project_root), 1, "duplicate label registry must be removed")
+        )
+    return diagnostics
+
+
 def evidence_paths(project_root: Path) -> list[Path]:
     return sorted((project_root / "src").rglob("*.asm")) + sorted(
         (project_root / "src").rglob("*.inc")
@@ -253,6 +384,8 @@ def lint_project(project_root: Path) -> list[Diagnostic]:
         *lint_public_language(project_root),
         *lint_python(project_root),
         *lint_markdown_links(project_root),
+        *lint_documentation_corpus(project_root),
+        *lint_label_registry_location(project_root),
         *lint_evidence(project_root),
         *lint_raw_hardware_operands(project_root),
     ]

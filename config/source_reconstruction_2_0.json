@@ -26,11 +26,9 @@
   },
   "required_documents": [
     "docs/preservation_source_1_0.md",
-    "docs/fixed_layout_variants.md",
+    "docs/variants.md",
     "docs/adr/0001-expanded-rom-architecture.md",
-    "docs/expanded_rom.md",
     "docs/content_authoring.md",
-    "docs/editor_references.md",
     "docs/revision_profiles.md",
     "docs/platform_profiles.md",
     "docs/source_reconstruction_2_0.md"

@@ -188,8 +188,10 @@ class Source3AuditTests(unittest.TestCase):
             (root / "smb2_labels.json").write_text(
                 json.dumps({
                     "schema_version": 1,
-                    "counts": {"labels": 0},
-                    "renames": [],
+                    "registries": {
+                        "smb1": {},
+                        "smb2": {"counts": {"labels": 0}, "renames": []},
+                    },
                 }),
                 encoding="utf-8",
             )

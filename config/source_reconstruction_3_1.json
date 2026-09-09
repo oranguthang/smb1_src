@@ -21,6 +21,8 @@
     "english_public_tree",
     "self_contained_release_metadata",
     "repository_layout_audit",
+    "documentation_corpus_review",
+    "canonical_label_rename_registry",
     "inherited_source_3_capabilities"
   ],
   "excluded_scope": [
@@ -97,6 +99,15 @@
         "files": ["scripts/validation/lint_project.py", "scripts/validation/source_3_1_audit.py"],
         "targets": ["lint", "source-3-1-audit"]
       }
+    },
+    {
+      "id": "documentation_and_label_provenance",
+      "kind": "documentation",
+      "summary": "Review the complete documentation corpus, consolidate overlapping reader tasks, and make one configuration-owned registry authoritative for all label renames.",
+      "evidence": {
+        "files": ["config/reconstruction/documentation_corpus.json", "config/reconstruction/label_renames.json", "docs/index.md", "docs/provenance/README.md"],
+        "targets": ["lint", "source-3-1-audit"]
+      }
     }
   ],
   "requirements": {
@@ -127,6 +138,14 @@
     "repository_layout": {
       "status": "satisfied",
       "evidence": {"targets": ["scaffold-check"], "files": ["config/reconstruction/repository_layout.json", "docs/source_layout.md"]}
+    },
+    "documentation_corpus": {
+      "status": "satisfied",
+      "evidence": {"targets": ["lint", "source-3-1-audit"], "files": ["config/reconstruction/documentation_corpus.json", "docs/index.md"]}
+    },
+    "label_rename_registry": {
+      "status": "satisfied",
+      "evidence": {"targets": ["lint", "source-3-1-audit"], "files": ["config/reconstruction/label_renames.json", "docs/provenance/README.md"]}
     },
     "release_history": {
       "status": "satisfied",
@@ -202,7 +221,7 @@
     {"component": "fceux_runtime", "origin": "external_unbundled", "license_id_or_status": "external_unbundled", "redistribution": "not_committed"}
   ],
   "provenance": {
-    "references": ["docs/provenance/README.md", "docs/provenance/label_renames.json", "docs/provenance/smb2_label_renames.json", "movies/README.md", "bin/README.md"],
+    "references": ["docs/provenance/README.md", "config/reconstruction/label_renames.json", "movies/README.md", "bin/README.md"],
     "private_inputs_tracked": false
   },
   "historical_constraints": [
@@ -222,6 +241,8 @@
     "docs/source_reconstruction_3_1.md",
     "docs/licensing.md",
     "docs/provenance/README.md",
+    "config/reconstruction/documentation_corpus.json",
+    "config/reconstruction/label_renames.json",
     "docs/provenance/source_3_1_history.json"
   ],
   "required_targets": [

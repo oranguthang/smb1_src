@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -99,6 +100,37 @@ class LintProjectTests(unittest.TestCase):
             "public project text must be English and contain no Cyrillic",
             messages,
         )
+
+    def test_documentation_corpus_requires_complete_inventory(self) -> None:
+        root = self.make_project()
+        config = root / "config" / "reconstruction"
+        config.mkdir(parents=True)
+        (config / "documentation_corpus.json").write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "maximum_reviewed_lines": 600,
+                    "documents": [],
+                    "reader_journeys": [],
+                    "consolidations": [],
+                    "prefix_exemptions": [],
+                    "oversize_reviews": [],
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        messages = [item.message for item in lint_project.lint_documentation_corpus(root)]
+        self.assertTrue(any("documentation inventory differs" in item for item in messages))
+
+    def test_rejects_duplicate_label_registry(self) -> None:
+        root = self.make_project()
+        canonical = root / "config" / "reconstruction"
+        canonical.mkdir(parents=True)
+        (canonical / "label_renames.json").write_text("{}\n", encoding="utf-8")
+        (root / "docs" / "label_renames.json").write_text("{}\n", encoding="utf-8")
+        messages = [item.message for item in lint_project.lint_label_registry_location(root)]
+        self.assertIn("duplicate label registry must be removed", messages)
 
 
 if __name__ == "__main__":

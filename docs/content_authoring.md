@@ -233,10 +233,27 @@ SMB2 with zero edits. It rejects any image whose size or SHA-1
 differs from the selected profile baseline. Its temporary workspaces live under
 `build/content_roundtrip/` and never overwrite local authoring work.
 
+## Editor Research and Reuse Boundaries
+
 The ignored `references/` directory may contain local research checkouts. The
-editors were implemented independently from the documented SMB1 formats. No
-third-party editor source is incorporated into the tracked project. The reviewed
-projects and reuse boundaries are recorded in `docs/editor_references.md`.
+editors were implemented independently from the documented SMB1 formats, and no
+third-party editor source is incorporated into the tracked project.
+
+| Project | Useful evidence | Reuse decision |
+| --- | --- | --- |
+| [SMB Utility](https://github.com/Maseya/SMB-Utility) | Visual workflow for SMB1 areas, objects, enemies, and test play from a selected position | Reference only; AGPL-3.0 code is not incorporated |
+| [SMBLevelDrawer](https://github.com/IsoFrieze/SMBLevelDrawer) | Cross-version area rendering for cartridge, FDS, Vs., and derivative releases | Reference only; GPL-3.0 code is not incorporated |
+| [smb-vanilla-port](https://github.com/nukep/smb-vanilla-port) | Engine-faithful behavior and portable runtime architecture | Behavioral reference only; no source is incorporated |
+| [Level-Headed](https://github.com/Coolcord/Level-Headed) | Enemy identifiers, area commands, and fixed-buffer constraints | Reference only; GPL-3.0 code is not incorporated |
+| [MushROMs SMB1 level format](https://github.com/bonimy/MushROMs/blob/master/doc/SMB1%20Level%20Format.md) | Bit-level documentation for headers, objects, page controls, enemies, and transitions | Used to cross-check independently written codecs |
+| [SMBMusEdit](https://github.com/anakrusis/SMBMusEdit) | Visibility of song headers, shared streams, allocation limits, and playback | Reference only; the repository declares no software license |
+| [MarioNESEditor](https://github.com/howerpower/MarioNESEditor) | SMB-specific CHR browsing and pixel editing | Reference only; the repository declares no software license |
+| [SMB1Base](https://github.com/smbstudio/smb1base) | Modern hacking workflow and compatibility with established level tools | Architectural reference only |
+
+The Pac-Man reconstruction remains the local interaction benchmark: visual
+selection, direct manipulation, semantic labels, previews, undo, atomic save,
+capacity feedback, isolated ROM builds, and emulator launch belong in the
+subject-specific program rather than in a generic data-tree editor.
 
 The immutable 1.0 round-trip manifest remains `config/authoring/data_formats.json`.
 `config/authoring/content_formats.json` layers complete level streams, the full vanilla

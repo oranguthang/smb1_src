@@ -36,13 +36,12 @@ This repository contains:
 - **docs/unknowns.md** - Stable uncertainty and evidence registry
 - **docs/debugger_workflow.md** - Mesen/FCEUX symbols and source navigation
 - **docs/runtime_evidence.md** - Deterministic gameplay transaction scenarios
-- **docs/scoring_runtime.md** - Score, coin, extra-life, HUD, and top-score transactions
 - **docs/data_formats.md** - Typed authored-data codecs and byte round trips
-- **docs/provenance/label_renames.json** - Original-to-current symbol map
+- **config/reconstruction/label_renames.json** - Canonical original-to-current symbol map
 - **docs/licensing.md** - Licensing and distribution status by material class
 - **docs/preservation_source_1_0.md** - Stable release scope and evidence boundary
 - **docs/source_reconstruction_2_0.md** - Aggregate 2.0 scope and acceptance gate
-- **docs/source_reconstruction_3_0.md** - Active 3.0 milestones and boundaries
+- **docs/source_reconstruction_3_0.md** - Published 3.0 milestones and boundaries
 - **docs/source_reconstruction_3_1.md** - Compatible modernization scope and release gate
 - **docs/relocation_testing.md** - Generated address-shift and runtime proof
 - **CONTRIBUTING.md** - Safe source, data, evidence, and verification workflow

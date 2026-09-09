@@ -201,7 +201,7 @@ transactions. It relates player-score digits to the coin and life counters,
 the status-bar VRAM packet, and the next-frame top-score copy. Boundary patches
 for the 100th coin, decimal carry, and shell-chain state are declared in the
 scoring manifest and recorded in every trace; the other scenarios use only the
-pinned movie input. See `docs/scoring_runtime.md`.
+pinned movie input. See `docs/runtime_evidence.md`.
 
 The same aggregate gate proves selected residual code unreachable without
 equating limited runtime coverage with absence. `make audit-unreachable-code`
@@ -308,4 +308,4 @@ ANN research. It did not support adding SMB2 as another conditional profile of
 the cartridge-era SMB1 engine. Post-release instruction normalization provides
 stronger evidence: ANN and SMB2 are revisions of one late-FDS engine. Their
 current symmetric source boundary and conservative promotion rules are recorded
-in `docs/later_engine_source_overlap.md` and `docs/smb2_reconstruction.md`.
+in `docs/later_engine.md` and `docs/smb2_reconstruction.md`.

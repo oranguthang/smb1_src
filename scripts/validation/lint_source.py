@@ -103,7 +103,7 @@ def lint_project(project_root: Path) -> list[Diagnostic]:
                         relative_path,
                         line_number,
                         "inline label provenance is forbidden; update "
-                        "docs/provenance/label_renames.json",
+                        "config/reconstruction/label_renames.json",
                     )
                 )
 

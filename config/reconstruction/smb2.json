@@ -63,7 +63,7 @@
     "aggregate_source": "src/revisions/smb2/build.asm",
     "linker_config": "config/linker/smb2_payloads.cfg",
     "build_script": "scripts/build/build_smb2_source.py",
-    "provenance_manifest": "docs/provenance/smb2_label_renames.json",
+    "provenance_manifest": "config/reconstruction/label_renames.json",
     "import_script": "scripts/workflow/import_smb2_source.py",
     "combined_size": 43594,
     "payload_order": ["SM2MAIN", "SM2DATA2", "SM2DATA3", "SM2DATA4"],

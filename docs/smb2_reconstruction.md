@@ -115,7 +115,7 @@ secondary cross-check for relationships between SMB2 and ANN.
 
 `scripts/workflow/import_smb2_source.py` pins the SHA-1 of each reference listing and
 records all 2,383 original colon labels plus three callable FDS BIOS constants
-in `docs/provenance/smb2_label_renames.json`. Records use payload, original name,
+in `config/reconstruction/label_renames.json`. Records use payload, original name,
 current semantic name, and current path; line numbers are intentionally omitted
 so comment and formatting changes cannot invalidate provenance. Exact original
 matches reuse 1,935 already reviewed SMB1 semantic stems while recomputing their

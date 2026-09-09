@@ -13,10 +13,6 @@ LABEL_RE = re.compile(
     r"^((?:bra|handler|loc|off|sub|tbl|unused|vec)_"
     r"[a-z0-9]+(?:_[a-z0-9]+)*):$"
 )
-COUNTS_RE = re.compile(r'^  "counts": \{.*\},$', re.MULTILINE)
-ADDITIONS_END = "\n  ]\n}\n"
-
-
 def active_labels(project_root: Path) -> list[tuple[str, str]]:
     labels: list[tuple[str, str]] = []
     for path in sorted((project_root / "src").rglob("*")):
@@ -41,12 +37,14 @@ def main() -> int:
         parser.error("--commit must be a full lowercase Git object ID")
 
     project_root = args.project_root.resolve()
-    manifest_path = project_root / "docs" / "provenance" / "label_renames.json"
-    text = manifest_path.read_text(encoding="utf-8")
-    manifest = json.loads(text)
+    manifest_path = (
+        project_root / "config" / "reconstruction" / "label_renames.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    smb1 = manifest["registries"]["smb1"]
 
-    mapped = {(item[1], item[2]) for item in manifest["renames"]}
-    mapped.update((item[0], item[1]) for item in manifest["project_additions"])
+    mapped = {(item[1], item[2]) for item in smb1["renames"]}
+    mapped.update((item[0], item[1]) for item in smb1["project_additions"])
     missing = [item for item in active_labels(project_root) if item not in mapped]
     if not missing:
         print("[OK] No unregistered assembly labels found.")
@@ -56,28 +54,19 @@ def main() -> int:
         [name, path, args.commit, args.reason]
         for name, path in missing
     ]
-    addition_lines = [
-        "    " + json.dumps(item, ensure_ascii=True, separators=(",", ":"))
-        for item in additions
-    ]
-    existing_additions = manifest["project_additions"]
-    separator = ",\n" if existing_additions else "\n"
-    replacement = separator + ",\n".join(addition_lines) + ADDITIONS_END
-    if not text.endswith(ADDITIONS_END):
-        raise SystemExit("[ERROR] Unexpected label manifest ending")
-    text = text[: -len(ADDITIONS_END)] + replacement
-
-    current_count = len(manifest["renames"]) + len(existing_additions) + len(additions)
-    counts = (
-        '  "counts": {"original_labels": '
-        f'{len(manifest["renames"])}, "current_labels": {current_count}, '
-        f'"direct_renames": {len(manifest["renames"])}, '
-        f'"project_additions": {len(existing_additions) + len(additions)}}},'
+    smb1["project_additions"].extend(additions)
+    current_count = len(smb1["renames"]) + len(smb1["project_additions"])
+    smb1["counts"] = {
+        "original_labels": len(smb1["renames"]),
+        "current_labels": current_count,
+        "direct_renames": len(smb1["renames"]),
+        "project_additions": len(smb1["project_additions"]),
+    }
+    manifest_path.write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=True) + "\n",
+        encoding="ascii",
+        newline="\n",
     )
-    text, replacements = COUNTS_RE.subn(counts, text, count=1)
-    if replacements != 1:
-        raise SystemExit("[ERROR] Could not update label manifest counts")
-    manifest_path.write_text(text, encoding="utf-8", newline="\n")
     print(f"[OK] Registered {len(additions)} assembly labels.")
     return 0
 

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "description": "Reviewed documentation inventory, reader journeys, and consolidation decisions for the current project tree.",
+  "maximum_reviewed_lines": 600,
+  "documents": [
+    {"path": "README.md", "owner": "project", "purpose": "Project status, legal inputs, quick start, and public command overview.", "decision": "retain"},
+    {"path": "CONTRIBUTING.md", "owner": "project", "purpose": "Source, evidence, test, private-data, and commit workflow.", "decision": "retain"},
+    {"path": "bin/README.md", "owner": "toolchain", "purpose": "Bundled assembler and linker provenance and license.", "decision": "retain"},
+    {"path": "movies/README.md", "owner": "runtime", "purpose": "Runtime input fixture provenance, license, and content boundary.", "decision": "retain"},
+    {"path": "docs/index.md", "owner": "documentation", "purpose": "Task-oriented entrypoint for every reader journey.", "decision": "retain"},
+    {"path": "docs/6502_reference.md", "owner": "source", "purpose": "NES CPU instruction and flag reference used while reviewing assembly.", "decision": "retain"},
+    {"path": "docs/assembly_style.md", "owner": "source", "purpose": "Mechanically enforced assembly layout and naming rules.", "decision": "retain"},
+    {"path": "docs/content_authoring.md", "owner": "authoring", "purpose": "End-to-end authoring, editor-model, profile, and research-reference workflow.", "decision": "retain"},
+    {"path": "docs/data_formats.md", "owner": "authoring", "purpose": "Codec ownership, capacities, and round-trip contracts.", "decision": "retain"},
+    {"path": "docs/debugger_workflow.md", "owner": "runtime", "purpose": "Debugger symbols, breakpoints, watches, and validation layers.", "decision": "retain"},
+    {"path": "docs/later_engine.md", "owner": "reconstruction", "purpose": "Container and instruction evidence for the ANN and SMB2 architecture decision.", "decision": "retain"},
+    {"path": "docs/licensing.md", "owner": "project", "purpose": "Licensing and distribution status by material class.", "decision": "retain"},
+    {"path": "docs/modding_examples.md", "owner": "source", "purpose": "Practical examples of isolated source modifications.", "decision": "retain"},
+    {"path": "docs/naming.md", "owner": "source", "purpose": "Semantic symbol vocabulary and provenance policy.", "decision": "retain"},
+    {"path": "docs/platform_profiles.md", "owner": "build", "purpose": "Vs. and FDS container profiles, inputs, and evidence.", "decision": "retain"},
+    {"path": "docs/player_movement.md", "owner": "gameplay", "purpose": "Player input, state, physics, collision, and static trace.", "decision": "retain"},
+    {"path": "docs/preservation_source_1_0.md", "owner": "release", "purpose": "Published preservation baseline and acceptance boundary.", "decision": "retain"},
+    {"path": "docs/provenance/README.md", "owner": "provenance", "purpose": "Source and symbol provenance policy for the canonical registry.", "decision": "retain"},
+    {"path": "docs/ram_fields.md", "owner": "source", "purpose": "Verified RAM symbol ownership by subsystem.", "decision": "retain"},
+    {"path": "docs/relocation_testing.md", "owner": "runtime", "purpose": "Relocation generation, supported matrices, and runtime proof.", "decision": "retain"},
+    {"path": "docs/revision_profiles.md", "owner": "build", "purpose": "Cartridge revision profile matrix and identity expectations.", "decision": "retain"},
+    {"path": "docs/roadmap.md", "owner": "project", "purpose": "Completed milestones, remaining work, and permanent invariants.", "decision": "retain"},
+    {"path": "docs/runtime_evidence.md", "owner": "runtime", "purpose": "Natural, controlled, scoring, reachability, and audio evidence.", "decision": "retain"},
+    {"path": "docs/smb2_reconstruction.md", "owner": "reconstruction", "purpose": "Sibling-source identity, runtime, relocation, and promotion boundary.", "decision": "retain"},
+    {"path": "docs/source_layout.md", "owner": "source", "purpose": "Address-ordered modules, granularity, and linker boundaries.", "decision": "retain"},
+    {"path": "docs/source_reconstruction_2_0.md", "owner": "release", "purpose": "Published 2.0 baseline scope and aggregate gate.", "decision": "retain"},
+    {"path": "docs/source_reconstruction_3_0.md", "owner": "release", "purpose": "Published 3.0 scope, capabilities, and tag lifecycle.", "decision": "retain"},
+    {"path": "docs/source_reconstruction_3_1.md", "owner": "release", "purpose": "Compatible 3.1 delta, boundaries, and verification command.", "decision": "retain"},
+    {"path": "docs/subsystems.md", "owner": "source", "purpose": "Runtime subsystem boundaries and principal interactions.", "decision": "retain"},
+    {"path": "docs/unknowns.md", "owner": "evidence", "purpose": "Open and resolved evidence records referenced from source.", "decision": "retain"},
+    {"path": "docs/variants.md", "owner": "build", "purpose": "Fixed-layout and expanded-ROM isolation, verification, and runtime checks.", "decision": "retain"},
+    {"path": "docs/adr/0001-expanded-rom-architecture.md", "owner": "architecture", "purpose": "Decision record for isolated CNROM graphics expansion.", "decision": "retain"}
+  ],
+  "reader_journeys": [
+    {"id": "build_and_verify", "paths": ["README.md", "docs/index.md", "docs/revision_profiles.md", "docs/platform_profiles.md", "docs/source_reconstruction_3_1.md"]},
+    {"id": "understand_architecture", "paths": ["README.md", "docs/index.md", "docs/source_layout.md", "docs/subsystems.md", "docs/ram_fields.md"]},
+    {"id": "author_content", "paths": ["README.md", "docs/index.md", "docs/content_authoring.md", "docs/data_formats.md"]},
+    {"id": "review_evidence", "paths": ["README.md", "docs/index.md", "docs/runtime_evidence.md", "docs/unknowns.md", "docs/provenance/README.md"]},
+    {"id": "review_late_fds", "paths": ["README.md", "docs/index.md", "docs/later_engine.md", "docs/smb2_reconstruction.md", "docs/platform_profiles.md"]}
+  ],
+  "consolidations": [
+    {"sources": ["docs/editor_references.md"], "destination": "docs/content_authoring.md", "reason": "Editor references are evidence for the authoring workflow rather than a separate reader task."},
+    {"sources": ["docs/scoring_runtime.md"], "destination": "docs/runtime_evidence.md", "reason": "Scoring scenarios are one runtime-evidence layer and now share its validation narrative."},
+    {"sources": ["docs/expanded_rom.md", "docs/fixed_layout_variants.md"], "destination": "docs/variants.md", "reason": "Both documents describe isolated non-preservation builds and their three-layer acceptance checks."},
+    {"sources": ["docs/later_engine_feasibility.md", "docs/later_engine_source_overlap.md"], "destination": "docs/later_engine.md", "reason": "The binary and instruction comparisons support one late-FDS architectural decision."}
+  ],
+  "prefix_exemptions": [
+    {"prefix": "source_reconstruction", "reason": "Each release document has an independent immutable release audience and lifecycle."}
+  ],
+  "oversize_reviews": [
+    {"path": "docs/roadmap.md", "reason": "The roadmap is a chronological project ledger whose milestone ordering and permanent invariants are reviewed as one document."}
+  ]
+}

@@ -1,6 +1,7 @@
 # Source Provenance
 
-`label_renames.json` maps every label in doppelganger's imported `smbdis.asm`
+`config/reconstruction/label_renames.json` is the single canonical symbol
+registry. Its `smb1` section maps every label in doppelganger's imported `smbdis.asm`
 directly to its current semantic name and module. The source side is pinned to
 repository commit `052aa23781fe028d8d7d2627638a87326107c015`, which preserves
 the imported file independently of the mutable external gist.
@@ -9,6 +10,9 @@ The source set includes every colon label in the imported file, including the
 labels that share a physical line with their first instruction. Tests compare
 the ordered map roots directly with that pinned Git object when Git history is
 available.
+
+The registry's `smb2` section maps the pinned sibling-engine listings to their
+reviewed current symbols without duplicating provenance data under `docs/`.
 
 Project-internal intermediate names are intentionally omitted. The separate
 `project_additions` collection records current labels that have no original

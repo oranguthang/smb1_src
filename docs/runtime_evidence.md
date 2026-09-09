@@ -1,8 +1,5 @@
 # Runtime Evidence Scenarios
 
-The focused score, coin, extra-life, HUD, and top-score transaction layer is
-documented separately in [`scoring_runtime.md`](scoring_runtime.md).
-
 The runtime workflow replays a deterministic power-on FCEUX movie against the
 byte-identical preservation ROM and records compact semantic events from named
 source routines. Run the focused scenarios and their validator with:
@@ -155,3 +152,35 @@ frame 37. A read trap is armed only between those exact writes and remains
 silent for all 17,862 frames. This resolves `SND-002`: the first square-2 stream
 read always sees zero, so the retained `$08` store is overwritten residual
 behavior.
+
+## Scoring Transactions
+
+The scoring evidence layer proves complete state transitions rather than only
+routine reachability. It uses the canonical JU ROM and deterministic World 1-1
+movie declared in `scenarios/scoring_runtime_scenarios.json`.
+
+Run the complete layer with:
+
+```text
+make trace-scoring-runtime
+```
+
+The six scenarios cover a normal coin award, the 99-to-100 coin extra-life
+boundary, decimal score carry, a natural enemy stomp, a controlled shell-chain
+award, and the natural flagpole award. Every score-producing scenario records:
+
+1. the six internal player-score digits before and after the transaction;
+2. raw coin and life counters plus the two coin-display digits;
+3. the six score tiles written to the status-bar VRAM packet, including
+   leading-zero suppression;
+4. the subsequent six-digit top-score update.
+
+Controlled scenarios declare every RAM patch in the manifest. The shared
+runtime validator rejects undeclared or missing patches, unexpected event
+frames or details, forbidden execution, and incomplete traces. Patches only
+establish boundary state; the original scoring routines perform every tested
+transaction.
+
+Generated CSV traces live under `build/evidence/scoring/` and remain ignored
+inspection artifacts. The JSON manifest, Lua capture script, validator tests,
+and this section form the tracked contract.

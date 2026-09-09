@@ -30,6 +30,11 @@ extracted payloads remain ignored private inputs.
   and monotonic author and committer dates.
 - Repository-layout evidence records every intentionally short ASM module and
   reviews each Python tool above the project threshold.
+- Documentation-corpus evidence inventories each public Markdown document,
+  records reader journeys and consolidation decisions, and reviews filename
+  clusters and oversized documents.
+- One configuration-owned label registry covers both reconstructed source
+  families; workflow tools and tests consume its named sections.
 
 ## Repository and Evidence Boundaries
 
@@ -63,10 +68,11 @@ make source-3-1-check
 
 `make source-2-minor-check` is the compatibility alias for the same gate.
 Before tagging, `make source-3-1-pre-tag` additionally requires a clean rewrite
-branch, a nonempty final release commit, and absence of the future local tag.
+branch, a nonempty reviewed candidate commit, and absence of the future local tag.
 After an annotated tag is published, `make source-3-1-post-tag` verifies its
 message and peeled local/remote target.
 
 The complete inherited gate succeeded on the candidate tree, so the manifest is
-now `tag-ready`. This promotion changes tracked release metadata and therefore
-forms a substantive final commit rather than an empty milestone.
+now `tag-ready`. The candidate commits retain neutral factual titles after
+independent review findings; the eventual release milestone is an owner-managed
+annotated tag rather than a completion claim in commit history.
