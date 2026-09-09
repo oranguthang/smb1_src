@@ -11,7 +11,7 @@ or the manifest.
 
 ## Manifest
 
-`config/data_formats.json` owns each artifact's source file, linker-label
+`config/authoring/data_formats.json` owns each artifact's source file, linker-label
 boundaries, codec, and any structural lengths that are not encoded in the data
 itself. A missing boundary, invalid source path, malformed stream, unconsumed
 byte, or first round-trip difference is a hard failure.

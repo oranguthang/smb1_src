@@ -5,7 +5,7 @@ remain a coherent profile of the SMB1 source reconstructed here. It does not add
 the game to the supported build or authoring matrix.
 
 Run `make later-engine-feasibility` with the three ignored original FDS images
-named in `config/later_engine_feasibility.json`. The command verifies each whole
+named in `config/reconstruction/later_engine_feasibility.json`. The command verifies each whole
 disk identity, parses the FDS records, and writes only hashes, sizes, addresses,
 and comparison metrics to `build/evidence/later_engine_feasibility.json`. It
 does not export ROM bytes into the tracked tree.

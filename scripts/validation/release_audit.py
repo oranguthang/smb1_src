@@ -10,6 +10,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from validation.make_contract import combined_makefile_text
+
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -65,7 +67,9 @@ def validate_release(project_root: Path, manifest_path: Path) -> list[str]:
     release = load_json(manifest_path)
     assets = load_json(project_root / "assets" / "manifest.json")
     runtime = load_json(project_root / "scenarios" / "runtime_scenarios.json")
-    formats = load_json(project_root / "config" / "data_formats.json")
+    formats = load_json(
+        project_root / "config" / "authoring" / "data_formats.json"
+    )
     errors = validate_hash_contracts(release, assets, runtime)
 
     tag = release.get("local_tag")
@@ -113,7 +117,7 @@ def validate_release(project_root: Path, manifest_path: Path) -> list[str]:
         if relative.replace("\\", "/").startswith("assets/generated/"):
             errors.append(f"generated asset remains in reachable history: {relative}")
 
-    makefile = (project_root / "Makefile").read_text(encoding="utf-8")
+    makefile = combined_makefile_text(project_root)
     for target in release["release_commands"]:
         if re.search(rf"^{re.escape(target)}\s*:", makefile, re.MULTILINE) is None:
             errors.append(f"release command has no Make target: {target}")

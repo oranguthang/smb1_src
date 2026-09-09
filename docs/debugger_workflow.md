@@ -50,8 +50,8 @@ checking text-file syntax.
 
 ## Breakpoints and Watches
 
-`config/debugger_breakpoints.json` groups frame/mode, player, gameplay
-transaction, object, and audio entry points. `config/debugger_watches.json`
+`config/debugger/breakpoints.json` groups frame/mode, player, gameplay
+transaction, object, and audio entry points. `config/debugger/watches.json`
 groups mode state, controller/player motion, progress, objects, rendering, and
 audio RAM. Entries use source symbols, never copied numeric addresses.
 

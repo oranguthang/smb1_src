@@ -56,10 +56,14 @@ smb1_src/
 |   |-- manifest.json   # Reference identity and extracted-asset hashes
 |   `-- generated/      # Ignored local container, graphics, and content assets
 |-- config/
-|   `-- linker/         # Native, expanded, FDS, and ANN linker contracts
+|   |-- authoring/      # Codec, Studio, and content-profile contracts
+|   |-- debugger/       # Breakpoint and watch contracts
+|   |-- linker/         # Native, expanded, FDS, and ANN linker contracts
+|   `-- reconstruction/ # Later-engine and sibling-source contracts
 |-- docs/               # Local technical notes
 |   |-- 6502_reference.md
 |   `-- modding_examples.md
+|-- mk/                 # Make orchestration grouped by workflow
 |-- scripts/            # Categorized build, validation, runtime, authoring, and workflow tools
 |   |-- authoring/      # Content codecs, models, and interactive Studios
 |   |-- build/          # Builds, images, assets, and profile composition
@@ -74,6 +78,7 @@ smb1_src/
 |   |-- memory/         # Hardware, RAM, and assembly-time definitions
 |   |-- rendering/      # Screens, backgrounds, HUD, and actor composition
 |   `-- system/         # Reset, frame control, input, and PPU I/O
+|-- tests/              # Tests mirroring scripts/ responsibilities
 |-- Makefile            # Main build entrypoint
 |-- README.md
 `-- .gitignore
@@ -123,6 +128,8 @@ under the ignored `build/native/` directory. It fails unless the 32 KiB PRG is
 byte-identical to the recorded baseline in `assets/manifest.json`.
 
 ### Using Makefile
+
+Run `make help` for the stable command groups and common entrypoints.
 
 ```bash
 # Check tracked text, assembly style, semantic source, and documentation

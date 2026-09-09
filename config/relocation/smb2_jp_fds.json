@@ -3,7 +3,7 @@
   "id": "smb2_jp_fds_programs",
   "source": "src/revisions/smb2/build.asm",
   "main_source": "src/revisions/smb2/main.asm",
-  "payload_manifest": "config/smb2_reconstruction.json",
+  "payload_manifest": "config/reconstruction/smb2.json",
   "platform_manifest": "config/smb2_platform_profile.json",
   "platform_profile": "smb2_jp_fds",
   "linker_config": "config/linker/smb2_payloads.cfg",

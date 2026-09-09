@@ -53,7 +53,13 @@ contracts.
 
 Python tools are grouped under `scripts/build/`, `scripts/validation/`,
 `scripts/runtime/`, `scripts/authoring/`, and `scripts/workflow/`. Make targets
-are the public interface. For direct tool execution, use the stable launcher:
+are grouped by the same responsibilities under `mk/`, and tests mirror those
+packages under `tests/`. Project configuration is grouped under
+`config/authoring/`, `config/debugger/`, `config/linker/`,
+`config/reconstruction/`, and the release-facing manifests in `config/`.
+
+Run `make help` for the stable public command groups. For direct tool execution,
+use the stable launcher:
 
 ```text
 python scripts/run.py <category.module> [arguments ...]

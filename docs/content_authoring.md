@@ -5,7 +5,7 @@ programs. They use the same tested binary codecs as the command-line build and
 store local work beneath the ignored `content/workspace/` directory.
 
 Source Reconstruction 3.0 introduces a manifest-owned compatibility matrix at
-`config/content_authoring_profiles.json`. Run `make list-content-profiles` to
+`config/authoring/content_authoring_profiles.json`. Run `make list-content-profiles` to
 inspect Studio availability and `make content-profile-audit` to validate the
 contract. JU, PC10, PAL, Vs. SMB, FDS SMB1, ANN, and SMB2 support all four Studios
 through isolated profile workspaces, labels, stream capacities, program images,
@@ -14,7 +14,7 @@ and point playtesting is proven for both its normal and extended course banks.
 A profile or Studio is not
 selectable merely because its program happens to share labels or bytes with JU.
 Source 3 formats extend the frozen Source 2 codec manifest through
-`config/content_formats_3.json`; the earlier release contract is not rewritten.
+`config/authoring/content_formats_3.json`; the earlier release contract is not rewritten.
 
 Select a supported profile with `CONTENT_PROFILE`:
 
@@ -238,7 +238,7 @@ editors were implemented independently from the documented SMB1 formats. No
 third-party editor source is incorporated into the tracked project. The reviewed
 projects and reuse boundaries are recorded in `docs/editor_references.md`.
 
-The immutable 1.0 round-trip manifest remains `config/data_formats.json`.
-`config/content_formats.json` layers complete level streams, the full vanilla
+The immutable 1.0 round-trip manifest remains `config/authoring/data_formats.json`.
+`config/authoring/content_formats.json` layers complete level streams, the full vanilla
 music bank, all metatiles, complete game text, and area palette packets over it
 without changing the accepted 1.0 evidence count.

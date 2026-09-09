@@ -1,10 +1,6 @@
 {
   "schema_version": 2,
-  "contract": {
-    "schema": "openkaryon.source_reconstruction_release_contract",
-    "version": 3,
-    "release_line": "3.0"
-  },
+  "release_line": "3.0",
   "release": "Source Reconstruction 3.0",
   "release_kind": "optional_advanced_generation",
   "tag": "source-reconstruction-3.0",
@@ -15,13 +11,11 @@
     "commit": "aaeb33466e40683d06dbdf907c346409d10d92bb"
   },
   "tag_policy": {
-    "mode": "unpublished_owner_rewrite",
-    "protected_ref": "refs/heads/main",
-    "preserved_old_target": "c9aeb8675b4d1a774914601ff87218c34b90e3f5",
-    "existing_tag_object": "8d0b5a5dfb3f37227da7a851c8fe7c75b286f2c9",
+    "mode": "published_immutable",
+    "release_commit": "4b0d6f885bdd41bdc08139f5044aeef3f099a69d",
+    "tag_object": "1411a1bae7dfe44e22c38e188cb7cf6cebfa319d",
     "remote": "origin",
-    "publication_status": "owner_only_not_externally_used",
-    "requires_owner_approval": true
+    "publication_status": "published"
   },
   "included_scope": [
     "multi_profile_byte_identity",
@@ -68,7 +62,7 @@
     {
       "id": "content_authoring",
       "summary": "Profile-aware World, Level, Graphics, and Sound Studio round trips for all accepted profiles.",
-      "evidence": ["docs/content_authoring.md", "config/content_authoring_profiles.json"]
+      "evidence": ["docs/content_authoring.md", "config/authoring/content_authoring_profiles.json"]
     },
     {
       "id": "late_fds_engine",
@@ -78,7 +72,7 @@
     {
       "id": "smb2_reconstruction",
       "summary": "Byte-identical source, runtime, relocation, overlay, gameplay, and authoring coverage for Japanese SMB2.",
-      "evidence": ["docs/smb2_reconstruction.md", "config/smb2_reconstruction.json"]
+      "evidence": ["docs/smb2_reconstruction.md", "config/reconstruction/smb2.json"]
     },
     {
       "id": "tooling_layout",
@@ -92,7 +86,7 @@
     "runtime_coverage": {"status": "satisfied", "evidence": {"targets": ["trace", "validate-revisions", "validate-platforms", "validate-smb2-runtime", "validate-smb2-overlays", "validate-smb2-gameplay"]}},
     "relocation_architecture": {"status": "satisfied", "evidence": {"targets": ["validate-relocation-revisions", "validate-relocation-platforms", "validate-smb2-relocation"], "documents": ["docs/relocation_testing.md"]}},
     "semantic_runtime_evidence": {"status": "satisfied", "evidence": {"targets": ["semantic-evidence"], "manifests": ["scenarios/semantic_runtime_scenarios.json", "scenarios/scoring_runtime_scenarios.json"]}},
-    "profile_aware_authoring": {"status": "satisfied", "evidence": {"targets": ["check-content-profiles"], "manifests": ["config/content_authoring_profiles.json"]}},
+    "profile_aware_authoring": {"status": "satisfied", "evidence": {"targets": ["check-content-profiles"], "manifests": ["config/authoring/content_authoring_profiles.json"]}},
     "toolchain_reproducibility": {"status": "satisfied", "evidence": {"targets": ["check-source-3-toolchain"], "manifests": ["config/release_toolchain_3_0.json"]}},
     "licensing_and_provenance": {"status": "satisfied", "evidence": {"documents": ["docs/licensing.md", "docs/provenance/README.md", "bin/README.md"]}},
     "aggregate_release_gate": {"status": "satisfied", "evidence": {"targets": ["source-3-check", "source-3-pre-tag", "source-3-post-tag"]}}
@@ -213,8 +207,8 @@
     "resolved_unknowns": ["CODE-002", "CODE-003", "DATA-001", "RAM-001", "SND-001", "SND-002"]
   },
   "authoring": {
-    "profile_manifest": "config/content_authoring_profiles.json",
-    "format_manifest": "config/content_formats_3.json",
+    "profile_manifest": "config/authoring/content_authoring_profiles.json",
+    "format_manifest": "config/authoring/content_formats_3.json",
     "default_profile": "ju",
     "studio_ids": ["world", "level", "graphics", "sound"],
     "supported_profiles": ["ju", "pc10", "pal", "vs_smb", "fds_smb", "ann_fds", "smb2_jp_fds"],
@@ -222,7 +216,7 @@
     "planned_profiles": []
   },
   "later_engine": {
-    "feasibility_manifest": "config/later_engine_feasibility.json",
+    "feasibility_manifest": "config/reconstruction/later_engine_feasibility.json",
     "subject": "smb2_jp_fds",
     "classification": "later-engine-sibling",
     "source_3_scope": "sibling-reconstruction",
@@ -230,7 +224,7 @@
     "future_boundary": "smb2-owned-source"
   },
   "smb2": {
-    "reconstruction_manifest": "config/smb2_reconstruction.json",
+    "reconstruction_manifest": "config/reconstruction/smb2.json",
     "relocation_manifest": "config/relocation/smb2_jp_fds.json",
     "source_roots": [
       "src/revisions/smb2",

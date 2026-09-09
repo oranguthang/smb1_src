@@ -10,6 +10,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from validation.make_contract import combined_makefile_text
+
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -156,7 +158,7 @@ def validate_source_2(
     for relative in release["required_documents"]:
         if not (project_root / relative).is_file():
             errors.append(f"required 2.0 document is missing: {relative}")
-    makefile = (project_root / "Makefile").read_text(encoding="utf-8")
+    makefile = combined_makefile_text(project_root)
     for target in release["required_targets"]:
         if re.search(rf"^{re.escape(target)}\s*:", makefile, re.MULTILINE) is None:
             errors.append(f"required 2.0 Make target is missing: {target}")

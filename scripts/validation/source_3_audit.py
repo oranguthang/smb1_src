@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from authoring.content_profiles import validate_profiles
+from validation.make_contract import combined_makefile_text
 
 
 EXPECTED_MILESTONES = [
@@ -88,12 +89,8 @@ def validate_contract_metadata(
     makefile: str,
 ) -> list[str]:
     errors: list[str] = []
-    if release.get("contract") != {
-        "schema": "openkaryon.source_reconstruction_release_contract",
-        "version": 3,
-        "release_line": "3.0",
-    }:
-        errors.append("Source 3.0 common release contract reference differs")
+    if release.get("release_line") != "3.0":
+        errors.append("Source 3.0 release line differs")
     if release.get("release") != "Source Reconstruction 3.0":
         errors.append("Source 3.0 release name differs")
     if release.get("release_kind") != "optional_advanced_generation":
@@ -276,7 +273,7 @@ def validate_release_history(project_root: Path, predecessor: str) -> list[str]:
         subject = parts[0]
         body = [part for part in parts[1:] if not part.startswith("Co-Authored-By:")]
         short = item["commit"][:12]
-        if re.search(r"[А-Яа-яЁё]", message):
+        if re.search(r"[\u0400-\u052f]", message):
             errors.append(f"release commit message is not English: {short}")
         if len(subject) > 72 or subject.endswith("."):
             errors.append(f"release commit subject is not concise: {short}")
@@ -719,7 +716,7 @@ def validate_source_3(
         if ancestor.returncode != 0:
             errors.append("Source Reconstruction 2.0 is not an ancestor of HEAD")
 
-    makefile = (project_root / "Makefile").read_text(encoding="utf-8")
+    makefile = combined_makefile_text(project_root)
     errors.extend(validate_contract_metadata(project_root, release, makefile))
     errors.extend(validate_milestones(release["milestones"], status))
     relocation = release["relocation"]

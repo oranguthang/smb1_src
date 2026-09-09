@@ -105,13 +105,12 @@ paths, and the tag-ready audit.
 
 ## Release Contract and Tag Lifecycle
 
-The manifest implements revision 3 of
-`openkaryon.source_reconstruction_release_contract` and classifies this release
-as the optional advanced 3.0 generation. It is the machine-readable owner of
-the included and excluded scope, complete delta after Source 2.0, accepted
-profiles, artifact identities, runtime coverage, toolchain, licensing status,
-and release gates. The detailed milestone sections below explain that contract;
-they do not replace it.
+The self-contained project manifest classifies this release as the optional
+advanced 3.0 generation. It is the machine-readable owner of the included and
+excluded scope, complete delta after Source 2.0, accepted profiles, artifact
+identities, runtime coverage, toolchain, licensing status, and release gates.
+The detailed milestone sections below explain that contract; they do not
+replace it.
 
 The repository adopts the recommended directory layout with one explicit
 deviation: Make still contains profile-specific path and command routing for
@@ -134,14 +133,11 @@ aggregate gate proceeds. The tested host and supported host boundary are
 recorded separately so a release claim is reproducible without committing
 private inputs.
 
-`make source-3-pre-tag` runs the complete aggregate gate, requires a clean Git
-tree and compliant release history, and compares the preserved annotated tag
-with `origin`. The current contract deliberately records an owner-only,
-unpublished rewrite: `main` and the old annotated 3.0 tag remain at the previous
-draft while this `rewrite/*` branch is reviewed. Moving either ref still
-requires explicit owner approval. After the replacement annotated tag is
-published, `make source-3-post-tag` reruns the release gate and requires the
-local and remote peeled tag targets to equal `HEAD`.
+The published annotated `source-reconstruction-3.0` tag points to release
+commit `4b0d6f8`. `make source-3-post-tag` reruns the release gate and requires
+the local and remote peeled tag targets to equal that checked-out release
+commit. The tag is immutable; later metadata and structure improvements belong
+to a new release instead of rewriting the published 3.0 boundary.
 
 Licensing and distribution boundaries are recorded in `docs/licensing.md`.
 In particular, hashes and provenance do not grant a license to original game
@@ -226,7 +222,7 @@ area-header offset is reset to zero before any square-2 stream read.
 
 ## Profile-Aware Authoring Contract
 
-`config/content_authoring_profiles.json` is the Source 3.0 compatibility
+`config/authoring/content_authoring_profiles.json` is the Source 3.0 compatibility
 boundary for the four Studios. It records all seven selected game-build profiles,
 their program load addresses and payload identities, isolated workspace and
 output roots, and the availability of World, Level, Graphics, and Sound Studio.
@@ -266,7 +262,7 @@ real disk-loader path: operating-mode task 6 and disk task 1 load FDS record
 `$40` (`NSMDATA4`) at `$C296`; the `$C33D=$00` overlay signature is checked before
 the selected course enters gameplay. Day and Night smoke runs restore normal
 emulation speed before handing control to the player.
-The active `config/content_formats_3.json` layers ANN-only artifacts over the
+The active `config/authoring/content_formats_3.json` layers ANN-only artifacts over the
 frozen Source 2 format manifest instead of changing the released contract.
 The shared authoring layer already validates named supplemental payloads by
 load address, size, and SHA-1; merges their linker labels; extracts CHR from the
