@@ -2,7 +2,7 @@
 
 A comprehensive disassembly of Super Mario Bros for the Nintendo Entertainment System (NES).
 
-The current tag-ready candidate is **Source Reconstruction 3.1**. It retains
+The current development candidate is **Source Reconstruction 3.1**. It retains
 the byte-identical Preservation Source 1.0 baseline, complete Source
 Reconstruction 2.0 contract, and published 3.0 capabilities while modernizing
 repository structure, test ownership, language policy, and release evidence.

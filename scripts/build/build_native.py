@@ -109,6 +109,7 @@ def main() -> int:
     parser.add_argument("--map", default="build/native/smb.map")
     parser.add_argument("--debug-info", default="build/native/smb.dbg")
     parser.add_argument("--output-rom", default="build/native/smb.nes")
+    parser.add_argument("--bin-include-dir", action="append", default=[])
     parser.add_argument(
         "--prg-only",
         action="store_true",
@@ -155,20 +156,20 @@ def main() -> int:
     raw_debug_path = debug_path.with_name(f"{debug_path.stem}.ld65.dbg")
     ca65 = resolve_tool("ca65", project_root)
     ld65 = resolve_tool("ld65", project_root)
-    run_tool(
-        ca65,
-        [
-            str(source),
-            "-g",
-            "-I",
-            str(source.parent),
-            "-I",
-            str(project_root / "src"),
-            "-o",
-            str(object_path),
-        ],
-        project_root,
-    )
+    assembler_arguments = [
+        str(source),
+        "-g",
+        "-I",
+        str(source.parent),
+        "-I",
+        str(project_root / "src"),
+    ]
+    for directory in args.bin_include_dir:
+        assembler_arguments.extend(
+            ("--bin-include-dir", str(rooted(project_root, directory)))
+        )
+    assembler_arguments.extend(("-o", str(object_path)))
+    run_tool(ca65, assembler_arguments, project_root)
     run_tool(
         ld65,
         [

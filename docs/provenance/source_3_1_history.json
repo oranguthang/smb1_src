@@ -97,12 +97,20 @@
       "reason": "Apply the validated ANN asset contract to the hard-course sibling path that the prior supplemental-only regression did not exercise."
     },
     {
-      "commit": "HEAD",
+      "commit": "637f20c2e4c5b00fc951cef4b67d7f95da75f4a1",
       "title": "Record complete ANN clean-gate evidence",
       "origin": "new_work",
       "source_commits": [],
       "scope": "Tag-ready status and release documentation after the complete inherited gate passes from clean generated state with direct and relocation assembly for both ANN course payloads.",
       "reason": "Restore readiness only after the corrected NSMDATA2 and NSMDATA4 production paths pass the full aggregate evidence sequence."
+    },
+    {
+      "commit": "pending",
+      "title": "Unify ANN generated-asset resolution",
+      "origin": "new_work",
+      "source_commits": [],
+      "scope": "Explicit binary-include roots for primary, ending, audio, tail-core, and relocation builds; repository-depth-independent ANN asset operands; container-template preparation; a clean-cache build-platform integration regression; the resulting relocation-validator size review; and development status during evidence renewal.",
+      "reason": "Close the remaining NSMMAIN path gap and exercise the complete production platform target that prior payload-only regressions did not reach."
     }
   ],
   "date_policy": {

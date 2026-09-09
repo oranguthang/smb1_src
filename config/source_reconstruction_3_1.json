@@ -7,7 +7,7 @@
   },
   "release_kind": "compatible_minor",
   "tag": "source-reconstruction-3.1",
-  "status": "tag-ready",
+  "status": "development",
   "predecessor": {
     "manifest": "config/source_reconstruction_3_0.json",
     "tag": "source-reconstruction-3.0",
@@ -77,10 +77,10 @@
     {
       "id": "clean_snapshot_reproducibility",
       "kind": "tooling",
-      "summary": "Track every test package, prepare validated ANN payload assets, and give ca65 an explicit binary-include root for production supplemental and hard-course sources.",
+      "summary": "Track every test package, prepare validated ANN build assets, and give ca65 an explicit binary-include root for every production ANN source path.",
       "evidence": {
-        "files": [".gitignore", "tests/build/__init__.py", "mk/variants.mk", "config/relocation/ann_fds.json", "scripts/build/build_asm_range.py", "scripts/build/prepare_ann_supplemental.py", "scripts/validation/relocation_test.py", "scripts/validation/source_3_1_audit.py", "src/platforms/late_fds/ann/courses/supplemental", "src/platforms/late_fds/ann/courses/hard", "tests/build/test_ann_supplemental_build.py", "tests/validation/test_source_3_1_audit.py"],
-        "targets": ["test", "prepare-ann-supplemental-assets", "verify-ann-supplemental-courses", "verify-ann-hard-courses"]
+        "files": [".gitignore", "tests/build/__init__.py", "mk/profiles.mk", "mk/variants.mk", "config/reconstruction/repository_layout.json", "config/relocation/ann_fds.json", "scripts/build/build_asm_range.py", "scripts/build/build_native.py", "scripts/build/prepare_ann_supplemental.py", "scripts/validation/relocation_test.py", "scripts/validation/source_3_1_audit.py", "src/audio/music_streams.asm", "src/rendering/background.asm", "src/platforms/late_fds/ann/courses", "src/platforms/late_fds/ann/ending", "tests/build/test_ann_supplemental_build.py", "tests/validation/test_source_3_1_audit.py"],
+        "targets": ["test", "prepare-ann-supplemental-assets", "build-platform PLATFORM=ann_fds", "verify-ann-supplemental-courses", "verify-ann-hard-courses"]
       }
     },
     {
@@ -156,7 +156,7 @@
       "evidence": {"files": ["docs/licensing.md", "docs/provenance/README.md", "bin/README.md"]}
     },
     "aggregate_release_gate": {
-      "status": "satisfied",
+      "status": "partial",
       "evidence": {"targets": ["source-3-1-check", "source-3-1-pre-tag", "source-3-1-post-tag"]}
     }
   },

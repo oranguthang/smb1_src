@@ -13,7 +13,7 @@ con_music_bowser_envelope_offset = $69d
 con_music_brick_envelope_offset = $6bd
 con_music_brick_envelope_size = $014
 .elseif con_revision_profile = con_revision_profile_ann
-    .define con_music_data_asset "../../assets/generated/platforms/ann_fds/source/ann_music_data.bin"
+    .define con_music_data_asset "ann_music_data.bin"
 con_music_common_offset = $000
 con_music_victory_offset = $510
 con_music_victory_size = $000

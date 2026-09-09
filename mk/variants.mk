@@ -109,10 +109,11 @@ validate-expanded: verify-expanded
 		--lua "$(EXPANDED_RUNTIME_LUA)" \
 		--result "$(EXPANDED_RUNTIME_RESULT)"
 
-verify-ann-audio:
+verify-ann-audio: prepare-ann-supplemental-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_AUDIO_SOURCE)" \
 		--config "$(ANN_AUDIO_CFG)" \
+		--bin-include-dir "$(ANN_SUPPLEMENTAL_ASSET_DIR)" \
 		--object "$(ANN_AUDIO_BUILD_DIR)/audio.o" \
 		--output "$(ANN_AUDIO_BUILD_DIR)/audio.bin" \
 		--labels "$(ANN_AUDIO_BUILD_DIR)/audio.lbl" \
@@ -126,10 +127,11 @@ verify-ann-audio:
 		--start 0xD2E4 \
 		--end 0xDFFA
 
-verify-ann-tail-core:
+verify-ann-tail-core: prepare-ann-supplemental-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_TAIL_CORE_SOURCE)" \
 		--config "$(ANN_TAIL_CORE_CFG)" \
+		--bin-include-dir "$(ANN_SUPPLEMENTAL_ASSET_DIR)" \
 		--object "$(ANN_TAIL_BUILD_DIR)/core.o" \
 		--output "$(ANN_TAIL_BUILD_DIR)/core.bin" \
 		--labels "$(ANN_TAIL_BUILD_DIR)/core.lbl" \
@@ -177,6 +179,7 @@ build-ann-ending: prepare-ann-supplemental-assets
 	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.build_asm_range \
 		--source "$(ANN_ENDING_SOURCE)" \
 		--config "$(ANN_ENDING_CFG)" \
+		--bin-include-dir "$(ANN_SUPPLEMENTAL_ASSET_DIR)" \
 		--object "$(ANN_ENDING_BUILD_DIR)/payload.o" \
 		--output "$(ANN_ENDING_BUILD_DIR)/payload.bin" \
 		--labels "$(ANN_ENDING_BUILD_DIR)/payload.lbl" \

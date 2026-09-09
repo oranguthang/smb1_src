@@ -41,6 +41,19 @@ class RelocationTestTests(unittest.TestCase):
             binary_path = generated.split('"')[1]
             self.assertEqual((destination.parent / binary_path).resolve(), asset)
 
+    def test_binary_include_basename_is_preserved_for_generated_source(self) -> None:
+        source = Path("src/platform/data.asm")
+        destination = Path("build/generated/platform/data.asm")
+
+        generated = rebase_incbin_paths(
+            '    .incbin "private.bin"\n',
+            source,
+            destination,
+            preserve_basenames=True,
+        )
+
+        self.assertEqual(generated, '    .incbin "private.bin"\n')
+
     def test_generated_sources_keep_probes_and_overrides_out_of_src(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

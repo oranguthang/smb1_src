@@ -77,9 +77,8 @@ branch, a nonempty reviewed candidate commit, and absence of the future local ta
 After an annotated tag is published, `make source-3-1-post-tag` verifies its
 message and peeled local/remote target.
 
-The complete inherited gate passed from clean generated state after exercising
-both direct and relocation assembly for the ANN supplemental and hard-course
-payloads through the production source hierarchy and default asset cache. The
-candidate is therefore `tag-ready`; its commits retain neutral factual titles,
-and the eventual release milestone remains an owner-managed annotated tag
-rather than a completion claim in commit history.
+The candidate is in `development` while clean-gate evidence is renewed for the
+ANN primary program path. The generated-asset contract now covers primary,
+supplemental, hard-course, ending, audio, and relocation assembly through one
+explicit binary-include root. Tag-ready status will return only after the
+complete inherited gate passes from an empty ANN platform cache.

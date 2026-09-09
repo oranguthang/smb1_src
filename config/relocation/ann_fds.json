@@ -4,6 +4,7 @@
   "profile_id": 5,
   "source": "src/main.asm",
   "preamble_includes": ["platforms/late_fds/ann/constants.inc"],
+  "bin_include_dirs": ["assets/generated/platforms/ann_fds/source"],
   "linker_config": "config/linker/relocation/ann_main_prg.cfg",
   "generated_root": "build/relocation/ann_fds",
   "cpu_base": "0x6000",
@@ -63,7 +64,8 @@
       {
         "name": "NSMDATA3",
         "source": "src/revisions/ann/ending.asm",
-        "linker_config": "config/linker/ann/ending.cfg"
+        "linker_config": "config/linker/ann/ending.cfg",
+        "bin_include_dirs": ["assets/generated/platforms/ann_fds/source"]
       },
       {
         "name": "NSMDATA4",

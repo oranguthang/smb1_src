@@ -31,6 +31,7 @@ PLATFORM_MAP ?= $(PLATFORM_BUILD_DIR)/smb.map
 PLATFORM_DEBUG ?= $(PLATFORM_BUILD_DIR)/smb.dbg
 PLATFORM_RUNTIME_RESULT ?= $(PLATFORM_BUILD_DIR)/runtime.txt
 PLATFORM_RUNTIME_LUA ?= $(PROJECT_DIR)scripts/workflow/validate_platform_runtime.lua
+PLATFORM_BIN_INCLUDE_ARGS =
 ifeq ($(PLATFORM),vs_smb)
 PLATFORM_SOURCE ?= $(PROJECT_DIR)src/revisions/vs.asm
 PLATFORM_CFG ?= $(NATIVE_CFG)
@@ -46,6 +47,7 @@ PLATFORM_SOURCE ?= $(PROJECT_DIR)src/revisions/ann/main.asm
 PLATFORM_CFG ?= $(PROJECT_DIR)config/linker/fds_prg.cfg
 PLATFORM_REFERENCE ?= $(PROJECT_DIR)All Night Nippon Super Mario Brothers (Japan) (Promotion Card).fds
 PLATFORM_OUTPUT ?= $(PLATFORM_BUILD_DIR)/smb.fds
+PLATFORM_BIN_INCLUDE_ARGS = --bin-include-dir "$(ANN_SUPPLEMENTAL_ASSET_DIR)"
 PLATFORM_PAYLOAD_ARGS = \
 	--payload NSMDATA2=$(ANN_SUPPLEMENTAL_COURSES_BUILD_DIR)/payload.bin \
 	--payload NSMDATA3=$(ANN_ENDING_BUILD_DIR)/payload.bin \
@@ -130,6 +132,7 @@ build-platform:
 		--map "$(PLATFORM_MAP)" \
 		--debug-info "$(PLATFORM_DEBUG)" \
 		--output-rom "$(PLATFORM_OUTPUT)" \
+		$(PLATFORM_BIN_INCLUDE_ARGS) \
 		--prg-only
 	$(PYTHON) "$(PROJECT_DIR)scripts/run.py" build.platform_profiles build \
 		--manifest "$(PLATFORM_MANIFEST)" \

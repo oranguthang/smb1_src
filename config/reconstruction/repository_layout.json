@@ -170,6 +170,12 @@
         "public_api_control": "The 3.1 audit is independent and does not extend this historical module."
       },
       {
+        "path": "scripts/validation/relocation_test.py",
+        "cohesion": "One validation command owns relocation source generation, assembly, and evidence checks for every supported profile.",
+        "extraction_decision": "Assembly and profile helpers are already separated; splitting the coordinating transaction would duplicate temporary-tree and evidence state.",
+        "public_api_control": "scripts.run exposes one stable validation.relocation_test command while focused unit tests cover its path and operand transformations."
+      },
+      {
         "path": "scripts/workflow/import_smb2_source.py",
         "cohesion": "One reproducible import transaction parses, normalizes, validates, and writes a complete sibling-source set.",
         "extraction_decision": "The importer is workflow-only and its output is reviewed and rebuilt; splitting its stateful pipeline would weaken atomicity.",

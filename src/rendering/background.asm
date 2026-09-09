@@ -351,7 +351,7 @@ tbl_metatile_graphics_pointers_high:
     .byte >off_palette_0_metatiles, >off_palette_1_metatiles, >off_palette_2_metatiles, >off_palette_3_metatiles
 
 .if con_revision_profile = con_revision_profile_ann
-    .define con_metatile_graphics_asset "../../assets/generated/platforms/ann_fds/source/ann_metatile_graphics.bin"
+    .define con_metatile_graphics_asset "ann_metatile_graphics.bin"
 con_palette_1_metatiles_size = $0bc
 con_palette_2_metatiles_offset = $158
 .else

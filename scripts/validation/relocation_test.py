@@ -76,12 +76,20 @@ def insert_probe(
     return replace_once(text, token, f"{token}\n{snippet.rstrip()}", identifier)
 
 
-def rebase_incbin_paths(text: str, source: Path, destination: Path) -> str:
+def rebase_incbin_paths(
+    text: str,
+    source: Path,
+    destination: Path,
+    *,
+    preserve_basenames: bool = False,
+) -> str:
     """Keep relative binary includes valid after copying an assembly module."""
 
     def replace_path(match: re.Match[str]) -> str:
         path = Path(match.group("path"))
         if path.is_absolute():
+            return match.group(0)
+        if preserve_basenames and len(path.parts) == 1:
             return match.group(0)
         absolute = (source.parent / path).resolve()
         relative = Path(os.path.relpath(absolute, destination.parent)).as_posix()
@@ -137,6 +145,7 @@ def prepare_generated_source(
             positioning_text,
             positioning_source,
             positioning_path,
+            preserve_basenames=bool(manifest.get("bin_include_dirs")),
         )
         positioning_path.write_text(positioning_text, encoding="utf-8", newline="\n")
 
@@ -213,6 +222,8 @@ def run_build(
         "--output-rom", str(outputs["rom"]),
         "--prg-only",
     ]
+    for directory in manifest.get("bin_include_dirs", []):
+        command.extend(("--bin-include-dir", str(rooted(project_root, directory))))
     subprocess.run(command, cwd=project_root, check=True)
     container = manifest["container"]
     candidate_prg = outputs["prg"].read_bytes()
