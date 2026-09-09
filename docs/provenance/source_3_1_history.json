@@ -89,12 +89,20 @@
       "reason": "Keep readiness metadata in a nonempty factual commit that follows the successful aggregate evidence instead of retaining the earlier unsupported claim."
     },
     {
-      "commit": "HEAD",
+      "commit": "baa8b010334fe27afb80e59f027624994e88bc90",
       "title": "Extend ANN binary includes to hard courses",
       "origin": "new_work",
       "source_commits": [],
       "scope": "Repository-depth-independent NSMDATA4 asset operands, explicit direct and relocation binary-include roots, independent clean-cache production regressions for both course payloads, and development-state audit enforcement during evidence renewal.",
       "reason": "Apply the validated ANN asset contract to the hard-course sibling path that the prior supplemental-only regression did not exercise."
+    },
+    {
+      "commit": "HEAD",
+      "title": "Record complete ANN clean-gate evidence",
+      "origin": "new_work",
+      "source_commits": [],
+      "scope": "Tag-ready status and release documentation after the complete inherited gate passes from clean generated state with direct and relocation assembly for both ANN course payloads.",
+      "reason": "Restore readiness only after the corrected NSMDATA2 and NSMDATA4 production paths pass the full aggregate evidence sequence."
     }
   ],
   "date_policy": {
