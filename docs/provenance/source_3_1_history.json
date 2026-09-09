@@ -73,12 +73,20 @@
       "reason": "Apply the refreshed compatible-quality rules retroactively and keep the reviewed source, evidence, and navigation contracts under one owner each."
     },
     {
-      "commit": "HEAD",
+      "commit": "a0d09eacfe1456e8cdec4cbd8d7e1f940211371a",
       "title": "Correct ANN supplemental binary include resolution",
       "origin": "new_work",
       "source_commits": [],
       "scope": "Explicit ca65 binary-include directories for direct and relocation payload assembly, repository-depth-independent ANN asset operands, a clean disposable-project production build regression, and development status during evidence renewal.",
       "reason": "Correct the clean-review failure that the former flat synthetic source and absolute binary paths bypassed."
+    },
+    {
+      "commit": "HEAD",
+      "title": "Record renewed clean-gate evidence",
+      "origin": "new_work",
+      "source_commits": [],
+      "scope": "Tag-ready status and release documentation after the complete inherited gate passes from clean generated state with direct and relocation ANN supplemental builds.",
+      "reason": "Keep readiness metadata in a nonempty factual commit that follows the successful aggregate evidence instead of retaining the earlier unsupported claim."
     }
   ],
   "date_policy": {

@@ -77,7 +77,9 @@ branch, a nonempty reviewed candidate commit, and absence of the future local ta
 After an annotated tag is published, `make source-3-1-post-tag` verifies its
 message and peeled local/remote target.
 
-The candidate is in `development` while clean-snapshot ANN assembly evidence is
-being corrected and rerun. The candidate commits retain neutral factual titles;
-the eventual release milestone remains an owner-managed annotated tag rather
-than a completion claim in commit history.
+The complete inherited gate passed from clean generated state after exercising
+both direct and relocation ANN supplemental assembly through the production
+source hierarchy and default asset cache. The candidate is therefore
+`tag-ready`; its commits retain neutral factual titles, and the eventual release
+milestone remains an owner-managed annotated tag rather than a completion claim
+in commit history.
